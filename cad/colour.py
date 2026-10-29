@@ -16,6 +16,7 @@ Scheme: Bomber Command, Mk II Series IA, 1943.
     C1 fin flashes, dull red squadron codes, yellow prop tips.
 """
 import json
+import os
 from xml.sax.saxutils import quoteattr
 import math
 import sys
@@ -256,9 +257,55 @@ def colour_part(name, P, pat):
         core = (mf.Manifold.cylinder(200, r_in, r_in, 96).rotate([0, 90, 0])
                 .translate([-100, s * yc, zc]))
         return paint(P, [(YELLOW, P - core)])
-    if name in ("canopy", "nose_glazing", "turret_dorsal", "turret_tail"):
-        return {CLEAR: P}
+    if name in CLEAR_PARTS:
+        return paint(P, [(BLACK, frames(name, P))], base=CLEAR)
     return {BLACK: P}
+
+
+# ============================================================
+# GLAZING FRAMES (black frame lines through a clear skin)
+# ============================================================
+CLEAR_PARTS = ("canopy", "nose_glazing", "turret_dorsal", "turret_tail", "astrodome")
+FRAME_W = 0.6                # mm
+CANOPY_FRAMES = [64.0, 69.0, 76.0, 86.0, 98.0, 110.0, 119.0]
+NOSE_FRAMES = [6.0, 13.0, 20.0]
+
+
+def outer_skin(P, d):
+    core = P
+    for v in ([d, 0, 0], [-d, 0, 0], [0, d, 0], [0, -d, 0], [0, 0, d], [0, 0, -d]):
+        core = core ^ P.translate(v)
+    return P - core
+
+
+def slab(axis, at, w=FRAME_W):
+    size = [1000.0, 1000.0, 1000.0]
+    i = "xyz".index(axis)
+    size[i] = w
+    off = [-500.0, -500.0, -500.0]
+    off[i] = at - w / 2
+    return mf.Manifold.cube(size).translate(off)
+
+
+def frames(name, P):
+    sk = outer_skin(P, 0.6)
+    if name == "canopy":
+        f = mf.Manifold()
+        for x in CANOPY_FRAMES:
+            f = f + slab("x", x)
+        return sk ^ (f + slab("y", 0.0))
+    if name == "nose_glazing":
+        f = mf.Manifold()
+        for x in NOSE_FRAMES:
+            f = f + slab("x", x)
+        return sk ^ (f + slab("y", 0.0) + slab("z", -17.5))
+    if name == "turret_dorsal":
+        x = H.DORSAL_X
+        _, _, top, _, _ = H.interp(H.FUSE_STATIONS, x)
+        return sk ^ (slab("x", x) + slab("y", 0.0) + slab("z", top + 2.0))
+    if name == "turret_tail":
+        return sk ^ (slab("y", 0.0) + slab("z", H.TAIL_TURRET_Z) + slab("x", H.FUSE_END_X + 5.0))
+    return mf.Manifold()
 
 
 # ============================================================
@@ -308,7 +355,7 @@ def make_inlay(P, centre, d, rings, axis, side=1):
         if c.volume() > 1e-3:
             vols[colour] = vols[colour] + c if colour in vols else c
         inner = inner + c
-    return P - socket, vols
+    return P - socket, vols, plug
 
 
 def inlays_for(name, P):
@@ -317,13 +364,13 @@ def inlays_for(name, P):
     if name.startswith("wing_outer"):
         s = 1 if name.endswith("stbd") else -1
         x, y, d = WING_ROUNDEL
-        P, vols = make_inlay(P, (x, s * y), d, B_RINGS(d), "z")
-        out.append((f"roundel_wing_{name.split('_')[-1]}", vols, [0, 0, 0]))
+        P, vols, plug = make_inlay(P, (x, s * y), d, B_RINGS(d), "z")
+        out.append((f"roundel_wing_{name.split('_')[-1]}", vols, [0, 0, 0], plug))
     if name.startswith("fuselage_rear"):
         s = 1 if name.endswith("stbd") else -1
         x, z, d = FUSE_ROUNDEL
-        P, vols = make_inlay(P, (x, z), d, C1_RINGS(d), "y", s)
-        out.append((f"roundel_fuselage_{name.split('_')[-1]}", vols, [90 * s, 0, 0]))
+        P, vols, plug = make_inlay(P, (x, z), d, C1_RINGS(d), "y", s)
+        out.append((f"roundel_fuselage_{name.split('_')[-1]}", vols, [90 * s, 0, 0], plug))
     return P, out
 
 
@@ -500,15 +547,14 @@ def write_3mf(path, objects, plates, template):
 # ============================================================
 # MAIN
 # ============================================================
-def add_object(objs, name, posed, out):
+def add_object(objs, name, posed, out, whole):
+    """Register a posed multi-colour object; also write its single-colour STL
+    (from the uncut solid: merging the colour pieces back is slow and fragile)."""
     import trimesh
     lo = np.min([v.bounding_box()[:3] for v in posed.values()], axis=0)
     hi = np.max([v.bounding_box()[3:] for v in posed.values()], axis=0)
     posed = {c: v.translate(list(-lo)) for c, v in posed.items()}
-    whole = mf.Manifold()
-    for v in posed.values():
-        whole = whole + v
-    V, F = mesh_of(whole)
+    V, F = mesh_of(whole.translate(list(-lo)))
     trimesh.Trimesh(V, F).export(out / "stl" / f"{name}.stl")
     objs[name] = {"name": name, "vols": posed, "size": (hi - lo)[:2]}
     print(f"{name:26s} " + ", ".join(f"{FILAMENTS[c][0]} {v.volume() / 1000:.1f}cc"
@@ -520,8 +566,7 @@ PLATE_GROUPS = [            # parts kept together by colour set (max 5 colours a
     ("Wings", lambda n: n.startswith(("wing_", "tailplane"))),
     ("Nacelles", lambda n: n.startswith("nacelle")),
     ("Fins and roundels", lambda n: n.startswith(("fin_", "roundel_"))),
-    ("Clear and guns", lambda n: n in ("canopy", "nose_glazing", "turret_dorsal", "turret_tail")
-     or n.startswith("guns")),
+    ("Clear and guns", lambda n: n in CLEAR_PARTS or n.startswith("guns")),
     ("Props, gear and stand", lambda n: True),
 ]
 MAX_COLOURS = 5
@@ -536,19 +581,31 @@ if __name__ == "__main__":
     objs = {}
     preview = []
     (out / "stl").mkdir(exist_ok=True)
+    only = os.environ.get("ONLY", "")
+    import time
     for name, w in parts.items():
+        if only and not any(o in name for o in only.split(",")):
+            continue
+        t0 = time.time()
         P = to_manifold(H.mesh(w))
         P = D.apply(name, P)                       # panel lines, hatches, rivets
+        t1 = time.time()
         P, extra = inlays_for(name, P)             # roundel sockets + inlay discs
+        t2 = time.time()
         vols = colour_part(name, P, pat)
+        for v in vols.values():
+            v.volume()                             # force evaluation for timing
+        t3 = time.time()
+        print(f"  [{name}] detail {t1 - t0:.1f}s inlay {t2 - t1:.1f}s colour {t3 - t2:.1f}s",
+              file=sys.stderr, flush=True)
         M = pose_matrix(poses[name])
-        jobs = [(name, vols, lambda v, M=M: v.transform(M[:3, :]))]
-        jobs += [(n, iv, lambda v, r=r: v.rotate(r)) for n, iv, r in extra]
-        for jname, jvols, pose in jobs:
+        jobs = [(name, vols, lambda v, M=M: v.transform(M[:3, :]), P)]
+        jobs += [(n, iv, lambda v, r=r: v.rotate(r), plug) for n, iv, r, plug in extra]
+        for jname, jvols, pose, whole in jobs:
             for c, v in jvols.items():             # assembled-frame colour preview
                 V, F = mesh_of(v)
                 preview.append((c, V, F))
-            add_object(objs, jname, {c: pose(v) for c, v in jvols.items()}, out)
+            add_object(objs, jname, {c: pose(v) for c, v in jvols.items()}, out, pose(whole))
     # plates
     order, plates_all, seen = [], [], set()
     for gname, pred in PLATE_GROUPS:

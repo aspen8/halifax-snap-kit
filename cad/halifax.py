@@ -23,6 +23,7 @@ import sys
 from pathlib import Path
 
 import cadquery as cq
+import numpy as np
 
 # ============================================================
 # PARAMETERS
@@ -141,6 +142,22 @@ FLANGE_D, FLANGE_T, CAVITY_D = 4.0, 1.2, 4.6
 COLLAR_D, COLLAR_T = 5.0, 0.8
 HEX_AF, HEX_LEN, HEX_SOCKET_AF = 3.0, 2.5, 3.1
 PIN_D = 1.8                  # mm, printed axle pins (wheels, turrets)
+
+# --- Exhausts (after PB94: a separate bar of stacks plugged into a side slot)
+EXH_X0 = 6.0                 # mm behind the nacelle front
+EXH_LEN = 18.0               # mm, Merlin bank of six
+EXH_H = 2.6                  # mm, bar height
+EXH_Z = 0.8                  # mm above the nacelle centreline
+EXH_DEPTH = 2.0              # mm into the nacelle
+EXH_PROUD = 0.5              # mm proud of the widest nacelle point
+EXH_STUBS = 6
+# --- Radiator intake (recess + vanes at the front of each chin radiator)
+RAD_INTAKE = (4.0, 3.2, 2.6, 2.2)        # depth, half-width, below/above centre
+RAD_VANES = (0.9, 2.3)                   # |y| of the vanes, either side of centre
+RAD_VANE_T = 0.5
+# --- Astrodome (clear, plugs into the roof) and D/F loop fairing (moulded on)
+ASTRODOME = (128.0, 3.2)                 # x, radius
+DF_LOOP = (163.0, 7.0, 2.2, 2.6)         # x, length, width, height of the fairing
 PIN_HEAD = (4.0, 0.8)        # head diameter, thickness
 SPINNER_LEN = 7.5
 SPINNER_R = 4.8
@@ -298,6 +315,7 @@ def fuselage_parts(wing_tongues):
     body = body.cut(cyl((DORSAL_X, 0, top_d - 3.0), 2 * DORSAL_R, 20, "z"))  # dorsal turret
     body = body.cut(cyl((DORSAL_X, 0, top_d - 3.0), AXLE_HOLE_TIGHT, -5, "z"))
     body = body.cut(tailplane_slot())
+    body = body.union(df_loop_fairing()).cut(astrodome_socket())
     for pocket in wing_tongues:
         body = body.cut(pocket)
     _, _, _, bot_t, _ = interp(FUSE_STATIONS, TAIL_AXLE_X)
@@ -557,6 +575,19 @@ def nacelle_parts(index, side, wing_panel):
     if index == 0:   # main undercarriage socket
         body = body.cut(gear_socket(MAIN_AXLE_X, yc * side, nacelle_bottom(0, MAIN_AXLE_X),
                                     MAIN_LEG, MAIN_PLUG))
+    # exhaust slots on both sides, and the radiator intake
+    for face in (1, -1):
+        body = body.cut(exhaust_bank(index, side, face, slot=True))
+    d, hw, zlo, zhi = RAD_INTAKE
+    zr = zc - NACELLE_H / 2 + RADIATOR_R * 0.55
+    xr = x0 + RADIATOR_X
+    Y = yc * side
+    body = body.cut(box(xr - 1.5, xr + d, Y - hw, Y + hw, zr - zlo, zr + zhi))
+    for vy in RAD_VANES:
+        for sg in (1, -1):
+            body = body.union(box(xr + 1.2, xr + d + 0.1, Y + sg * vy - RAD_VANE_T / 2,
+                                  Y + sg * vy + RAD_VANE_T / 2, zr - zlo, zr + zhi)
+                              .intersect(nacelle_body(zc, x0, length).translate((0, Y, 0))))
     # prop shaft bearing: bore through the nose, cavity for the captive flange
     body = body.cut(cyl((x0 - 1, yc * side, zc), BORE_D, 6.2, "x"))
     body = body.cut(cyl((x0 + 5.2, yc * side, zc), CAVITY_D, 1.6, "x"))
@@ -569,6 +600,71 @@ def nacelle_parts(index, side, wing_panel):
     inboard = box(-10, 400, y - 50, y, -80, 80) if side > 0 else box(-10, 400, y, y + 50, -80, 80)
     outboard = box(-10, 400, y, y + 50, -80, 80) if side > 0 else box(-10, 400, y - 50, y, -80, 80)
     return body.intersect(inboard).cut(holes), body.intersect(outboard).cut(holes)
+
+
+def nacelle_halfwidth(index, x):
+    _, _, x0, length = NACELLES[index]
+    _, k = interp(NACELLE_PROFILE, (x - x0) / length)
+    return k * NACELLE_W / 2
+
+
+def exhaust_bank(index, side, face, slot=False):
+    """Bar of six stacks on one side of a nacelle (face=+1 is the +y side).
+    slot=True returns the socket to cut instead (with FIT)."""
+    yc, zc, x0, _ = NACELLES[index]
+    Y = yc * side
+    xs, xe = x0 + EXH_X0, x0 + EXH_X0 + EXH_LEN
+    ws = [nacelle_halfwidth(index, x) for x in np.linspace(xs, xe, 12)]
+    y_in, y_out = min(ws) - EXH_DEPTH, max(ws) + EXH_PROUD
+    zm = zc + EXH_Z
+    f = FIT if slot else 0.0
+    y0, y1 = (y_in - (0.3 if slot else 0)), (y_out + 2 if slot else y_out)
+    h = EXH_H + 2 * f
+    a0, a1 = Y + face * y0, Y + face * y1
+    lo, hi = min(a0, a1), max(a0, a1)
+    bar = box(xs + h / 2 - f, xe - h / 2 + f, lo, hi, zm - h / 2, zm + h / 2)
+    for xx in (xs + h / 2 - f, xe - h / 2 + f):
+        bar = bar.union(cyl((xx, lo, zm), h, hi - lo, "y"))
+    if slot:
+        return bar
+    pitch = EXH_LEN / EXH_STUBS
+    for k in range(EXH_STUBS):
+        xk = xs + (k + 0.5) * pitch
+        yb = Y + face * (y_out - 0.05)
+        yt = Y + face * (y_out + 1.4)
+        def rect(x, y, w, hh):
+            pts = [V(x - w / 2, y, zm - hh / 2), V(x + w / 2, y, zm - hh / 2),
+                   V(x + w / 2, y, zm + hh / 2), V(x - w / 2, y, zm + hh / 2)]
+            return cq.Wire.makePolygon(pts, close=True)
+        stub = wp(cq.Solid.makeLoft([rect(xk, yb, 1.8, 2.0), rect(xk + 0.7, yt, 2.3, 2.5)], ruled=True))
+        outlet = box(xk + 0.7 - 0.5, xk + 0.7 + 0.5, min(yt, yt - face * 0.6), max(yt, yt - face * 0.6),
+                     zm - 0.8, zm + 0.8)
+        bar = bar.union(stub).cut(outlet)
+    return bar
+
+
+def astrodome():
+    x, r = ASTRODOME
+    _, _, top, _, _ = interp(FUSE_STATIONS, x)
+    dome = (wp(cq.Solid.makeSphere(r, V(x, 0, top - 0.3)))
+            .intersect(box(x - 10, x + 10, -10, 10, top - 0.3, top + 10)))
+    plug = cyl((x, 0, top - 1.8), 2 * (r - 0.8) - 2 * FIT, 1.6, "z")
+    return dome.union(plug)
+
+
+def astrodome_socket():
+    x, r = ASTRODOME
+    _, _, top, _, _ = interp(FUSE_STATIONS, x)
+    return cyl((x, 0, top - 1.9), 2 * (r - 0.8), 3.0, "z")
+
+
+def df_loop_fairing():
+    x, L, w, h = DF_LOOP
+    _, _, top, _, _ = interp(FUSE_STATIONS, x)
+    m = cq.Matrix([[L / 2, 0, 0, 0], [0, w / 2, 0, 0], [0, 0, h / 2, 0]])
+    tear = wp(cq.Solid.makeSphere(1.0).transformGeometry(m)).translate((x, 0, top + 2.4))
+    mast = box(x - 1.2, x + 1.2, -0.7, 0.7, top - 0.5, top + 2.4)
+    return tear.union(mast)
 
 
 def propeller():
@@ -801,6 +897,14 @@ def build():
         for i in range(n):
             parts[f"{kname}_{i + 1}"] = connector_key(key)
             poses[f"{kname}_{i + 1}"] = lambda w: w
+    parts["astrodome"] = astrodome()
+    poses["astrodome"] = lambda w: w
+    for i in range(len(NACELLES)):
+        for side, tag in ((1, "stbd"), (-1, "port")):
+            for face, ftag in ((1, "a"), (-1, "b")):
+                n = f"exhaust{i + 1}_{tag}_{'outboard' if face == side else 'inboard'}"
+                parts[n] = exhaust_bank(i, side, face)
+                poses[n] = lambda w, fc=face: rot(w, "x", 90 * fc)   # flat back on the bed
     parts["turret_dorsal"] = dorsal_turret()
     poses["turret_dorsal"] = lambda w: w
     parts["turret_tail"] = tail_turret()
