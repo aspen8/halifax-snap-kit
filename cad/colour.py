@@ -26,8 +26,9 @@ import manifold3d as mf
 import numpy as np
 from PIL import Image
 
-import halifax as H
 import cadquery as cq
+import detail as D
+import halifax as H
 
 # ============================================================
 # PARAMETERS
@@ -189,7 +190,7 @@ def paint(P, ops, base=BLACK):
     out = {}
     claimed = mf.Manifold()
     for colour, region in reversed(ops):
-        r = (P ^ region) - claimed
+        r = region - claimed          # regions are already inside P (built from its skins)
         if r.volume() > 1e-3:
             out[colour] = out[colour] + r if colour in out else r
             claimed = claimed + r
@@ -199,10 +200,19 @@ def paint(P, ops, base=BLACK):
     return out
 
 
+def clip(section, a0, b0, a1, b1):
+    """Crop a section to a rectangle (keeps prisms small and booleans fast)."""
+    box2 = mf.CrossSection.square([a1 - a0 + 2, b1 - b0 + 2]).translate([a0 - 1, b0 - 1])
+    return section ^ box2
+
+
 def colour_part(name, P, pat):
     S = skins(P)
     up = S["up"]
-    camo_up = [(EARTH, up), (GREEN, up ^ prism_z(pat["plan_green"]))]
+    x0, y0, z0, x1, y1, z1 = P.bounding_box()
+    plan = prism_z(clip(pat["plan_green"], x0, y0, x1, y1))
+    pat = dict(pat, side={s: tuple(clip(c, x0, z0, x1, z1) for c in v) for s, v in pat["side"].items()})
+    camo_up = [(EARTH, up), (GREEN, up ^ plan)]
     if name.startswith(("wing_", "tailplane")):
         ops = list(camo_up)
         if name.startswith("wing_outer"):
@@ -216,7 +226,7 @@ def colour_part(name, P, pat):
         side = S["+y"] if s > 0 else S["-y"]
         green_s, band = pat["side"][s]
         ops = [(EARTH, side ^ prism_y(band)), (GREEN, side ^ prism_y(green_s)),
-               (EARTH, up ^ prism_y(band)), (GREEN, up ^ prism_y(band) ^ prism_z(pat["plan_green"]))]
+               (EARTH, up ^ prism_y(band)), (GREEN, up ^ prism_y(band) ^ plan)]
         x, z, d = FUSE_ROUNDEL
         for colour, dd in ((YELLOW, d), (BLUE, d * 0.889), (WHITE, d / 3 + 1.8), (RED, d / 3)):
             ops.append((colour, side ^ prism_y(disc(x, z, dd))))
@@ -233,7 +243,7 @@ def colour_part(name, P, pat):
         zc = H.NACELLES[idx][1]
         upper = mf.Manifold.cube([1000, 1000, 500]).translate([-500, -500, zc - 1.0])
         skin = (S["up"] + S["+y"] + S["-y"]) ^ upper
-        return paint(P, [(EARTH, skin), (GREEN, skin ^ prism_z(pat["plan_green"]))])
+        return paint(P, [(EARTH, skin), (GREEN, skin ^ plan)])
     if name.startswith("fin_"):
         s = 1 if name.endswith("stbd") else -1
         side = S["+y"] if s > 0 else S["-y"]
@@ -439,14 +449,26 @@ if __name__ == "__main__":
     pat = {"plan_green": plan_green, "side": {s: side_camo(g, s) for s in (1, -1)}}
     parts, poses = H.build()
     objs = {}
+    preview = []
+    (out / "stl").mkdir(exist_ok=True)
     for name, w in parts.items():
-        P = to_manifold(H.mesh(w))
+        P = to_manifold(H.mesh(w, tol=0.01, ang=0.1))
+        P = D.apply(name, P)                       # panel lines, hatches, rivets
         vols = colour_part(name, P, pat)
+        for c, v in vols.items():                  # assembled-frame colour preview
+            V, F = mesh_of(v)
+            preview.append((c, V, F))
         M = pose_matrix(poses[name])
         posed = {c: v.transform(M[:3, :]) for c, v in vols.items()}
         lo = np.min([v.bounding_box()[:3] for v in posed.values()], axis=0)
         hi = np.max([v.bounding_box()[3:] for v in posed.values()], axis=0)
         posed = {c: v.translate(list(-lo)) for c, v in posed.items()}
+        whole = mf.Manifold()
+        for v in posed.values():
+            whole = whole + v
+        V, F = mesh_of(whole)
+        import trimesh
+        trimesh.Trimesh(V, F).export(out / "stl" / f"{name}.stl")
         objs[name] = {"name": name, "vols": posed, "size": (hi - lo)[:2]}
         print(f"{name:26s} " + ", ".join(f"{FILAMENTS[c][0]} {v.volume() / 1000:.1f}cc"
                                           for c, v in sorted(vols.items())), flush=True)
@@ -468,6 +490,14 @@ if __name__ == "__main__":
                 vols = {c: v.rotate([0, 0, 90]).translate([sy, 0, 0]) for c, v in vols.items()}
             objects.append({"name": n, "placement": (pi, x, y),
                             "volumes": [(c, *mesh_of(v)) for c, v in sorted(vols.items())]})
+    import trimesh
+    scene = trimesh.Scene()
+    for i, (c, V, F) in enumerate(preview):
+        rgb = [int(FILAMENTS[c][1][k:k + 2], 16) for k in (1, 3, 5)]
+        m = trimesh.Trimesh(V, F)
+        m.visual.face_colors = rgb + [255]
+        scene.add_geometry(m, node_name=f"v{i}")
+    scene.export(out / "halifax_colour_preview.glb")
     names = [f"{g} {i + 1}" for i, (g, _) in enumerate(plates_all)]
     write_3mf(out / "halifax_kit.3mf", objects, names, template)
     for i, (gname, items) in enumerate(plates_all):
