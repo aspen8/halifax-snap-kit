@@ -51,14 +51,30 @@ FILAMENTS = {                # slot: (name, hex colour)
 BLACK, EARTH, GREEN, RED, BLUE, YELLOW, WHITE, CLEAR = range(1, 9)
 
 # Codes (no particular aircraft yet; letters from the 51 Sqn profile)
-SQN_CODE = "MH"
-AC_LETTER = "E"
-CODE_HEIGHT = 20.0           # mm (48 in letters)
-CODE_Z = -11.0               # mm, centre height on the fuselage side
-SQN_CODE_X = 214.2           # mm, centre of squadron code (port side)
-AC_LETTER_X = 273.4          # mm, centre of aircraft letter (port side)
-
-FUSE_ROUNDEL = (243.9, -11.0, 22.8)     # x, z, outer diameter (54 in C1)
+# Markings presets (pick with MARKINGS or the HALIFAX_MARKINGS env var).
+# Positions are model mm on the port side; starboard mirrors about the roundel.
+PRESETS = {
+    "NP-G": dict(     # 158 Sqn LV917 (profile supplied by the user)
+        sqn="NP", letter="G", code_h=21.0, code_z=-12.3, sqn_x=212.9, letter_x=262.4,
+        roundel=(240.3, -15.4, 23.7), serial=("LV917", 288.6, 0.5, 3.1),
+        demarcation=[(0, -8.0), (25, -4.0), (45, -1.0), (70, 1.4), (330, 1.4), (360, 2.0)],
+        wave=(0.7, 7.5), fin_stripes=True),
+    "MH-E": dict(     # 51 Sqn (first profile)
+        sqn="MH", letter="E", code_h=20.0, code_z=-11.0, sqn_x=214.2, letter_x=273.4,
+        roundel=(243.9, -11.0, 22.8), serial=None,
+        demarcation=[(0, -8.0), (26, -6.0), (45, -3.0), (60, 0.5), (90, 1.5), (130, 0.0),
+                     (170, -1.5), (210, 0.5), (250, -1.0), (290, 0.5), (330, 1.5), (360, 2.0)],
+        wave=(0.0, 1.0), fin_stripes=False),
+}
+MARKINGS = os.environ.get("HALIFAX_MARKINGS", "NP-G")
+MK = PRESETS[MARKINGS]
+SQN_CODE, AC_LETTER = MK["sqn"], MK["letter"]
+CODE_HEIGHT, CODE_Z = MK["code_h"], MK["code_z"]
+SQN_CODE_X, AC_LETTER_X = MK["sqn_x"], MK["letter_x"]
+FUSE_ROUNDEL = MK["roundel"]
+# 4 Group fin stripes: two yellow bands, (x, z) corners on the fin side
+FIN_STRIPES = [[(304.0, 17.0), (342.0, 34.8), (342.0, 21.7), (304.0, 3.3)],
+               [(304.0, -8.6), (342.0, 11.1), (342.0, -2.7), (304.0, -25.0)]]
 WING_ROUNDEL = (154.3, 166.0, 37.0)     # x, |y|, diameter (84 in Type B)
 FIN_FLASH = (309.0, 15.0, 33.0, 7.0, 1.5)  # x start, z0, z1, red/blue width, white width
 PROP_TIP = 3.0               # mm of yellow at the prop tips
@@ -75,8 +91,7 @@ CAMO_NOSE_PY = 2397          # page y of the nose tip
 CAMO_CL_PX = 1995            # page x of the centreline
 
 # Demarcation (top of the black on the fuselage sides), from the profile
-DEMARCATION = [(0, -8.0), (26, -6.0), (45, -3.0), (60, 0.5), (90, 1.5), (130, 0.0),
-               (170, -1.5), (210, 0.5), (250, -1.0), (290, 0.5), (330, 1.5), (360, 2.0)]
+DEMARCATION = MK["demarcation"]
 
 BED = (230.0, 250.0)         # usable plate area (dual-nozzle X limit on the X2D)
 PLATE_GAP = 8.0
@@ -156,7 +171,9 @@ def plan_camo():
 
 def demarcation_z(x):
     xs, zs = zip(*DEMARCATION)
-    return np.interp(x, xs, zs)
+    amp, period = MK["wave"]
+    return np.interp(x, xs, zs) + amp * np.abs(np.sin(np.pi * np.asarray(x) / period)) * (
+        np.asarray(x) > 60)                     # scalloped edge aft of the cockpit
 
 
 def side_camo(g, side):
@@ -236,6 +253,9 @@ def colour_part(name, P, pat):
         ax = AC_LETTER_X if s < 0 else 2 * rx - AC_LETTER_X
         for txt, cx in ((SQN_CODE, sx), (AC_LETTER, ax)):
             ops.append((RED, side ^ prism_y(text_section(txt, CODE_HEIGHT, cx, CODE_Z, mirror))))
+        if MK["serial"]:
+            txt, x, z, h = MK["serial"]
+            ops.append((RED, side ^ prism_y(text_section(txt, h, x if s < 0 else x, z, mirror))))
         return paint(P, ops)
     if name.startswith("nacelle"):
         idx = int(name[7]) - 1
@@ -248,9 +268,14 @@ def colour_part(name, P, pat):
         side = S["+y"] if s > 0 else S["-y"]
         x0, z0, z1, w, ww = FIN_FLASH
         rect = lambda a, b: mf.CrossSection([np.array([[a, z0], [b, z0], [b, z1], [a, z1]])])
-        return paint(P, [(RED, side ^ prism_y(rect(x0, x0 + w))),
-                         (WHITE, side ^ prism_y(rect(x0 + w, x0 + w + ww))),
-                         (BLUE, side ^ prism_y(rect(x0 + w + ww, x0 + 2 * w + ww)))])
+        ops = [(RED, side ^ prism_y(rect(x0, x0 + w))),
+               (WHITE, side ^ prism_y(rect(x0 + w, x0 + w + ww))),
+               (BLUE, side ^ prism_y(rect(x0 + w + ww, x0 + 2 * w + ww)))]
+        if MK["fin_stripes"]:
+            both = S["+y"] + S["-y"]
+            for quad in FIN_STRIPES:
+                ops.append((YELLOW, both ^ prism_y(cs([quad]))))
+        return paint(P, ops)
     if name.startswith("prop") and not name.startswith("prop_shaft"):
         idx = int(name[4]) - 1
         yc, zc, x0, _ = H.NACELLES[idx]
