@@ -32,11 +32,16 @@ SCALE = 30120.0 / SPAN       # ~1:60.2
 
 # --- Fit and printing
 FIT = 0.15                   # mm, sliding clearance per side (X2D, PLA)
-DOWEL_HOLE = 1.85            # mm, press fit for 1.75 mm filament dowels
-DOWEL_DEPTH = 4.0            # mm, hole depth each side (cut dowels to 7.5 mm)
+# Printed connector keys (flat, printed lying down). (length across the split,
+# width, thickness) in mm; slots get KEY_FIT per side and END_GAP at each end.
+KEY_FIT = 0.1                # mm, press fit per side
+KEY_END_GAP = 0.3            # mm, slot is this much deeper than half a key
+KEY_LR = (8.0, 10.0, 2.4)    # fuselage port/starboard halves (width along x)
+KEY_FR = (12.0, 6.0, 2.4)    # front/rear fuselage joint (width along z)
+KEY_NAC = (7.0, 6.0, 2.0)    # nacelle halves (width along x)
 
-AXLE_HOLE_TIGHT = 1.80       # mm, 1.75 mm filament axle grips here
-AXLE_HOLE_LOOSE = 2.05       # mm, ...and spins freely here
+AXLE_HOLE_TIGHT = 1.80       # mm, printed 1.8 mm pins grip here (wheel forks, turret bases)
+AXLE_HOLE_LOOSE = 2.05       # mm, ...and turn freely here (wheels, dorsal turret)
 WALL = 1.6                   # mm, nose spigot inset from the skin
 
 # --- Fuselage stations: (x, half_width, z_top, z_bottom, squareness)
@@ -66,10 +71,10 @@ JOINT_LIP = 7.0              # mm, length of the internal joining lip
 NOSE_SPIGOT = 5.0            # mm
 
 # Alignment bosses between port/starboard halves: (x, "top"|"bottom")
-FUSE_BOSSES = [
-    (40, "top"), (140, "top"), (204, "top"), (235, "top"), (280, "top"), (344, "top"),
+FUSE_BOSSES = [              # connector key positions between port/starboard halves
+    (40, "top"), (140, "top"), (204, "top"), (235, "top"), (280, "top"),
     (40, "bottom"), (100, "bottom"), (190, "bottom"),
-    (235, "bottom"), (290, "bottom"), (330, "bottom"),
+    (235, "bottom"), (290, "bottom"), (318, "bottom"),
 ]
 
 # --- Cockpit canopy hump: (x, half_width, z_top)
@@ -128,7 +133,15 @@ NACELLE_PINS = [(0.13, -2.0), (0.6, -7.0)]   # (fraction of nacelle length, dz)
 
 # --- Propellers: Rotol 3-blade, 12 ft 9 in
 PROP_D = 3886.0 / SCALE      # ~64.5 mm
-PROP_GAP = 0.6               # mm, prop backplate to nacelle front
+PROP_GAP = 1.2               # mm, prop backplate to nacelle front (thrust collar sits here)
+# Printed prop shaft (after PB94): flange captured inside the nacelle halves,
+# thrust collar outside, hex boss that the prop presses onto. Spins freely.
+SHAFT_D, BORE_D = 2.4, 2.7         # mm
+FLANGE_D, FLANGE_T, CAVITY_D = 4.0, 1.2, 4.6
+COLLAR_D, COLLAR_T = 5.0, 0.8
+HEX_AF, HEX_LEN, HEX_SOCKET_AF = 3.0, 2.5, 3.1
+PIN_D = 1.8                  # mm, printed axle pins (wheels, turrets)
+PIN_HEAD = (4.0, 0.8)        # head diameter, thickness
 SPINNER_LEN = 7.5
 SPINNER_R = 4.8
 BLADE_T = 1.2                # mm
@@ -240,15 +253,32 @@ def fuselage_solid(offset=0.0, x0=None, x1=None):
     return wp(cq.Solid.makeLoft([superellipse_wire(*s) for s in st], ruled=False))
 
 
-def dowel_holes(points, axis, split):
-    """Holes for 1.75 mm filament dowels, DOWEL_DEPTH into each side of a split."""
+def key_slots(points, axis, split, key, width_axis):
+    """Rectangular slots for a printed key across the split plane at each point.
+    The key's length runs along `axis`, its width along `width_axis`."""
+    length, width, thick = key
+    ext = {axis: length / 2 + KEY_END_GAP, width_axis: width / 2 + KEY_FIT}
+    third = ({"x", "y", "z"} - {axis, width_axis}).pop()
+    ext[third] = thick / 2 + KEY_FIT
     out = None
     for p in points:
         q = list(p)
-        q["xyz".index(axis)] = split - DOWEL_DEPTH
-        h = cyl(q, DOWEL_HOLE, 2 * DOWEL_DEPTH, axis)
-        out = h if out is None else out.union(h)
+        q["xyz".index(axis)] = split
+        lo = [q[i] - ext[a] for i, a in enumerate("xyz")]
+        hi = [q[i] + ext[a] for i, a in enumerate("xyz")]
+        b = box(lo[0], hi[0], lo[1], hi[1], lo[2], hi[2])
+        out = b if out is None else out.union(b)
     return out
+
+
+def connector_key(key):
+    """A printed key, lying flat (length x width on the bed), ends chamfered."""
+    length, width, thick = key
+    k = W().box(length, width, thick, centered=(True, True, False))
+    return k.edges("|Y").chamfer(0.4)
+
+
+KEY_COUNTS = {}              # filled by the part builders: name -> (key, count)
 
 
 def canopy_hump():
@@ -286,12 +316,14 @@ def fuselage_parts(wing_tongues):
     for x, where in FUSE_BOSSES:
         _, hw, top, bot, _ = interp(FUSE_STATIONS, x)
         pts.append((x, 0, top - 4.5 if where == "top" else bot + 4.5))
-    lr_holes = dowel_holes(pts, "y", 0.0)
+    lr_holes = key_slots(pts, "y", 0.0, KEY_LR, "x")
+    KEY_COUNTS["key_fuselage_halves"] = (KEY_LR, len(pts))
 
     # front/rear pins on the joint face (on the front sections, pointing aft)
     _, hw, top, bot, _ = interp(FUSE_STATIONS, FUSE_SPLIT_X)
     fr = [(0, y, z) for y in (-hw / 2, hw / 2) for z in (top - 6, bot + 6, (top + bot) / 2)]
-    fr_holes = dowel_holes(fr, "x", FUSE_SPLIT_X)
+    fr_holes = key_slots(fr, "x", FUSE_SPLIT_X, KEY_FR, "z")
+    KEY_COUNTS["key_fuselage_joint"] = (KEY_FR, len(fr))
 
     port = box(-10, 400, -50, 0, -60, 60)
     stbd = box(-10, 400, 0, 50, -60, 60)
@@ -525,12 +557,15 @@ def nacelle_parts(index, side, wing_panel):
     if index == 0:   # main undercarriage socket
         body = body.cut(gear_socket(MAIN_AXLE_X, yc * side, nacelle_bottom(0, MAIN_AXLE_X),
                                     MAIN_LEG, MAIN_PLUG))
-    # filament axle hole for the prop
-    body = body.cut(cyl((x0 - 1, yc * side, zc), AXLE_HOLE_TIGHT, 8, "x"))
+    # prop shaft bearing: bore through the nose, cavity for the captive flange
+    body = body.cut(cyl((x0 - 1, yc * side, zc), BORE_D, 6.2, "x"))
+    body = body.cut(cyl((x0 + 5.2, yc * side, zc), CAVITY_D, 1.6, "x"))
     # pins from the inboard half into the outboard half
     pts = [(x0 + f * length, 0, zc + dz) for f, dz in NACELLE_PINS]
     y = yc * side
-    holes = dowel_holes(pts, "y", y)
+    holes = key_slots(pts, "y", y, KEY_NAC, "x")
+    n0 = KEY_COUNTS.get("key_nacelle", (KEY_NAC, 0))[1]
+    KEY_COUNTS["key_nacelle"] = (KEY_NAC, n0 + len(pts))
     inboard = box(-10, 400, y - 50, y, -80, 80) if side > 0 else box(-10, 400, y, y + 50, -80, 80)
     outboard = box(-10, 400, y, y + 50, -80, 80) if side > 0 else box(-10, 400, y - 50, y, -80, 80)
     return body.intersect(inboard).cut(holes), body.intersect(outboard).cut(holes)
@@ -553,8 +588,30 @@ def propeller():
     prop = hub
     for i in range(3):
         prop = prop.union(blade.rotate((0, 0, 0), (1, 0, 0), 120 * i))
-    prop = prop.cut(cyl((1.1, 0, 0), AXLE_HOLE_LOOSE, -6.5, "x"))
-    return prop
+    # hex socket in the back of the hub: presses onto the shaft's hex boss
+    hexs = (W("YZ").polygon(6, HEX_SOCKET_AF / math.cos(math.pi / 6))
+            .extrude(HEX_LEN + 0.1).translate((1.0 - HEX_LEN - 0.1, 0, 0)))
+    return prop.cut(hexs)
+
+
+def prop_shaft(x0, y, zc):
+    """Shaft along +x from the prop to the captive flange inside the nacelle."""
+    f = cyl((x0 + 5.4, y, zc), FLANGE_D, FLANGE_T, "x")
+    sh = cyl((x0 - 0.2, y, zc), SHAFT_D, 5.6, "x")
+    col = cyl((x0 - 1.0, y, zc), COLLAR_D, COLLAR_T, "x")
+    hx = (W("YZ").polygon(6, HEX_AF / math.cos(math.pi / 6)).extrude(HEX_LEN)
+          .translate((x0 - 1.0 - HEX_LEN, y, zc)))
+    return f.union(sh).union(col).union(hx)
+
+
+def axle_pin(start, axis, sign, length, head=True):
+    """Printed pin from `start` along sign*axis; optional head outside the start."""
+    p = cyl(start, PIN_D, sign * length, axis)
+    if head:
+        q = list(start)
+        q["xyz".index(axis)] -= sign * PIN_HEAD[1]
+        p = p.union(cyl(q, PIN_HEAD[0], sign * PIN_HEAD[1], axis))
+    return p
 
 
 # ============================================================
@@ -690,6 +747,8 @@ def build():
             parts[f"prop{i + 1}_{tag}"] = (propeller()
                                           .translate((x0 - PROP_GAP - 1.0, yc * side, zc)))
             poses[f"prop{i + 1}_{tag}"] = lambda w: rot(w, "y", 90)
+            parts[f"prop_shaft{i + 1}_{tag}"] = prop_shaft(x0, yc * side, zc)
+            poses[f"prop_shaft{i + 1}_{tag}"] = lambda w: rot(w, "y", 90)   # flange on the bed
         yc0 = NACELLES[0][0] * side
         parts[f"main_gear_{tag}"] = gear_fork(MAIN_AXLE_X, yc0, MAIN_AXLE_Z,
                                               nacelle_bottom(0, MAIN_AXLE_X), MAIN_WHEEL_W,
@@ -697,6 +756,10 @@ def build():
         poses[f"main_gear_{tag}"] = lambda w: rot(w, "y", 90)
         parts[f"main_wheel_{tag}"] = wheel(MAIN_AXLE_X, yc0, MAIN_AXLE_Z, MAIN_WHEEL_D, MAIN_WHEEL_W)
         poses[f"main_wheel_{tag}"] = lambda w: rot(w, "x", 90)
+        span = MAIN_WHEEL_W + 1.2 + 2 * MAIN_LEG[1]
+        parts[f"pin_main_wheel_{tag}"] = axle_pin((MAIN_AXLE_X, yc0 + side * span / 2, MAIN_AXLE_Z),
+                                                  "y", -side, span)
+        poses[f"pin_main_wheel_{tag}"] = lambda w, s=side: rot(w, "x", -90 * s)   # head down
         parts[f"fin_{tag}"] = fin(side)
         poses[f"fin_{tag}"] = lambda w: rot(w, "x", 90)
 
@@ -718,6 +781,14 @@ def build():
     poses["tail_gear"] = lambda w: rot(w, "y", 90)
     parts["tail_wheel"] = wheel(TAIL_AXLE_X, 0, bot_t - TAIL_LEG_DROP, TAIL_WHEEL_D, TAIL_WHEEL_W)
     poses["tail_wheel"] = lambda w: rot(w, "x", 90)
+    tspan = TAIL_WHEEL_W + 1.2 + 2 * TAIL_LEG[1]
+    parts["pin_tail_wheel"] = axle_pin((TAIL_AXLE_X, tspan / 2, bot_t - TAIL_LEG_DROP), "y", -1, tspan)
+    poses["pin_tail_wheel"] = lambda w: rot(w, "x", -90)
+    _, _, top_d, _, _ = interp(FUSE_STATIONS, DORSAL_X)
+    parts["pin_dorsal_turret"] = axle_pin((DORSAL_X, 0, top_d - 7.6), "z", 1, 9.0, head=False)
+    poses["pin_dorsal_turret"] = lambda w: w
+    parts["pin_tail_turret"] = axle_pin((FUSE_END_X - 4.6, 0, TAIL_TURRET_Z), "x", 1, 8.0, head=False)
+    poses["pin_tail_turret"] = lambda w: rot(w, "y", 90)
     post, base, sax = stand_parts()
     parts["stand_post"], parts["stand_base"] = post, base
     poses["stand_post"] = lambda w: rot(w.rotate(*sax, STAND_PITCH), "x", 90)
@@ -725,6 +796,11 @@ def build():
 
     parts["tailplane"] = tailplane()
     poses["tailplane"] = lambda w: w
+    # printed connector keys (one part per key, so the kit is complete)
+    for kname, (key, n) in KEY_COUNTS.items():
+        for i in range(n):
+            parts[f"{kname}_{i + 1}"] = connector_key(key)
+            poses[f"{kname}_{i + 1}"] = lambda w: w
     parts["turret_dorsal"] = dorsal_turret()
     poses["turret_dorsal"] = lambda w: w
     parts["turret_tail"] = tail_turret()

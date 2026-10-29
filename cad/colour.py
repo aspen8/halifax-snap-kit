@@ -248,7 +248,7 @@ def colour_part(name, P, pat):
         return paint(P, [(RED, side ^ prism_y(rect(x0, x0 + w))),
                          (WHITE, side ^ prism_y(rect(x0 + w, x0 + w + ww))),
                          (BLUE, side ^ prism_y(rect(x0 + w + ww, x0 + 2 * w + ww)))])
-    if name.startswith("prop"):
+    if name.startswith("prop") and not name.startswith("prop_shaft"):
         idx = int(name[4]) - 1
         yc, zc, x0, _ = H.NACELLES[idx]
         s = 1 if name.endswith("stbd") else -1
