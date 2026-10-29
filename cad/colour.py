@@ -192,17 +192,17 @@ def skins(P):
 
 
 def paint(P, ops, base=BLACK):
-    """ops: list of (colour, region); later ops win. Returns {colour: Manifold}."""
+    """ops: list of (colour, region); later ops win. Returns {colour: Manifold}.
+    Works by peeling regions off what is left (no growing unions: much faster)."""
     out = {}
-    claimed = mf.Manifold()
+    remaining = P
     for colour, region in reversed(ops):
-        r = region - claimed          # regions are already inside P (built from its skins)
+        r = remaining ^ region
         if r.volume() > 1e-3:
             out[colour] = out[colour] + r if colour in out else r
-            claimed = claimed + r
-    rest = P - claimed
-    if rest.volume() > 1e-3:
-        out[base] = out[base] + rest if base in out else rest
+            remaining = remaining - region
+    if remaining.volume() > 1e-3:
+        out[base] = out[base] + remaining if base in out else remaining
     return out
 
 
