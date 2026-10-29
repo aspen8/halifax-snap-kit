@@ -47,33 +47,37 @@ WALL = 1.6                   # mm, nose spigot inset from the skin
 
 # --- Fuselage stations: (x, half_width, z_top, z_bottom, squareness)
 # squareness: 2 = ellipse, higher = flatter sides (Halifax is slab-sided)
-FUSE_STATIONS = [            # side profile: 51 Sqn profile (0.5905 mm/px); widths: Revell plan
-    (0.0,   2.5, -15.5, -21.0, 2.0),   # perspex chin dome
-    (2.0,   5.5, -14.8, -25.5, 2.2),
-    (5.0,   7.2, -13.5, -28.0, 2.4),
-    (8.5,   8.2,  -6.0, -30.0, 2.6),   # painted nose cap starts above the dome
-    (12.5,  9.2,  -4.0, -31.7, 2.7),
-    (19.5, 10.6,  -2.2, -34.0, 2.9),
-    (30.0, 12.2,   0.2, -35.4, 3.2),
-    (44.0, 13.2,   2.5, -36.3, 3.5),
-    (49.0, 13.4,   3.1, -36.5, 3.6),   # windscreen base
-    (54.0, 13.5,   7.3, -36.6, 3.7),
-    (59.0, 13.5,   9.6, -36.7, 3.8),
-    (72.5, 13.5,  11.4, -36.8, 3.8),   # roof line
-    (160.0, 13.3, 11.4, -36.8, 3.8),
-    (179.0, 13.1, 11.4, -35.2, 3.8),
-    (202.0, 12.9, 11.4, -32.9, 3.7),
-    (226.0, 12.4, 11.4, -29.9, 3.6),
-    (250.0, 12.0, 11.4, -27.0, 3.4),
-    (273.0, 11.5, 11.4, -24.0, 3.3),
-    (297.0, 11.0, 11.3, -20.5, 3.1),
+FUSE_STATIONS = [            # measured from the Revell Srs IA side and plan views
+    (0.0,   3.0, -19.3, -22.0, 2.0),   # perspex nose dome
+    (1.2,   5.0, -15.1, -23.8, 2.1),
+    (2.5,   5.9, -12.6, -25.9, 2.2),
+    (4.9,   6.7,  -9.8, -28.0, 2.3),
+    (8.6,   7.7,  -7.2, -30.7, 2.5),
+    (12.3,  8.6,  -5.4, -32.8, 2.6),
+    (18.4,  9.7,  -3.5, -34.9, 2.8),
+    (25.7, 11.0,  -1.5, -36.0, 3.0),
+    (32.9, 12.0,  -0.2, -36.5, 3.2),
+    (42.1, 12.65,  1.5, -36.6, 3.4),
+    (51.3, 13.0,   3.5, -36.6, 3.6),   # windscreen base
+    (54.3, 13.1,   6.7, -36.6, 3.7),
+    (57.4, 13.2,   9.5, -36.6, 3.8),
+    (60.4, 13.3,  10.5, -36.7, 3.8),
+    (63.5, 13.3,  11.1, -36.7, 3.8),
+    (67.0, 13.3,  11.4, -36.7, 3.8),   # roof line
+    (160.0, 13.3, 11.4, -36.7, 3.8),
+    (179.0, 13.1, 11.4, -35.4, 3.8),
+    (199.0, 12.9, 11.4, -33.6, 3.7),
+    (226.0, 12.4, 11.4, -31.0, 3.6),
+    (248.0, 12.0, 11.4, -28.0, 3.5),
+    (272.0, 11.5, 11.4, -24.2, 3.3),
+    (297.0, 11.0, 11.3, -20.4, 3.1),
     (321.0, 10.4, 11.0, -17.5, 2.9),
     (344.0,  9.5, 10.2, -14.0, 2.6),
     (352.0,  9.0,  9.6, -13.0, 2.5),
 ]
 FUSE_END_X = 352.0
-NOSE_SPLIT_X = 13.0          # perspex chin dome ends here
-NOSE_GLASS_TOP = -13.0       # mm, dome top; the painted nose cap is above it
+NOSE_SPLIT_X = 12.8          # perspex nose dome ends at this frame (Revell)
+NOSE_GLASS_TOP = 50.0        # mm, dome covers the full section
 NOSE_SPIGOT_BOX = (5.0, 6.0, -28.0, -16.0)   # length, half-width, z0, z1 of the dome's plug
 FUSE_SPLIT_X = 215.0         # front / rear fuselage joint
 JOINT_LIP = 7.0              # mm, length of the internal joining lip
@@ -81,7 +85,7 @@ NOSE_SPIGOT = 5.0            # mm
 
 # Alignment bosses between port/starboard halves: (x, "top"|"bottom")
 FUSE_BOSSES = [              # connector key positions between port/starboard halves
-    (40, "top"), (140, "top"), (204, "top"), (235, "top"), (280, "top"),
+    (40, "top"), (140, "top"), (208, "top"), (235, "top"), (280, "top"),
     (40, "bottom"), (100, "bottom"), (190, "bottom"),
     (235, "bottom"), (290, "bottom"), (318, "bottom"),
 ]
@@ -90,15 +94,17 @@ FUSE_BOSSES = [              # connector key positions between port/starboard ha
 CANOPY_CUT = (48.0, 75.0, 2.0)          # x0, x1, z floor (full width drop-in)
 CANOPY_TAB = (55.0, 68.0, 3.0, -2.0)     # x0, x1, half-width, z bottom of the locating tab
 H2S_RADOME = True            # ventral H2S blister (Revell Srs IA drawing)
-RADOME = [(203.0, 6.0, 1.5), (208.0, 9.0, 4.0), (215.0, 10.0, 5.0), (225.0, 9.5, 5.0),
-          (235.0, 7.0, 3.8), (243.0, 3.5, 2.0), (247.0, 1.0, 0.5)]   # x, half-width, depth
+RADOME = [(202.0, 6.0, 0.5), (206.0, 8.5, 5.0), (211.0, 9.8, 8.8), (217.0, 10.0, 10.3),
+          (224.0, 9.4, 9.8), (231.0, 7.6, 7.5), (238.0, 5.0, 3.8), (243.0, 2.5, 1.0),
+          (246.0, 0.8, 0.2)]   # x, half-width, depth below the fuselage (Revell side + plan)
 GEAR_BATH = [(110.0, -27.0, 7.5), (118.0, -34.5, 9.5), (128.0, -37.5, 10.2),
              (150.0, -37.5, 10.2), (162.0, -34.5, 9.0), (171.0, -28.0, 6.0)]  # x, bottom z, half-width
 
 # --- Turrets
-DORSAL_X = 186.0             # Boulton Paul Type A Mk VIII, low profile
+DORSAL_X = 195.0             # Boulton Paul Type A Mk VIII (Revell side view)
 DORSAL_R = 8.0               # mm, hole radius in the roof
 DORSAL_DOME_R = 9.0
+DORSAL_DOME_DROP = 0.3       # sphere centre below the base: ~7.5 mm tall above the roof
 DORSAL_GUN_Z = 2.5           # mm, gun pack height above the turret base
 TAIL_TURRET_R = 9.0          # Boulton Paul Type E
 TAIL_TURRET_Z = -2.2
@@ -166,8 +172,9 @@ RAD_INTAKE = (4.0, 3.2, 2.6, 2.2)        # depth, half-width, below/above centre
 RAD_VANES = (0.9, 2.3)                   # |y| of the vanes, either side of centre
 RAD_VANE_T = 0.5
 # --- Astrodome (clear, plugs into the roof) and D/F loop fairing (moulded on)
-ASTRODOME = (86.0, 3.2)                  # x, radius (Revell side view)
-DF_LOOP = (118.0, 13.0, 3.6, 3.2)        # x, length, width, height of the fairing
+ASTRODOME = (87.6, 4.6)                  # x, radius (Revell side view)
+DF_LOOP = (125.5, 13.0, 3.6, 3.6)        # x, length, width, height of the fairing
+DF_TOP = 7.5                 # mm, fairing top above the roof (stalk + housing)
 PIN_HEAD = (4.0, 0.8)        # head diameter, thickness
 SPINNER_LEN = 7.5
 SPINNER_R = 4.8
@@ -407,7 +414,7 @@ def gun_slot(at, direction):
 def dorsal_turret():
     _, _, top, _, _ = interp(FUSE_STATIONS, DORSAL_X)
     base_z = top - 1.2                       # sits on the roof edges
-    dome = (wp(cq.Solid.makeSphere(DORSAL_DOME_R, V(DORSAL_X, 0, base_z - 2.5)))
+    dome = (wp(cq.Solid.makeSphere(DORSAL_DOME_R, V(DORSAL_X, 0, base_z - DORSAL_DOME_DROP)))
             .intersect(box(DORSAL_X - 20, DORSAL_X + 20, -20, 20, base_z, 40)))
     plug = cyl((DORSAL_X, 0, top - 3.0 + FIT), 2 * (DORSAL_R - FIT), base_z - top + 3.0, "z")
     t = dome.union(plug)
@@ -671,10 +678,11 @@ def exhaust_bank(index, side, face, slot=False):
 def astrodome():
     x, r = ASTRODOME
     _, _, top, _, _ = interp(FUSE_STATIONS, x)
-    dome = (wp(cq.Solid.makeSphere(r, V(x, 0, top - 0.3)))
-            .intersect(box(x - 10, x + 10, -10, 10, top - 0.3, top + 10)))
-    plug = cyl((x, 0, top - 1.8), 2 * (r - 0.8) - 2 * FIT, 1.6, "z")
-    return dome.union(plug)
+    skirt = cyl((x, 0, top - 0.3), 2 * r, 0.7, "z")
+    dome = (wp(cq.Solid.makeSphere(r, V(x, 0, top + 0.4)))
+            .intersect(box(x - 10, x + 10, -10, 10, top + 0.4, top + 10)))
+    plug = cyl((x, 0, top - 1.9), 2 * (r - 0.8) - 2 * FIT, 1.7, "z")
+    return skirt.union(dome).union(plug)
 
 
 def astrodome_socket():
@@ -687,8 +695,9 @@ def df_loop_fairing():
     x, L, w, h = DF_LOOP
     _, _, top, _, _ = interp(FUSE_STATIONS, x)
     m = cq.Matrix([[L / 2, 0, 0, 0], [0, w / 2, 0, 0], [0, 0, h / 2, 0]])
-    tear = wp(cq.Solid.makeSphere(1.0).transformGeometry(m)).translate((x, 0, top + 2.4))
-    mast = box(x - 1.2, x + 1.2, -0.7, 0.7, top - 0.5, top + 2.4)
+    zc = top + DF_TOP - h / 2
+    tear = wp(cq.Solid.makeSphere(1.0).transformGeometry(m)).translate((x, 0, zc))
+    mast = box(x - 1.2, x + 1.2, -1.0, 1.0, top - 0.5, zc)
     return tear.union(mast)
 
 

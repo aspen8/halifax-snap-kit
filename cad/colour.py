@@ -269,9 +269,9 @@ def colour_part(name, P, pat):
 # ============================================================
 CLEAR_PARTS = ("canopy", "nose_glazing", "turret_dorsal", "turret_tail", "astrodome")
 FRAME_W = 0.6                # mm
-CANOPY_FRAMES = [49.5, 54.0, 59.0, 64.0, 69.0, 74.0]
+CANOPY_FRAMES = [51.5, 55.5, 59.5, 64.5, 69.5, 74.0]
 CANOPY_RAILS = [3.2, 8.8]    # z of the sill and the roof-edge frame
-NOSE_FRAMES = [4.5, 9.0]
+NOSE_FRAMES = [6.0]
 
 
 def outer_skin(P, d):
@@ -303,7 +303,7 @@ def frames(name, P):
         f = mf.Manifold()
         for x in NOSE_FRAMES:
             f = f + slab("x", x)
-        return sk ^ (f + slab("y", 0.0) + slab("z", -20.5))
+        return sk ^ (f + slab("y", 0.0))
     if name == "turret_dorsal":
         x = H.DORSAL_X
         _, _, top, _, _ = H.interp(H.FUSE_STATIONS, x)
