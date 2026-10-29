@@ -1,66 +1,78 @@
 # Halifax snap kit
 
 Handley Page Halifax B Mk II Series IA (Merlin XX), 1:60 scale, 500 mm span.
-A multi-part snap kit for the Bambu Lab X2D (256 x 256 mm bed). Each part prints flat with no supports.
+A fully printed multi-colour snap kit in the style of PB94's MasterBuilds, for the Bambu Lab X2D: no glue, no filament pins, at most 5 colours on any plate.
 
-Status: airframe, kit split, landing gear and display stand done. Panel lines and colour parts (camo, roundels, codes) are still to come.
+![colour render](docs/colour_render.png)
 
-## Files
+## Print it
 
-- `cad/halifax.py`: the parametric CadQuery model. Every dimension is in the PARAMETERS block.
-- `cad/fit_test.py`: tolerance test coupon.
-- `stl/`: print-ready STLs, already placed in print orientation.
-- `halifax.3mf`: the original AI-generated reference mesh (proportions only).
+Open `kit/halifax_kit.3mf` in Bambu Studio. It contains 8 plates with the filaments already assigned.
 
-Rebuild:
+1. Print `stl/fit_test_plate.stl` and `stl/fit_test_tongue.stl` first. Then adjust `FIT` and `AXLE_HOLE_TIGHT` in `cad/halifax.py` if needed.
+2. Load the filaments for each plate. The X2D's AMS holds 4 and the auxiliary head adds a 5th.
 
-```
-pip install cadquery trimesh   # Python 3.10-3.12
-python cad/halifax.py out
-```
-
-## Print first: fit test
-
-Print `fit_test_plate` + `fit_test_tongue`.
-- Find the hole that grips 1.75 mm filament firmly and set `DOWEL_HOLE` to it.
-- Find the pocket the tongue pushes into snugly and set `FIT` to it.
-
-The defaults are 1.85 mm and 0.15 mm.
-
-## Parts (36)
-
-| Group | Parts | Notes |
+| Plate | Parts | Filaments |
 |---|---|---|
-| Fuselage | front/rear x port/stbd | Solid halves, printed split face down. 15% infill keeps them light. |
-| Nose | `nose_glazing` | Clear / translucent filament. Spigot down. |
-| Canopy | `canopy` | Clear. Drops into the roof pocket. |
-| Turrets | `turret_dorsal`, `turret_tail`, `guns_*` | The dorsal turret rotates on a filament pin. |
-| Wings | inner + outer panel per side | Flat underside. Tongue joints set the 5 deg dihedral. |
-| Nacelles | 2 halves per engine (8) | Clamp around the wing. |
-| Props | 4 x 3-blade | Spin on 1.75 mm filament axles. |
-| Tail | `tailplane`, `fin_port`, `fin_stbd` | Tailplane passes through the fuselage; fins slot onto its tips. |
-| Gear | `main_gear_*`, `main_wheel_*`, `tail_gear`, `tail_wheel` | Plug into the nacelle and fuselage sockets. Wheels turn on filament axles. Sits tail-down at 8.8 deg. |
-| Stand | `stand_post`, `stand_base` | In-flight display at 5 deg nose-up. The socket is under the model's CG. Leave the gear off. |
+| 1 | Fuselage halves (4) | Black, Dark Earth, Dark Green, Red |
+| 2 | Outer wings, tailplane | Black, Dark Earth, Dark Green |
+| 3 | Inner wings | Black, Dark Earth, Dark Green |
+| 4 | Nacelle halves (8) | Black, Dark Earth, Dark Green |
+| 5 | Fins, roundel inlays | Black, Red, Blue, Yellow, White |
+| 6 | Canopy, nose, turrets, astrodome, gun packs | Black, Clear |
+| 7–8 | Props, prop shafts, exhausts, gear, wheels, pins, keys, stand | Black, Yellow |
 
-## Geometry notes
+Suggested settings: PLA (matte for the camo), 0.16–0.2 mm layers, 2 walls, 10–15% gyroid infill, no supports.
 
-- Wing incidence is 2 deg at the root, from rigging figures. The underside is flat from 15% chord for printing, and the wing is pitched to compensate.
-- Sections are NACA 230xx, after the real NACA 23021 root / 23007 tip.
-- Planform, nacelle and tail positions are measured from the Revell 1/72 Halifax B/GR II Srs IA plan views (instructions page 14), scaled to span. The overlay is in `docs/overlay_revell_plan.png`. The resulting wing area is 116.6 m², against the published 116 m².
-- Fuselage depth and fin height were checked against a true side profile, and match within about 1 mm.
-- Main track is 122 mm (7.3 m), with the wheels under the inner nacelles. Main wheels are 26 mm (1.57 m). The model sits tail-down at 8.7 deg.
-- With the tail down, the fin top is about 4.3 m above the ground, which matches the Revell drawing. The often-quoted 6.32 m height doesn't fit the drawings, so I've followed the drawings.
+## Kit contents (86 parts)
+
+- **Airframe:** 4 fuselage halves, 4 wing panels, 8 nacelle halves, tailplane, 2 fins.
+- **Colour inlays:** 2 Type B wing roundels and 2 C1 fuselage roundels, pressed into sockets.
+- **Clear parts:** perspex nose, canopy, astrodome, dorsal and tail turrets, all with black frame lines. Plus 2 gun packs.
+- **Engines:** 4 props with yellow tips, 4 prop shafts with captive flanges (the props spin), 8 exhaust banks.
+- **Gear:** 2 main gear forks and wheels, tailwheel, printed axle pins.
+- **Connector keys:** 11 between the fuselage halves, 6 at the front/rear joint, 8 in the nacelles.
+- **Stand:** base and post, for in-flight display.
+
+**Surface detail** (sized like PB94's):
+- 0.5 mm panel lines and deeper hinge lines.
+- Fuel filler caps, the dinghy hatch, the crew door, roof hatches and nose windows.
+- Paired rivet rows along the spars and the upper fuselage seam.
+- Radiator intakes with vanes and the D/F loop fairing.
 
 ## Assembly
 
-1. Cut 1.75 mm filament into 7.5 mm dowels (about 26 needed).
-2. Press the dowels into the port fuselage halves and the inboard nacelle halves.
-3. Slide both inner wing panels' root tongues into the fuselage. Port goes forward, starboard aft. Add the canopy, the tailplane and the nose spigot, then close the fuselage halves.
-4. Join the front and rear fuselage sections on their dowels.
-5. Plug the outer wing panels onto the inner panels. The tongue sets the dihedral.
-6. Clamp the nacelle halves around the wings.
-7. Fit the props on 12 mm filament axles.
-   For gear: put the wheels on 16 mm (main) and 9 mm (tail) filament axles, then plug the gear into its sockets. For the stand: push the post into the base, then the key into the socket under the fuselage.
-8. Fit the fins onto the tailplane tips, then the turrets and gun packs.
+1. **Fuselage.** Press the canopy, the astrodome and the nose spigot into place. Slide in the tailplane and both inner wing root tongues, port forward and starboard aft. Then close each fuselage pair on its connector keys, and join the front and rear sections on the joint keys.
+2. **Wings.** Plug the outer panels onto the inner panels. The joint tongue sets the 5° dihedral. Press the roundels into their sockets.
+3. **Nacelles.** Push the exhaust banks into their side slots. Drop a prop shaft into the inboard half, with its flange in the pocket. Close the outboard half around the wing on the nacelle keys, then press the prop onto the hex boss.
+4. **Tail.** Fit the fins onto the tailplane tips.
+5. **Turrets.** Fit the gun packs into the turrets. Pin the turrets on: the dorsal turret rotates.
+6. **Display.** Either fit the gear (wheels on the headed pins, forks into their sockets) or put the model on the stand. With the gear down it sits tail-down at 8.7°.
 
-The joints are designed as press fits. Use a drop of CA glue on any joint that comes out loose.
+## Files
+
+- `cad/halifax.py`: parametric airframe and kit split (CadQuery).
+- `cad/detail.py`: panel lines, hatches and rivets.
+- `cad/colour.py`: colour scheme, roundel inlays and the Bambu 3MF writer.
+- `cad/fit_test.py`: tolerance test coupon.
+- `cad/render_colour.py`: colour preview renders.
+- `cad/ref/camo_plan_green.png`: camo pattern traced from the Revell plan view.
+- `stl/`: single-colour STLs in print orientation, with surface detail.
+- `kit/halifax_kit.3mf`: the multi-colour kit.
+- `docs/`: renders, the side view and the plan overlay.
+
+To rebuild (Python 3.10–3.12):
+
+```
+pip install cadquery trimesh manifold3d scikit-image matplotlib shapely lxml
+python cad/colour.py out [project_settings.json]
+```
+
+## Accuracy
+
+Geometry was measured from the Revell 1/72 Halifax B/GR II Srs IA plan views and a 51 Sqn side profile.
+
+- Wing planform, nacelle positions and tail match the plans to about 1 mm. Wing area works out at 116.6 m² full size.
+- Wing incidence is 2° at the root. The undersides are flat from 15% chord so they print without supports.
+- The camo is the plan-view pattern, wrapped down to a demarcation line taken from the profile.
+- Markings are 51 Sqn MH-E as a placeholder. The codes are parameters in `cad/colour.py`.
