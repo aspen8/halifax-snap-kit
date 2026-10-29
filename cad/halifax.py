@@ -102,6 +102,8 @@ TC_INNER = 0.19             # nominal; the flattened underside takes ~3% off
 TC_OUTER = [(85.0, 0.185), (245.0, 0.13), (250.0, 0.12)]
 WING_FLAT_FROM = 0.15        # underside is flat from 15% chord to the TE
 WING_TE = 0.8                # mm, trailing-edge thickness
+WING_INCIDENCE = 2.0         # deg, root chord to fuselage datum (rigging: 2 deg)
+WING_PITCH_X = 140.0         # mm, wing is pitched about this x (main spar)
 # Spar tongues into the fuselage (x range), port forward / starboard aft
 ROOT_TONGUE = {-1: (128.0, 142.0), 1: (146.0, 160.0)}
 ROOT_TONGUE_Z = (1.4, 5.4)   # above the floor
@@ -117,6 +119,8 @@ NACELLE_H = 21.0             # mm, max height of the body (oval)
 RADIATOR_X = 6.0             # mm, chin radiator start behind nacelle front
 RADIATOR_LEN = 34.0
 RADIATOR_R = 6.0
+NACELLE_PROFILE = [(0.0, 0.30), (0.02, 0.62), (0.06, 0.86), (0.13, 0.98), (0.25, 1.0),
+                   (0.45, 0.95), (0.70, 0.70), (0.90, 0.35), (1.0, 0.08)]
 NACELLE_PINS = [(12.0, -2.0), (None, -7.0)]  # (dx from front | None = mid-chord, dz)
 
 # --- Propellers: Rotol 3-blade, 12 ft 9 in
@@ -141,6 +145,30 @@ FIN_Z_TOP = 40.0
 FIN_T = 3.6
 FIN_CORNER_R = 9.0
 FIN_POCKET = 1.5             # mm, tailplane tip sits this deep in the fin
+
+# --- Landing gear (Messier main legs either side of the wheel; castoring tailwheel)
+MAIN_AXLE_X = 132.0          # mm, just aft of the radiator
+MAIN_AXLE_Z = -50.0          # mm
+MAIN_WHEEL_D = 24.0          # mm (~1.45 m)
+MAIN_WHEEL_W = 9.0
+MAIN_LEG = (4.0, 3.0)        # leg section: x (fore-aft), y
+MAIN_PLUG = (8.0, 6.0)       # plug y-width, depth into the nacelle socket
+TAIL_AXLE_X = 322.0
+TAIL_LEG_DROP = 9.0          # mm, axle below the fuselage bottom
+TAIL_WHEEL_D = 9.0
+TAIL_WHEEL_W = 4.5
+TAIL_LEG = (3.0, 2.0)
+TAIL_PLUG = (5.0, 5.0)
+
+# --- Display stand (in-flight pose, gear removed)
+STAND_X = 165.0              # mm, socket under the fuselage, at the printed model's CG
+STAND_KEY = 6.0              # mm, square key into the fuselage socket
+STAND_KEY_DEPTH = 9.0
+STAND_PITCH = 5.0            # deg, nose-up display attitude
+STAND_HEIGHT = 95.0          # mm, fuselage bottom to base top
+STAND_POST = (8.0, 6.0)      # mm, post section x, y
+STAND_BASE = (170.0, 110.0, 5.0)
+STAND_LABEL = "HALIFAX B.II Srs.IA"
 
 OUT_DIR = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("out")
 
@@ -237,10 +265,13 @@ def fuselage_parts(wing_tongues):
     body = body.cut(cyl((DORSAL_X, 0, top_d - 3.0), 2 * DORSAL_R, 20, "z"))  # dorsal turret
     body = body.cut(cyl((DORSAL_X, 0, top_d - 3.0), AXLE_HOLE_TIGHT, -5, "z"))
     body = body.cut(tailplane_slot())
-    for t in wing_tongues:
-        bb = t.val().BoundingBox()
-        body = body.cut(box(bb.xmin - FIT, bb.xmax + FIT, bb.ymin - 0.5, bb.ymax + 0.5,
-                            bb.zmin - FIT, bb.zmax + FIT))
+    for pocket in wing_tongues:
+        body = body.cut(pocket)
+    _, _, _, bot_t, _ = interp(FUSE_STATIONS, TAIL_AXLE_X)
+    body = body.cut(gear_socket(TAIL_AXLE_X, 0, bot_t, TAIL_LEG, TAIL_PLUG))
+    _, _, _, bot_s, _ = interp(FUSE_STATIONS, STAND_X)
+    k = STAND_KEY / 2 + FIT
+    body = body.cut(box(STAND_X - k, STAND_X + k, -k, k, bot_s - 1, bot_s + STAND_KEY_DEPTH + 0.3))
     body = body.cut(cyl((FUSE_END_X + 0.1, 0, TAIL_TURRET_Z), AXLE_HOLE_TIGHT, -5, "x"))
     # socket for the nose spigot
     body = body.cut(fuselage_solid(WALL, NOSE_SPLIT_X - 1, NOSE_SPLIT_X + NOSE_SPIGOT + 2)
@@ -404,7 +435,7 @@ def wing_parts(side):
     cd = math.cos(math.radians(DIHEDRAL))
     # inner panel: built to y=+90 then trimmed at the joint bisector
     st_in = []
-    for y in (WING_ROOT_Y, WING_JOINT_Y + 5):
+    for y in (WING_ROOT_Y - 4, WING_JOINT_Y + 5):     # root is trimmed to the fuselage
         _, x, c = interp(PLANFORM, y)
         st_in.append((y, x, c, TC_INNER))
     inner = panel(st_in)
@@ -435,24 +466,43 @@ def wing_parts(side):
     # root tongue into the fuselage
     tx0, tx1 = ROOT_TONGUE[side]
     reach = WING_ROOT_Y - WALL - 0.4           # stops short of the far wall
-    root_tongue = box(tx0, tx1, -reach, WING_ROOT_Y + 10,
-                      Z_FLOOR + ROOT_TONGUE_Z[0], Z_FLOOR + ROOT_TONGUE_Z[1])
+    z0, z1 = Z_FLOOR + ROOT_TONGUE_Z[0], Z_FLOOR + ROOT_TONGUE_Z[1]
+    root_tongue = box(tx0, tx1, -reach, WING_ROOT_Y + 10, z0, z1)
+    root_pocket = box(tx0 - FIT, tx1 + FIT, -reach - 0.5, WING_ROOT_Y + 10, z0 - FIT, z1 + FIT)
+
+    # pitch the whole wing to the rigged incidence
+    ax, d = pitch_axis(), -wing_pitch()
+    inner, outer = inner.rotate(*ax, d), outer.rotate(*ax, d)
+    root_tongue, root_pocket = root_tongue.rotate(*ax, d), root_pocket.rotate(*ax, d)
     inner = inner.cut(fuselage_solid()).union(root_tongue)
 
     if side < 0:
         inner, outer = inner.mirror("XZ"), outer.mirror("XZ")
-        root_tongue = root_tongue.mirror("XZ")
-    return inner, outer, root_tongue
+        root_pocket = root_pocket.mirror("XZ")
+    return inner, outer, root_pocket
+
+
+def pitch_axis():
+    return (WING_PITCH_X, 0, Z_FLOOR), (WING_PITCH_X, 1, Z_FLOOR)
+
+
+def wing_pitch():
+    """Nose-down rotation (deg) that brings the root chord to WING_INCIDENCE.
+
+    Flattening the underside tilts the chord nose-up relative to the flat."""
+    _, _, c = interp(PLANFORM, WING_ROOT_Y)
+    nose, _, te_lo, te_up = flat_bottom_section(TC_INNER, c)
+    le = min(nose, key=lambda p: p[0])
+    te = ((te_lo[0] + te_up[0]) / 2, (te_lo[1] + te_up[1]) / 2)
+    return math.degrees(math.atan2(le[1] - te[1], te[0] - le[0])) - WING_INCIDENCE
 
 
 # ============================================================
 # NACELLES AND PROPS
 # ============================================================
 def nacelle_body(zc, x0, length):
-    prof = [(0.0, 0.30), (0.02, 0.62), (0.06, 0.86), (0.13, 0.98), (0.25, 1.0),
-            (0.45, 0.95), (0.70, 0.70), (0.90, 0.35), (1.0, 0.08)]
     r = NACELLE_W / 2
-    body = revolve_profile([(x0 + f * length, k * r) for f, k in prof])
+    body = revolve_profile([(x0 + f * length, k * r) for f, k in NACELLE_PROFILE])
     m = cq.Matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, NACELLE_H / NACELLE_W, 0]])
     body = wp(body.val().transformGeometry(m))
     rad_pts = [(0.0, 0.25), (0.15, 0.85), (0.5, 1.0), (0.85, 0.85), (1.0, 0.2)]
@@ -469,6 +519,9 @@ def nacelle_parts(index, side, wing_panel):
     body = (body.cut(wing_panel)
             .cut(wing_panel.translate((0, 0, FIT)))
             .cut(wing_panel.translate((0, 0, -FIT))))
+    if index == 0:   # main undercarriage socket
+        body = body.cut(gear_socket(MAIN_AXLE_X, yc * side, nacelle_bottom(0, MAIN_AXLE_X),
+                                    MAIN_LEG, MAIN_PLUG))
     # filament axle hole for the prop
     body = body.cut(cyl((x0 - 1, yc * side, zc), AXLE_HOLE_TIGHT, 8, "x"))
     # pins from the inboard half into the outboard half
@@ -533,6 +586,71 @@ def fin(side):
 
 
 # ============================================================
+# LANDING GEAR AND STAND
+# ============================================================
+def nacelle_bottom(index, x):
+    _, zc, x0, length = NACELLES[index]
+    _, k = interp(NACELLE_PROFILE, (x - x0) / length)
+    return zc - k * NACELLE_H / 2
+
+
+def gear_socket(x, yc, z_top, leg, plug):
+    lx, _ = leg
+    py, depth = plug
+    return box(x - lx / 2 - FIT, x + lx / 2 + FIT, yc - py / 2 - FIT, yc + py / 2 + FIT,
+               z_top - 1, z_top + depth + 0.3)
+
+
+def gear_fork(x, yc, z_axle, z_top, wheel_w, leg, plug):
+    """Two legs either side of the wheel, a cross-bar and a plug (prints flat)."""
+    lx, ly = leg
+    py, depth = plug
+    yo = wheel_w / 2 + 0.6 + ly / 2
+    x0, x1 = x - lx / 2, x + lx / 2
+    f = box(x0, x1, yc - yo - ly / 2, yc + yo + ly / 2, z_top - 3.0, z_top - 0.1)
+    for s in (-1, 1):
+        f = f.union(box(x0, x1, yc + s * yo - ly / 2, yc + s * yo + ly / 2,
+                        z_axle - lx / 2, z_top - 0.1))
+    f = f.union(box(x0, x1, yc - py / 2, yc + py / 2, z_top - 0.2, z_top + depth))
+    return f.cut(cyl((x, yc - 20, z_axle), AXLE_HOLE_TIGHT, 40, "y"))
+
+
+def wheel(x, yc, z_axle, d, w):
+    t = W("XZ").circle(d / 2).extrude(w / 2, both=True)
+    t = t.edges().fillet(min(2.5, w / 3))
+    for s in (-1, 1):   # hub recess on both faces
+        t = t.cut(cyl((0, s * (w / 2 + 0.1), 0), d * 0.55, -s * 0.9, "y"))
+        t = t.union(cyl((0, s * (w / 2 - 0.8), 0), d * 0.22, s * 0.5, "y"))
+    t = t.cut(cyl((0, -w, 0), AXLE_HOLE_LOOSE, 2 * w, "y"))
+    return t.translate((x, yc, z_axle))
+
+
+def stand_parts():
+    """Post and base, built level then expressed in the model frame."""
+    _, _, _, bot, _ = interp(FUSE_STATIONS, STAND_X)
+    S = V(STAND_X, 0, bot)
+    th = math.radians(STAND_PITCH)
+    ax = ((STAND_X, 0, bot), (STAND_X, 1, bot))
+    k = STAND_KEY / 2
+    key = box(STAND_X - k, STAND_X + k, -k, k, bot - 2.5, bot + STAND_KEY_DEPTH).rotate(*ax, STAND_PITCH)
+    px = S.x - 2.5 * math.sin(th)
+    pz = S.z - 2.5 * math.cos(th)
+    base_top = bot - STAND_HEIGHT
+    hx, hy = STAND_POST[0] / 2, STAND_POST[1] / 2
+    post = box(px - hx, px + hx, -hy, hy, base_top + 1.2, pz + 0.8).union(key)
+    bl, bw, bt = STAND_BASE
+    base = (W("XY").ellipse(bl / 2, bw / 2).extrude(-bt).edges(">Z").chamfer(1.2)
+            .translate((px, 0, base_top)))
+    base = base.union(box(px - hx - 4, px + hx + 4, -hy - 4, hy + 4, base_top - 0.5, base_top + 10))
+    base = base.cut(box(px - hx - FIT, px + hx + FIT, -hy - FIT, hy + FIT, base_top + 1, base_top + 11))
+    label = (W("XY").text(STAND_LABEL, 7.0, -0.6, halign="center", valign="center")
+             .translate((px, -bw / 2 + 14, base_top)))
+    base = base.cut(label)
+    # express in the model frame (model is pitched nose-up STAND_PITCH on the stand)
+    return post.rotate(*ax, -STAND_PITCH), base.rotate(*ax, -STAND_PITCH), ax
+
+
+# ============================================================
 # ASSEMBLY + PRINT POSES
 # ============================================================
 def rot(w, axis, deg):
@@ -555,10 +673,11 @@ def build():
         tongues.append(tongue)
         parts[f"wing_inner_{tag}"] = inner
         parts[f"wing_outer_{tag}"] = outer
-        poses[f"wing_inner_{tag}"] = lambda w: w
+        unpitch = (lambda w: w.rotate(*pitch_axis(), wing_pitch()))
+        poses[f"wing_inner_{tag}"] = unpitch
         pivot_y = WING_JOINT_Y * side
-        poses[f"wing_outer_{tag}"] = (lambda w, s=side, py=pivot_y:
-                                      w.rotate((0, py, Z_FLOOR), (1, py, Z_FLOOR), -DIHEDRAL * s))
+        poses[f"wing_outer_{tag}"] = (lambda w, s=side, py=pivot_y, u=unpitch:
+                                      u(w).rotate((0, py, Z_FLOOR), (1, py, Z_FLOOR), -DIHEDRAL * s))
         for i in range(len(NACELLES)):
             pnl = inner if i == 0 else outer
             inb, outb = nacelle_parts(i, side, pnl)
@@ -570,6 +689,13 @@ def build():
             parts[f"prop{i + 1}_{tag}"] = (propeller()
                                           .translate((x0 - PROP_GAP - 1.0, yc * side, zc)))
             poses[f"prop{i + 1}_{tag}"] = lambda w: rot(w, "y", 90)
+        yc0 = NACELLES[0][0] * side
+        parts[f"main_gear_{tag}"] = gear_fork(MAIN_AXLE_X, yc0, MAIN_AXLE_Z,
+                                              nacelle_bottom(0, MAIN_AXLE_X), MAIN_WHEEL_W,
+                                              MAIN_LEG, MAIN_PLUG)
+        poses[f"main_gear_{tag}"] = lambda w: rot(w, "y", 90)
+        parts[f"main_wheel_{tag}"] = wheel(MAIN_AXLE_X, yc0, MAIN_AXLE_Z, MAIN_WHEEL_D, MAIN_WHEEL_W)
+        poses[f"main_wheel_{tag}"] = lambda w: rot(w, "x", 90)
         parts[f"fin_{tag}"] = fin(side)
         poses[f"fin_{tag}"] = lambda w: rot(w, "x", 90)
 
@@ -584,6 +710,17 @@ def build():
             poses[k] = lambda w: rot(w, "y", 90)      # spigot down
         else:
             poses[k] = lambda w: w
+
+    _, _, _, bot_t, _ = interp(FUSE_STATIONS, TAIL_AXLE_X)
+    parts["tail_gear"] = gear_fork(TAIL_AXLE_X, 0, bot_t - TAIL_LEG_DROP, bot_t,
+                                   TAIL_WHEEL_W, TAIL_LEG, TAIL_PLUG)
+    poses["tail_gear"] = lambda w: rot(w, "y", 90)
+    parts["tail_wheel"] = wheel(TAIL_AXLE_X, 0, bot_t - TAIL_LEG_DROP, TAIL_WHEEL_D, TAIL_WHEEL_W)
+    poses["tail_wheel"] = lambda w: rot(w, "x", 90)
+    post, base, sax = stand_parts()
+    parts["stand_post"], parts["stand_base"] = post, base
+    poses["stand_post"] = lambda w: rot(w.rotate(*sax, STAND_PITCH), "x", 90)
+    poses["stand_base"] = lambda w: w.rotate(*sax, STAND_PITCH)
 
     parts["tailplane"] = tailplane()
     poses["tailplane"] = lambda w: w
