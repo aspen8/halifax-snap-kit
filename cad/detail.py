@@ -53,7 +53,7 @@ FUSE_RINGS = [32.0, 48.0, 140.0, 165.0, 200.0, 245.0, 280.0, 315.0, 342.0]
 FUSE_SEAMS = [(1.5, 30.0, 350.0), (-24.0, 30.0, 340.0)]     # (z, x from, x to) side seams
 CREW_DOOR = (-1, 252.0, 264.0, -30.0, -8.0)    # side, x0, x1, z0, z1 (port, rear fuselage)
 ROOF_HATCHES = [(150.0, 9.0, 7.0), (232.0, 9.0, 7.0)]       # x centre, length, width
-NOSE_WINDOWS = [(36.0, 43.0, -9.0, -4.5), (46.0, 52.0, -9.0, -4.5)]  # x0, x1, z0, z1 both sides
+NOSE_WINDOWS = [(34.0, 38.0, -12.8, -9.3), (41.0, 47.5, -19.0, -14.0), (53.0, 60.0, -19.0, -14.0)]  # x0, x1, z0, z1 (profile)
 NACELLE_RINGS = [0.20, 0.36]  # fractions of nacelle length (cowling joints)
 
 

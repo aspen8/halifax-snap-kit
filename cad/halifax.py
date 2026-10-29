@@ -47,26 +47,34 @@ WALL = 1.6                   # mm, nose spigot inset from the skin
 
 # --- Fuselage stations: (x, half_width, z_top, z_bottom, squareness)
 # squareness: 2 = ellipse, higher = flatter sides (Halifax is slab-sided)
-FUSE_STATIONS = [
-    (0.0,   1.5, -15.0, -19.5, 2.0),   # perspex nose tip
-    (3.0,   5.5, -10.0, -25.0, 2.2),
-    (9.0,   8.8,  -5.5, -29.5, 2.5),
-    (19.0, 11.4,  -1.5, -33.0, 2.8),
-    (32.0, 12.8,   1.2, -35.0, 3.2),
-    (46.0, 13.4,   3.6, -35.8, 3.5),
-    (60.0, 13.5,   6.5, -36.0, 3.6),
-    (72.0, 13.5,  10.2, -36.0, 3.8),
-    (82.0, 13.5,  11.4, -36.0, 3.8),
-    (190.0, 13.2, 11.4, -36.0, 3.8),
-    (215.0, 12.8, 11.4, -35.0, 3.7),
-    (240.0, 12.2, 11.4, -30.5, 3.5),
-    (270.0, 11.6, 11.4, -25.5, 3.3),
-    (305.0, 10.9, 11.2, -21.5, 3.0),
-    (335.0, 10.0, 10.6, -17.5, 2.8),
-    (352.0,  9.0,  9.6, -14.0, 2.5),
+FUSE_STATIONS = [            # side profile: 51 Sqn profile (0.5905 mm/px); widths: Revell plan
+    (0.0,   2.5, -15.5, -21.0, 2.0),   # perspex chin dome
+    (2.0,   5.5, -14.8, -25.5, 2.2),
+    (5.0,   7.2, -13.5, -28.0, 2.4),
+    (8.5,   8.2,  -6.0, -30.0, 2.6),   # painted nose cap starts above the dome
+    (12.5,  9.2,  -4.0, -31.7, 2.7),
+    (19.5, 10.6,  -2.2, -34.0, 2.9),
+    (30.0, 12.2,   0.2, -35.4, 3.2),
+    (44.0, 13.2,   2.5, -36.3, 3.5),
+    (49.0, 13.4,   3.1, -36.5, 3.6),   # windscreen base
+    (54.0, 13.5,   7.3, -36.6, 3.7),
+    (59.0, 13.5,   9.6, -36.7, 3.8),
+    (72.5, 13.5,  11.4, -36.8, 3.8),   # roof line
+    (160.0, 13.3, 11.4, -36.8, 3.8),
+    (179.0, 13.1, 11.4, -35.2, 3.8),
+    (202.0, 12.9, 11.4, -32.9, 3.7),
+    (226.0, 12.4, 11.4, -29.9, 3.6),
+    (250.0, 12.0, 11.4, -27.0, 3.4),
+    (273.0, 11.5, 11.4, -24.0, 3.3),
+    (297.0, 11.0, 11.3, -20.5, 3.1),
+    (321.0, 10.4, 11.0, -17.5, 2.9),
+    (344.0,  9.5, 10.2, -14.0, 2.6),
+    (352.0,  9.0,  9.6, -13.0, 2.5),
 ]
 FUSE_END_X = 352.0
-NOSE_SPLIT_X = 26.0          # perspex nose ends here
+NOSE_SPLIT_X = 13.0          # perspex chin dome ends here
+NOSE_GLASS_TOP = -13.0       # mm, dome top; the painted nose cap is above it
+NOSE_SPIGOT_BOX = (5.0, 6.0, -28.0, -16.0)   # length, half-width, z0, z1 of the dome's plug
 FUSE_SPLIT_X = 215.0         # front / rear fuselage joint
 JOINT_LIP = 7.0              # mm, length of the internal joining lip
 NOSE_SPIGOT = 5.0            # mm
@@ -79,11 +87,13 @@ FUSE_BOSSES = [              # connector key positions between port/starboard ha
 ]
 
 # --- Cockpit canopy hump: (x, half_width, z_top)
-CANOPY = [
-    (62.0, 6.0, 8.0), (68.0, 8.0, 13.0), (74.0, 9.0, 15.6), (84.0, 9.5, 16.4),
-    (96.0, 9.5, 16.2), (106.0, 8.5, 14.5), (116.0, 6.0, 12.0), (122.0, 3.0, 11.3),
-]
-CANOPY_CUT = (60.0, 124.0, 10.0, 5.0)   # x0, x1, half-width, z floor of the drop-in
+CANOPY_CUT = (48.0, 75.0, 2.0)          # x0, x1, z floor (full width drop-in)
+CANOPY_TAB = (55.0, 68.0, 3.0, -2.0)     # x0, x1, half-width, z bottom of the locating tab
+H2S_RADOME = True            # ventral H2S blister (Revell Srs IA drawing)
+RADOME = [(203.0, 6.0, 1.5), (208.0, 9.0, 4.0), (215.0, 10.0, 5.0), (225.0, 9.5, 5.0),
+          (235.0, 7.0, 3.8), (243.0, 3.5, 2.0), (247.0, 1.0, 0.5)]   # x, half-width, depth
+GEAR_BATH = [(110.0, -27.0, 7.5), (118.0, -34.5, 9.5), (128.0, -37.5, 10.2),
+             (150.0, -37.5, 10.2), (162.0, -34.5, 9.0), (171.0, -28.0, 6.0)]  # x, bottom z, half-width
 
 # --- Turrets
 DORSAL_X = 186.0             # Boulton Paul Type A Mk VIII, low profile
@@ -156,8 +166,8 @@ RAD_INTAKE = (4.0, 3.2, 2.6, 2.2)        # depth, half-width, below/above centre
 RAD_VANES = (0.9, 2.3)                   # |y| of the vanes, either side of centre
 RAD_VANE_T = 0.5
 # --- Astrodome (clear, plugs into the roof) and D/F loop fairing (moulded on)
-ASTRODOME = (128.0, 3.2)                 # x, radius
-DF_LOOP = (163.0, 7.0, 2.2, 2.6)         # x, length, width, height of the fairing
+ASTRODOME = (86.0, 3.2)                  # x, radius (Revell side view)
+DF_LOOP = (122.0, 12.0, 3.6, 3.2)        # x, length, width, height of the fairing
 PIN_HEAD = (4.0, 0.8)        # head diameter, thickness
 SPINNER_LEN = 7.5
 SPINNER_R = 4.8
@@ -298,9 +308,12 @@ def connector_key(key):
 KEY_COUNTS = {}              # filled by the part builders: name -> (key, count)
 
 
-def canopy_hump():
-    wires = [superellipse_wire(x, hw, zt, 3.0, 3.0) for x, hw, zt in CANOPY]
-    return wp(cq.Solid.makeLoft(wires, ruled=False))
+def radome():
+    secs = []
+    for x, hw, d in RADOME:
+        _, _, _, bot, _ = interp(FUSE_STATIONS, x)
+        secs.append(superellipse_wire(x, hw, bot + 3.0, bot - d, 2.4))
+    return wp(cq.Solid.makeLoft(secs, ruled=False))
 
 
 def fuselage_parts(wing_tongues):
@@ -309,9 +322,14 @@ def fuselage_parts(wing_tongues):
     body = outer
 
     # sockets and slots
-    cx0, cx1, chw, cz = CANOPY_CUT
+    cx0, cx1, cz = CANOPY_CUT
+    tx0, tx1, thw, tz = CANOPY_TAB
+    if H2S_RADOME:
+        outer = outer.union(radome())
+        body = outer
     _, _, top_d, _, _ = interp(FUSE_STATIONS, DORSAL_X)
-    body = body.cut(box(cx0, cx1, -chw, chw, cz, 30))                       # canopy
+    body = body.cut(box(cx0, cx1, -30, 30, cz, 30))                          # canopy
+    body = body.cut(box(tx0 - FIT, tx1 + FIT, -thw - FIT, thw + FIT, tz - 0.3, cz + 0.1))
     body = body.cut(cyl((DORSAL_X, 0, top_d - 3.0), 2 * DORSAL_R, 20, "z"))  # dorsal turret
     body = body.cut(cyl((DORSAL_X, 0, top_d - 3.0), AXLE_HOLE_TIGHT, -5, "z"))
     body = body.cut(tailplane_slot())
@@ -325,9 +343,11 @@ def fuselage_parts(wing_tongues):
     body = body.cut(box(STAND_X - k, STAND_X + k, -k, k, bot_s - 1, bot_s + STAND_KEY_DEPTH + 0.3))
     body = body.cut(cyl((FUSE_END_X + 0.1, 0, TAIL_TURRET_Z), AXLE_HOLE_TIGHT, -5, "x"))
     # socket for the nose spigot
-    body = body.cut(fuselage_solid(WALL, NOSE_SPLIT_X - 1, NOSE_SPLIT_X + NOSE_SPIGOT + 2)
-                    .intersect(box(NOSE_SPLIT_X - 1, NOSE_SPLIT_X + NOSE_SPIGOT + 0.4,
-                                   -50, 50, -60, 60)))
+    sl, shw, sz0, sz1 = NOSE_SPIGOT_BOX
+    body = body.cut(box(NOSE_SPLIT_X - 0.1, NOSE_SPLIT_X + sl + 0.4, -shw - FIT, shw + FIT,
+                        sz0 - FIT, sz1 + FIT))
+    glass_zone = box(-5, NOSE_SPLIT_X, -50, 50, -60, NOSE_GLASS_TOP)
+    body = body.cut(glass_zone)
 
     # port/stbd alignment pins (pins on the port half, pointing +y)
     pts = []
@@ -345,7 +365,7 @@ def fuselage_parts(wing_tongues):
 
     port = box(-10, 400, -50, 0, -60, 60)
     stbd = box(-10, 400, 0, 50, -60, 60)
-    front = box(NOSE_SPLIT_X, FUSE_SPLIT_X, -50, 50, -60, 60)
+    front = box(-5, FUSE_SPLIT_X, -50, 50, -60, 60)
     rear = box(FUSE_SPLIT_X, 400, -50, 50, -60, 60)
     parts = {}
     for sec_name, sec in (("front", front), ("rear", rear)):
@@ -353,15 +373,13 @@ def fuselage_parts(wing_tongues):
             p = body.intersect(sec).intersect(side).cut(lr_holes).cut(fr_holes)
             parts[f"fuselage_{sec_name}_{side_name}"] = p
 
-    # perspex nose with a spigot into the front section
-    parts["nose_glazing"] = (
-        outer.intersect(box(-1, NOSE_SPLIT_X, -50, 50, -60, 60))
-        .union(fuselage_solid(WALL + FIT, NOSE_SPLIT_X - 1, NOSE_SPLIT_X + NOSE_SPIGOT + 1)
-               .intersect(box(NOSE_SPLIT_X - 1, NOSE_SPLIT_X + NOSE_SPIGOT, -50, 50, -60, 60))))
+    # perspex chin dome with a plug into the front section
+    parts["nose_glazing"] = (outer.intersect(glass_zone)
+                             .union(box(NOSE_SPLIT_X - 0.5, NOSE_SPLIT_X + sl, -shw, shw, sz0, sz1)))
 
-    # cockpit canopy: roof + hump, fills the roof pocket (FIT clearance)
-    parts["canopy"] = (outer.union(canopy_hump())
-                       .intersect(box(cx0 + FIT, cx1 - FIT, -chw + FIT, chw - FIT, cz + FIT, 30)))
+    # cockpit glazing: full-width drop-in above the sill, plus a locating tab
+    parts["canopy"] = (outer.intersect(box(cx0 + FIT, cx1 - FIT, -30, 30, cz + FIT, 30))
+                       .union(box(tx0, tx1, -thw, thw, tz, cz + 0.5)))
     return parts
 
 
@@ -553,6 +571,11 @@ def wing_pitch():
 # ============================================================
 # NACELLES AND PROPS
 # ============================================================
+def gear_bath(y, zc):
+    secs = [superellipse_wire(x, hw, zc, bot, 2.4) for x, bot, hw in GEAR_BATH]
+    return wp(cq.Solid.makeLoft(secs, ruled=False)).translate((0, y, 0))
+
+
 def nacelle_body(zc, x0, length):
     r = NACELLE_W / 2
     body = revolve_profile([(x0 + f * length, k * r) for f, k in NACELLE_PROFILE])
@@ -568,6 +591,8 @@ def nacelle_body(zc, x0, length):
 def nacelle_parts(index, side, wing_panel):
     yc, zc, x0, length = NACELLES[index]
     body = nacelle_body(zc, x0, length).translate((0, yc * side, 0))
+    if index == 0:   # undercarriage housing under the inner nacelles
+        body = body.union(gear_bath(yc * side, zc))
     # notch for the wing, with clearance top and bottom
     body = (body.cut(wing_panel)
             .cut(wing_panel.translate((0, 0, FIT)))
@@ -745,7 +770,10 @@ def fin(side):
 def nacelle_bottom(index, x):
     _, zc, x0, length = NACELLES[index]
     _, k = interp(NACELLE_PROFILE, (x - x0) / length)
-    return zc - k * NACELLE_H / 2
+    z = zc - k * NACELLE_H / 2
+    if index == 0 and GEAR_BATH[0][0] <= x <= GEAR_BATH[-1][0]:
+        z = min(z, interp(GEAR_BATH, x)[1])
+    return z
 
 
 def gear_socket(x, yc, z_top, leg, plug):

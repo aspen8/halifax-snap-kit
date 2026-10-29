@@ -36,6 +36,7 @@ import halifax as H
 # PARAMETERS
 # ============================================================
 SKIN = 0.8                   # mm, depth of coloured skin
+UNDERSIDE_CLEAR = 0.4        # mm of black kept under thin edges (no camo flecks below)
 
 FILAMENTS = {                # slot: (name, hex colour)
     1: ("Black", "#1C1C1C"),
@@ -53,11 +54,11 @@ BLACK, EARTH, GREEN, RED, BLUE, YELLOW, WHITE, CLEAR = range(1, 9)
 SQN_CODE = "MH"
 AC_LETTER = "E"
 CODE_HEIGHT = 20.0           # mm (48 in letters)
-CODE_Z = -11.7               # mm, centre height on the fuselage side
-SQN_CODE_X = 211.0           # mm, centre of squadron code (port side)
-AC_LETTER_X = 272.0          # mm, centre of aircraft letter (port side)
+CODE_Z = -11.0               # mm, centre height on the fuselage side
+SQN_CODE_X = 214.2           # mm, centre of squadron code (port side)
+AC_LETTER_X = 273.4          # mm, centre of aircraft letter (port side)
 
-FUSE_ROUNDEL = (241.5, -11.7, 22.8)     # x, z, outer diameter (54 in C1)
+FUSE_ROUNDEL = (243.9, -11.0, 22.8)     # x, z, outer diameter (54 in C1)
 WING_ROUNDEL = (154.3, 166.0, 37.0)     # x, |y|, diameter (84 in Type B)
 FIN_FLASH = (309.0, 15.0, 33.0, 7.0, 1.5)  # x start, z0, z1, red/blue width, white width
 PROP_TIP = 3.0               # mm of yellow at the prop tips
@@ -218,6 +219,7 @@ def colour_part(name, P, pat):
     x0, y0, z0, x1, y1, z1 = P.bounding_box()
     plan = prism_z(clip(pat["plan_green"], x0, y0, x1, y1))
     pat = dict(pat, side={s: tuple(clip(c, x0, z0, x1, z1) for c in v) for s, v in pat["side"].items()})
+    up = up - (P - P.translate([0, 0, UNDERSIDE_CLEAR]))   # never reach the underside
     camo_up = [(EARTH, up), (GREEN, up ^ plan)]
     if name.startswith(("wing_", "tailplane")):
         return paint(P, list(camo_up))
@@ -267,8 +269,9 @@ def colour_part(name, P, pat):
 # ============================================================
 CLEAR_PARTS = ("canopy", "nose_glazing", "turret_dorsal", "turret_tail", "astrodome")
 FRAME_W = 0.6                # mm
-CANOPY_FRAMES = [64.0, 69.0, 76.0, 86.0, 98.0, 110.0, 119.0]
-NOSE_FRAMES = [6.0, 13.0, 20.0]
+CANOPY_FRAMES = [49.5, 54.0, 59.0, 64.0, 69.0, 74.0]
+CANOPY_RAILS = [3.2, 8.8]    # z of the sill and the roof-edge frame
+NOSE_FRAMES = [4.5, 9.0]
 
 
 def outer_skin(P, d):
@@ -293,12 +296,14 @@ def frames(name, P):
         f = mf.Manifold()
         for x in CANOPY_FRAMES:
             f = f + slab("x", x)
+        for z in CANOPY_RAILS:
+            f = f + slab("z", z)
         return sk ^ (f + slab("y", 0.0))
     if name == "nose_glazing":
         f = mf.Manifold()
         for x in NOSE_FRAMES:
             f = f + slab("x", x)
-        return sk ^ (f + slab("y", 0.0) + slab("z", -17.5))
+        return sk ^ (f + slab("y", 0.0) + slab("z", -20.5))
     if name == "turret_dorsal":
         x = H.DORSAL_X
         _, _, top, _, _ = H.interp(H.FUSE_STATIONS, x)
