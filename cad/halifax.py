@@ -92,14 +92,17 @@ GUN_PITCH = 2.6              # mm, spacing of the four barrels
 GUN_BLOCK = (4.0, 12.0, 2.4)  # breech block x, y, z
 
 # --- Wing planform (projected): (y, x_leading_edge, chord)
-PLANFORM = [(0.0, 113.0, 76.0), (85.0, 116.0, 72.0), (245.0, 146.0, 22.0),
-            (248.5, 150.0, 14.5), (250.0, 154.0, 7.0)]
+# Measured from the Revell 1/72 Halifax B/GR II Srs IA plan views, scaled to span:
+# LE straight across the centre section, then swept; TE straight to the panel joint.
+PLANFORM = [(0.0, 109.3, 82.7), (70.0, 109.8, 82.2), (80.0, 111.4, 80.6),
+            (244.0, 137.9, 34.9), (248.0, 140.5, 30.0), (250.0, 145.0, 22.0)]
+OUTER_SEG = 2                # PLANFORM index where the outer panel starts
 WING_ROOT_Y = 13.3           # wing root face (fuselage side)
-WING_JOINT_Y = 85.0          # inner/outer panel joint
+WING_JOINT_Y = 80.0          # inner/outer panel joint (TE kink)
 DIHEDRAL = 5.0               # deg, outer panels
 Z_FLOOR = -16.6              # flat underside of the inner panels
 TC_INNER = 0.19             # nominal; the flattened underside takes ~3% off
-TC_OUTER = [(85.0, 0.185), (245.0, 0.13), (250.0, 0.12)]
+TC_OUTER = [(80.0, 0.185), (244.0, 0.13), (250.0, 0.12)]
 WING_FLAT_FROM = 0.15        # underside is flat from 15% chord to the TE
 WING_TE = 0.8                # mm, trailing-edge thickness
 WING_INCIDENCE = 2.0         # deg, root chord to fuselage datum (rigging: 2 deg)
@@ -111,17 +114,17 @@ JOINT_TONGUE = (0.26, 0.54, 1.6, 5.0, 12.0)  # chord fr. start/end, z0, z1, dept
 
 # --- Nacelles: (y_centre, z_centre, x_front, length)
 NACELLES = [
-    (59.0,  -15.7, 86.0, 132.0),     # inner: runs past trailing edge (gear bay)
-    (128.5, -11.0, 95.0, 100.0),     # outer
+    (61.0,  -15.7, 77.1, 93.0),      # inner (spinner tip 41 mm ahead of the LE)
+    (126.0, -11.0, 88.2, 62.0),      # outer
 ]
 NACELLE_W = 22.0             # mm, max width
 NACELLE_H = 21.0             # mm, max height of the body (oval)
 RADIATOR_X = 6.0             # mm, chin radiator start behind nacelle front
-RADIATOR_LEN = 34.0
+RADIATOR_LEN = 30.0
 RADIATOR_R = 6.0
 NACELLE_PROFILE = [(0.0, 0.30), (0.02, 0.62), (0.06, 0.86), (0.13, 0.98), (0.25, 1.0),
                    (0.45, 0.95), (0.70, 0.70), (0.90, 0.35), (1.0, 0.08)]
-NACELLE_PINS = [(12.0, -2.0), (None, -7.0)]  # (dx from front | None = mid-chord, dz)
+NACELLE_PINS = [(0.13, -2.0), (0.6, -7.0)]   # (fraction of nacelle length, dz)
 
 # --- Propellers: Rotol 3-blade, 12 ft 9 in
 PROP_D = 3886.0 / SCALE      # ~64.5 mm
@@ -132,28 +135,28 @@ BLADE_T = 1.2                # mm
 BLADE_ROOT_W, BLADE_MAX_W, BLADE_TIP_W = 3.6, 5.2, 3.4
 
 # --- Tailplane and fins
-TAIL_ROOT = (293.0, 41.0)    # x_le, chord at centreline
-TAIL_TIP = (298.0, 36.0)     # at the fin inner face
+TAIL_ROOT = (301.6, 40.0)    # x_le, chord at centreline (Revell plan)
+TAIL_TIP = (307.9, 34.0)     # at the fin inner face
 TAIL_FLOOR = 4.0             # mm, flat underside of the tailplane
 TAIL_TC = 0.11
 TAIL_SLOT_H = 6.5            # mm, height of the fuselage slot above the floor
-FIN_Y = 82.0                 # mm, fin mid-plane
-FIN_X_LE = 297.0
-FIN_CHORD = 39.0
-FIN_Z_BOTTOM = -20.0
-FIN_Z_TOP = 40.0
+FIN_Y = 76.0                 # mm, fin mid-plane
+FIN_X_LE = 305.0
+FIN_CHORD = 36.0
+FIN_Z_BOTTOM = -23.0
+FIN_Z_TOP = 42.5             # ~31 mm above the roof line (side profile)
 FIN_T = 3.6
 FIN_CORNER_R = 9.0
 FIN_POCKET = 1.5             # mm, tailplane tip sits this deep in the fin
 
 # --- Landing gear (Messier main legs either side of the wheel; castoring tailwheel)
-MAIN_AXLE_X = 132.0          # mm, just aft of the radiator
-MAIN_AXLE_Z = -50.0          # mm
-MAIN_WHEEL_D = 24.0          # mm (~1.45 m)
+MAIN_AXLE_X = 120.0          # mm, just aft of the radiator (Revell side view)
+MAIN_AXLE_Z = -51.0          # mm
+MAIN_WHEEL_D = 26.0          # mm (~1.57 m)
 MAIN_WHEEL_W = 9.0
 MAIN_LEG = (4.0, 3.0)        # leg section: x (fore-aft), y
 MAIN_PLUG = (8.0, 6.0)       # plug y-width, depth into the nacelle socket
-TAIL_AXLE_X = 322.0
+TAIL_AXLE_X = 334.0
 TAIL_LEG_DROP = 9.0          # mm, axle below the fuselage bottom
 TAIL_WHEEL_D = 9.0
 TAIL_WHEEL_W = 4.5
@@ -420,9 +423,9 @@ def outer_planform(y_local):
     """Planform/thickness of the outer panel at a local (unrotated) span."""
     cd = math.cos(math.radians(DIHEDRAL))
     yp = WING_JOINT_Y + (y_local - WING_JOINT_Y) * cd
-    seg = PLANFORM[1:]
+    seg = PLANFORM[OUTER_SEG:]
     if yp < WING_JOINT_Y:            # extrapolate the outer leading edge inward
-        a, b = PLANFORM[1], PLANFORM[2]
+        a, b = PLANFORM[OUTER_SEG], PLANFORM[OUTER_SEG + 1]
         t = (yp - a[0]) / (b[0] - a[0])
         _, x, c = (0, a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))
     else:
@@ -435,13 +438,13 @@ def wing_parts(side):
     cd = math.cos(math.radians(DIHEDRAL))
     # inner panel: built to y=+90 then trimmed at the joint bisector
     st_in = []
-    for y in (WING_ROOT_Y - 4, WING_JOINT_Y + 5):     # root is trimmed to the fuselage
+    for y in (WING_ROOT_Y - 4, PLANFORM[1][0], WING_JOINT_Y + 5):  # root trimmed to fuselage
         _, x, c = interp(PLANFORM, y)
         st_in.append((y, x, c, TC_INNER))
     inner = panel(st_in)
 
     st_out = []
-    for yp in (WING_JOINT_Y - 5, 245.0, 248.5, 250.0):
+    for yp in [WING_JOINT_Y - 5] + [p[0] for p in PLANFORM[OUTER_SEG + 1:]]:
         yl = WING_JOINT_Y + (yp - WING_JOINT_Y) / cd
         x, c, tc = outer_planform(yl)
         st_out.append((yl, x, c, tc))
@@ -525,9 +528,7 @@ def nacelle_parts(index, side, wing_panel):
     # filament axle hole for the prop
     body = body.cut(cyl((x0 - 1, yc * side, zc), AXLE_HOLE_TIGHT, 8, "x"))
     # pins from the inboard half into the outboard half
-    _, le, c = interp(PLANFORM, yc)
-    pts = [((x0 + dx) if dx is not None else (le + 0.5 * c), 0, zc + dz)
-           for dx, dz in NACELLE_PINS]
+    pts = [(x0 + f * length, 0, zc + dz) for f, dz in NACELLE_PINS]
     y = yc * side
     holes = dowel_holes(pts, "y", y)
     inboard = box(-10, 400, y - 50, y, -80, 80) if side > 0 else box(-10, 400, y, y + 50, -80, 80)
@@ -679,7 +680,7 @@ def build():
         poses[f"wing_outer_{tag}"] = (lambda w, s=side, py=pivot_y, u=unpitch:
                                       u(w).rotate((0, py, Z_FLOOR), (1, py, Z_FLOOR), -DIHEDRAL * s))
         for i in range(len(NACELLES)):
-            pnl = inner if i == 0 else outer
+            pnl = inner.union(outer)          # tongue pocket must stay clear too
             inb, outb = nacelle_parts(i, side, pnl)
             parts[f"nacelle{i + 1}_{tag}_inboard"] = inb
             parts[f"nacelle{i + 1}_{tag}_outboard"] = outb

@@ -46,8 +46,10 @@ The defaults are 1.85 mm and 0.15 mm.
 
 - Wing incidence is 2 deg at the root, from rigging figures. The underside is flat from 15% chord for printing, and the wing is pitched to compensate.
 - Sections are NACA 230xx, after the real NACA 23021 root / 23007 tip.
-- Main track is 118 mm (7.1 m), with the wheels under the inner nacelles. Jane's gives 25 ft 6 in (7.8 m) for the Mk III.
-- Not verified: the fin height (from the reference mesh) gives about 4.2 m to the fin top tail-down, against the published 6.32 m overall height. It should be checked against a 3-view drawing.
+- Planform, nacelle and tail positions are measured from the Revell 1/72 Halifax B/GR II Srs IA plan views (instructions page 14), scaled to span. The overlay is in `docs/overlay_revell_plan.png`. The resulting wing area is 116.6 m², against the published 116 m².
+- Fuselage depth and fin height were checked against a true side profile, and match within about 1 mm.
+- Main track is 122 mm (7.3 m), with the wheels under the inner nacelles. Main wheels are 26 mm (1.57 m). The model sits tail-down at 8.7 deg.
+- With the tail down, the fin top is about 4.3 m above the ground, which matches the Revell drawing. The often-quoted 6.32 m height doesn't fit the drawings, so I've followed the drawings.
 
 ## Assembly
 
