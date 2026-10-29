@@ -93,10 +93,13 @@ FUSE_BOSSES = [              # connector key positions between port/starboard ha
 # --- Cockpit canopy hump: (x, half_width, z_top)
 CANOPY_CUT = (48.0, 75.0, 2.0)          # x0, x1, z floor (full width drop-in)
 CANOPY_TAB = (55.0, 68.0, 3.0, -2.0)     # x0, x1, half-width, z bottom of the locating tab
-H2S_RADOME = True            # ventral H2S blister (Revell Srs IA drawing)
+H2S_RADOME = False           # ventral H2S blister (Revell GR.II only; not on the B.II Srs IA)
 RADOME = [(202.0, 6.0, 0.5), (206.0, 8.5, 5.0), (211.0, 9.8, 8.8), (217.0, 10.0, 10.3),
           (224.0, 9.4, 9.8), (231.0, 7.6, 7.5), (238.0, 5.0, 3.8), (243.0, 2.5, 1.0),
           (246.0, 0.8, 0.2)]   # x, half-width, depth below the fuselage (Revell side + plan)
+WHEEL_UP_X = 147.0           # retracted main wheel, protruding below the nacelle (stand display)
+WHEEL_UP_PROUD = 3.6         # mm below the housing
+WHEEL_UP_PLUG = (4.0, 9.0, 5.0)   # x, y, depth of the plug into the housing
 GEAR_BATH = [(110.0, -27.0, 7.5), (118.0, -34.5, 9.5), (128.0, -37.5, 10.2),
              (150.0, -37.5, 10.2), (162.0, -34.5, 9.0), (171.0, -28.0, 6.0)]  # x, bottom z, half-width
 
@@ -604,6 +607,11 @@ def nacelle_parts(index, side, wing_panel):
     body = (body.cut(wing_panel)
             .cut(wing_panel.translate((0, 0, FIT)))
             .cut(wing_panel.translate((0, 0, -FIT))))
+    if index == 0:   # socket for the wheels-up insert (stand display)
+        px, py, pd = WHEEL_UP_PLUG
+        zb = nacelle_bottom(0, WHEEL_UP_X)
+        body = body.cut(box(WHEEL_UP_X - px / 2 - FIT, WHEEL_UP_X + px / 2 + FIT,
+                            yc * side - py / 2 - FIT, yc * side + py / 2 + FIT, zb - 1, zb + pd + 0.3))
     if index == 0:   # main undercarriage socket
         body = body.cut(gear_socket(MAIN_AXLE_X, yc * side, nacelle_bottom(0, MAIN_AXLE_X),
                                     MAIN_LEG, MAIN_PLUG))
@@ -792,6 +800,19 @@ def gear_socket(x, yc, z_top, leg, plug):
                z_top - 1, z_top + depth + 0.3)
 
 
+def wheel_up_insert(side):
+    """Black tyre segment that shows below the inner nacelle with the gear up."""
+    yc = NACELLES[0][0] * side
+    zb = nacelle_bottom(0, WHEEL_UP_X)
+    r = MAIN_WHEEL_D / 2
+    zc = zb - WHEEL_UP_PROUD + r
+    tyre = cyl((WHEEL_UP_X, yc - MAIN_WHEEL_W / 2, zc), MAIN_WHEEL_D, MAIN_WHEEL_W, "y")
+    seg = tyre.intersect(box(WHEEL_UP_X - 20, WHEEL_UP_X + 20, yc - 10, yc + 10, zb - 10, zb))
+    px, py, pd = WHEEL_UP_PLUG
+    plug = box(WHEEL_UP_X - px / 2, WHEEL_UP_X + px / 2, yc - py / 2, yc + py / 2, zb - 0.1, zb + pd)
+    return seg.union(plug)
+
+
 def gear_fork(x, yc, z_axle, z_top, wheel_w, leg, plug):
     """Two legs either side of the wheel, a cross-bar and a plug (prints flat)."""
     lx, ly = leg
@@ -893,6 +914,8 @@ def build():
         parts[f"pin_main_wheel_{tag}"] = axle_pin((MAIN_AXLE_X, yc0 + side * span / 2, MAIN_AXLE_Z),
                                                   "y", -side, span)
         poses[f"pin_main_wheel_{tag}"] = lambda w, s=side: rot(w, "x", -90 * s)   # head down
+        parts[f"wheel_up_{tag}"] = wheel_up_insert(side)
+        poses[f"wheel_up_{tag}"] = lambda w: rot(w, "x", 90)               # flat side down
         parts[f"fin_{tag}"] = fin(side)
         poses[f"fin_{tag}"] = lambda w: rot(w, "x", 90)
 
