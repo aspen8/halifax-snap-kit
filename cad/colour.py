@@ -16,6 +16,7 @@ Scheme: Bomber Command, Mk II Series IA, 1943.
     C1 fin flashes, dull red squadron codes, yellow prop tips.
 """
 import json
+from xml.sax.saxutils import quoteattr
 import math
 import sys
 import uuid
@@ -59,6 +60,10 @@ FUSE_ROUNDEL = (241.5, -11.7, 22.8)     # x, z, outer diameter (54 in C1)
 WING_ROUNDEL = (154.3, 166.0, 37.0)     # x, |y|, diameter (84 in Type B)
 FIN_FLASH = (309.0, 15.0, 33.0, 7.0, 1.5)  # x start, z0, z1, red/blue width, white width
 PROP_TIP = 3.0               # mm of yellow at the prop tips
+INLAY_DEPTH = 1.2            # mm, roundel inlay depth at its shallowest point
+INLAY_FIT = 0.1              # mm, radial clearance (press fit)
+C1_RINGS = lambda d: [(YELLOW, d), (BLUE, d * 0.889), (WHITE, d / 3 + 1.8), (RED, d / 3)]
+B_RINGS = lambda d: [(BLUE, d), (RED, d * 0.4)]
 
 # Plan-view camo raster (Revell plan, top view crop) -> model coordinates
 CAMO_PNG = Path(__file__).with_name("ref") / "camo_plan_green.png"
@@ -214,22 +219,13 @@ def colour_part(name, P, pat):
     pat = dict(pat, side={s: tuple(clip(c, x0, z0, x1, z1) for c in v) for s, v in pat["side"].items()})
     camo_up = [(EARTH, up), (GREEN, up ^ plan)]
     if name.startswith(("wing_", "tailplane")):
-        ops = list(camo_up)
-        if name.startswith("wing_outer"):
-            x, y, d = WING_ROUNDEL
-            s = 1 if name.endswith("stbd") else -1
-            ops += [(BLUE, up ^ prism_z(disc(x, s * y, d))),
-                    (RED, up ^ prism_z(disc(x, s * y, d * 0.4)))]
-        return paint(P, ops)
+        return paint(P, list(camo_up))
     if name.startswith("fuselage_"):
         s = 1 if name.endswith("stbd") else -1
         side = S["+y"] if s > 0 else S["-y"]
         green_s, band = pat["side"][s]
         ops = [(EARTH, side ^ prism_y(band)), (GREEN, side ^ prism_y(green_s)),
                (EARTH, up ^ prism_y(band)), (GREEN, up ^ prism_y(band) ^ plan)]
-        x, z, d = FUSE_ROUNDEL
-        for colour, dd in ((YELLOW, d), (BLUE, d * 0.889), (WHITE, d / 3 + 1.8), (RED, d / 3)):
-            ops.append((colour, side ^ prism_y(disc(x, z, dd))))
         # codes read "MH (o) E" from both sides: squadron code aft on starboard
         rx = FUSE_ROUNDEL[0]
         mirror = s > 0
@@ -266,6 +262,72 @@ def colour_part(name, P, pat):
 
 
 # ============================================================
+# ROUNDEL INLAYS (separate multi-colour discs, as PB94 does)
+# ============================================================
+def cyl_axis(cx, cy, r, axis):
+    c = mf.Manifold.cylinder(400.0, r, r, 128).translate([cx, cy, -200.0])
+    return c if axis == "z" else c.rotate([90, 0, 0])      # 'y': centre (cx, z=cy)
+
+
+def surface_extreme(P, centre, r, axis, side):
+    """Deepest point of the outer surface under the disc, measured along the inlay axis
+    (z: lowest top surface; y: the side surface point closest to the centreline)."""
+    import trimesh
+    V, F = mesh_of(P)
+    tm = trimesh.Trimesh(V, F, process=False)
+    a = np.linspace(-r, r, 25)
+    A, B = np.meshgrid(a, a)
+    m = A ** 2 + B ** 2 <= r * r
+    A, B = A[m] + centre[0], B[m] + centre[1]
+    if axis == "z":
+        o = np.c_[A, B, np.full(A.size, 500.0)]
+        d = np.tile([0, 0, -1.0], (A.size, 1))
+        loc, _, _ = tm.ray.intersects_location(o, d, multiple_hits=False)
+        return loc[:, 2].min()
+    o = np.c_[A, np.full(A.size, 500.0 * side), B]
+    d = np.tile([0, -float(side), 0], (A.size, 1))
+    loc, _, _ = tm.ray.intersects_location(o, d, multiple_hits=False)
+    return (loc[:, 1] * side).min()          # distance outward from the centreline
+
+
+def make_inlay(P, centre, d, rings, axis, side=1):
+    """Cut a socket in P and return (P_with_socket, {colour: inlay volume})."""
+    r = d / 2
+    flat = surface_extreme(P, centre, r, axis, side) - INLAY_DEPTH
+    if axis == "z":
+        keep = mf.Manifold.cube([1000, 1000, 500]).translate([-500, -500, flat])
+    elif side > 0:
+        keep = mf.Manifold.cube([1000, 500, 1000]).translate([-500, flat, -500])
+    else:
+        keep = mf.Manifold.cube([1000, 500, 1000]).translate([-500, -flat - 500, -500])
+    socket = P ^ cyl_axis(*centre, r, axis) ^ keep
+    plug = P ^ cyl_axis(*centre, r - INLAY_FIT, axis) ^ keep
+    vols, inner = {}, mf.Manifold()
+    for colour, dd in reversed(rings):               # innermost first
+        c = (plug ^ cyl_axis(*centre, dd / 2, axis)) - inner
+        if c.volume() > 1e-3:
+            vols[colour] = vols[colour] + c if colour in vols else c
+        inner = inner + c
+    return P - socket, vols
+
+
+def inlays_for(name, P):
+    """Returns (P, [(inlay_name, vols, rotation_to_print_pose)])."""
+    out = []
+    if name.startswith("wing_outer"):
+        s = 1 if name.endswith("stbd") else -1
+        x, y, d = WING_ROUNDEL
+        P, vols = make_inlay(P, (x, s * y), d, B_RINGS(d), "z")
+        out.append((f"roundel_wing_{name.split('_')[-1]}", vols, [0, 0, 0]))
+    if name.startswith("fuselage_rear"):
+        s = 1 if name.endswith("stbd") else -1
+        x, z, d = FUSE_ROUNDEL
+        P, vols = make_inlay(P, (x, z), d, C1_RINGS(d), "y", s)
+        out.append((f"roundel_fuselage_{name.split('_')[-1]}", vols, [90 * s, 0, 0]))
+    return P, out
+
+
+# ============================================================
 # 3MF WRITER (Bambu Studio project layout)
 # ============================================================
 def pose_matrix(pose):
@@ -285,26 +347,31 @@ def mesh_of(m):
 
 
 def pack(items):
-    """Shelf-pack (name, (w, h)) onto plates. Returns [[(name, x, y, rot90)], ...]."""
-    plates = []
+    """First-fit shelf packing of (name, (w, h)) onto plates.
+    Returns [[(name, x, y, rot90)], ...]."""
+    plates = []                       # each: list of shelves [y, height, x_used] + items
     for name, (w, h) in items:
         rot = w > BED[0] >= h
         if rot:
             w, h = h, w
+        placed = False
         for p in plates:
-            if p["x"] + w <= BED[0] and p["y"] + h <= BED[1]:
-                pass
-            elif p["y"] + p["row"] + PLATE_GAP + h <= BED[1]:
-                p["y"] += p["row"] + PLATE_GAP
-                p["x"], p["row"] = 0.0, 0.0
-            else:
-                continue
-            p["items"].append((name, p["x"], p["y"], rot))
-            p["x"] += w + PLATE_GAP
-            p["row"] = max(p["row"], h)
-            break
-        else:
-            plates.append({"x": w + PLATE_GAP, "y": 0.0, "row": h, "items": [(name, 0.0, 0.0, rot)]})
+            for sh in p["shelves"]:                 # an existing shelf with room
+                if h <= sh[1] and sh[2] + w <= BED[0]:
+                    p["items"].append((name, sh[2], sh[0], rot))
+                    sh[2] += w + PLATE_GAP
+                    placed = True
+                    break
+            if placed:
+                break
+            top = sum(sh[1] + PLATE_GAP for sh in p["shelves"])
+            if top + h <= BED[1]:                   # a new shelf on this plate
+                p["shelves"].append([top, h, w + PLATE_GAP])
+                p["items"].append((name, 0.0, top, rot))
+                placed = True
+                break
+        if not placed:
+            plates.append({"shelves": [[0.0, h, w + PLATE_GAP]], "items": [(name, 0.0, 0.0, rot)]})
     return [p["items"] for p in plates]
 
 
@@ -369,7 +436,7 @@ def write_3mf(path, objects, plates, template):
             vid = next_id
             next_id += 1
             vol_ids.append((vid, colour, len(F)))
-            vs = "".join(f'<vertex x="{x:.4f}" y="{y:.4f}" z="{zz:.4f}"/>' for x, y, zz in V)
+            vs = "".join(f'<vertex x="{x:.3f}" y="{y:.3f}" z="{zz:.3f}"/>' for x, y, zz in V)
             ts = "".join(f'<triangle v1="{a}" v2="{b}" v3="{c}"/>' for a, b, c in F)
             body.append(f' <object id="{vid}" p:UUID="{uuid.uuid4()}" type="model">\n'
                         f'  <mesh><vertices>{vs}</vertices><triangles>{ts}</triangles></mesh>\n </object>\n')
@@ -396,7 +463,7 @@ def write_3mf(path, objects, plates, template):
             f'      <metadata key="extruder" value="{colour}"/>\n'
             f'      <mesh_stat face_count="{n}" edges_fixed="0" degenerate_facets="0" facets_removed="0" facets_reversed="0" backwards_edges="0"/>\n'
             '    </part>\n' for vid, colour, n in vol_ids)
-        settings.append(f'  <object id="{oid}">\n    <metadata key="name" value="{obj["name"]}"/>\n'
+        settings.append(f'  <object id="{oid}">\n    <metadata key="name" value={quoteattr(obj["name"])}/>\n'
                         f'    <metadata key="extruder" value="{vol_ids[0][1]}"/>\n'
                         f'    <metadata face_count="{faces}"/>\n{parts}  </object>\n')
     z.writestr("3D/3dmodel.model", f'<?xml version="1.0" encoding="UTF-8"?>\n<model unit="millimeter" xml:lang="en-US" {ns}>\n'
@@ -415,7 +482,7 @@ def write_3mf(path, objects, plates, template):
                        f'      <metadata key="identify_id" value="{1000 + o["oid"]}"/>\n    </model_instance>\n'
                        for o in objects if o["placement"][0] == pi)
         plate_xml.append(f'  <plate>\n    <metadata key="plater_id" value="{pi + 1}"/>\n'
-                         f'    <metadata key="plater_name" value="{items}"/>\n'
+                         f'    <metadata key="plater_name" value={quoteattr(items)}/>\n'
                          '    <metadata key="locked" value="false"/>\n'
                          '    <metadata key="filament_map_mode" value="Auto For Flush"/>\n'
                          f'    <metadata key="filament_maps" value="{" ".join(["1"] * nfil)}"/>\n'
@@ -433,13 +500,31 @@ def write_3mf(path, objects, plates, template):
 # ============================================================
 # MAIN
 # ============================================================
-PLATE_GROUPS = [            # parts kept together, in this order, by colour set
+def add_object(objs, name, posed, out):
+    import trimesh
+    lo = np.min([v.bounding_box()[:3] for v in posed.values()], axis=0)
+    hi = np.max([v.bounding_box()[3:] for v in posed.values()], axis=0)
+    posed = {c: v.translate(list(-lo)) for c, v in posed.items()}
+    whole = mf.Manifold()
+    for v in posed.values():
+        whole = whole + v
+    V, F = mesh_of(whole)
+    trimesh.Trimesh(V, F).export(out / "stl" / f"{name}.stl")
+    objs[name] = {"name": name, "vols": posed, "size": (hi - lo)[:2]}
+    print(f"{name:26s} " + ", ".join(f"{FILAMENTS[c][0]} {v.volume() / 1000:.1f}cc"
+                                      for c, v in sorted(posed.items())), flush=True)
+
+
+PLATE_GROUPS = [            # parts kept together by colour set (max 5 colours a plate)
     ("Fuselage", lambda n: n.startswith("fuselage")),
     ("Wings", lambda n: n.startswith(("wing_", "tailplane"))),
-    ("Nacelles & fins", lambda n: n.startswith(("nacelle", "fin_"))),
-    ("Clear", lambda n: n in ("canopy", "nose_glazing", "turret_dorsal", "turret_tail")),
-    ("Black & props", lambda n: True),
+    ("Nacelles", lambda n: n.startswith("nacelle")),
+    ("Fins and roundels", lambda n: n.startswith(("fin_", "roundel_"))),
+    ("Clear and guns", lambda n: n in ("canopy", "nose_glazing", "turret_dorsal", "turret_tail")
+     or n.startswith("guns")),
+    ("Props, gear and stand", lambda n: True),
 ]
+MAX_COLOURS = 5
 
 if __name__ == "__main__":
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "out")
@@ -452,26 +537,18 @@ if __name__ == "__main__":
     preview = []
     (out / "stl").mkdir(exist_ok=True)
     for name, w in parts.items():
-        P = to_manifold(H.mesh(w, tol=0.01, ang=0.1))
+        P = to_manifold(H.mesh(w))
         P = D.apply(name, P)                       # panel lines, hatches, rivets
+        P, extra = inlays_for(name, P)             # roundel sockets + inlay discs
         vols = colour_part(name, P, pat)
-        for c, v in vols.items():                  # assembled-frame colour preview
-            V, F = mesh_of(v)
-            preview.append((c, V, F))
         M = pose_matrix(poses[name])
-        posed = {c: v.transform(M[:3, :]) for c, v in vols.items()}
-        lo = np.min([v.bounding_box()[:3] for v in posed.values()], axis=0)
-        hi = np.max([v.bounding_box()[3:] for v in posed.values()], axis=0)
-        posed = {c: v.translate(list(-lo)) for c, v in posed.items()}
-        whole = mf.Manifold()
-        for v in posed.values():
-            whole = whole + v
-        V, F = mesh_of(whole)
-        import trimesh
-        trimesh.Trimesh(V, F).export(out / "stl" / f"{name}.stl")
-        objs[name] = {"name": name, "vols": posed, "size": (hi - lo)[:2]}
-        print(f"{name:26s} " + ", ".join(f"{FILAMENTS[c][0]} {v.volume() / 1000:.1f}cc"
-                                          for c, v in sorted(vols.items())), flush=True)
+        jobs = [(name, vols, lambda v, M=M: v.transform(M[:3, :]))]
+        jobs += [(n, iv, lambda v, r=r: v.rotate(r)) for n, iv, r in extra]
+        for jname, jvols, pose in jobs:
+            for c, v in jvols.items():             # assembled-frame colour preview
+                V, F = mesh_of(v)
+                preview.append((c, V, F))
+            add_object(objs, jname, {c: pose(v) for c, v in jvols.items()}, out)
     # plates
     order, plates_all, seen = [], [], set()
     for gname, pred in PLATE_GROUPS:
@@ -499,6 +576,10 @@ if __name__ == "__main__":
         scene.add_geometry(m, node_name=f"v{i}")
     scene.export(out / "halifax_colour_preview.glb")
     names = [f"{g} {i + 1}" for i, (g, _) in enumerate(plates_all)]
+    for i, (gname, items) in enumerate(plates_all):
+        cols = sorted({c for n, *_ in items for c in objs[n]["vols"]})
+        print(f"plate {i + 1} colours: " + ", ".join(FILAMENTS[c][0] for c in cols))
+        assert len(cols) <= MAX_COLOURS, f"plate {i + 1} needs {len(cols)} colours"
     write_3mf(out / "halifax_kit.3mf", objects, names, template)
     for i, (gname, items) in enumerate(plates_all):
         print(f"plate {i + 1} ({gname}): " + ", ".join(n for n, *_ in items))
