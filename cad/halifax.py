@@ -167,7 +167,7 @@ RAD_VANES = (0.9, 2.3)                   # |y| of the vanes, either side of cent
 RAD_VANE_T = 0.5
 # --- Astrodome (clear, plugs into the roof) and D/F loop fairing (moulded on)
 ASTRODOME = (86.0, 3.2)                  # x, radius (Revell side view)
-DF_LOOP = (122.0, 12.0, 3.6, 3.2)        # x, length, width, height of the fairing
+DF_LOOP = (118.0, 13.0, 3.6, 3.2)        # x, length, width, height of the fairing
 PIN_HEAD = (4.0, 0.8)        # head diameter, thickness
 SPINNER_LEN = 7.5
 SPINNER_R = 4.8
