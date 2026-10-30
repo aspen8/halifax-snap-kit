@@ -76,7 +76,7 @@ WING_ROUNDEL = (154.3, 166.0, 37.0)     # x, |y|, diameter (84 in Type B)
 FIN_FLASH = (309.0, 15.0, 33.0, 7.0, 1.5)  # x start, z0, z1, red/blue width, white width
 PROP_TIP = 3.0               # mm of yellow at the prop tips
 INLAY_DEPTH = 1.2            # mm, roundel inlay depth at its shallowest point
-INLAY_FIT = 0.1              # mm, radial clearance (press fit)
+INLAY_FIT = 0.15             # mm, radial clearance (press fit, as KEY_FIT from the fit test)
 C1_RINGS = lambda d: [(YELLOW, d), (BLUE, d * 0.889), (WHITE, d / 3 + 1.8), (RED, d / 3)]
 B_RINGS = lambda d: [(BLUE, d), (RED, d * 0.4)]
 

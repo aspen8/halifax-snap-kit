@@ -23,10 +23,11 @@ What the Halifax taught us, so the next aircraft starts from a working pipeline.
 |---|---|---|
 | Usable plate | 230 × 250 mm (dual-nozzle X limit) | |
 | Sliding fit (`FIT`) | 0.15 mm per side | Confirmed by fit test |
-| Printed key press fit (`KEY_FIT`) | 0.10 mm per side | Confirm with fit test |
-| Printed 1.8 mm pin: grips | 1.80 mm hole | Confirm with fit test |
-| Printed 1.8 mm pin: spins | 2.05 mm hole | |
-| Roundel inlay radial fit | 0.10 mm | |
+| Printed key press fit (`KEY_FIT`) | 0.15 mm per side | Confirmed by fit test |
+| Printed 1.8 mm pin: grips | 2.35 mm hole | Confirmed by fit test (small holes print about 0.5 mm tight) |
+| Printed 1.8 mm pin: spins | 2.65 mm hole | Confirmed by fit test |
+| Roundel inlay radial fit | 0.15 mm | Matches the key press fit |
+| Prop shaft 2.4 mm in bore | 3.1 mm bore, hex socket 3.4 mm across flats for a 3.0 mm hex | Scaled from the pin test; check on the first print |
 | Inlay depth | 1.2 mm | |
 | Colour skin depth | 0.8 mm | |
 | Panel lines | 0.5 mm wide × 0.25 mm deep | |
@@ -82,4 +83,8 @@ Rule of thumb: every paint region should be a prism or slab that pokes out throu
 - **Canopy part = glazed area only.** Frames and fuselage paint outside the glass belong to the fuselage, so the canopy plate (black and clear) doesn't need camo.
 - **Side-view lines also show up in plan view.** On a rounded section, a cant rail at z and a roof bar at |y| can be the same line. Check both views before adding frames, or you get doubled lines.
 - **`pkill -f` can kill your own shell** when the pattern appears in the command line. Use `TaskStop`, or a pattern that can't match itself.
+
+## Small holes
+
+On the X2D, a printed 1.8 mm pin needs a 2.35 mm hole to grip and 2.65 mm to spin. My first guesses (1.80 and 2.05) didn't fit at all. Size every small hole from the fit test, and leave at least 1 mm of wall round it; the gear legs had to grow to manage that.
 
