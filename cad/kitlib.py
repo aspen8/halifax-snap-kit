@@ -158,6 +158,12 @@ def to_manifold(tm):
                                tri_verts=np.asarray(tm.faces, np.uint32)))
 
 
+def largest_piece(M):
+    """(the largest connected solid of M, [volumes of the pieces dropped])."""
+    comps = sorted(M.decompose(), key=lambda c: -c.volume())
+    return (comps[0] if comps else M), [c.volume() for c in comps[1:]]
+
+
 def mesh_of(m):
     mm = m.to_mesh()
     return np.asarray(mm.vert_properties)[:, :3], np.asarray(mm.tri_verts)
@@ -216,7 +222,7 @@ def make_inlay(P, centre, d, rings, axis, side=1, depth=1.2, fit=0.1):
     else:
         keep = mf.Manifold.cube([1000, 500, 1000]).translate([-500, -flat - 500, -500])
     socket = cyl_axis(*centre, r, axis) ^ keep         # a plain cylinder: no sheets left on the surface
-    plug = P ^ cyl_axis(*centre, r - fit, axis) ^ keep
+    plug = largest_piece(P ^ cyl_axis(*centre, r - fit, axis) ^ keep)[0]   # no stray rivet specks
     # Each ring is the plug cut by a tube (cylinder minus the previous cylinder). Subtracting
     # the inner ring solids instead leaves zero-thickness sheets on the surface, where their
     # top faces coincide with the plug's.

@@ -691,7 +691,7 @@ def astrodome():
     skirt = cyl((x, 0, top - 0.3), 2 * r, 0.7, "z")
     dome = (wp(cq.Solid.makeSphere(r, V(x, 0, top + 0.4)))
             .intersect(box(x - 10, x + 10, -10, 10, top + 0.4, top + 10)))
-    plug = cyl((x, 0, top - 1.9), 2 * (r - 0.8) - 2 * FIT, 1.7, "z")
+    plug = cyl((x, 0, top - 1.9), 2 * (r - 0.8) - 2 * FIT, 2.3, "z")   # reaches into the dome
     # skirt conforms to the curved roof (only the plug goes below the surface)
     return skirt.union(dome).cut(fuselage_solid()).union(plug)
 

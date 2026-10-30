@@ -486,6 +486,10 @@ if __name__ == "__main__":
         P = D.apply(name, P)                       # panel lines, hatches, rivets
         if name == "stand_base":
             P = stand_decorate(P)                  # raised badge and name
+        P, dropped = K.largest_piece(P)            # every part is one solid: drop islands and specks
+        if any(v > 1.0 for v in dropped):
+            print(f"  [{name}] dropped loose pieces: " + ", ".join(f"{v:.1f}" for v in dropped if v > 1.0) + " mm3",
+                  file=sys.stderr, flush=True)
         t1 = time.time()
         P, extra = inlays_for(name, P)             # roundel sockets + inlay discs
         t2 = time.time()
