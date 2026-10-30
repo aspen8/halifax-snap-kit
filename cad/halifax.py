@@ -42,6 +42,8 @@ KEY_END_GAP = 0.3            # mm, slot is this much deeper than half a key
 KEY_LR = (8.0, 10.0, 2.4)    # fuselage port/starboard halves (width along x)
 KEY_FR = (12.0, 6.0, 2.4)    # front/rear fuselage joint (width along z)
 KEY_NAC = (7.0, 6.0, 2.0)    # nacelle halves (width along x)
+KEY_FIN = (4.0, 7.0, 1.6)    # tailplane tip into fin: length along y, width along x, thickness z
+FIN_KEY_AT = (0.22, 0.50)    # key positions, fractions of the tip chord
 
 AXLE_HOLE_TIGHT = 2.35       # mm, printed 1.8 mm pins grip here (X2D fit test)
 AXLE_HOLE_LOOSE = 2.65       # mm, ...and spin freely here (X2D fit test)
@@ -193,7 +195,6 @@ TAIL_ROOT = (301.6, 40.0)    # x_le, chord at centreline (Revell plan)
 TAIL_TIP = (307.9, 34.0)     # at the fin inner face
 TAIL_FLOOR = 4.0             # mm, flat underside of the tailplane
 TAIL_TC = 0.11
-TAIL_SLOT_H = 6.5            # mm, height of the fuselage slot above the floor
 FIN_Y = 76.0                 # mm, fin mid-plane
 FIN_X_LE = 305.0
 FIN_CHORD = 36.0
@@ -201,7 +202,7 @@ FIN_Z_BOTTOM = -23.0
 FIN_Z_TOP = 42.5             # ~31 mm above the roof line (side profile)
 FIN_T = 3.6
 FIN_CORNER_R = 9.0
-FIN_POCKET = 1.5             # mm, tailplane tip sits this deep in the fin
+FIN_POCKET = 0.6             # mm, tailplane tip sits this deep in the fin (seats it; keys hold it)
 
 # --- Landing gear (Messier main legs either side of the wheel; castoring tailwheel)
 MAIN_AXLE_X = 120.0          # mm, just aft of the radiator (Revell side view)
@@ -337,7 +338,8 @@ def fuselage_parts(wing_tongues):
         body = body.union(box(k0, k1, -khw, khw, z - 0.5, z + kh))
     body = body.cut(cyl((DORSAL_X, 0, top_d - 3.0), 2 * DORSAL_R, 20, "z"))  # dorsal turret
     body = body.cut(cyl((DORSAL_X, 0, top_d - 3.0), AXLE_HOLE_TIGHT, -5, "z"))
-    body = body.cut(tailplane_slot())
+    for c in tailplane_slot_cuts():
+        body = body.cut(c)
     body = body.union(df_loop_fairing()).cut(astrodome_socket())
     for pocket in wing_tongues:
         body = body.cut(pocket)
@@ -763,9 +765,12 @@ def tailplane():
     return panel(st[:2], TAIL_FLOOR).union(panel(st[1:], TAIL_FLOOR))
 
 
-def tailplane_slot():
-    return box(TAIL_ROOT[0] - FIT - 0.5, TAIL_ROOT[0] + TAIL_ROOT[1] + FIT + 0.5,
-               -20, 20, TAIL_FLOOR - FIT, TAIL_FLOOR + TAIL_SLOT_H + FIT)
+def tailplane_slot_cuts():
+    """The tailplane's own aerofoil, grown by FIT: the halves close round it and keep a solid
+    roof above it (a plain box slot broke through the tapering top and left a loose strip)."""
+    tp = tailplane().intersect(box(TAIL_ROOT[0] - 5, TAIL_ROOT[0] + TAIL_ROOT[1] + 5, -20, 20, -50, 50))
+    return [tp.translate((dx, 0, dz)) for dx, dz in
+            ((0, 0), (FIT, 0), (-FIT, 0), (0, FIT), (0, -FIT), (FIT, FIT), (-FIT, FIT))]
 
 
 def fin(side):
@@ -778,8 +783,17 @@ def fin(side):
     tp = tailplane()
     for dx, dz in ((0, 0), (FIT, 0), (-FIT, 0), (0, FIT), (0, -FIT)):
         f = f.cut(tp.translate((dx, 0, dz)))
-    # tailplane tip sits in a shallow recess
-    return f
+    # tailplane tip sits in a shallow recess, held by two printed keys
+    return f.cut(fin_key_slots(side))
+
+
+def fin_key_slots(side):
+    """Key slots across the tailplane-tip / fin joint (cut into both parts)."""
+    y_tip = FIN_Y - FIN_T / 2 + FIN_POCKET
+    x0, c = TAIL_TIP
+    pts = [(x0 + f * c, 0, TAIL_FLOOR + 0.47 * TAIL_TC * c) for f in FIN_KEY_AT]
+    KEY_COUNTS["key_fin"] = (KEY_FIN, 2 * len(pts))
+    return key_slots(pts, "y", side * y_tip, KEY_FIN, "x")
 
 
 # ============================================================
@@ -994,7 +1008,7 @@ def build():
     poses["stand_post"] = lambda w: rot(w.rotate(*sax, STAND_PITCH), "x", 90)
     poses["stand_base"] = lambda w: w.rotate(*sax, STAND_PITCH)
 
-    parts["tailplane"] = tailplane()
+    parts["tailplane"] = tailplane().cut(fin_key_slots(1)).cut(fin_key_slots(-1))
     poses["tailplane"] = lambda w: w
     # printed connector keys (one part per key, so the kit is complete)
     for kname, (key, n) in KEY_COUNTS.items():
