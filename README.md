@@ -25,14 +25,14 @@ Open `kit/halifax_kit.3mf` in Bambu Studio. It contains 8 plates with the filame
 
 Suggested settings: PLA (matte for the camo), 0.16–0.2 mm layers, 2 walls, 10–15% gyroid infill, no supports.
 
-## Kit contents (89 parts)
+## Kit contents (93 parts)
 
 - **Airframe:** 4 fuselage halves, 4 wing panels, 8 nacelle halves, tailplane, 2 fins.
 - **Colour inlays:** 2 Type B wing roundels and 2 C1 fuselage roundels, pressed into sockets.
 - **Clear parts:** perspex nose, cockpit canopy, rear roof glazing, astrodome, dorsal and tail turrets, all with black frame lines. Plus 2 gun packs.
 - **Engines:** 4 props with yellow tips, 4 prop shafts with captive flanges (the props spin), 8 exhaust banks.
 - **Gear:** 2 main gear forks and wheels, tailwheel and printed axle pins. For display on the stand there are 2 wheels-up inserts that show the retracted main wheels.
-- **Connector keys:** 11 between the fuselage halves, 6 at the front/rear joint, 8 in the nacelles.
+- **Connector keys:** 11 between the fuselage halves, 6 at the front/rear joint, 8 in the nacelles, 4 at the tailplane tips into the fins.
 - **Display stand:** a swept "swan-neck" blade that prints flat on its side, on a plinth (190 × 120 mm, bevelled underside) with a Dark Earth/Dark Green camo top, a yellow pinstripe, a raised white Halifax silhouette, and the name in raised white: HANDLEY PAGE HALIFAX / B MK II SERIES IA / 158 SQN RAF · NP-G · LV917.
 
 **Surface detail** (sized like PB94's):
@@ -46,7 +46,7 @@ Suggested settings: PLA (matte for the camo), 0.16–0.2 mm layers, 2 walls, 10�
 1. **Fuselage.** Drop the canopy and rear roof glazing over their locating bosses, press the astrodome and the nose spigot into place. Slide in the tailplane and both inner wing root tongues, port forward and starboard aft. Then close each fuselage pair on its connector keys, and join the front and rear sections on the joint keys.
 2. **Wings.** Plug the outer panels onto the inner panels. The joint tongue sets the 5° dihedral. Press the roundels into their sockets.
 3. **Nacelles.** Push the exhaust banks into their side slots. Drop a prop shaft into the inboard half, with its flange in the pocket. Close the outboard half around the wing on the nacelle keys, then press the prop onto the hex boss.
-4. **Tail.** Fit the fins onto the tailplane tips.
+4. **Tail.** The tailplane is captured in its shaped slot when the rear fuselage halves close. Push two keys into each tailplane tip and press the fins on.
 5. **Turrets.** Fit the gun packs into the turrets. Pin the turrets on: the dorsal turret rotates.
 6. **Display.** Either fit the gear (wheels on the headed pins, forks into their sockets) or put the model on the stand. With the gear down it sits tail-down at 8.7°. For the stand, push the blade's tenon into the plinth, fit the wheels-up inserts, and lower the model onto the key at the blade tip: it sits 5° nose-up.
 
