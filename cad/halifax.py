@@ -37,7 +37,7 @@ SCALE = 30120.0 / SPAN       # ~1:60.2
 FIT = 0.15                   # mm, sliding clearance per side (X2D, PLA)
 # Printed connector keys (flat, printed lying down). (length across the split,
 # width, thickness) in mm; slots get KEY_FIT per side and END_GAP at each end.
-KEY_FIT = 0.1                # mm, press fit per side
+KEY_FIT = 0.15               # mm, press fit per side (fit test on the X2D)
 KEY_END_GAP = 0.3            # mm, slot is this much deeper than half a key
 KEY_LR = (8.0, 10.0, 2.4)    # fuselage port/starboard halves (width along x)
 KEY_FR = (12.0, 6.0, 2.4)    # front/rear fuselage joint (width along z)
