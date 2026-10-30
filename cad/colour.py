@@ -151,11 +151,15 @@ def side_camo(g, side):
 # ============================================================
 # PAINTING
 # ============================================================
+SKIN_OUT = 0.05             # mm, skins reach just past the surface: no coplanar faces, so no
+                             # zero-thickness slivers of the base colour left on the outside
+
+
 def skins(P):
     return {
-        "up": P - P.translate([0, 0, -SKIN]),
-        "+y": P - P.translate([0, -SKIN, 0]),
-        "-y": P - P.translate([0, SKIN, 0]),
+        "up": P.translate([0, 0, SKIN_OUT]) - P.translate([0, 0, -SKIN]),
+        "+y": P.translate([0, SKIN_OUT, 0]) - P.translate([0, -SKIN, 0]),
+        "-y": P.translate([0, -SKIN_OUT, 0]) - P.translate([0, SKIN, 0]),
     }
 
 
@@ -304,7 +308,7 @@ def stand_paint(P, pat):
     L = stand_level(P)
     raised, stripe = stand_regions()
     above = mf.Manifold.cube([1000, 1000, 50]).translate([-500, -500, top + 0.01])
-    deck = (L - L.translate([0, 0, -SKIN])) - above          # flat top skin of the plinth
+    deck = (L.translate([0, 0, SKIN_OUT]) - L.translate([0, 0, -SKIN])) - above          # flat top skin of the plinth
     foot = H.STAND_X + H.STAND_FOOT_DX
     sl, sw, _ = H.STAND_BOSS
     boss = prism_z(mf.CrossSection.square([sl + 2, sw + 2], True).translate([foot, 0]))

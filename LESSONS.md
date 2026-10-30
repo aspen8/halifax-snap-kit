@@ -64,3 +64,7 @@ Print `cad/fit_test.py` first on any new printer or filament.
 ## Reference images
 
 These are not in git (copyright). Keep them in `ref/` locally or in a private repo. Without them the overlays can't be redrawn, but the calibrated numbers in `tools/refs.json` and the station tables in `cad/halifax.py` hold everything measured from them.
+
+## Colour skins must overshoot the surface
+
+When a colour region's outer face is exactly coplanar with the part's surface, manifold booleans can leave zero-thickness sheets of the base colour lying on the outside. They show up as black streaks in renders and in Bambu Studio. Build skins as `P.translate(+0.05) - P.translate(-SKIN)` (see `SKIN_OUT` in `cad/colour.py`). On the stand plinth this cut stray black on the top from 6450 to 159 mm².

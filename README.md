@@ -21,7 +21,7 @@ Open `kit/halifax_kit.3mf` in Bambu Studio. It contains 8 plates with the filame
 | 5 | Fins, roundel inlays | Black, Red, Blue, Yellow, White |
 | 6 | Canopy, nose, turrets, astrodome, gun packs | Black, Clear |
 | 7 | Display stand: camo plinth with badge and name, swept blade | Black, Dark Earth, Dark Green, Yellow, White |
-| 8–9 | Props, prop shafts, exhausts, gear, wheels, pins, keys | Black, Yellow |
+| 8 | Props, prop shafts, exhausts, gear, wheels, pins, keys | Black, Yellow |
 
 Suggested settings: PLA (matte for the camo), 0.16–0.2 mm layers, 2 walls, 10–15% gyroid infill, no supports.
 
