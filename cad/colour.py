@@ -176,6 +176,13 @@ def demarcation_z(x):
         np.asarray(x) > 60)                     # scalloped edge aft of the cockpit
 
 
+def roof_section(inset=2.0):
+    """Plan outline of the fuselage roof, inset from the sides."""
+    xs = np.linspace(0, H.FUSE_END_X, 120)
+    hw = np.array([max(H.interp(H.FUSE_STATIONS, x)[1] - inset, 0.2) for x in xs])
+    return cs([np.r_[np.c_[xs, hw], np.c_[xs[::-1], -hw[::-1]]]])
+
+
 def side_camo(g, side):
     """Green region on one fuselage side in (x, z): the plan pattern unfolded
     down the side, cut off at the demarcation line."""
@@ -193,8 +200,8 @@ def side_camo(g, side):
     val[ok] = g[row[ok], col[ok]]
     above = Z > demarcation_z(X)
     to_xz = lambda r, c: (xs[0] + c * 0.25, zs[0] + r * 0.25)
-    green = raster_section(val & above, to_xz, smooth=0.6)
-    band = raster_section(above, to_xz)
+    green = raster_section(val & above, to_xz, smooth=0.6).simplify(0.12)
+    band = raster_section(above, to_xz).simplify(0.12)
     return green, band
 
 
@@ -236,7 +243,8 @@ def colour_part(name, P, pat):
     x0, y0, z0, x1, y1, z1 = P.bounding_box()
     plan = prism_z(clip(pat["plan_green"], x0, y0, x1, y1))
     pat = dict(pat, side={s: tuple(clip(c, x0, z0, x1, z1) for c in v) for s, v in pat["side"].items()})
-    up = up - (P - P.translate([0, 0, UNDERSIDE_CLEAR]))   # never reach the underside
+    if not name.startswith("fuselage_"):    # thin edges: keep camo off the underside
+        up = up - (P - P.translate([0, 0, UNDERSIDE_CLEAR]))
     camo_up = [(EARTH, up), (GREEN, up ^ plan)]
     if name.startswith(("wing_", "tailplane")):
         return paint(P, list(camo_up))
@@ -244,8 +252,9 @@ def colour_part(name, P, pat):
         s = 1 if name.endswith("stbd") else -1
         side = S["+y"] if s > 0 else S["-y"]
         green_s, band = pat["side"][s]
+        roof = up ^ prism_z(roof_section())         # roof only: keeps clear of the side skin
         ops = [(EARTH, side ^ prism_y(band)), (GREEN, side ^ prism_y(green_s)),
-               (EARTH, up ^ prism_y(band)), (GREEN, up ^ prism_y(band) ^ plan)]
+               (EARTH, roof), (GREEN, roof ^ plan)]
         # codes read "MH (o) E" from both sides: squadron code aft on starboard
         rx = FUSE_ROUNDEL[0]
         mirror = s > 0

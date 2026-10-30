@@ -690,7 +690,8 @@ def astrodome():
     dome = (wp(cq.Solid.makeSphere(r, V(x, 0, top + 0.4)))
             .intersect(box(x - 10, x + 10, -10, 10, top + 0.4, top + 10)))
     plug = cyl((x, 0, top - 1.9), 2 * (r - 0.8) - 2 * FIT, 1.7, "z")
-    return skirt.union(dome).union(plug)
+    # skirt conforms to the curved roof (only the plug goes below the surface)
+    return skirt.union(dome).cut(fuselage_solid()).union(plug)
 
 
 def astrodome_socket():
@@ -808,6 +809,8 @@ def wheel_up_insert(side):
     zc = zb - WHEEL_UP_PROUD + r
     tyre = cyl((WHEEL_UP_X, yc - MAIN_WHEEL_W / 2, zc), MAIN_WHEEL_D, MAIN_WHEEL_W, "y")
     seg = tyre.intersect(box(WHEEL_UP_X - 20, WHEEL_UP_X + 20, yc - 10, yc + 10, zb - 10, zb))
+    _, zcn, x0, length = NACELLES[0]
+    seg = seg.cut(nacelle_body(zcn, x0, length).translate((0, yc, 0))).cut(gear_bath(yc, zcn))
     px, py, pd = WHEEL_UP_PLUG
     plug = box(WHEEL_UP_X - px / 2, WHEEL_UP_X + px / 2, yc - py / 2, yc + py / 2, zb - 0.1, zb + pd)
     return seg.union(plug)
