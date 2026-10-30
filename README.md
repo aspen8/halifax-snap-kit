@@ -9,7 +9,7 @@ A fully printed multi-colour snap kit in the style of PB94's MasterBuilds, for t
 
 Open `kit/halifax_kit.3mf` in Bambu Studio. It contains 8 plates with the filaments already assigned.
 
-1. Print `stl/fit_test_plate.stl` and `stl/fit_test_tongue.stl` first. Then adjust `FIT` and `AXLE_HOLE_TIGHT` in `cad/halifax.py` if needed.
+1. Print the fit test first: `stl/fit_test_plate.stl`, `fit_test_tongue.stl`, `fit_test_pins.stl` (head down) and `fit_test_key.stl`. Then adjust `AXLE_HOLE_TIGHT`, `KEY_FIT` and `FIT` in `cad/halifax.py` if needed.
 2. Load the filaments for each plate. The X2D's AMS holds 4 and the auxiliary head adds a 5th.
 
 | Plate | Parts | Filaments |
