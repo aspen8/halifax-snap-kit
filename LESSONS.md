@@ -76,3 +76,10 @@ The same applies to anything cut by subtracting a solid that shares the part's s
 
 Rule of thumb: every paint region should be a prism or slab that pokes out through the surface, so the boolean never compares two copies of the same face.
 
+## Markings and glazing
+
+- **Underwing roundels.** Bomber Command night bombers had none, so the Halifax wing inlays are top-only, 1.2 mm deep. For an aircraft with roundels top and bottom, PB94 uses a double-sided press-in disc. Do that with a through-socket and an inlay coloured on both faces.
+- **Canopy part = glazed area only.** Frames and fuselage paint outside the glass belong to the fuselage, so the canopy plate (black and clear) doesn't need camo.
+- **Side-view lines also show up in plan view.** On a rounded section, a cant rail at z and a roof bar at |y| can be the same line. Check both views before adding frames, or you get doubled lines.
+- **`pkill -f` can kill your own shell** when the pattern appears in the command line. Use `TaskStop`, or a pattern that can't match itself.
+

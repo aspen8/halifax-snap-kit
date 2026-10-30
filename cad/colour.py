@@ -324,11 +324,12 @@ def stand_paint(P, pat):
 CLEAR_PARTS = ("canopy", "nose_glazing", "turret_dorsal", "turret_tail", "astrodome")
 FRAME_W = 0.6                # mm
 # Pilot's canopy, measured from the Revell side and plan views (mm, assembled frame)
-CANOPY_GLASS_X = 52.6                       # windscreen base; forward of it is solid frame
-CANOPY_XFRAMES = [60.7, 72.4]               # windscreen rear frame, canopy rear frame (full hoop)
+CANOPY_GLASS_X = (52.9, 72.1)               # glazing between these; the rims outside are frame
+CANOPY_XFRAMES = [60.7]                     # windscreen rear frame (full hoop)
 CANOPY_SIDE_XFRAMES = [66.8]                # splits the two side windows (below the cant rail)
 CANOPY_RAILS = [(2.4, 52.6, 72.4), (8.0, 56.0, 72.4)]   # (z, x0, x1): sill and cant rail
-CANOPY_ROOF_BARS = [(2.8, 56.5), (10.3, 60.7)]          # (|y|, x0): roof glazing bars to the rear frame
+CANOPY_ROOF_BARS = [(2.8, 56.5)]            # (|y|, x0): roof glazing bars to the rear frame
+CANOPY_SCREEN_V = (60.7, 10.3)              # windscreen V seen from above: from (x, +-y) to the apex
 CANOPY_SCREEN_DIAG = ((57.6, 8.0), (53.4, 2.6))         # side quarter-light frame (x, z)
 NOSE_XFRAMES = [(6.0, -18.1), (12.4, None)]  # (x, only above z): vertical frame, rear rim
 NOSE_ZFRAMES = [-18.1, -21.2]                # gun-slot band across the dome
@@ -338,7 +339,8 @@ def frames(name, P):
     sk = ALL - K.inner_core(P, 0.6)        # reaches past the surface: no clear slivers
     W = FRAME_W
     if name == "canopy":
-        f = H_box(-100, CANOPY_GLASS_X, -100, 100, -100, 100)
+        g0, g1 = CANOPY_GLASS_X
+        f = H_box(-100, g0, -100, 100, -100, 100) + H_box(g1, 400, -100, 100, -100, 100)
         for x in CANOPY_XFRAMES:
             f = f + slab("x", x)
         for x in CANOPY_SIDE_XFRAMES:
@@ -349,9 +351,10 @@ def frames(name, P):
         roof = mf.CrossSection()
         for yb, x0 in CANOPY_ROOF_BARS:
             for sg in (1, -1):
-                roof = roof + D.band((x0, sg * yb), (CANOPY_XFRAMES[-1], sg * yb), W)
-                if yb > 5:   # windscreen V, seen from above
-                    roof = roof + D.band((x0, sg * yb), (CANOPY_GLASS_X, 0.0), W)
+                roof = roof + D.band((x0, sg * yb), (g1, sg * yb), W)
+        vx, vy = CANOPY_SCREEN_V
+        for sg in (1, -1):
+            roof = roof + D.band((vx, sg * vy), (g0 - 0.3, 0.0), W)
         f = f + (D.prism_z(roof) ^ top)
         f = f + D.prism_y(D.band(*CANOPY_SCREEN_DIAG, W))
         return sk ^ f

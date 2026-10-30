@@ -93,7 +93,7 @@ FUSE_BOSSES = [              # connector key positions between port/starboard ha
 ]
 
 # --- Cockpit canopy hump: (x, half_width, z_top)
-CANOPY_CUT = (48.0, 75.0, 2.0)          # x0, x1, z floor (full width drop-in)
+CANOPY_CUT = (52.3, 72.8, 2.0)          # x0, x1, z floor: just the glazed area (Revell); full-width drop-in
 CANOPY_TAB = (55.0, 68.0, 3.0, -2.0)     # x0, x1, half-width, z bottom of the locating tab
 H2S_RADOME = False           # ventral H2S blister (Revell GR.II only; not on the B.II Srs IA)
 RADOME = [(202.0, 6.0, 0.5), (206.0, 8.5, 5.0), (211.0, 9.8, 8.8), (217.0, 10.0, 10.3),
