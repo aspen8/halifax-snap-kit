@@ -215,7 +215,7 @@ def make_inlay(P, centre, d, rings, axis, side=1, depth=1.2, fit=0.1):
         keep = mf.Manifold.cube([1000, 500, 1000]).translate([-500, flat, -500])
     else:
         keep = mf.Manifold.cube([1000, 500, 1000]).translate([-500, -flat - 500, -500])
-    socket = P ^ cyl_axis(*centre, r, axis) ^ keep
+    socket = cyl_axis(*centre, r, axis) ^ keep         # a plain cylinder: no sheets left on the surface
     plug = P ^ cyl_axis(*centre, r - fit, axis) ^ keep
     # Each ring is the plug cut by a tube (cylinder minus the previous cylinder). Subtracting
     # the inner ring solids instead leaves zero-thickness sheets on the surface, where their
