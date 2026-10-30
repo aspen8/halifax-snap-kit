@@ -25,6 +25,8 @@ from pathlib import Path
 import cadquery as cq
 import numpy as np
 
+import kitlib as K
+
 # ============================================================
 # PARAMETERS
 # ============================================================
@@ -219,9 +221,14 @@ STAND_KEY = 6.0              # mm, square key into the fuselage socket
 STAND_KEY_DEPTH = 9.0
 STAND_PITCH = 5.0            # deg, nose-up display attitude
 STAND_HEIGHT = 95.0          # mm, fuselage bottom to base top
-STAND_POST = (8.0, 6.0)      # mm, post section x, y
-STAND_BASE = (170.0, 110.0, 5.0)
-STAND_LABEL = "HALIFAX B.II Srs.IA"
+STAND_BASE = (190.0, 120.0, 12.0)   # mm: length (x), width (y), thickness; display plinth
+STAND_BASE_DX = 20.0         # base centre is this far aft of STAND_X (balances the blade)
+STAND_BASE_R = 14.0          # plan corner radius
+STAND_BASE_BEVEL = 3.5       # underside chamfer (the base looks like it floats)
+STAND_FOOT_DX = 60.0         # blade foot this far aft of STAND_X: a swept "swan neck"
+STAND_BLADE = (18.0, 9.0, 7.0)    # blade width at the foot, at the top; thickness (y)
+STAND_TENON = (12.0, 4.0, 9.0)    # blade tenon into the base: x, y, depth
+STAND_BOSS = (34.0, 16.0, 3.0)    # raised stadium around the blade foot: length, width, height
 
 OUT_DIR = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("out")
 
@@ -291,28 +298,12 @@ def fuselage_solid(offset=0.0, x0=None, x1=None):
 
 
 def key_slots(points, axis, split, key, width_axis):
-    """Rectangular slots for a printed key across the split plane at each point.
-    The key's length runs along `axis`, its width along `width_axis`."""
-    length, width, thick = key
-    ext = {axis: length / 2 + KEY_END_GAP, width_axis: width / 2 + KEY_FIT}
-    third = ({"x", "y", "z"} - {axis, width_axis}).pop()
-    ext[third] = thick / 2 + KEY_FIT
-    out = None
-    for p in points:
-        q = list(p)
-        q["xyz".index(axis)] = split
-        lo = [q[i] - ext[a] for i, a in enumerate("xyz")]
-        hi = [q[i] + ext[a] for i, a in enumerate("xyz")]
-        b = box(lo[0], hi[0], lo[1], hi[1], lo[2], hi[2])
-        out = b if out is None else out.union(b)
-    return out
+    """Slots for a printed key across the split plane at each point (see kitlib)."""
+    return K.key_slots(points, axis, split, key, width_axis, KEY_FIT, KEY_END_GAP)
 
 
 def connector_key(key):
-    """A printed key, lying flat (length x width on the bed), ends chamfered."""
-    length, width, thick = key
-    k = W().box(length, width, thick, centered=(True, True, False))
-    return k.edges("|Y").chamfer(0.4)
+    return K.connector_key(key)
 
 
 KEY_COUNTS = {}              # filled by the part builders: name -> (key, count)
@@ -840,27 +831,68 @@ def wheel(x, yc, z_axle, d, w):
     return t.translate((x, yc, z_axle))
 
 
-def stand_parts():
-    """Post and base, built level then expressed in the model frame."""
+def stand_frame():
+    """Level-frame numbers shared with colour.py: (support point S, base top z, base centre x)."""
     _, _, _, bot, _ = interp(FUSE_STATIONS, STAND_X)
-    S = V(STAND_X, 0, bot)
+    return V(STAND_X, 0, bot), bot - STAND_HEIGHT, STAND_X + STAND_BASE_DX
+
+
+def bezier(p, n=48):
+    t = np.linspace(0, 1, n)[:, None]
+    p = [np.asarray(q, float) for q in p]
+    return ((1 - t) ** 3 * p[0] + 3 * (1 - t) ** 2 * t * p[1]
+            + 3 * (1 - t) * t ** 2 * p[2] + t ** 3 * p[3])
+
+
+def stand_blade(foot, top, top_dir):
+    """Tapered swept blade in the XZ plane (prints flat on its side), edges rounded."""
+    w0, w1, t = STAND_BLADE
+    h = top[1] - foot[1]
+    spine = bezier([foot, (foot[0], foot[1] + 0.5 * h),
+                    (top[0] - top_dir[0] * 0.45 * h, top[1] - top_dir[1] * 0.45 * h), top], 24)
+    d = np.gradient(spine, axis=0)
+    d /= np.linalg.norm(d, axis=1)[:, None]
+    nrm = np.c_[-d[:, 1], d[:, 0]]
+    w = np.linspace(w0, w1, len(spine))[:, None] / 2
+    left, right = spine + nrm * w, spine - nrm * w
+    pts = [tuple(p) for p in left] + [tuple(p) for p in right[::-1]]
+    blade = (W("XZ").moveTo(*left[0]).spline(pts[1:len(left)], includeCurrent=True)
+             .lineTo(*right[-1]).spline(pts[len(left) + 1:], includeCurrent=True).close()
+             .extrude(t / 2, both=True))
+    return blade.faces(">Y or <Y").edges().fillet(1.5)   # 24-point splines keep this valid
+
+
+def stand_parts():
+    """Swept blade and display plinth, built level then expressed in the model frame."""
+    S, base_top, bcx = stand_frame()
     th = math.radians(STAND_PITCH)
-    ax = ((STAND_X, 0, bot), (STAND_X, 1, bot))
+    ax = ((STAND_X, 0, S.z), (STAND_X, 1, S.z))
     k = STAND_KEY / 2
-    key = box(STAND_X - k, STAND_X + k, -k, k, bot - 2.5, bot + STAND_KEY_DEPTH).rotate(*ax, STAND_PITCH)
-    px = S.x - 2.5 * math.sin(th)
-    pz = S.z - 2.5 * math.cos(th)
-    base_top = bot - STAND_HEIGHT
-    hx, hy = STAND_POST[0] / 2, STAND_POST[1] / 2
-    post = box(px - hx, px + hx, -hy, hy, base_top + 1.2, pz + 0.8).union(key)
+    key = box(STAND_X - k, STAND_X + k, -k, k, S.z - 2.5, S.z + STAND_KEY_DEPTH).rotate(*ax, STAND_PITCH)
+    top = (S.x - 2.5 * math.sin(th), S.z - 2.5 * math.cos(th))
+    foot = (STAND_X + STAND_FOOT_DX, base_top + STAND_BOSS[2])
+    tx, ty, td = STAND_TENON
+    tenon = box(foot[0] - tx / 2, foot[0] + tx / 2, -ty / 2, ty / 2, foot[1] - td, foot[1] + 1.0)
+    # OCC sometimes drops the spline blade from the union; nudge the tip until it holds
+    for eps in np.arange(0.0, 1.0, 0.05):
+        blade = stand_blade(foot, (top[0] - 0.8 * math.sin(th), top[1] + (0.8 + eps) * math.cos(th)),
+                            (math.sin(th), math.cos(th)))
+        post = blade.union(tenon).union(key)
+        if post.val().isValid() and post.val().Volume() > blade.val().Volume():
+            break
+    else:
+        raise RuntimeError("stand blade union failed")
+    # plinth: rounded slab, bevelled underside, rounded top edge, raised boss round the foot
     bl, bw, bt = STAND_BASE
-    base = (W("XY").ellipse(bl / 2, bw / 2).extrude(-bt).edges(">Z").chamfer(1.2)
-            .translate((px, 0, base_top)))
-    base = base.union(box(px - hx - 4, px + hx + 4, -hy - 4, hy + 4, base_top - 0.5, base_top + 10))
-    base = base.cut(box(px - hx - FIT, px + hx + FIT, -hy - FIT, hy + FIT, base_top + 1, base_top + 11))
-    label = (W("XY").text(STAND_LABEL, 7.0, -0.6, halign="center", valign="center")
-             .translate((px, -bw / 2 + 14, base_top)))
-    base = base.cut(label)
+    base = (W("XY").rect(bl, bw).extrude(-bt).edges("|Z").fillet(STAND_BASE_R)
+            .edges("<Z").chamfer(STAND_BASE_BEVEL).edges(">Z").fillet(1.5)
+            .translate((bcx, 0, base_top)))
+    sl, sw, sh = STAND_BOSS
+    boss = (W("XY").slot2D(sl, sw).extrude(sh).edges(">Z").fillet(1.0)
+            .translate((foot[0], 0, base_top - 0.01)))
+    base = base.union(boss)
+    base = base.cut(box(foot[0] - tx / 2 - FIT, foot[0] + tx / 2 + FIT, -ty / 2 - FIT, ty / 2 + FIT,
+                        foot[1] - td - 0.4, foot[1] + 1))
     # express in the model frame (model is pitched nose-up STAND_PITCH on the stand)
     return post.rotate(*ax, -STAND_PITCH), base.rotate(*ax, -STAND_PITCH), ax
 

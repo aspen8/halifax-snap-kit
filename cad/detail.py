@@ -10,12 +10,11 @@ Layout is symmetric and structural, guided by the Revell 1/72 Halifax
 B/GR II Srs IA plan views. Everything works on manifold3d meshes in the
 assembled frame (see halifax.py axes).
 """
-import math
-
 import manifold3d as mf
-import numpy as np
 
 import halifax as H
+from kitlib import band, rect_outline, ring  # noqa: F401
+from kitlib import dots_along as _dots
 
 # ============================================================
 # PARAMETERS
@@ -62,42 +61,6 @@ NACELLE_RINGS = [0.20, 0.36]  # fractions of nacelle length (cowling joints)
 # ============================================================
 # 2D HELPERS
 # ============================================================
-def band(p0, p1, w):
-    """Rectangle of width w along the segment p0-p1."""
-    p0, p1 = np.asarray(p0, float), np.asarray(p1, float)
-    d = p1 - p0
-    n = np.array([-d[1], d[0]]) / (np.linalg.norm(d) + 1e-12) * w / 2
-    return mf.CrossSection([np.array([p0 - n, p1 - n, p1 + n, p0 + n])])
-
-
-def ring(cx, cy, d, w):
-    return (mf.CrossSection.circle(d / 2 + w / 2, 64) - mf.CrossSection.circle(d / 2 - w / 2, 64)
-            ).translate([cx, cy])
-
-
-def rect_outline(a0, b0, a1, b1, w):
-    pts = [(a0, b0), (a1, b0), (a1, b1), (a0, b1)]
-    out = mf.CrossSection()
-    for i in range(4):
-        out = out + band(pts[i], pts[(i + 1) % 4], w)
-    return out
-
-
-def dots_along(p0, p1, offset, pitch=RIVET_PITCH):
-    p0, p1 = np.asarray(p0, float), np.asarray(p1, float)
-    d = p1 - p0
-    L = np.linalg.norm(d)
-    if L < pitch:
-        return mf.CrossSection()
-    u = d / L
-    n = np.array([-u[1], u[0]]) * offset
-    out = mf.CrossSection()
-    for t in np.arange(pitch / 2, L - pitch / 2 + 1e-6, pitch):
-        c = p0 + u * t + n
-        out = out + mf.CrossSection.circle(RIVET_D / 2, 16).translate(list(c))
-    return out
-
-
 def prism_z(sec):
     return sec.extrude(400.0).translate([0, 0, -200.0])
 
@@ -108,6 +71,10 @@ def prism_y(sec_xz):
 
 def slab_x(x, w):
     return mf.Manifold.cube([w, 1000, 1000]).translate([x - w / 2, -500, -500])
+
+
+def dots_along(p0, p1, offset, pitch=RIVET_PITCH):
+    return _dots(p0, p1, offset, pitch, RIVET_D)
 
 
 # ============================================================

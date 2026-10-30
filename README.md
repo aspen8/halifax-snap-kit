@@ -20,7 +20,8 @@ Open `kit/halifax_kit.3mf` in Bambu Studio. It contains 8 plates with the filame
 | 4 | Nacelle halves (8) | Black, Dark Earth, Dark Green |
 | 5 | Fins, roundel inlays | Black, Red, Blue, Yellow, White |
 | 6 | Canopy, nose, turrets, astrodome, gun packs | Black, Clear |
-| 7–8 | Props, prop shafts, exhausts, gear, wheels, pins, keys, stand | Black, Yellow |
+| 7 | Display stand: camo plinth with badge and name, swept blade | Black, Dark Earth, Dark Green, Yellow, White |
+| 8–9 | Props, prop shafts, exhausts, gear, wheels, pins, keys | Black, Yellow |
 
 Suggested settings: PLA (matte for the camo), 0.16–0.2 mm layers, 2 walls, 10–15% gyroid infill, no supports.
 
@@ -32,7 +33,7 @@ Suggested settings: PLA (matte for the camo), 0.16–0.2 mm layers, 2 walls, 10�
 - **Engines:** 4 props with yellow tips, 4 prop shafts with captive flanges (the props spin), 8 exhaust banks.
 - **Gear:** 2 main gear forks and wheels, tailwheel and printed axle pins. For display on the stand there are 2 wheels-up inserts that show the retracted main wheels.
 - **Connector keys:** 11 between the fuselage halves, 6 at the front/rear joint, 8 in the nacelles.
-- **Stand:** base and post, for in-flight display.
+- **Display stand:** a swept "swan-neck" blade that prints flat on its side, on a plinth (190 × 120 mm, bevelled underside) with a Dark Earth/Dark Green camo top, a yellow pinstripe, a raised white Halifax silhouette, and the name in raised white: HANDLEY PAGE HALIFAX / B MK II SERIES IA / 158 SQN RAF · NP-G · LV917.
 
 **Surface detail** (sized like PB94's):
 - 0.5 mm panel lines and deeper hinge lines.
@@ -47,10 +48,11 @@ Suggested settings: PLA (matte for the camo), 0.16–0.2 mm layers, 2 walls, 10�
 3. **Nacelles.** Push the exhaust banks into their side slots. Drop a prop shaft into the inboard half, with its flange in the pocket. Close the outboard half around the wing on the nacelle keys, then press the prop onto the hex boss.
 4. **Tail.** Fit the fins onto the tailplane tips.
 5. **Turrets.** Fit the gun packs into the turrets. Pin the turrets on: the dorsal turret rotates.
-6. **Display.** Either fit the gear (wheels on the headed pins, forks into their sockets) or put the model on the stand. With the gear down it sits tail-down at 8.7°.
+6. **Display.** Either fit the gear (wheels on the headed pins, forks into their sockets) or put the model on the stand. With the gear down it sits tail-down at 8.7°. For the stand, push the blade's tenon into the plinth, fit the wheels-up inserts, and lower the model onto the key at the blade tip: it sits 5° nose-up.
 
 ## Files
 
+- `cad/kitlib.py`: the reusable toolkit for any snap kit: colour painting, inlays, printed keys, text, the Bambu 3MF writer. Nothing in it is Halifax-specific.
 - `cad/halifax.py`: parametric airframe and kit split (CadQuery).
 - `cad/detail.py`: panel lines, hatches and rivets.
 - `cad/colour.py`: colour scheme, roundel inlays and the Bambu 3MF writer.
@@ -60,6 +62,13 @@ Suggested settings: PLA (matte for the camo), 0.16–0.2 mm layers, 2 walls, 10�
 - `stl/`: single-colour STLs in print orientation, with surface detail.
 - `kit/halifax_kit.3mf`: the multi-colour kit.
 - `docs/`: renders, the side view and the plan overlay.
+- `tools/`: checks used while building:
+  - `ref_overlay.py`: model outline over a reference drawing, calibrated in `tools/refs.json`.
+  - `interference.py`: overlapping parts.
+  - `overhang.py`: printability of the print poses.
+  - `colour_check.py`: stray colours, e.g. camo on the underside.
+  - `closeup.py`: close-up renders.
+- `LESSONS.md`: the workflow, X2D tolerances and pitfalls. Read it before starting the next aircraft.
 
 To rebuild (Python 3.10–3.12):
 
@@ -78,3 +87,15 @@ Geometry was measured from the Revell 1/72 Halifax B/GR II Srs IA plan views and
 - Nose dome, cockpit, turret, astrodome and D/F loop come from the Revell side elevation, cross-checked against the Wikipedia Mk II Srs IA drawing (overlay in `docs/overlay_revell_side.png`).
 - Markings default to 158 Sqn NP-G (LV917): scalloped demarcation and 4 Group yellow fin stripes. To use 51 Sqn MH-E instead, set `HALIFAX_MARKINGS=MH-E` before running `cad/colour.py`.
 - No H2S radome: that's a Mk III / GR.II feature. Set `H2S_RADOME = True` in `cad/halifax.py` to add it.
+
+## Reference images (not in git)
+
+The shape and markings depend on reference drawings. They're copyrighted, so they're not committed: keep them in `ref/` (git-ignored) or a private repo. Without them `tools/ref_overlay.py` can't redraw the overlays, though everything measured from them is already in the code and `tools/refs.json`.
+
+| File in `ref/` | Source | Used for |
+|---|---|---|
+| `revell_04394_p14.png` | Revell 04394 Halifax B/GR II Srs IA instructions, page 14, rendered at 400 dpi | Side and plan shape, camo pattern, glazing frames |
+| `wikipedia_halifax_3view.png` | Wikipedia Halifax 3-view (Mk I to Mk III side views) | Cross-check of the side profile |
+| `profile_158sqn_NP-G.jpg` | 158 Sqn LV917 NP-G colour profile | Markings (default) |
+| `profile_51sqn_MH-E.jpg` | 51 Sqn MH-E colour profile | Alternative markings |
+

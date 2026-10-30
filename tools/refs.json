@@ -1,0 +1,17 @@
+{
+  "_comment": "Calibration of each reference drawing: model (h, v) in mm -> page pixel (u, v) = A @ [h, v, 1]. The images themselves are not in git; put them in ref/ (see README).",
+  "side": {
+    "image": "ref/revell_04394_p14.png",
+    "_source": "Revell 04394 Halifax B/GR II Srs IA instructions, page 14, rendered at 400 dpi. Lower side view (nose right). 0.2042 mm per px; the drawing is tilted slightly, hence the x term in the second row.",
+    "axes": "xz",
+    "affine": [[-4.89716, 0.0, 2171.0], [-0.065587, -4.89716, 3823.30]],
+    "crop": [340, 3480, 2240, 4120]
+  },
+  "plan": {
+    "image": "ref/revell_04394_p14.png",
+    "_source": "Same page, underside plan view (nose down, starboard on the left). 0.253 mm per px.",
+    "axes": "xy",
+    "affine": [[0.0, -3.95257, 1995.0], [-3.95257, 0.0, 2397.0]],
+    "crop": [940, 900, 3050, 2440]
+  }
+}
