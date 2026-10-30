@@ -182,8 +182,10 @@ RAD_VANES = (0.9, 2.3)                   # |y| of the vanes, either side of cent
 RAD_VANE_T = 0.5
 # --- Astrodome (clear, plugs into the roof) and D/F loop fairing (moulded on)
 ASTRODOME = (87.6, 4.6)                  # x, radius (Revell side view)
-DF_LOOP = (125.5, 13.0, 3.6, 3.6)        # x, length, width, height of the fairing
-DF_TOP = 7.5                 # mm, fairing top above the roof (stalk + housing)
+DF_LOOP = (117.3, 14.1, 4.0, 4.5)        # nose x, length, width, depth of the teardrop housing (Revell side)
+DF_MAST = (0.41, 2.8, 2.0)              # mast position (fraction of length from the nose), x-length, width
+DF_PROFILE = [(0.0, 0.05), (0.04, 0.55), (0.12, 0.85), (0.3, 1.0), (0.55, 0.85), (0.8, 0.45), (1.0, 0.04)]
+DF_TOP = 7.9                 # mm, fairing top above the roof (stalk + housing)
 PIN_HEAD = (4.6, 0.8)        # head diameter, thickness (covers the 2.65 spin holes)
 SPINNER_LEN = 7.5
 SPINNER_R = 4.8
@@ -703,12 +705,16 @@ def astrodome_socket():
 
 
 def df_loop_fairing():
-    x, L, w, h = DF_LOOP
-    _, _, top, _, _ = interp(FUSE_STATIONS, x)
-    m = cq.Matrix([[L / 2, 0, 0, 0], [0, w / 2, 0, 0], [0, 0, h / 2, 0]])
-    zc = top + DF_TOP - h / 2
-    tear = wp(cq.Solid.makeSphere(1.0).transformGeometry(m)).translate((x, 0, zc))
-    mast = box(x - 1.2, x + 1.2, -1.0, 1.0, top - 0.5, zc)
+    """D/F loop housing: a teardrop (round nose forward, pointed tail) on a short mast."""
+    x0, L, w, d = DF_LOOP
+    f, mx, mw = DF_MAST
+    xm = x0 + f * L
+    _, _, top, _, _ = interp(FUSE_STATIONS, xm)
+    zc = top + DF_TOP - d / 2
+    tear = revolve_profile([(x0 + a * L, k * d / 2) for a, k in DF_PROFILE])
+    tear = wp(tear.val().transformGeometry(cq.Matrix([[1, 0, 0, 0], [0, w / d, 0, 0], [0, 0, 1, 0]])))
+    tear = tear.translate((0, 0, zc))
+    mast = box(xm - mx / 2, xm + mx / 2, -mw / 2, mw / 2, top - 0.5, zc)
     return tear.union(mast)
 
 
