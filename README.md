@@ -19,17 +19,17 @@ Open `kit/halifax_kit.3mf` in Bambu Studio. It contains 8 plates with the filame
 | 3 | Inner wings | Black, Dark Earth, Dark Green |
 | 4 | Nacelle halves (8) | Black, Dark Earth, Dark Green |
 | 5 | Fins, roundel inlays | Black, Red, Blue, Yellow, White |
-| 6 | Canopy, nose, turrets, astrodome, gun packs | Black, Clear |
+| 6 | Canopy, rear roof glazing, nose, turrets, astrodome, gun packs | Black, Clear |
 | 7 | Display stand: camo plinth with badge and name, swept blade | Black, Dark Earth, Dark Green, Yellow, White |
 | 8 | Props, prop shafts, exhausts, gear, wheels, pins, keys | Black, Yellow |
 
 Suggested settings: PLA (matte for the camo), 0.16–0.2 mm layers, 2 walls, 10–15% gyroid infill, no supports.
 
-## Kit contents (88 parts)
+## Kit contents (89 parts)
 
 - **Airframe:** 4 fuselage halves, 4 wing panels, 8 nacelle halves, tailplane, 2 fins.
 - **Colour inlays:** 2 Type B wing roundels and 2 C1 fuselage roundels, pressed into sockets.
-- **Clear parts:** perspex nose, canopy, astrodome, dorsal and tail turrets, all with black frame lines. Plus 2 gun packs.
+- **Clear parts:** perspex nose, cockpit canopy, rear roof glazing, astrodome, dorsal and tail turrets, all with black frame lines. Plus 2 gun packs.
 - **Engines:** 4 props with yellow tips, 4 prop shafts with captive flanges (the props spin), 8 exhaust banks.
 - **Gear:** 2 main gear forks and wheels, tailwheel and printed axle pins. For display on the stand there are 2 wheels-up inserts that show the retracted main wheels.
 - **Connector keys:** 11 between the fuselage halves, 6 at the front/rear joint, 8 in the nacelles.
@@ -43,7 +43,7 @@ Suggested settings: PLA (matte for the camo), 0.16–0.2 mm layers, 2 walls, 10�
 
 ## Assembly
 
-1. **Fuselage.** Press the canopy, the astrodome and the nose spigot into place. Slide in the tailplane and both inner wing root tongues, port forward and starboard aft. Then close each fuselage pair on its connector keys, and join the front and rear sections on the joint keys.
+1. **Fuselage.** Drop the canopy and rear roof glazing over their locating bosses, press the astrodome and the nose spigot into place. Slide in the tailplane and both inner wing root tongues, port forward and starboard aft. Then close each fuselage pair on its connector keys, and join the front and rear sections on the joint keys.
 2. **Wings.** Plug the outer panels onto the inner panels. The joint tongue sets the 5° dihedral. Press the roundels into their sockets.
 3. **Nacelles.** Push the exhaust banks into their side slots. Drop a prop shaft into the inboard half, with its flange in the pocket. Close the outboard half around the wing on the nacelle keys, then press the prop onto the hex boss.
 4. **Tail.** Fit the fins onto the tailplane tips.
