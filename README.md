@@ -24,13 +24,13 @@ Open `kit/halifax_kit.3mf` in Bambu Studio. It contains 8 plates with the filame
 
 Suggested settings: PLA (matte for the camo), 0.16–0.2 mm layers, 2 walls, 10–15% gyroid infill, no supports.
 
-## Kit contents (86 parts)
+## Kit contents (88 parts)
 
 - **Airframe:** 4 fuselage halves, 4 wing panels, 8 nacelle halves, tailplane, 2 fins.
 - **Colour inlays:** 2 Type B wing roundels and 2 C1 fuselage roundels, pressed into sockets.
 - **Clear parts:** perspex nose, canopy, astrodome, dorsal and tail turrets, all with black frame lines. Plus 2 gun packs.
 - **Engines:** 4 props with yellow tips, 4 prop shafts with captive flanges (the props spin), 8 exhaust banks.
-- **Gear:** 2 main gear forks and wheels, tailwheel, printed axle pins.
+- **Gear:** 2 main gear forks and wheels, tailwheel and printed axle pins. For display on the stand there are 2 wheels-up inserts that show the retracted main wheels.
 - **Connector keys:** 11 between the fuselage halves, 6 at the front/rear joint, 8 in the nacelles.
 - **Stand:** base and post, for in-flight display.
 
@@ -75,4 +75,6 @@ Geometry was measured from the Revell 1/72 Halifax B/GR II Srs IA plan views and
 - Wing planform, nacelle positions and tail match the plans to about 1 mm. Wing area works out at 116.6 m² full size.
 - Wing incidence is 2° at the root. The undersides are flat from 15% chord so they print without supports.
 - The camo is the plan-view pattern, wrapped down to a demarcation line taken from the profile.
-- Markings are 51 Sqn MH-E as a placeholder. The codes are parameters in `cad/colour.py`.
+- Nose dome, cockpit, turret, astrodome and D/F loop come from the Revell side elevation, cross-checked against the Wikipedia Mk II Srs IA drawing (overlay in `docs/overlay_revell_side.png`).
+- Markings default to 158 Sqn NP-G (LV917): scalloped demarcation and 4 Group yellow fin stripes. To use 51 Sqn MH-E instead, set `HALIFAX_MARKINGS=MH-E` before running `cad/colour.py`.
+- No H2S radome: that's a Mk III / GR.II feature. Set `H2S_RADOME = True` in `cad/halifax.py` to add it.
