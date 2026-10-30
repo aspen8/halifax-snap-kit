@@ -134,11 +134,18 @@ def slab(axis, at, w):
     return mf.Manifold.cube(size).translate(off)
 
 
-def outer_skin(P, d):
+def inner_core(P, d):
+    """P eroded by d along the six axis directions."""
     core = P
     for v in ([d, 0, 0], [-d, 0, 0], [0, d, 0], [0, -d, 0], [0, 0, d], [0, 0, -d]):
         core = core ^ P.translate(v)
-    return P - core
+    return core
+
+
+def outer_skin(P, d):
+    """The outer d mm of P. To paint it, prefer (region - inner_core(P, d)): a region that
+    reaches past the surface leaves no zero-thickness sheets behind."""
+    return P - inner_core(P, d)
 
 
 def cyl_axis(cx, cy, r, axis):
@@ -210,12 +217,16 @@ def make_inlay(P, centre, d, rings, axis, side=1, depth=1.2, fit=0.1):
         keep = mf.Manifold.cube([1000, 500, 1000]).translate([-500, -flat - 500, -500])
     socket = P ^ cyl_axis(*centre, r, axis) ^ keep
     plug = P ^ cyl_axis(*centre, r - fit, axis) ^ keep
-    vols, inner = {}, mf.Manifold()
+    # Each ring is the plug cut by a tube (cylinder minus the previous cylinder). Subtracting
+    # the inner ring solids instead leaves zero-thickness sheets on the surface, where their
+    # top faces coincide with the plug's.
+    vols, prev = {}, None
     for colour, dd in reversed(rings):               # innermost first
-        c = (plug ^ cyl_axis(*centre, dd / 2, axis)) - inner
+        cyl = cyl_axis(*centre, dd / 2, axis)
+        c = plug ^ (cyl if prev is None else cyl - prev)
         if c.volume() > 1e-3:
             vols[colour] = vols[colour] + c if colour in vols else c
-        inner = inner + c
+        prev = cyl
     return P - socket, vols, plug
 
 

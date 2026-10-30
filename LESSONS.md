@@ -68,3 +68,11 @@ These are not in git (copyright). Keep them in `ref/` locally or in a private re
 ## Colour skins must overshoot the surface
 
 When a colour region's outer face is exactly coplanar with the part's surface, manifold booleans can leave zero-thickness sheets of the base colour lying on the outside. They show up as black streaks in renders and in Bambu Studio. Build skins as `P.translate(+0.05) - P.translate(-SKIN)` (see `SKIN_OUT` in `cad/colour.py`). On the stand plinth this cut stray black on the top from 6450 to 159 mm².
+
+The same applies to anything cut by subtracting a solid that shares the part's surface:
+- **Roundel rings.** Cut each ring as `plug ^ (cylinder - previous cylinder)`, not `plug - inner rings`.
+- **Glazing frames.** Use `frame slabs - inner_core(P)`, not `outer_skin(P) ^ frames`.
+- **Raised lettering.** Paint it with a region above the deck, not `P ^ region`.
+
+Rule of thumb: every paint region should be a prism or slab that pokes out through the surface, so the boolean never compares two copies of the same face.
+

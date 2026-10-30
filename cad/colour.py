@@ -26,7 +26,7 @@ from PIL import Image
 import detail as D
 import halifax as H
 import kitlib as K
-from kitlib import (clip, cs, mesh_of, outer_skin, pose_matrix, prism_y, prism_z,
+from kitlib import (clip, cs, mesh_of, pose_matrix, prism_y, prism_z,
                     raster_section, text_section, to_manifold)
 
 # ============================================================
@@ -314,7 +314,7 @@ def stand_paint(P, pat):
     boss = prism_z(mf.CrossSection.square([sl + 2, sw + 2], True).translate([foot, 0]))
     ops = [(EARTH, deck), (GREEN, deck ^ prism_z(pat["plan_green"])),
            (YELLOW, deck ^ prism_z(stripe)), (BLACK, boss),
-           (WHITE, L ^ above ^ prism_z(raised.offset(0.05, mf.JoinType.Round)))]
+           (WHITE, above ^ prism_z(raised.offset(0.05, mf.JoinType.Round)))]
     return {c: stand_level(v, -1) for c, v in paint(L, ops).items()}
 
 
@@ -335,7 +335,7 @@ NOSE_ZFRAMES = [-18.1, -21.2]                # gun-slot band across the dome
 
 
 def frames(name, P):
-    sk = outer_skin(P, 0.6)
+    sk = ALL - K.inner_core(P, 0.6)        # reaches past the surface: no clear slivers
     W = FRAME_W
     if name == "canopy":
         f = H_box(-100, CANOPY_GLASS_X, -100, 100, -100, 100)
