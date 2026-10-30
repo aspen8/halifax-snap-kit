@@ -92,3 +92,12 @@ On the X2D, a printed 1.8 mm pin needs a 2.35 mm hole to grip and 2.65 mm to spi
 ## Slots through tapering parts
 
 The tailplane slot was a plain box. Where the rear fuselage tapers, it broke through the top, and a panel line then cut off a loose strip of roof. Cut slots with the mating part's own shape grown by `FIT` (as the fins do); it also locates the part. After every geometry change, check each part is still a single piece (`trimesh` `split()`). Every joint needs a positive locator, either keys or a shaped socket, not just a butt joint.
+
+## Final checks before handing over a kit
+
+Run all three on the full build. Every one caught something on the Halifax that the renders hid:
+1. Every STL is a single piece (`trimesh` `split()`). This caught the nacelle islands left in the wing-tongue pocket, an astrodome plug that only touched its dome, and loose rivet dots.
+2. Assembled interference over all parts (`tools/interference.py`). It must be clean apart from intended press fits.
+3. Overhangs in print pose (`tools/overhang.py`). This caught the canopy floating on its tab.
+
+`colour.py` now keeps only the largest solid of each part and reports anything above 1 mm3 it drops. Read those reports: a dropped piece can mean a real geometry bug.
