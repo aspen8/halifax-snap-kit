@@ -327,9 +327,11 @@ FRAME_W = 0.6                # mm
 CANOPY_GLASS_X = (52.9, 72.1)               # glazing between these; the rims outside are frame
 CANOPY_XFRAMES = [60.7]                     # windscreen rear frame (full hoop)
 CANOPY_SIDE_XFRAMES = [66.8]                # splits the two side windows (below the cant rail)
-CANOPY_RAILS = [(2.4, 52.6, 72.4), (8.0, 56.0, 72.4)]   # (z, x0, x1): sill and cant rail
-CANOPY_ROOF_BARS = [(2.8, 56.5)]            # (|y|, x0): roof glazing bars to the rear frame
-CANOPY_SCREEN_V = (60.7, 10.3)              # windscreen V seen from above: from (x, +-y) to the apex
+CANOPY_RAILS = [(2.4, 52.6, 72.4), (8.0, 57.6, 72.4)]   # (z, x0, x1): sill, and cant rail from the screen frame
+CANOPY_ROOF_BARS = [(2.8, 55.4)]            # (|y|, x0): roof bars, from the screen's lower frame to the rear
+# Windscreen lower frame seen from above (x, |y|): from the cant rail's front end, in to the
+# roof bars, then the V notch to the apex. Every bar ends on another frame, as on the real thing.
+CANOPY_SCREEN_FRAME = [(57.6, 10.5), (55.4, 2.8), (52.6, 0.0)]
 CANOPY_SCREEN_DIAG = ((57.6, 8.0), (53.4, 2.6))         # side quarter-light frame (x, z)
 # Rear roof glazing (Revell plan, and the user's photo): centre panel with the astrodome,
 # side panels split by diagonals from the rear outer corner to the front inner corner
@@ -357,9 +359,11 @@ def frames(name, P):
         for yb, x0 in CANOPY_ROOF_BARS:
             for sg in (1, -1):
                 roof = roof + D.band((x0, sg * yb), (g1, sg * yb), W)
-        vx, vy = CANOPY_SCREEN_V
+        pts = CANOPY_SCREEN_FRAME
         for sg in (1, -1):
-            roof = roof + D.band((vx, sg * vy), (g0 - 0.3, 0.0), W)
+            for (xa, ya), (xb, yb) in zip(pts, pts[1:]):
+                roof = roof + D.band((xa, sg * ya), (xb, sg * yb), W)
+            roof = roof + mf.CrossSection.circle(W / 2, 12).translate([pts[1][0], sg * pts[1][1]])
         f = f + (D.prism_z(roof) ^ top)
         f = f + D.prism_y(D.band(*CANOPY_SCREEN_DIAG, W))
         return sk ^ f
