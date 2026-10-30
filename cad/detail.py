@@ -53,7 +53,9 @@ FUSE_RINGS = [32.0, 48.0, 140.0, 165.0, 200.0, 245.0, 280.0, 315.0, 342.0]
 FUSE_SEAMS = [(1.5, 30.0, 350.0), (-24.0, 30.0, 340.0)]     # (z, x from, x to) side seams
 CREW_DOOR = (-1, 252.0, 264.0, -30.0, -8.0)    # side, x0, x1, z0, z1 (port, rear fuselage)
 ROOF_HATCHES = [(150.0, 9.0, 7.0), (232.0, 9.0, 7.0)]       # x centre, length, width
-NOSE_WINDOWS = [(34.0, 38.0, -12.8, -9.3), (41.0, 47.5, -19.0, -14.0), (53.0, 60.0, -19.0, -14.0)]  # x0, x1, z0, z1 (profile)
+NOSE_WINDOWS = [(54.0, 61.0, -10.3, -2.6),     # navigator's D-window (Revell side view)
+                (61.3, 71.7, -1.3, 0.9)]       # strip window under the canopy; x0, x1, z0, z1
+NOSE_PORTS = [(16.8, -15.6, 4.1)]              # round side window: x, z, diameter
 NACELLE_RINGS = [0.20, 0.36]  # fractions of nacelle length (cowling joints)
 
 
@@ -218,6 +220,8 @@ def apply(name, P):
         win = mf.CrossSection()
         for x0, x1, z0, z1 in NOSE_WINDOWS:
             win = win + mf.CrossSection.square([x1 - x0, z1 - z0]).translate([x0, z0])
+        for x, z, dd in NOSE_PORTS:
+            win = win + mf.CrossSection.circle(dd / 2, 32).translate([x, z])
         groove(prism_y(win), sax, 0.5)
         hat = mf.CrossSection()
         for x, L, w in ROOF_HATCHES:

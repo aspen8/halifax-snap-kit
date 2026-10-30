@@ -98,10 +98,10 @@ RADOME = [(202.0, 6.0, 0.5), (206.0, 8.5, 5.0), (211.0, 9.8, 8.8), (217.0, 10.0,
           (224.0, 9.4, 9.8), (231.0, 7.6, 7.5), (238.0, 5.0, 3.8), (243.0, 2.5, 1.0),
           (246.0, 0.8, 0.2)]   # x, half-width, depth below the fuselage (Revell side + plan)
 WHEEL_UP_X = 147.0           # retracted main wheel, protruding below the nacelle (stand display)
-WHEEL_UP_PROUD = 3.6         # mm below the housing
+WHEEL_UP_PROUD = 6.0         # mm below the housing
 WHEEL_UP_PLUG = (4.0, 9.0, 5.0)   # x, y, depth of the plug into the housing
-GEAR_BATH = [(110.0, -27.0, 7.5), (118.0, -34.5, 9.5), (128.0, -37.5, 10.2),
-             (150.0, -37.5, 10.2), (162.0, -34.5, 9.0), (171.0, -28.0, 6.0)]  # x, bottom z, half-width
+GEAR_BATH = [(104.0, -27.5, 6.5), (110.0, -33.0, 8.0), (115.0, -34.5, 8.5),
+             (157.0, -34.5, 8.5), (160.5, -31.5, 8.0), (163.5, -26.5, 6.5)]  # x, bottom z, half-width: flat-bottomed slab-sided box (Revell side view)
 
 # --- Turrets
 DORSAL_X = 195.0             # Boulton Paul Type A Mk VIII (Revell side view)
@@ -582,8 +582,8 @@ def wing_pitch():
 # NACELLES AND PROPS
 # ============================================================
 def gear_bath(y, zc):
-    secs = [superellipse_wire(x, hw, zc, bot, 2.4) for x, bot, hw in GEAR_BATH]
-    return wp(cq.Solid.makeLoft(secs, ruled=False)).translate((0, y, 0))
+    secs = [superellipse_wire(x, hw, zc, bot, 4.0) for x, bot, hw in GEAR_BATH]
+    return wp(cq.Solid.makeLoft(secs, ruled=True)).translate((0, y, 0))
 
 
 def nacelle_body(zc, x0, length):

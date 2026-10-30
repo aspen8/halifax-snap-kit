@@ -303,9 +303,15 @@ def colour_part(name, P, pat):
 # ============================================================
 CLEAR_PARTS = ("canopy", "nose_glazing", "turret_dorsal", "turret_tail", "astrodome")
 FRAME_W = 0.6                # mm
-CANOPY_FRAMES = [51.5, 55.5, 59.5, 64.5, 69.5, 74.0]
-CANOPY_RAILS = [3.2, 8.8]    # z of the sill and the roof-edge frame
-NOSE_FRAMES = [6.0]
+# Pilot's canopy, measured from the Revell side and plan views (mm, assembled frame)
+CANOPY_GLASS_X = 52.6                       # windscreen base; forward of it is solid frame
+CANOPY_XFRAMES = [60.7, 72.4]               # windscreen rear frame, canopy rear frame (full hoop)
+CANOPY_SIDE_XFRAMES = [66.8]                # splits the two side windows (below the cant rail)
+CANOPY_RAILS = [(2.4, 52.6, 72.4), (8.0, 56.0, 72.4)]   # (z, x0, x1): sill and cant rail
+CANOPY_ROOF_BARS = [(2.8, 56.5), (10.3, 60.7)]          # (|y|, x0): roof glazing bars to the rear frame
+CANOPY_SCREEN_DIAG = ((57.6, 8.0), (53.4, 2.6))         # side quarter-light frame (x, z)
+NOSE_XFRAMES = [(6.0, -18.1), (12.4, None)]  # (x, only above z): vertical frame, rear rim
+NOSE_ZFRAMES = [-18.1, -21.2]                # gun-slot band across the dome
 
 
 def outer_skin(P, d):
@@ -313,6 +319,10 @@ def outer_skin(P, d):
     for v in ([d, 0, 0], [-d, 0, 0], [0, d, 0], [0, -d, 0], [0, 0, d], [0, 0, -d]):
         core = core ^ P.translate(v)
     return P - core
+
+
+def H_box(x0, x1, y0, y1, z0, z1):
+    return mf.Manifold.cube([x1 - x0, y1 - y0, z1 - z0]).translate([x0, y0, z0])
 
 
 def slab(axis, at, w=FRAME_W):
@@ -326,18 +336,32 @@ def slab(axis, at, w=FRAME_W):
 
 def frames(name, P):
     sk = outer_skin(P, 0.6)
+    W = FRAME_W
     if name == "canopy":
-        f = mf.Manifold()
-        for x in CANOPY_FRAMES:
+        f = H_box(-100, CANOPY_GLASS_X, -100, 100, -100, 100)
+        for x in CANOPY_XFRAMES:
             f = f + slab("x", x)
-        for z in CANOPY_RAILS:
-            f = f + slab("z", z)
-        return sk ^ (f + slab("y", 0.0))
+        for x in CANOPY_SIDE_XFRAMES:
+            f = f + (slab("x", x) ^ H_box(-100, 400, -100, 100, -100, CANOPY_RAILS[1][0]))
+        for z, x0, x1 in CANOPY_RAILS:
+            f = f + (slab("z", z) ^ H_box(x0, x1, -100, 100, -100, 100))
+        top = H_box(-100, 400, -100, 100, 5.0, 100)
+        roof = mf.CrossSection()
+        for yb, x0 in CANOPY_ROOF_BARS:
+            for sg in (1, -1):
+                roof = roof + D.band((x0, sg * yb), (CANOPY_XFRAMES[-1], sg * yb), W)
+                if yb > 5:   # windscreen V, seen from above
+                    roof = roof + D.band((x0, sg * yb), (CANOPY_GLASS_X, 0.0), W)
+        f = f + (D.prism_z(roof) ^ top)
+        f = f + D.prism_y(D.band(*CANOPY_SCREEN_DIAG, W))
+        return sk ^ f
     if name == "nose_glazing":
         f = mf.Manifold()
-        for x in NOSE_FRAMES:
-            f = f + slab("x", x)
-        return sk ^ (f + slab("y", 0.0))
+        for x, zmin in NOSE_XFRAMES:
+            f = f + (slab("x", x) if zmin is None else slab("x", x) ^ H_box(-100, 400, -100, 100, zmin, 100))
+        for z in NOSE_ZFRAMES:
+            f = f + slab("z", z)
+        return sk ^ f
     if name == "turret_dorsal":
         x = H.DORSAL_X
         _, _, top, _, _ = H.interp(H.FUSE_STATIONS, x)
