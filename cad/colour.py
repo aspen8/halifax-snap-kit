@@ -492,6 +492,7 @@ if __name__ == "__main__":
                   file=sys.stderr, flush=True)
         t1 = time.time()
         P, extra = inlays_for(name, P)             # roundel sockets + inlay discs
+        P = K.largest_piece(P)[0]                  # the socket cut can strand a rivet dot
         t2 = time.time()
         vols = colour_part(name, P, pat)
         for v in vols.values():

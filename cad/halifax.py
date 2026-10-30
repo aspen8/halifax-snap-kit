@@ -691,7 +691,7 @@ def astrodome():
     skirt = cyl((x, 0, top - 0.3), 2 * r, 0.7, "z")
     dome = (wp(cq.Solid.makeSphere(r, V(x, 0, top + 0.4)))
             .intersect(box(x - 10, x + 10, -10, 10, top + 0.4, top + 10)))
-    plug = cyl((x, 0, top - 1.9), 2 * (r - 0.8) - 2 * FIT, 2.3, "z")   # reaches into the dome
+    plug = cyl((x, 0, top - 1.9), 2 * (r - 0.8) - 2 * FIT, 2.6, "z")   # overlaps the dome: one solid
     # skirt conforms to the curved roof (only the plug goes below the surface)
     return skirt.union(dome).cut(fuselage_solid()).union(plug)
 
@@ -916,6 +916,7 @@ def stand_parts():
     base = base.union(boss)
     base = base.cut(box(foot[0] - tx / 2 - FIT, foot[0] + tx / 2 + FIT, -ty / 2 - FIT, ty / 2 + FIT,
                         foot[1] - td - 0.4, foot[1] + 1))
+    base = base.cut(post)                    # the blade's foot seats flush in the boss
     # express in the model frame (model is pitched nose-up STAND_PITCH on the stand)
     return post.rotate(*ax, -STAND_PITCH), base.rotate(*ax, -STAND_PITCH), ax
 
