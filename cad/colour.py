@@ -321,7 +321,7 @@ def stand_paint(P, pat):
 # ============================================================
 # GLAZING FRAMES (black frame lines through a clear skin)
 # ============================================================
-CLEAR_PARTS = ("canopy", "nose_glazing", "turret_dorsal", "turret_tail", "astrodome")
+CLEAR_PARTS = ("canopy", "canopy_rear", "nose_glazing", "turret_dorsal", "turret_tail", "astrodome")
 FRAME_W = 0.6                # mm
 # Pilot's canopy, measured from the Revell side and plan views (mm, assembled frame)
 CANOPY_GLASS_X = (52.9, 72.1)               # glazing between these; the rims outside are frame
@@ -331,6 +331,11 @@ CANOPY_RAILS = [(2.4, 52.6, 72.4), (8.0, 56.0, 72.4)]   # (z, x0, x1): sill and 
 CANOPY_ROOF_BARS = [(2.8, 56.5)]            # (|y|, x0): roof glazing bars to the rear frame
 CANOPY_SCREEN_V = (60.7, 10.3)              # windscreen V seen from above: from (x, +-y) to the apex
 CANOPY_SCREEN_DIAG = ((57.6, 8.0), (53.4, 2.6))         # side quarter-light frame (x, z)
+# Rear roof glazing (Revell plan, and the user's photo): centre panel with the astrodome,
+# side panels split by diagonals from the rear outer corner to the front inner corner
+REAR_GLASS_X = (73.6, 91.0)
+REAR_BARS = 5.1                             # |y| of the centre-panel bars
+REAR_EDGE = 10.4                            # |y| beyond this is frame (the sill of the panel)
 NOSE_XFRAMES = [(6.0, -18.1), (12.4, None)]  # (x, only above z): vertical frame, rear rim
 NOSE_ZFRAMES = [-18.1, -21.2]                # gun-slot band across the dome
 
@@ -358,6 +363,15 @@ def frames(name, P):
         f = f + (D.prism_z(roof) ^ top)
         f = f + D.prism_y(D.band(*CANOPY_SCREEN_DIAG, W))
         return sk ^ f
+    if name == "canopy_rear":
+        g0, g1 = REAR_GLASS_X
+        f = (H_box(-100, g0, -100, 100, -100, 100) + H_box(g1, 400, -100, 100, -100, 100)
+             + H_box(-100, 400, REAR_EDGE, 100, -100, 100) + H_box(-100, 400, -100, -REAR_EDGE, -100, 100))
+        bars = mf.CrossSection()
+        for sg in (1, -1):
+            bars = bars + D.band((g0, sg * REAR_BARS), (g1, sg * REAR_BARS), W)
+            bars = bars + D.band((g1, sg * (REAR_EDGE + 0.2)), (g0, sg * REAR_BARS), W)
+        return sk ^ (f + D.prism_z(bars))
     if name == "nose_glazing":
         f = mf.Manifold()
         for x, zmin in NOSE_XFRAMES:

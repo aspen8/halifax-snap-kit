@@ -94,7 +94,9 @@ FUSE_BOSSES = [              # connector key positions between port/starboard ha
 
 # --- Cockpit canopy hump: (x, half_width, z_top)
 CANOPY_CUT = (52.3, 72.8, 2.0)          # x0, x1, z floor: just the glazed area (Revell); full-width drop-in
-CANOPY_TAB = (55.0, 68.0, 3.0, -2.0)     # x0, x1, half-width, z bottom of the locating tab
+CANOPY_KEY = (55.0, 68.0, 3.0, 2.5)      # boss on the fuselage floor: x0, x1, half-width, height
+CANOPY_REAR = (72.8, 91.8, 7.0)          # rear roof glazing (Revell plan): x0, x1, z floor
+CANOPY_REAR_KEY = (76.0, 82.0, 3.0, 2.0)  # its locating boss
 H2S_RADOME = False           # ventral H2S blister (Revell GR.II only; not on the B.II Srs IA)
 RADOME = [(202.0, 6.0, 0.5), (206.0, 8.5, 5.0), (211.0, 9.8, 8.8), (217.0, 10.0, 10.3),
           (224.0, 9.4, 9.8), (231.0, 7.6, 7.5), (238.0, 5.0, 3.8), (243.0, 2.5, 1.0),
@@ -324,13 +326,15 @@ def fuselage_parts(wing_tongues):
 
     # sockets and slots
     cx0, cx1, cz = CANOPY_CUT
-    tx0, tx1, thw, tz = CANOPY_TAB
+    rx0, rx1, rz = CANOPY_REAR
     if H2S_RADOME:
         outer = outer.union(radome())
         body = outer
     _, _, top_d, _, _ = interp(FUSE_STATIONS, DORSAL_X)
     body = body.cut(box(cx0, cx1, -30, 30, cz, 30))                          # canopy
-    body = body.cut(box(tx0 - FIT, tx1 + FIT, -thw - FIT, thw + FIT, tz - 0.3, cz + 0.1))
+    body = body.cut(box(rx0, rx1, -30, 30, rz, 30))                          # rear roof glazing
+    for (k0, k1, khw, kh), z in ((CANOPY_KEY, cz), (CANOPY_REAR_KEY, rz)):  # locating bosses
+        body = body.union(box(k0, k1, -khw, khw, z - 0.5, z + kh))
     body = body.cut(cyl((DORSAL_X, 0, top_d - 3.0), 2 * DORSAL_R, 20, "z"))  # dorsal turret
     body = body.cut(cyl((DORSAL_X, 0, top_d - 3.0), AXLE_HOLE_TIGHT, -5, "z"))
     body = body.cut(tailplane_slot())
@@ -378,9 +382,14 @@ def fuselage_parts(wing_tongues):
     parts["nose_glazing"] = (outer.intersect(glass_zone)
                              .union(box(NOSE_SPLIT_X - 0.5, NOSE_SPLIT_X + sl, -shw, shw, sz0, sz1)))
 
-    # cockpit glazing: full-width drop-in above the sill, plus a locating tab
+    # glazing: drop-ins with flat bottoms (print flat), recessed over the fuselage bosses
+    def recess(key, z):
+        k0, k1, khw, kh = key
+        return box(k0 - FIT, k1 + FIT, -khw - FIT, khw + FIT, z - 1, z + kh + 0.3)
     parts["canopy"] = (outer.intersect(box(cx0 + FIT, cx1 - FIT, -30, 30, cz + FIT, 30))
-                       .union(box(tx0, tx1, -thw, thw, tz, cz + 0.5)))
+                       .cut(recess(CANOPY_KEY, cz)))
+    parts["canopy_rear"] = (outer.intersect(box(rx0 + FIT, rx1 - FIT, -30, 30, rz + FIT, 30))
+                            .cut(recess(CANOPY_REAR_KEY, rz)).cut(astrodome_socket()))
     return parts
 
 
