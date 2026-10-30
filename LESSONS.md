@@ -88,3 +88,7 @@ Rule of thumb: every paint region should be a prism or slab that pokes out throu
 
 On the X2D, a printed 1.8 mm pin needs a 2.35 mm hole to grip and 2.65 mm to spin. My first guesses (1.80 and 2.05) didn't fit at all. Size every small hole from the fit test, and leave at least 1 mm of wall round it; the gear legs had to grow to manage that.
 
+
+## Slots through tapering parts
+
+The tailplane slot was a plain box. Where the rear fuselage tapers, it broke through the top, and a panel line then cut off a loose strip of roof. Cut slots with the mating part's own shape grown by `FIT` (as the fins do); it also locates the part. After every geometry change, check each part is still a single piece (`trimesh` `split()`). Every joint needs a positive locator, either keys or a shaped socket, not just a butt joint.
