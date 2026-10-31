@@ -167,7 +167,8 @@ def roof_camo():
         if v and start is None:
             start = xs[i]
         elif not v and start is not None:
-            sec = sec + mf.CrossSection.square([xs[i] - start, 60.0]).translate([start, -30.0])
+            x_end = xs[i] if i < len(xs) else xs[-1] + 0.25
+            sec = sec + mf.CrossSection.square([x_end - start, 60.0]).translate([start, -30.0])
             start = None
     return sec
 
