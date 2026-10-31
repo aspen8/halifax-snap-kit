@@ -153,7 +153,8 @@ WING_PITCH_X = 140.0         # mm, wing is pitched about this x (main spar)
 ROOT_TONGUE = {-1: (128.0, 142.0), 1: (146.0, 160.0)}
 ROOT_TONGUE_Z = (0.0, 4.0)   # above the floor: flush with the flat underside, so it prints on the bed
 JOINT_TONGUE = (0.26, 0.54, 4.3, 7.7, 12.0)  # joint key: chord fr. start/end, z0, z1 (mid-thickness: >=3.4 mm wall), depth each side
-WING_POSE = os.environ.get("HALIFAX_WING_POSE", "flat")   # 'flat' or 'end' (standing on the joint faces)
+WING_POSE = os.environ.get("HALIFAX_WING_POSE", "end")    # wings stand on their joint faces ('flat' kept for reference:
+                                                           # it leaves the leading-edge undersides rough)
 
 # --- Nacelles: (y_centre, z_centre, x_front, length)
 NACELLES = [

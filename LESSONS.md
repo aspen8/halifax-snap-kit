@@ -115,3 +115,16 @@ Run all three on the full build. Every one caught something on the Halifax that 
 - **Do awkward booleans with mesh tools.** The scalloped body/spine split failed in OCC (the CAD kernel); doing that one cut in manifold3d fixed it. Parts in `build()` can be trimesh meshes.
 - **A fine-layer plate for small detail parts** (exhausts, wheels, props, gear). Not done on the Halifax yet.
 
+## Wings print on end
+
+Test prints of flat wings showed two problems:
+- **Tongues starting above the flat underside** print as hanging shelves. Their rough undersides spoil the fit, and the thin slot floors under them deform.
+- **The front 15% of the aerofoil** (the curve into the leading edge) is always a rough overhang.
+
+Fixes:
+- Print wings standing on their joint faces.
+- Make joints with separate flat-printed keys, in slots at mid-thickness with at least 3 mm of wall.
+- Keep any tongue that must print flat flush with the flat underside.
+
+For a display model, quality beats purge cost.
+

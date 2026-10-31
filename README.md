@@ -7,10 +7,9 @@ A fully printed multi-colour snap kit in the style of PB94's MasterBuilds, for t
 
 ## Print it
 
-There are two versions. They're identical except for how the wings print:
+Open `kit/halifax_kit.3mf` in Bambu Studio. Every part is placed for printing, with the filaments assigned.
 
-- `kit/halifax_kit.3mf`: wings print flat, with fewer colour changes. 10 plates.
-- `kit/halifax_kit_wings_on_end.3mf`: wings stand on their joint faces. Layer lines run along the span, as on the fuselage, which hides them. Expect more colour changes on the wing plate. 9 plates.
+The wings print standing on end, like the fuselage. Layer lines then run along the span and barely show, and the leading edges come out smooth. Printed flat, the leading-edge undersides are rough overhangs. The cost is more colour changes and purge on the wing plate. The flat layout can still be generated with `HALIFAX_WING_POSE=flat`, for reference.
 
 1. Print the fit test first (`stl/fit_test_*`), then adjust `AXLE_HOLE_TIGHT`, `KEY_FIT` and `FIT` in `cad/halifax.py` if needed. The X2D values are already set.
 2. Load the filaments for each plate. The X2D's AMS holds 4 and the auxiliary head adds a 5th.
@@ -35,7 +34,7 @@ Print settings are already in the files, set up for the X2D 0.4 mm nozzle:
 
 Filament presets are left as PLA Basic. In Bambu Studio, pick your own preset for each slot (matte for the camo, silk for the canopies) so the temperatures match. The canopy and turret slot is set to **silk silver** for a display finish. Swap it for clear PETG if you want see-through glazing, and print the black frames in PETG on that plate too.
 
-The single-colour STLs are in `stl/`, with the wings flat. The on-end wing STLs are in `stl/wings_on_end/`.
+The single-colour STLs are in `stl/`, in print orientation.
 
 ## Kit contents (102 parts)
 
