@@ -90,7 +90,7 @@ FUSE_SPLIT_X = 196.0         # front / rear fuselage joint (just ahead of the co
 SPINE_LINE = [(0, -8.0), (25, -4.0), (45, -1.0), (50, 2.0), (75, 2.0), (85, 1.4), (290, 1.4),
               (299, 4.0), (360, 4.0)]   # x, z: body/spine split (tail: the tailplane floor)
 SPINE_WAVE = (0.7, 7.5, 85.0, 290.0)    # scallop amplitude, period, from x, to x
-SPINE_CUTS = [(13.0, 22.2, "green"), (22.2, 52.3, "earth"), (72.8, 100.0, "green"),
+SPINE_CUTS = [(13.0, 52.3, "earth"), (72.8, 100.0, "green"),
               (100.0, 150.2, "earth"), (150.2, 186.0, "green"), (186.0, 230.0, "earth"),
               (230.0, 288.0, "green"), (288.0, 343.0, "earth"), (343.0, 360.0, "green")]
 SPINE_GAP = 0.1              # mm, end clearance between neighbouring spine pieces
@@ -335,19 +335,20 @@ def radome():
 
 
 def spine_z(x):
-    """Height of the body/spine split (the camouflage demarcation line) at x."""
+    """Height of the body/spine split (the camouflage demarcation line) at x.
+    Rounded scallops (sin^2): no cusps for the B-rep booleans."""
     xs, zs = zip(*SPINE_LINE)
     amp, period, w0, w1 = SPINE_WAVE
     x = np.asarray(x, float)
-    wave = amp * np.abs(np.sin(np.pi * x / period)) * ((x > w0) & (x < w1))
+    wave = amp * np.sin(np.pi * x / period) ** 2 * ((x > w0) & (x < w1))
     return np.interp(x, xs, zs) + wave
 
 
 def spine_upper():
-    """Solid region above the split line (extruded across the whole width)."""
-    xs = np.arange(-6.0, 401.0, 0.5)
-    pts = [(float(x), float(spine_z(x))) for x in xs] + [(400.0, 80.0), (-6.0, 80.0)]
-    return W("XZ").polyline(pts).close().extrude(60, both=True)
+    """Solid region above the split line (a smooth spline, extruded across the whole width)."""
+    pts = [(float(x), float(spine_z(x))) for x in np.arange(-6.0, 401.0, 1.0)]
+    return (W("XZ").moveTo(*pts[0]).spline(pts[1:], includeCurrent=True)
+            .lineTo(400.0, 80.0).lineTo(-6.0, 80.0).close().extrude(60, both=True))
 
 
 def fuselage_parts(wing_tongues):
@@ -386,39 +387,50 @@ def fuselage_parts(wing_tongues):
     glass_zone = box(-5, NOSE_SPLIT_X, -50, 50, -60, NOSE_GLASS_TOP)
     body = body.cut(glass_zone)
 
-    # spine (camo) pieces above the split line; full-width black body below it
-    upper = spine_upper()
-    cap = body.intersect(upper)
-    body = body.cut(upper)
+    # spine (camo) pieces above the split line; full-width black body below it.
+    # The split is done with mesh booleans (manifold3d): OCC fails on this cut.
+    def M(w):
+        return K.to_manifold(mesh(w))
+
+    def T(man):
+        import trimesh
+        V, F = K.mesh_of(man)
+        return trimesh.Trimesh(V, F)
+
+    def mbox(x0, x1, y0, y1, z0, z1):
+        return K.box(x0, x1, y0, y1, z0, z1)
+
+    B = M(body)
+    pts = [(float(x), float(spine_z(x))) for x in np.arange(-6.0, 401.0, 0.5)] + [(400.0, 80.0), (-6.0, 80.0)]
+    upper = K.prism_y(K.cs([np.array(pts)]))
+    cap, Bb = B ^ upper, B - upper
     # front/rear keys on the joint face, below the spine line
     _, hw, top, bot, _ = interp(FUSE_STATIONS, FUSE_SPLIT_X)
-    zs = spine_z(FUSE_SPLIT_X)
+    zs = float(spine_z(FUSE_SPLIT_X))
     fr = [(0, y, z) for y in (-hw / 2, hw / 2) for z in (bot + 6, (bot + zs) / 2, zs - 6)]
-    fr_holes = key_slots(fr, "x", FUSE_SPLIT_X, KEY_FR, "z")
+    fr_holes = M(key_slots(fr, "x", FUSE_SPLIT_X, KEY_FR, "z"))
     KEY_COUNTS["key_fuselage_joint"] = (KEY_FR, len(fr))
     # spine-to-body keys: one or two per piece, clear of the tailplane tunnel
-    cpts = []
+    cap_holes = K.box(0, 0.001, 0, 0.001, 0, 0.001)
+    n_keys = 0
     for x0, x1, _ in SPINE_CUTS:
         n = 2 if x1 - x0 >= 45 else 1
         for i in range(n):
             x = x0 + (x1 - x0) * (i + 1) / (n + 1)
             if TAIL_ROOT[0] - 3 < x < TAIL_ROOT[0] + TAIL_ROOT[1] + 3:
                 x = TAIL_ROOT[0] - 6
-            cpts.append((x, 0, spine_z(x)))
-    cap_holes = None
-    for p in cpts:
-        s = key_slots([p], "z", p[2], KEY_CAP, "x")
-        cap_holes = s if cap_holes is None else cap_holes.union(s)
-    KEY_COUNTS["key_spine"] = (KEY_CAP, len(cpts))
+            z = float(spine_z(x))
+            cap_holes = cap_holes + M(key_slots([(x, 0, z)], "z", z, KEY_CAP, "x"))
+            n_keys += 1
+    KEY_COUNTS["key_spine"] = (KEY_CAP, n_keys)
 
-    front = box(-5, FUSE_SPLIT_X, -50, 50, -60, 60)
-    rear = box(FUSE_SPLIT_X, 400, -50, 50, -60, 60)
     parts = {}
-    for sec_name, sec in (("front", front), ("rear", rear)):
-        parts[f"fuselage_{sec_name}"] = body.intersect(sec).cut(fr_holes).cut(cap_holes)
+    for sec_name, (a, b) in (("front", (-5, FUSE_SPLIT_X)), ("rear", (FUSE_SPLIT_X, 400))):
+        parts[f"fuselage_{sec_name}"] = T(K.largest_piece((Bb ^ mbox(a, b, -50, 50, -60, 60))
+                                                          - fr_holes - cap_holes)[0])
     for i, (x0, x1, col) in enumerate(SPINE_CUTS):
-        piece = cap.intersect(box(x0 + SPINE_GAP / 2, x1 - SPINE_GAP / 2, -50, 50, -60, 60)).cut(cap_holes)
-        parts[f"spine_{i + 1:02d}_{col}"] = piece
+        piece = (cap ^ mbox(x0 + SPINE_GAP / 2, x1 - SPINE_GAP / 2, -50, 50, -60, 60)) - cap_holes
+        parts[f"spine_{i + 1:02d}_{col}"] = T(K.largest_piece(piece)[0])
 
     # perspex chin dome with a plug into the front section
     parts["nose_glazing"] = (outer.intersect(glass_zone)
@@ -1095,6 +1107,8 @@ def build():
 def mesh(w, tol=0.02, ang=0.15):
     """Tessellate a part to a trimesh (exact bounds, unlike the B-rep box)."""
     import trimesh
+    if isinstance(w, trimesh.Trimesh):          # parts made with mesh booleans pass through
+        return w.copy()
     verts, tris = [], []
     for solid in w.vals():
         v, t = solid.tessellate(tol, ang)
@@ -1115,15 +1129,20 @@ if __name__ == "__main__":
     for name, w in parts.items():
         if only and not any(o in name for o in only):
             continue
-        s = w.val()
-        if len(w.vals()) > 1:
-            print(f"!! {name}: {len(w.vals())} separate solids")
-        mesh(w).export(OUT_DIR / "assembled" / f"{name}.stl")
-        pm = mesh(poses[name](w))
+        am = mesh(w)
+        if hasattr(w, "vals"):
+            valid = w.val().isValid()
+            if len(w.vals()) > 1:
+                print(f"!! {name}: {len(w.vals())} separate solids")
+        else:
+            valid = am.is_watertight
+        am.export(OUT_DIR / "assembled" / f"{name}.stl")
+        pm = am.copy()
+        pm.apply_transform(K.pose_matrix(poses[name]))
         lo, hi = pm.bounds
         pm.apply_translation(-lo)
         ext = hi - lo
         fits = "ok" if max(ext[0], ext[1]) <= bed and ext[2] <= 256 else "TOO BIG"
         pm.export(OUT_DIR / "print" / f"{name}.stl")
-        print(f"{name:28s} valid={s.isValid()!s:5s} watertight={pm.is_watertight!s:5s} "
+        print(f"{name:28s} valid={valid!s:5s} watertight={pm.is_watertight!s:5s} "
               f"{ext[0]:6.1f} x {ext[1]:6.1f} x {ext[2]:5.1f} mm  {fits}", flush=True)
