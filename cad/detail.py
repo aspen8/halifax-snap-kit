@@ -49,7 +49,7 @@ TRIM_TAB = (14.0, 30.0, 0.86)   # |y| from, to, chord fraction (to TE)
 RUDDER_HINGE = 0.55          # fraction of fin chord
 
 FUSE_RINGS = [32.0, 48.0, 140.0, 165.0, 200.0, 245.0, 280.0, 315.0, 342.0]
-FUSE_SEAMS = [(1.5, 30.0, 350.0), (-24.0, 30.0, 340.0)]     # (z, x from, x to) side seams
+FUSE_SEAMS = [(-24.0, 30.0, 340.0)]     # (z, x from, x to) side seams; the spine joint is the upper seam
 CREW_DOOR = (-1, 252.0, 264.0, -30.0, -8.0)    # side, x0, x1, z0, z1 (port, rear fuselage)
 ROOF_HATCHES = [(150.0, 9.0, 7.0), (232.0, 9.0, 7.0)]       # x centre, length, width
 NOSE_WINDOWS = [(54.0, 61.0, -10.3, -2.6),     # navigator's D-window (Revell side view)
@@ -169,35 +169,38 @@ def apply(name, P):
         sec = band((x, H.FIN_Z_BOTTOM + 2), (x, H.FIN_Z_TOP - 2), GROOVE_W)
         for axis in ("y", "-y"):
             groove(prism_y(sec), axis, HINGE_D)
-    elif name.startswith("fuselage_"):
-        side = 1 if name.endswith("stbd") else -1
-        sax = "y" if side > 0 else "-y"
-        outer = skin(P, "z", GROOVE_D) + skin(P, sax, GROOVE_D) + skin(P, "-z", GROOVE_D)
+    elif name.startswith(("fuselage_", "spine_")):
+        sides = ([1 if name.endswith("stbd") else -1] if name.endswith(("port", "stbd")) else [1, -1])
         rings = mf.Manifold()
         for x in FUSE_RINGS:
             rings = rings + slab_x(x, GROOVE_W)
+        outer = skin(P, "z", GROOVE_D) + skin(P, "-z", GROOVE_D)
+        for side in sides:
+            outer = outer + skin(P, "y" if side > 0 else "-y", GROOVE_D)
         cuts.append(outer ^ rings)
-        sec = mf.CrossSection()
-        for z, x0, x1 in FUSE_SEAMS:
-            sec = sec + band((x0, z), (x1, z), GROOVE_W)
-        ds, x0, x1, z0, z1 = CREW_DOOR
-        if ds == side:
-            sec = sec + rect_outline(x0, z0, x1, z1, GROOVE_W)
-        groove(prism_y(sec), sax, GROOVE_D)
-        win = mf.CrossSection()
-        for x0, x1, z0, z1 in NOSE_WINDOWS:
-            win = win + mf.CrossSection.square([x1 - x0, z1 - z0]).translate([x0, z0])
-        for x, z, dd in NOSE_PORTS:
-            win = win + mf.CrossSection.circle(dd / 2, 32).translate([x, z])
-        groove(prism_y(win), sax, 0.5)
+        for side in sides:
+            sax = "y" if side > 0 else "-y"
+            sec = mf.CrossSection()
+            for z, x0, x1 in FUSE_SEAMS:
+                sec = sec + band((x0, z), (x1, z), GROOVE_W)
+            ds, x0, x1, z0, z1 = CREW_DOOR
+            if ds == side:
+                sec = sec + rect_outline(x0, z0, x1, z1, GROOVE_W)
+            groove(prism_y(sec), sax, GROOVE_D)
+            win = mf.CrossSection()
+            for x0, x1, z0, z1 in NOSE_WINDOWS:
+                win = win + mf.CrossSection.square([x1 - x0, z1 - z0]).translate([x0, z0])
+            for x, z, dd in NOSE_PORTS:
+                win = win + mf.CrossSection.circle(dd / 2, 32).translate([x, z])
+            groove(prism_y(win), sax, 0.5)
+            dots = mf.CrossSection()
+            for z, x0, x1 in FUSE_SEAMS:
+                dots = dots + dots_along((x0, z), (x1, z), RIVET_OFFSET)
+            adds.append(raised(P, sax) ^ prism_y(dots))
         hat = mf.CrossSection()
         for x, L, w in ROOF_HATCHES:
             hat = hat + rect_outline(x - L / 2, -w / 2, x + L / 2, w / 2, GROOVE_W)
         groove(prism_z(hat), "z", GROOVE_D)
-        dots = mf.CrossSection()
-        for z, x0, x1 in FUSE_SEAMS[:1]:
-            dots = dots + dots_along((x0, z), (x1, z), RIVET_OFFSET)
-        adds.append(raised(P, sax) ^ prism_y(dots))
     elif name.startswith("nacelle"):
         idx = int(name[7]) - 1
         _, _, x0, L = H.NACELLES[idx]

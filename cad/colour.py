@@ -213,6 +213,10 @@ def colour_part(name, P, pat):
     sock_op = [(BLACK, sock)] if sock is not None else []
     if name.startswith(("wing_", "tailplane")):
         return paint(P, list(camo_up) + sock_op)
+    if name in ("fuselage_front", "fuselage_rear"):     # black body; codes are inlays
+        return {BLACK: P}
+    if name.startswith("spine_"):                          # one camo colour per piece
+        return {GREEN if name.endswith("green") else EARTH: P}
     if name.startswith("fuselage_"):
         s = 1 if name.endswith("stbd") else -1
         side = S["+y"] if s > 0 else S["-y"]
@@ -443,12 +447,34 @@ def inlays_for(name, P):
         x, y, d = WING_ROUNDEL
         P, vols, plug = make_inlay(P, (x, s * y), d, B_RINGS(d), "z")
         out.append((f"roundel_wing_{name.split('_')[-1]}", vols, [0, 0, 0], plug))
-    if name.startswith("fuselage_rear"):
-        s = 1 if name.endswith("stbd") else -1
-        x, z, d = FUSE_ROUNDEL
-        P, vols, plug = make_inlay(P, (x, z), d, C1_RINGS(d), "y", s)
-        out.append((f"roundel_fuselage_{name.split('_')[-1]}", vols, [90 * s, 0, 0], plug))
+    if name == "fuselage_rear":
+        for s, tag in ((-1, "port"), (1, "stbd")):
+            x, z, d = FUSE_ROUNDEL
+            P, vols, plug = make_inlay(P, (x, z), d, C1_RINGS(d), "y", s)
+            out.append((f"roundel_fuselage_{tag}", vols, [90 * s, 0, 0], plug))
+            # squadron code and aircraft letter as red press-in inlays, read nose-to-tail
+            rx = FUSE_ROUNDEL[0]
+            sx = SQN_CODE_X if s < 0 else 2 * rx - SQN_CODE_X
+            ax = AC_LETTER_X if s < 0 else 2 * rx - AC_LETTER_X
+            n = 0
+            for txt, cx in ((SQN_CODE, sx), (AC_LETTER, ax)):
+                for letter in sorted(text_section(txt, CODE_HEIGHT, cx, CODE_Z, s > 0).decompose(),
+                                     key=lambda q: q.bounds()[0]):
+                    n += 1
+                    P, plug = K.make_section_inlay(P, letter, s, INLAY_DEPTH, INLAY_FIT)
+                    out.append((f"code_{tag}_{n}", {RED: plug}, [90 * s, 0, 0], plug))
     return P, out
+
+
+def engrave_serial(name, P):
+    """Serial number engraved 0.3 mm into the rear fuselage and spine (too small to inlay)."""
+    if not MK["serial"] or not name.startswith(("fuselage_rear", "spine_")):
+        return P
+    txt, x, z, h = MK["serial"]
+    for s in (1, -1):
+        sk = D.skin(P, "y" if s > 0 else "-y", 0.3)
+        P = P - (sk ^ prism_y(text_section(txt, h, x, z, s > 0)))
+    return P
 
 
 # ============================================================
@@ -497,9 +523,11 @@ def add_object(objs, name, posed, out, whole):
 
 PLATE_GROUPS = [            # parts kept together by colour set (max 5 colours a plate)
     ("Fuselage", lambda n: n.startswith("fuselage")),
+    ("Spine (Dark Green)", lambda n: n.startswith("spine_") and n.endswith("green")),
+    ("Spine (Dark Earth)", lambda n: n.startswith("spine_") and n.endswith("earth")),
     ("Wings", lambda n: n.startswith(("wing_", "tailplane"))),
     ("Nacelles", lambda n: n.startswith("nacelle")),
-    ("Fins and roundels", lambda n: n.startswith(("fin_", "roundel_"))),
+    ("Fins, roundels and codes", lambda n: n.startswith(("fin_", "roundel_", "code_"))),
     ("Clear and guns", lambda n: n in CLEAR_PARTS or n.startswith("guns")),
     ("Display stand", lambda n: n.startswith("stand")),
     ("Props and gear", lambda n: True),
@@ -527,6 +555,7 @@ if __name__ == "__main__":
         P = D.apply(name, P)                       # panel lines, hatches, rivets
         if name == "stand_base":
             P = stand_decorate(P)                  # raised badge and name
+        P = engrave_serial(name, P)
         P, dropped = K.largest_piece(P)            # every part is one solid: drop islands and specks
         if any(v > 1.0 for v in dropped):
             print(f"  [{name}] dropped loose pieces: " + ", ".join(f"{v:.1f}" for v in dropped if v > 1.0) + " mm3",

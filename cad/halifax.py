@@ -9,7 +9,7 @@ Axes (assembled): X = distance aft of the nose tip, Y = span (+ = starboard),
 Z = up. All units mm at model scale.
 
 Kit layout (no supports needed except where noted):
-  fuselage    4 hollow half-shells (front/rear x port/starboard), pinned
+  fuselage    2 full-width black sections printed on end, keyed; camo spine in 9 clip-on pieces
   nose        clear perspex nose (Series IA)
   canopy      cockpit glazing, drops into the roof
   turrets     dorsal (Type A) and tail (Type E) + separate gun packs
@@ -83,7 +83,17 @@ FUSE_END_X = 352.0
 NOSE_SPLIT_X = 12.8          # perspex nose dome ends at this frame (Revell)
 NOSE_GLASS_TOP = 50.0        # mm, dome covers the full section
 NOSE_SPIGOT_BOX = (5.0, 6.0, -28.0, -16.0)   # length, half-width, z0, z1 of the dome's plug
-FUSE_SPLIT_X = 215.0         # front / rear fuselage joint
+FUSE_SPLIT_X = 196.0         # front / rear fuselage joint (just ahead of the codes and roundel)
+# Fuselage printed Lancaster-style: full-width black sections on end, with the camouflaged
+# spine as separate single-colour pieces sitting on the demarcation line.
+SPINE_LINE = [(0, -8.0), (25, -4.0), (45, -1.0), (50, 2.0), (75, 2.0), (85, 1.4), (290, 1.4),
+              (299, 4.0), (360, 4.0)]   # x, z: body/spine split (tail: the tailplane floor)
+SPINE_WAVE = (0.7, 7.5, 85.0, 290.0)    # scallop amplitude, period, from x, to x
+SPINE_CUTS = [(13.0, 22.2, "green"), (22.2, 52.3, "earth"), (72.8, 100.0, "green"),
+              (100.0, 150.2, "earth"), (150.2, 186.0, "green"), (186.0, 230.0, "earth"),
+              (230.0, 288.0, "green"), (288.0, 343.0, "earth"), (343.0, 360.0, "green")]
+SPINE_GAP = 0.1              # mm, end clearance between neighbouring spine pieces
+KEY_CAP = (7.0, 6.0, 2.0)    # spine to body keys: length along z, width along x, thickness y
 JOINT_LIP = 7.0              # mm, length of the internal joining lip
 NOSE_SPIGOT = 5.0            # mm
 
@@ -322,8 +332,24 @@ def radome():
     return wp(cq.Solid.makeLoft(secs, ruled=False))
 
 
+def spine_z(x):
+    """Height of the body/spine split (the camouflage demarcation line) at x."""
+    xs, zs = zip(*SPINE_LINE)
+    amp, period, w0, w1 = SPINE_WAVE
+    x = np.asarray(x, float)
+    wave = amp * np.abs(np.sin(np.pi * x / period)) * ((x > w0) & (x < w1))
+    return np.interp(x, xs, zs) + wave
+
+
+def spine_upper():
+    """Solid region above the split line (extruded across the whole width)."""
+    xs = np.arange(-6.0, 401.0, 0.5)
+    pts = [(float(x), float(spine_z(x))) for x in xs] + [(400.0, 80.0), (-6.0, 80.0)]
+    return W("XZ").polyline(pts).close().extrude(60, both=True)
+
+
 def fuselage_parts(wing_tongues):
-    """Solid half-fuselages (printed split face down; slicer infill keeps them light)."""
+    """Full-width black body sections (printed on end) and single-colour spine pieces."""
     outer = fuselage_solid()
     body = outer
 
@@ -358,29 +384,39 @@ def fuselage_parts(wing_tongues):
     glass_zone = box(-5, NOSE_SPLIT_X, -50, 50, -60, NOSE_GLASS_TOP)
     body = body.cut(glass_zone)
 
-    # port/stbd alignment pins (pins on the port half, pointing +y)
-    pts = []
-    for x, where in FUSE_BOSSES:
-        _, hw, top, bot, _ = interp(FUSE_STATIONS, x)
-        pts.append((x, 0, top - 4.5 if where == "top" else bot + 4.5))
-    lr_holes = key_slots(pts, "y", 0.0, KEY_LR, "x")
-    KEY_COUNTS["key_fuselage_halves"] = (KEY_LR, len(pts))
-
-    # front/rear pins on the joint face (on the front sections, pointing aft)
+    # spine (camo) pieces above the split line; full-width black body below it
+    upper = spine_upper()
+    cap = body.intersect(upper)
+    body = body.cut(upper)
+    # front/rear keys on the joint face, below the spine line
     _, hw, top, bot, _ = interp(FUSE_STATIONS, FUSE_SPLIT_X)
-    fr = [(0, y, z) for y in (-hw / 2, hw / 2) for z in (top - 6, bot + 6, (top + bot) / 2)]
+    zs = spine_z(FUSE_SPLIT_X)
+    fr = [(0, y, z) for y in (-hw / 2, hw / 2) for z in (bot + 6, (bot + zs) / 2, zs - 6)]
     fr_holes = key_slots(fr, "x", FUSE_SPLIT_X, KEY_FR, "z")
     KEY_COUNTS["key_fuselage_joint"] = (KEY_FR, len(fr))
+    # spine-to-body keys: one or two per piece, clear of the tailplane tunnel
+    cpts = []
+    for x0, x1, _ in SPINE_CUTS:
+        n = 2 if x1 - x0 >= 45 else 1
+        for i in range(n):
+            x = x0 + (x1 - x0) * (i + 1) / (n + 1)
+            if TAIL_ROOT[0] - 3 < x < TAIL_ROOT[0] + TAIL_ROOT[1] + 3:
+                x = TAIL_ROOT[0] - 6
+            cpts.append((x, 0, spine_z(x)))
+    cap_holes = None
+    for p in cpts:
+        s = key_slots([p], "z", p[2], KEY_CAP, "x")
+        cap_holes = s if cap_holes is None else cap_holes.union(s)
+    KEY_COUNTS["key_spine"] = (KEY_CAP, len(cpts))
 
-    port = box(-10, 400, -50, 0, -60, 60)
-    stbd = box(-10, 400, 0, 50, -60, 60)
     front = box(-5, FUSE_SPLIT_X, -50, 50, -60, 60)
     rear = box(FUSE_SPLIT_X, 400, -50, 50, -60, 60)
     parts = {}
     for sec_name, sec in (("front", front), ("rear", rear)):
-        for side_name, side in (("port", port), ("stbd", stbd)):
-            p = body.intersect(sec).intersect(side).cut(lr_holes).cut(fr_holes)
-            parts[f"fuselage_{sec_name}_{side_name}"] = p
+        parts[f"fuselage_{sec_name}"] = body.intersect(sec).cut(fr_holes).cut(cap_holes)
+    for i, (x0, x1, col) in enumerate(SPINE_CUTS):
+        piece = cap.intersect(box(x0 + SPINE_GAP / 2, x1 - SPINE_GAP / 2, -50, 50, -60, 60)).cut(cap_holes)
+        parts[f"spine_{i + 1:02d}_{col}"] = piece
 
     # perspex chin dome with a plug into the front section
     parts["nose_glazing"] = (outer.intersect(glass_zone)
@@ -987,10 +1023,14 @@ def build():
     fp = fuselage_parts(tongues)
     for k, v in fp.items():
         parts[k] = v
-        if k.endswith("_port"):
-            poses[k] = lambda w: rot(w, "x", -90)
-        elif k.endswith("_stbd"):
-            poses[k] = lambda w: rot(w, "x", 90)
+        if k == "fuselage_front":
+            poses[k] = lambda w: rot(w, "y", 90)      # on end, standing on the joint face
+        elif k == "fuselage_rear":
+            poses[k] = lambda w: rot(w, "y", -90)
+        elif k.startswith("spine_"):
+            i = int(k.split("_")[1]) - 1
+            up = 90 if SPINE_CUTS[i][1] <= 100 else -90   # stand on the bigger end face
+            poses[k] = lambda w, up=up: rot(w, "y", up)
         elif k == "nose_glazing":
             poses[k] = lambda w: rot(w, "y", 90)      # spigot down
         else:

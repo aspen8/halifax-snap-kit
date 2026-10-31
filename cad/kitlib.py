@@ -236,6 +236,26 @@ def make_inlay(P, centre, d, rings, axis, side=1, depth=1.2, fit=0.1):
     return P - socket, vols, plug
 
 
+def make_section_inlay(P, sec, side, depth=1.2, fit=0.15):
+    """Inlay of any flat shape (e.g. a code letter) pressed into a side (y) surface.
+    sec: CrossSection in (x, z); side: +1 starboard / -1 port.
+    Returns (P_with_socket, plug)."""
+    import trimesh
+    V, F = mesh_of(P)
+    tm = trimesh.Trimesh(V, F, process=False)
+    x0, z0, x1, z1 = sec.bounds()
+    A, B = np.meshgrid(np.linspace(x0, x1, 30), np.linspace(z0, z1, 30))
+    o = np.c_[A.ravel(), np.full(A.size, 500.0 * side), B.ravel()]
+    d = np.tile([0, -float(side), 0], (A.size, 1))
+    loc, _, _ = tm.ray.intersects_location(o, d, multiple_hits=False)
+    flat = (loc[:, 1] * side).min() - depth
+    keep = (mf.Manifold.cube([1000, 500, 1000]).translate([-500, flat, -500]) if side > 0 else
+            mf.Manifold.cube([1000, 500, 1000]).translate([-500, -flat - 500, -500]))
+    socket = prism_y(sec) ^ keep
+    plug = largest_piece(P ^ prism_y(sec.offset(-fit, mf.JoinType.Round)) ^ keep)[0]
+    return P - socket, plug
+
+
 # ============================================================
 # PRINTED JOINTS (CadQuery solids)
 # ============================================================
