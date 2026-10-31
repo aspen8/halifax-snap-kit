@@ -1045,7 +1045,7 @@ def build():
         parts[f"wheel_up_{tag}"] = wheel_up_insert(side)
         poses[f"wheel_up_{tag}"] = lambda w: rot(w, "x", 90)               # flat side down
         parts[f"fin_{tag}"] = fin(side)
-        poses[f"fin_{tag}"] = lambda w: rot(w, "x", 90)
+        poses[f"fin_{tag}"] = lambda w, s=side: rot(w, "x", 90 * s)   # inner (fuselage-facing) face down on both
 
     fp = fuselage_parts(tongues)
     for k, v in fp.items():
