@@ -55,13 +55,14 @@ PRESETS = {
         unit="158 SQN RAF", sqn="NP", letter="G", code_h=21.0, code_z=-12.3, sqn_x=212.9, letter_x=262.4,
         roundel=(240.3, -15.4, 23.7), serial=("LV917", 288.6, 0.5, 3.1),
         demarcation=[(0, -8.0), (25, -4.0), (45, -1.0), (70, 1.4), (330, 1.4), (360, 2.0)],
-        wave=(0.7, 7.5), fin_stripes=True),
+        wave=(0.7, 7.5), fin_stripes=True,
+        side_camo="camo_side_npg.png"),   # fuselage band traced from the NP-G profile
     "MH-E": dict(     # 51 Sqn (first profile)
         unit="51 SQN RAF", sqn="MH", letter="E", code_h=20.0, code_z=-11.0, sqn_x=214.2, letter_x=273.4,
         roundel=(243.9, -11.0, 22.8), serial=None,
         demarcation=[(0, -8.0), (26, -6.0), (45, -3.0), (60, 0.5), (90, 1.5), (130, 0.0),
                      (170, -1.5), (210, 0.5), (250, -1.0), (290, 0.5), (330, 1.5), (360, 2.0)],
-        wave=(0.0, 1.0), fin_stripes=False),
+        wave=(0.0, 1.0), fin_stripes=False, side_camo=None),
 }
 MARKINGS = os.environ.get("HALIFAX_MARKINGS", "NP-G")
 MK = PRESETS[MARKINGS]
@@ -141,11 +142,34 @@ def side_camo(g, side):
     ok = (row >= 0) & (row < g.shape[0]) & (col >= 0) & (col < g.shape[1])
     val = np.zeros_like(X, bool)
     val[ok] = g[row[ok], col[ok]]
+    if MK.get("side_camo"):                 # traced from the aircraft's own profile (same grid)
+        val = np.asarray(Image.open(CAMO_PNG.with_name(MK["side_camo"])).convert("L"))[::-1] > 127
     above = Z > demarcation_z(X)
     to_xz = lambda r, c: (xs[0] + c * 0.25, zs[0] + r * 0.25)
     green = raster_section(val & above, to_xz, smooth=0.6).simplify(0.12)
     band = raster_section(above, to_xz).simplify(0.12)
     return green, band
+
+
+def roof_camo():
+    """Plan section of green across the fuselage roof: the side trace's colour along the top
+    edge, carried straight over the spine (None when the scheme has no side trace)."""
+    if not MK.get("side_camo"):
+        return None
+    val = np.asarray(Image.open(CAMO_PNG.with_name(MK["side_camo"])).convert("L"))[::-1] > 127
+    xs = np.arange(-2, 365, 0.25)
+    zs = np.arange(-40, 20, 0.25)
+    top = np.array([H.interp(H.FUSE_STATIONS, x)[2] for x in xs])
+    rows = np.clip(np.round((top - 1.0 - zs[0]) / 0.25).astype(int), 0, len(zs) - 1)
+    g = val[rows, np.arange(len(xs))]
+    sec, start = mf.CrossSection(), None
+    for i, v in enumerate(list(g) + [False]):
+        if v and start is None:
+            start = xs[i]
+        elif not v and start is not None:
+            sec = sec + mf.CrossSection.square([xs[i] - start, 60.0]).translate([start, -30.0])
+            start = None
+    return sec
 
 
 # ============================================================
@@ -193,8 +217,9 @@ def colour_part(name, P, pat):
         side = S["+y"] if s > 0 else S["-y"]
         green_s, band = pat["side"][s]
         roof = up ^ prism_z(roof_section())         # roof only: keeps clear of the side skin
+        roof_green = prism_z(pat["roof_green"]) if pat.get("roof_green") is not None else plan
         ops = [(EARTH, side ^ prism_y(band)), (GREEN, side ^ prism_y(green_s)),
-               (EARTH, roof), (GREEN, roof ^ plan)]
+               (EARTH, roof), (GREEN, roof ^ roof_green)]
         # codes read "MH (o) E" from both sides: squadron code aft on starboard
         rx = FUSE_ROUNDEL[0]
         mirror = s > 0
@@ -485,7 +510,8 @@ if __name__ == "__main__":
     template = sys.argv[2] if len(sys.argv) > 2 else None
     out.mkdir(parents=True, exist_ok=True)
     g, plan_green = plan_camo()
-    pat = {"plan_green": plan_green, "side": {s: side_camo(g, s) for s in (1, -1)}}
+    pat = {"plan_green": plan_green, "side": {s: side_camo(g, s) for s in (1, -1)},
+           "roof_green": roof_camo()}
     parts, poses = H.build()
     objs = {}
     preview = []
