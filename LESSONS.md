@@ -157,6 +157,16 @@ The Hawk was the second kit, and the first built from scratch on the v2 approach
 - **Colour that's on the print-bed face is nearly free.** Only the first layers change colour. The Hawk's underside chevrons and the Union flag on the fin halves (a thin part) are painted into the skin this way.
 - **Find a plinth's deck height from the geometry, not the bounding box.** The raised boss at the blade foot was taller than the deck, and the lettering and pinstripe came out empty.
 
+### Tracing colour artwork
+- **Fit the drawing locally to the part being traced.** The HobbyBoss side views were fitted through the fin's corners (`tools/trace_colours.py`, a least-squares affine over several point pairs), so the flag lands exactly on our fin. Fitting by overlap of the outline failed: the white parts of the flag are the same colour as the paper.
+- **Different sheets disagree by a few mm.** That fit drifted 2–4 mm lower down the fuselage, and the two side views disagreed with each other. Don't mix positions from two sheets. Keep one source per region, and warp the joining piece to meet both ends: the swoosh is pinned to the Revell roundel at its foot and to the HobbyBoss fin at the root.
+- **Trace the port and starboard views separately.** Then check that they agree in (x, z): on the Hawk they do, because the flag is reversed on the starboard side, hoist forward.
+- **Sheets show different years.** The Revell 2010 sheet has the blue fin, the HobbyBoss sheet II the Union flag. Check which scheme the user wants before tracing.
+
+### Thin parts
+- **Keys across a thin split break through the skin.** The first fin-half keys were 6 mm across in a 2 mm half. Check every slot against a 0.3 mm outer layer: `(slot ^ (P - P.translate(-0.3 * n))).volume()` must be 0. Use full keys only where the part is thick (the spine cap), short keys about 2.2 mm across at 30% chord elsewhere, and thicken the section slightly if needed (fin thickness from 8.5% to 10% of chord).
+- **STL interference has rounding noise.** Coplanar seats (the fin on the spine) showed up as 18 mm³ "overlaps" in the float32 STLs but 0 on the exact manifolds. Confirm anything small on the manifolds before changing geometry.
+
 ### Checks that caught real bugs on the Hawk
 - **Interference:** run it without the `key_*` STLs, which are modelled at the origin. It found the tongue clash, the tilted stand key and a fin-cap sliver.
 - **Overhang:** found the canopy standing on its pegs.

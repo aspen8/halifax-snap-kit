@@ -54,7 +54,8 @@ AXLE_HOLE_LOOSE = 2.65       # ...and spin here
 PIN_D = 1.8
 PIN_HEAD = (3.6, 0.8)
 KEY_FR = (10.0, 5.0, 2.2)    # front/rear fuselage joint key: length across the split, width (z), thickness (y)
-KEY_FIN = (6.0, 5.0, 1.8)    # fin halves (across the split, along x, thickness z)
+KEY_FIN = (6.0, 5.0, 1.8)    # fin halves, in the spine cap (across the split, along x, thickness z)
+KEY_FIN_SMALL = (2.2, 4.0, 1.2)   # fin halves, in the thin fin (slot only 1.25 mm deep per half)
 
 # --- Fuselage main body: (x, half_width, z_top, z_bottom, squareness)
 # Plan half-widths from the Revell top view; top/bottom lines from the side view.
@@ -165,9 +166,10 @@ FIN_LE = ((206.3, 32.6), (245.9, 70.2))
 FIN_TE = ((250.9, 24.9), (260.0, 70.8))
 FIN_TOP = 70.5
 FIN_ROOT_Z = 24.0            # fin root (the spine is cut flat here to take it)
-FIN_TC = 0.085
+FIN_TC = 0.10               # real ~8.5%; 10% leaves wall round the half keys
 FIN_TONGUE = (210.0, 244.0, 4.0)   # x0, x1, depth of the root tongue into the spine
-FIN_KEYS = [(218.0, 34.0), (238.0, 34.0), (243.0, 52.0)]   # (x, z) of the fin half keys
+FIN_KEYS = [(196.0, 25.0)]                 # full keys in the thick spine cap: (x, z)
+FIN_KEYS_SMALL = [(223.1, 36.0), (229.2, 44.0)]   # small keys at 30% chord, where the fin is thickest
 
 # --- Jet pipe
 JET_PIPE = (7.0, 5.4, 6.8)   # depth, radius, z centre
@@ -578,8 +580,11 @@ def fin_seat():
 def fin_halves():
     f = fin_whole()
     pts = [(x, 0.0, z) for x, z in FIN_KEYS]
-    slots = to_m(K.key_slots(pts, "y", 0.0, KEY_FIN, "x", KEY_FIT, KEY_END_GAP))
+    small = [(x, 0.0, z) for x, z in FIN_KEYS_SMALL]
+    slots = (to_m(K.key_slots(pts, "y", 0.0, KEY_FIN, "x", KEY_FIT, KEY_END_GAP))
+             + to_m(K.key_slots(small, "y", 0.0, KEY_FIN_SMALL, "x", KEY_FIT, 0.15)))
     KEY_COUNTS["key_fin"] = (KEY_FIN, len(pts))
+    KEY_COUNTS["key_fin_small"] = (KEY_FIN_SMALL, len(small))
     return f ^ box(0, 400, 0, 20, -50, 100), (f ^ box(0, 400, -20, 0, -50, 100)), slots
 
 

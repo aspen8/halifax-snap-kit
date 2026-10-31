@@ -4,14 +4,14 @@ Colour the Hawk kit (Red Arrows) and write a multi-colour Bambu Studio 3MF.
 Run:  python colour.py OUT_DIR [project_settings_template.json]
       ONLY=name,name python colour.py OUT_DIR      (just some parts)
 
-Scheme: Red Arrows Hawk T.1A, current Union-flag fin.
+Scheme: Red Arrows Hawk T.1A, current Union-flag fin (traced from the HobbyBoss 81738 sheet).
   - Fuselage sections print red, on end. White cheat line, tail swoosh, belly stripes,
     "ROYAL AIR FORCE" and the fuselage roundels are press-in inlays (Halifax v2 style).
     Stripe shapes are traced from the Revell 04284 views (hawk/tools/white_regions.py,
     kept in ref/hawk_white/, not in git); the lettering is regenerated as text.
   - Wings print flat: the white underside chevrons are in the bottom skin (first layers).
     Roundels are through-discs, so they show above and below.
-  - Fin halves print flat: white band and Union flag in the outer skin.
+  - Fin halves print flat: the traced white swoosh and Union flag in the outer skin.
   - Canopy clear with black frames; cockpit black/grey; gear grey with black tyres.
 """
 import json
@@ -57,7 +57,6 @@ ROUNDEL = lambda d: [(BLUE, d), (WHITE, d * 2 / 3), (RED, d / 3)]
 FUSE_ROUNDEL = (187.3, 9.0, 10.6)        # x, z, diameter (Revell side view)
 WING_ROUNDEL = (162.2, 94.8, 15.0)       # x, |y|, diameter (Revell top view)
 LETTERS = ("ROYAL AIR FORCE", 145.1, 7.1, 62.0, 6.0)   # text, x centre, z centre, length, height
-FIN_BAND = ((219.6, 26.1), 1.15, 7.5)
 # Cheat line: (x, z of the stripe centre), constant width. Traced from the Revell side view and
 # smoothed (the trace is broken by leader lines and labels).
 CHEAT_LINE = [(6.5, 2.9), (20.0, 3.2), (45.0, 3.4), (80.0, 3.6), (111.0, 3.9)]
@@ -81,32 +80,40 @@ def close(sec, r):
     return sec.offset(r, mf.JoinType.Round).offset(-r, mf.JoinType.Round)
 
 
-def side_stripes():
-    """White cheat line and tail swoosh on the fuselage side, (x, z). Excludes the canopy,
-    lettering, roundel, fin (painted on the fin) and the labels under the fuselage."""
-    keep = []
+def swoosh(side):
+    """The tail swoosh (current scheme) traced from the HobbyBoss 81738 side views
+    (tools/trace_colours.py, hawk/tools/side_white_*.json). That calibration is fitted at the fin,
+    so the trace is warped in z to meet our roundel at its lower end while staying put at the fin root."""
+    tag = "stbd" if side > 0 else "port"
+    rs = [np.array(r) for r in json.load(open(WHITE_DIR / f"side_hb_{tag}.json"))["classes"]["white"]]
     rx, rz, rd = FUSE_ROUNDEL
-    for r in rings("side"):
+    rings, hb_roundel = [], None
+    for r in rs:
         x0, z0 = r.min(0)
         x1, z1 = r.max(0)
-        cx, cz = r.mean(0)
-        if z0 < -2.0 or x1 > 262 or x0 < 2.0:
-            continue
-        if 38 < cx < 139 and cz > H.canopy_plane_z(cx) - 1.0:
-            continue                                   # canopy glazing
-        if cx < 178.5:
-            continue                                   # cheat line (parametric) and lettering (text)
-        if x0 > 182.0 and z1 > H.FIN_ROOT_Z + 1.0 and cz > H.FIN_ROOT_Z - 2:
-            continue                                   # on the fin (painted there)
-        if math.hypot(cx - rx, cz - rz) < rd / 2 + 1.5:
-            continue                                   # roundel rings
-        keep.append(r)
-    sec = close(cs(keep), 1.5)                         # bridge gaps left by leader lines
-    sec = sec.offset(-0.6, mf.JoinType.Round).offset(0.6, mf.JoinType.Round)   # drop specks
+        a = 0.5 * abs(np.dot(r[:, 0], np.roll(r[:, 1], 1)) - np.dot(r[:, 1], np.roll(r[:, 0], 1)))
+        if abs((x0 + x1) / 2 - rx) < 3 and 40 < a < 70:
+            hb_roundel = (z0 + z1) / 2                  # the roundel's white ring in the drawing
+        elif x0 > 178.0 and a > 100:
+            rings.append(r)                             # the swoosh itself
+    top = H.FIN_ROOT_Z + 0.6
+    dz = rz - hb_roundel
+    out = []
+    for r in rings:
+        z = r[:, 1]
+        w = np.clip((top - z) / (top - hb_roundel), 0, 1)
+        out.append(np.c_[r[:, 0], z + dz * w])
+    sec = cs(out) - mf.CrossSection.circle(rd / 2 + 0.6, 64).translate([rx, rz])
+    return sec.offset(-0.4, mf.JoinType.Round).offset(0.4, mf.JoinType.Round)
+
+
+def side_stripes(side):
+    """White on the fuselage side, (x, z): the cheat line (parametric, along the Revell trace)
+    and the tail swoosh (HobbyBoss trace)."""
     line = mf.CrossSection()
     for p0, p1 in zip(CHEAT_LINE, CHEAT_LINE[1:]):
         line = line + K.band(p0, p1, CHEAT_W) + mf.CrossSection.circle(CHEAT_W / 2, 16).translate(list(p1))
-    return sec + line
+    return line + swoosh(side)
 
 
 def widen(sec, wmin):
@@ -201,9 +208,9 @@ def fuselage_inlays(name, P):
     out = []
     x0, _, _, x1, _, _ = P.bounding_box()
     tag = {"radome": "nose", "fuselage_front": "front", "fuselage_rear": "rear"}[name]
-    stripes = widen(side_stripes(), STRIPE_MIN_W)
     edges = [H.INTAKE_STATIONS[0][0], H.NOSE_SPLIT_X, H.FUSE_SPLIT_X]
     for side, st in ((1, "stbd"), (-1, "port")):
+        stripes = widen(side_stripes(side), STRIPE_MIN_W)
         k = 0
         for piece in chunks(clip(stripes, x0, -100, x1, 100), edges):
             P, plug = y_inlay(P, piece, side)
@@ -272,50 +279,27 @@ def fin_outline(z0=None):
     return [(le(zb) - 30, zb), (te(zb) + 3, zb), (te(H.FIN_TOP) + 3, H.FIN_TOP + 2), (le(H.FIN_TOP) - 3, H.FIN_TOP + 2)]
 
 
-def fin_band():
-    (bx, bz), k, w = FIN_BAND
-    zs = (H.FIN_ROOT_Z - 3, H.FIN_TOP + 3)
-    f = lambda z: bx + (z - bz) / k
-    return cs([np.array([(f(zs[0]), zs[0]), (f(zs[0]) + w, zs[0]), (f(zs[1]) + w, zs[1]), (f(zs[1]), zs[1])])])
-
-
-def union_flag():
-    """The Union flag in (x, z), laid along the fin behind the white band, hoist at the root.
-    Returns [(colour, section)] in paint order (later wins)."""
-    (bx, bz), k, w = FIN_BAND
-    u = np.array([1.0, k]); u /= np.linalg.norm(u)         # along the band (flag length)
-    v = np.array([u[1], -u[0]])                            # across it, aft and down (flag height)
-    L, Ht = 64.0, 32.0                                     # mm; standard 2:1 flag
-    o = np.array([bx + w + (H.FIN_ROOT_Z - 6 - bz) / k, H.FIN_ROOT_Z - 6]) + v * 0.6
-    to = lambda p: o + u * (p[0] * L / 60) + v * (p[1] * Ht / 30)
-    poly = lambda pts: cs([np.array([to(p) for p in pts])])
-
-    def band(p0, p1, wd):
-        p0, p1 = np.array(p0, float), np.array(p1, float)
-        d = p1 - p0
-        n = np.array([-d[1], d[0]]) / np.linalg.norm(d) * wd / 2
-        return poly([p0 - n, p1 - n, p1 + n, p0 + n])
-    ops = [(BLUE, poly([(0, 0), (60, 0), (60, 30), (0, 30)]))]
-    white = band((0, 0), (60, 30), 6) + band((0, 30), (60, 0), 6)
-    ops.append((WHITE, white))
-    red = mf.CrossSection()
-    c = np.array([30.0, 15.0])
-    for corner, sgn in (((0, 0), 1), ((60, 30), 1), ((0, 30), -1), ((60, 0), -1)):
-        d = np.array(corner, float) - c
-        n = np.array([-d[1], d[0]]) / np.linalg.norm(d)
-        side_n = n * sgn * (1 if corner[0] == 0 else -1)   # counterchanged
-        red = red + band(c + side_n * 1.0, np.array(corner) + side_n * 1.0, 2)
-    ops.append((RED, red))
-    ops.append((WHITE, band((30, -1), (30, 31), 10) + band((-1, 15), (61, 15), 10)))
-    ops.append((RED, band((30, -1), (30, 31), 6) + band((-1, 15), (61, 15), 6)))
+def fin_flag(side):
+    """Union-flag fin traced from the HobbyBoss 81738 side views (tools/trace_colours.py,
+    specs in hawk/tools/fin_flag_*.json). Returns [(colour, section)] in (x, z)."""
+    tag = "stbd" if side > 0 else "port"
+    p = WHITE_DIR / f"fin_{tag}.json"
+    if not p.exists():
+        raise SystemExit(f"missing {p}: run tools/trace_colours.py hawk/tools/fin_flag_{tag}.json {p}")
+    cls = json.load(open(p))["classes"]
+    ops = []
+    for name, colour in (("white", WHITE), ("blue", BLUE)):
+        keep = []
+        for r in cls.get(name, []):
+            r = np.array(r)
+            a = 0.5 * abs(np.dot(r[:, 0], np.roll(r[:, 1], 1)) - np.dot(r[:, 1], np.roll(r[:, 0], 1)))
+            cx, cz = r.mean(0)
+            if a < 1.0 or (cx < 212.0 and cz < 32.0):      # specks, and page background by the fillet
+                continue
+            keep.append(r)
+        if keep:
+            ops.append((colour, cs(keep)))
     return ops
-
-
-def flag_region():
-    (bx, bz), k, w = FIN_BAND
-    zs = (H.FIN_ROOT_Z - 3, H.FIN_TOP + 3)
-    f = lambda z: bx + (z - bz) / k + w
-    return cs([np.array([(f(zs[0]), zs[0]), (300, zs[0]), (300, zs[1]), (f(zs[1]), zs[1])])])
 
 
 def paint(P, ops, base=RED):
@@ -334,12 +318,11 @@ def colour_part(name, P):
         S = skins(P, FIN_SKIN)
         side = S["+y"] if name.endswith("stbd") else S["-y"]
         top = S["up"]
-        sw = side_stripes() ^ cs([np.array([(176, H.FIN_ROOT_Z - 1), (240, H.FIN_ROOT_Z - 1),
+        sw = side_stripes(1 if name.endswith("stbd") else -1) ^ cs([np.array([(176, H.FIN_ROOT_Z - 1), (240, H.FIN_ROOT_Z - 1),
                                            (240, H.FIN_ROOT_Z + 3), (176, H.FIN_ROOT_Z + 3)])])
-        ops = [(WHITE, side ^ prism_y(fin_band() + sw))]
-        region = flag_region()
-        for colour, sec in union_flag():
-            ops.append((colour, side ^ prism_y(sec ^ region)))
+        ops = [(WHITE, side ^ prism_y(sw))]
+        for colour, sec in fin_flag(1 if name.endswith("stbd") else -1):
+            ops.append((colour, side ^ prism_y(sec)))
         ops.append((WHITE, top ^ prism_z(fuselage_plan(205, 226, inset=-2.0) ^
                                          cs([np.array([(213.5, -10), (223.5, -10), (223.5, 10), (213.5, 10)])]))))
         return paint(P, ops)
