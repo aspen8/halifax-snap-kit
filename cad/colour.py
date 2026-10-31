@@ -26,7 +26,7 @@ from PIL import Image
 import detail as D
 import halifax as H
 import kitlib as K
-from kitlib import (clip, cs, mesh_of, pose_matrix, prism_y, prism_z,
+from kitlib import (clip, cs, cyl_axis, mesh_of, pose_matrix, prism_y, prism_z,
                     raster_section, text_section, to_manifold)
 
 # ============================================================
@@ -163,6 +163,18 @@ def skins(P):
     }
 
 
+def socket_region(name):
+    """Everything inside a roundel socket: painted black so the gap round the inlay reads black."""
+    if name.startswith("wing_outer"):
+        s = 1 if name.endswith("stbd") else -1
+        x, y, d = WING_ROUNDEL
+        return cyl_axis(x, s * y, d / 2 + 0.05, "z")
+    if name.startswith("fuselage_rear"):
+        x, z, d = FUSE_ROUNDEL
+        return cyl_axis(x, z, d / 2 + 0.05, "y")
+    return None
+
+
 def colour_part(name, P, pat):
     S = skins(P)
     up = S["up"]
@@ -172,8 +184,10 @@ def colour_part(name, P, pat):
     if not name.startswith("fuselage_"):    # thin edges: keep camo off the underside
         up = up - (P - P.translate([0, 0, UNDERSIDE_CLEAR]))
     camo_up = [(EARTH, up), (GREEN, up ^ plan)]
+    sock = socket_region(name)
+    sock_op = [(BLACK, sock)] if sock is not None else []
     if name.startswith(("wing_", "tailplane")):
-        return paint(P, list(camo_up))
+        return paint(P, list(camo_up) + sock_op)
     if name.startswith("fuselage_"):
         s = 1 if name.endswith("stbd") else -1
         side = S["+y"] if s > 0 else S["-y"]
@@ -191,7 +205,7 @@ def colour_part(name, P, pat):
         if MK["serial"]:
             txt, x, z, h = MK["serial"]
             ops.append((RED, side ^ prism_y(text_section(txt, h, x if s < 0 else x, z, mirror))))
-        return paint(P, ops)
+        return paint(P, ops + sock_op)
     if name.startswith("nacelle"):
         idx = int(name[7]) - 1
         zc = H.NACELLES[idx][1]
