@@ -404,6 +404,10 @@ def fuselage_parts(wing_tongues):
     pts = [(float(x), float(spine_z(x))) for x in np.arange(-6.0, 401.0, 0.5)] + [(400.0, 80.0), (-6.0, 80.0)]
     upper = K.prism_y(K.cs([np.array(pts)]))
     cap, Bb = B ^ upper, B - upper
+    # the canopy's locating boss rises above the split line where there is no spine piece
+    # (the canopy fills that gap), so it stays on the body
+    k0, k1, khw, kh = CANOPY_KEY
+    Bb = Bb + mbox(k0, k1, -khw, khw, cz - 0.5, cz + kh)
     # front/rear keys on the joint face, below the spine line
     _, hw, top, bot, _ = interp(FUSE_STATIONS, FUSE_SPLIT_X)
     zs = float(spine_z(FUSE_SPLIT_X))
