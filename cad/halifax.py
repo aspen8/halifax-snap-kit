@@ -19,6 +19,7 @@ Kit layout (no supports needed except where noted):
   tail        one-piece tailplane through the fuselage, two fins
 """
 import math
+import os
 import sys
 from pathlib import Path
 
@@ -151,7 +152,8 @@ WING_PITCH_X = 140.0         # mm, wing is pitched about this x (main spar)
 # Spar tongues into the fuselage (x range), port forward / starboard aft
 ROOT_TONGUE = {-1: (128.0, 142.0), 1: (146.0, 160.0)}
 ROOT_TONGUE_Z = (1.4, 5.4)   # above the floor
-JOINT_TONGUE = (0.26, 0.54, 1.6, 5.0, 12.0)  # chord fr. start/end, z0, z1, depth
+JOINT_TONGUE = (0.26, 0.54, 1.6, 5.0, 12.0)  # joint key: chord fr. start/end, z0, z1, depth each side
+WING_POSE = os.environ.get("HALIFAX_WING_POSE", "flat")   # 'flat' or 'end' (standing on the joint faces)
 
 # --- Nacelles: (y_centre, z_centre, x_front, length)
 NACELLES = [
@@ -568,21 +570,21 @@ def wing_parts(side):
         st_out.append((yl, x, c, tc))
     outer = panel(st_out)
 
-    # joint tongue (built in the outer panel's frame, at the bisector angle)
+    # inner/outer joint: flat faces at the dihedral bisector and a printed connector key
+    # (flat ends let both panels print standing on end)
     fs, fe, z0, z1, depth = JOINT_TONGUE
     x, c, _ = outer_planform(WING_JOINT_Y)
-    tongue = box(x + fs * c, x + fe * c, WING_JOINT_Y - depth, WING_JOINT_Y + 10,
-                 Z_FLOOR + z0, Z_FLOOR + z1)
-    pocket = box(x + fs * c - FIT, x + fe * c + FIT, WING_JOINT_Y - depth - 0.4,
-                 WING_JOINT_Y + 1, Z_FLOOR + z0 - FIT, Z_FLOOR + z1 + FIT)
-
+    slot = box(x + fs * c - KEY_FIT, x + fe * c + KEY_FIT,
+               WING_JOINT_Y - depth - KEY_END_GAP, WING_JOINT_Y + depth + KEY_END_GAP,
+               Z_FLOOR + z0 - KEY_FIT, Z_FLOOR + z1 + KEY_FIT)
+    KEY_COUNTS["key_wing"] = ((2 * depth, round((fe - fs) * c, 1), z1 - z0), 2)
     pivot = ((0, WING_JOINT_Y, Z_FLOOR), (1, WING_JOINT_Y, Z_FLOOR))
-    outer = outer.union(tongue.rotate(*pivot, -DIHEDRAL / 2)).rotate(*pivot, DIHEDRAL)
-    pocket = pocket.rotate(*pivot, DIHEDRAL / 2)
+    slot = slot.rotate(*pivot, DIHEDRAL / 2)
+    outer = outer.rotate(*pivot, DIHEDRAL)
     half = box(-100, 400, WING_JOINT_Y, WING_JOINT_Y + 300, Z_FLOOR - 50, Z_FLOOR + 50)
     half = half.rotate(*pivot, DIHEDRAL / 2)
-    inner = inner.cut(half).cut(pocket)
-    outer = outer.intersect(half.union(tongue.rotate(*pivot, DIHEDRAL / 2)))
+    inner = inner.cut(half).cut(slot)
+    outer = outer.intersect(half).cut(slot)
 
     # root tongue into the fuselage
     tx0, tx1 = ROOT_TONGUE[side]
@@ -987,10 +989,17 @@ def build():
         parts[f"wing_inner_{tag}"] = inner
         parts[f"wing_outer_{tag}"] = outer
         unpitch = (lambda w: w.rotate(*pitch_axis(), wing_pitch()))
-        poses[f"wing_inner_{tag}"] = unpitch
         pivot_y = WING_JOINT_Y * side
-        poses[f"wing_outer_{tag}"] = (lambda w, s=side, py=pivot_y, u=unpitch:
-                                      u(w).rotate((0, py, Z_FLOOR), (1, py, Z_FLOOR), -DIHEDRAL * s))
+        jp = ((0, pivot_y, Z_FLOOR), (1, pivot_y, Z_FLOOR))
+        if WING_POSE == "end":     # stand each panel on its joint face (the bisector plane)
+            poses[f"wing_inner_{tag}"] = (lambda w, s=side, jp=jp, u=unpitch:
+                                          rot(u(w).rotate(*jp, -DIHEDRAL / 2 * s), "x", -90 * s))
+            poses[f"wing_outer_{tag}"] = (lambda w, s=side, jp=jp, u=unpitch:
+                                          rot(u(w).rotate(*jp, -DIHEDRAL / 2 * s), "x", 90 * s))
+        else:
+            poses[f"wing_inner_{tag}"] = unpitch
+            poses[f"wing_outer_{tag}"] = (lambda w, s=side, jp=jp, u=unpitch:
+                                          u(w).rotate(*jp, -DIHEDRAL * s))
         for i in range(len(NACELLES)):
             pnl = inner.union(outer)          # tongue pocket must stay clear too
             inb, outb = nacelle_parts(i, side, pnl)

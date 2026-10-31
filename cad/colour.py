@@ -609,7 +609,8 @@ if __name__ == "__main__":
         cols = sorted({c for n, *_ in items for c in objs[n]["vols"]})
         print(f"plate {i + 1} colours: " + ", ".join(FILAMENTS[c][0] for c in cols))
         assert len(cols) <= MAX_COLOURS, f"plate {i + 1} needs {len(cols)} colours"
-    write_3mf(out / "halifax_kit.3mf", objects, names, template)
+    kit_name = "halifax_kit_wings_on_end.3mf" if H.WING_POSE == "end" else "halifax_kit.3mf"
+    write_3mf(out / kit_name, objects, names, template)
     for i, (gname, items) in enumerate(plates_all):
         print(f"plate {i + 1} ({gname}): " + ", ".join(n for n, *_ in items))
-    print("wrote", out / "halifax_kit.3mf")
+    print("wrote", out / kit_name)
