@@ -7,46 +7,75 @@ A fully printed multi-colour snap kit in the style of PB94's MasterBuilds, for t
 
 ## Print it
 
-Open `kit/halifax_kit.3mf` in Bambu Studio. It contains 8 plates with the filaments already assigned.
+There are two versions. They're identical except for how the wings print:
 
-1. Print the fit test first: `stl/fit_test_plate.stl`, `fit_test_tongue.stl`, `fit_test_pins.stl` (head down) and `fit_test_key.stl`. Then adjust `AXLE_HOLE_TIGHT`, `KEY_FIT` and `FIT` in `cad/halifax.py` if needed.
+- `kit/halifax_kit.3mf`: wings print flat, with fewer colour changes. 10 plates.
+- `kit/halifax_kit_wings_on_end.3mf`: wings stand on their joint faces. Layer lines run along the span, as on the fuselage, which hides them. Expect more colour changes on the wing plate. 9 plates.
+
+1. Print the fit test first (`stl/fit_test_*`), then adjust `AXLE_HOLE_TIGHT`, `KEY_FIT` and `FIT` in `cad/halifax.py` if needed. The X2D values are already set.
 2. Load the filaments for each plate. The X2D's AMS holds 4 and the auxiliary head adds a 5th.
 
 | Plate | Parts | Filaments |
 |---|---|---|
-| 1 | Fuselage halves (4) | Black, Dark Earth, Dark Green, Red |
-| 2 | Outer wings, tailplane | Black, Dark Earth, Dark Green |
-| 3 | Inner wings | Black, Dark Earth, Dark Green |
-| 4 | Nacelle halves (8) | Black, Dark Earth, Dark Green |
-| 5 | Fins, roundel inlays | Black, Red, Blue, Yellow, White |
-| 6 | Canopy, rear roof glazing, nose, turrets, astrodome, gun packs | Black, Clear |
-| 7 | Display stand: camo plinth with badge and name, swept blade | Black, Dark Earth, Dark Green, Yellow, White |
-| 8 | Props, prop shafts, exhausts, gear, wheels, pins, keys | Black, Yellow |
+| Fuselage | Front and rear body sections, standing on end (use a brim) | Black |
+| Spine (Dark Green) | 4 camo spine pieces, on end | Dark Green |
+| Spine (Dark Earth) | 4 camo spine pieces (the nose piece lies flat) | Dark Earth |
+| Wings | Inner and outer panels, tailplane | Black, Dark Earth, Dark Green |
+| Nacelles | 8 nacelle halves | Black, Dark Earth, Dark Green |
+| Fins, roundels and codes | Fins, roundel inlays, NP-G code letters | Black, Red, Blue, Yellow, White |
+| Clear and guns | Canopy, rear roof glazing, nose, turrets, astrodome, gun packs | Black, Clear |
+| Display stand | Camo plinth with badge and name, swept blade | Black, Dark Earth, Dark Green, Yellow, White |
+| Props and gear | Props, prop shafts, exhausts, gear, wheels, pins, keys | Black, Yellow |
 
-Suggested settings: PLA (matte for the camo), 0.16–0.2 mm layers, 2 walls, 10–15% gyroid infill, no supports.
+Suggested settings:
+- PLA, matte for the camo.
+- 0.16–0.2 mm layers, 2 walls, 10–15% gyroid infill, no supports.
+- A brim on everything that stands on end. The front fuselage is 183 mm tall and the outer wings are about 165 mm.
 
-## Kit contents (91 parts)
+The single-colour STLs are in `stl/`, with the wings flat. The on-end wing STLs are in `stl/wings_on_end/`.
 
-- **Airframe:** 4 fuselage halves, 4 wing panels, 8 nacelle halves, tailplane, 2 fins.
-- **Colour inlays:** 2 Type B wing roundels and 2 C1 fuselage roundels, pressed into sockets.
+## Kit contents (102 parts)
+
+- **Fuselage (Lancaster-style):**
+  - 2 full-width black body sections, printed on end so there's no seam along the spine.
+  - 8 single-colour camo spine pieces that sit on the scalloped demarcation line, cut where the NP-G profile changes colour.
+- **Airframe:** 4 wing panels, 8 nacelle halves, tailplane, 2 fins.
+- **Colour inlays:**
+  - Type B wing roundels and C1 fuselage roundels.
+  - The NP-G code letters in red.
+  - All press into black-lined sockets.
 - **Clear parts:** perspex nose, cockpit canopy, rear roof glazing, astrodome, dorsal and tail turrets, all with black frame lines. Plus 2 gun packs.
 - **Engines:** 4 props with yellow tips, 4 prop shafts with captive flanges (the props spin), 8 exhaust banks.
 - **Gear:** 2 main gear forks and wheels, tailwheel and printed axle pins. For display on the stand there are 2 wheels-up inserts that show the retracted main wheels.
-- **Connector keys:** 11 between the fuselage halves, 6 at the front/rear joint, 8 in the nacelles, 2 at the tailplane tips into the fins.
-- **Display stand:** a swept "swan-neck" blade that prints flat on its side, on a plinth (190 × 120 mm, bevelled underside) with a Dark Earth/Dark Green camo top, a yellow pinstripe, a raised white Halifax silhouette, and the name in raised white: HANDLEY PAGE HALIFAX / B MK II SERIES IA / 158 SQN RAF · NP-G · LV917.
+- **Connector keys:**
+  - 10 spine to body.
+  - 6 at the front/rear joint.
+  - 2 at the inner/outer wing joints.
+  - 8 in the nacelles.
+  - 2 at the tailplane tips into the fins.
+- **Display stand:**
+  - A swept "swan-neck" blade that prints flat on its side.
+  - A plinth (190 × 120 mm, bevelled underside) with a Dark Earth/Dark Green camo top and a yellow pinstripe.
+  - A raised white Halifax silhouette, and the name in raised white: HANDLEY PAGE HALIFAX / B MK II SERIES IA / 158 SQN RAF · NP-G · LV917.
 
 **Surface detail** (sized like PB94's):
 - 0.5 mm panel lines and deeper hinge lines.
 - Fuel filler caps, the dinghy hatch, the crew door, roof hatches and nose windows.
-- Paired rivet rows along the spars and the upper fuselage seam.
+- Paired rivet rows along the spars and the lower fuselage seam.
 - Radiator intakes with vanes and the D/F loop fairing.
 
 ## Assembly
 
-1. **Fuselage.** Drop the canopy and rear roof glazing over their locating bosses, press the astrodome and the nose spigot into place. Slide in the tailplane and both inner wing root tongues, port forward and starboard aft. Then close each fuselage pair on its connector keys, and join the front and rear sections on the joint keys.
-2. **Wings.** Plug the outer panels onto the inner panels. The joint tongue sets the 5° dihedral. Press the roundels into their sockets.
+1. **Fuselage.**
+   - Join the front and rear body sections on the 6 joint keys.
+   - Drop the canopy and rear roof glazing over their locating bosses, and press in the astrodome and the nose spigot.
+   - Slide both inner wing root tongues into their side pockets, port forward and starboard aft.
+   - Lay the tailplane on its seat.
+   - Press the spine pieces on, nose to tail, on their keys. The piece over the tail holds the tailplane down, and the piece over the joint locks the two sections together.
+   - Press in the red code letters and the roundels.
+2. **Wings.** Join each outer panel to its inner panel with a wing key. The joint faces set the 5° dihedral. Press the wing roundels into their sockets.
 3. **Nacelles.** Push the exhaust banks into their side slots. Drop a prop shaft into the inboard half, with its flange in the pocket. Close the outboard half around the wing on the nacelle keys, then press the prop onto the hex boss.
-4. **Tail.** The tailplane is captured in its shaped slot when the rear fuselage halves close. Push a key into each tailplane tip and press the fins on.
+4. **Tail.** Push a key into each tailplane tip and press the fins on.
 5. **Turrets.** Fit the gun packs into the turrets. Pin the turrets on: the dorsal turret rotates.
 6. **Display.** Either fit the gear (wheels on the headed pins, forks into their sockets) or put the model on the stand. With the gear down it sits tail-down at 8.7°. For the stand, push the blade's tenon into the plinth, fit the wheels-up inserts, and lower the model onto the key at the blade tip: it sits 5° nose-up.
 

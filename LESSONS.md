@@ -101,3 +101,17 @@ Run all three on the full build. Every one caught something on the Halifax that 
 3. Overhangs in print pose (`tools/overhang.py`). This caught the canopy floating on its tab.
 
 `colour.py` now keeps only the largest solid of each part and reports anything above 1 mm3 it drops. Read those reports: a dropped piece can mean a real geometry bug.
+
+
+## Ideas borrowed from the grafitomi Lancaster (used on the Halifax from v2)
+
+- **Fuselage as full-width sections printed on end.** No seam along the spine, and layer lines run around the body where they barely show. Use a brim on tall parts.
+- **Camo spine as single-colour clip-on pieces** on the demarcation line, keyed to a black body. The fuselage plates then need no colour changes and the colour edges are crisp. Cut the pieces at the profile's colour changes, kept clear of glazing, turrets and the tailplane.
+  - Give every piece a flat face to print on.
+  - Make every piece at least about 5 mm thick, so a straight split line may be needed on a low nose.
+  - Put each key where its piece is thickest.
+- **Code letters as press-in inlays** (`kitlib.make_section_inlay`), like the roundels. Engrave text that's too small to inlay.
+- **Wing joint with a separate key and flat faces** at the dihedral bisector, so the panels can also print standing on end. Ship both wing poses and let the builder choose: on end hides layer lines but costs more colour changes.
+- **Do awkward booleans with mesh tools.** The scalloped body/spine split failed in OCC (the CAD kernel); doing that one cut in manifold3d fixed it. Parts in `build()` can be trimesh meshes.
+- **A fine-layer plate for small detail parts** (exhausts, wheels, props, gear). Not done on the Halifax yet.
+
