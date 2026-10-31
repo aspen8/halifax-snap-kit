@@ -87,7 +87,7 @@ NOSE_SPIGOT_BOX = (5.0, 6.0, -28.0, -16.0)   # length, half-width, z0, z1 of the
 FUSE_SPLIT_X = 196.0         # front / rear fuselage joint (just ahead of the codes and roundel)
 # Fuselage printed Lancaster-style: full-width black sections on end, with the camouflaged
 # spine as separate single-colour pieces sitting on the demarcation line.
-SPINE_LINE = [(0, -8.0), (25, -4.0), (45, -1.0), (50, 2.0), (75, 2.0), (85, 1.4), (290, 1.4),
+SPINE_LINE = [(0, -14.2), (52.3, 2.0), (75, 2.0), (85, 1.4), (290, 1.4),  # one straight line to the windscreen: the nose piece is ~5 mm thick with a flat underside
               (299, 4.0), (360, 4.0)]   # x, z: body/spine split (tail: the tailplane floor)
 SPINE_WAVE = (0.7, 7.5, 85.0, 290.0)    # scallop amplitude, period, from x, to x
 SPINE_CUTS = [(13.0, 52.3, "earth"), (72.8, 100.0, "green"),
@@ -413,12 +413,18 @@ def fuselage_parts(wing_tongues):
     # spine-to-body keys: one or two per piece, clear of the tailplane tunnel
     cap_holes = K.box(0, 0.001, 0, 0.001, 0, 0.001)
     n_keys = 0
+    def thick(x):
+        return interp(FUSE_STATIONS, x)[2] - float(spine_z(x))
+    tail = (TAIL_ROOT[0] - 3 - KEY_CAP[1] / 2, TAIL_ROOT[0] + TAIL_ROOT[1] + 3 + KEY_CAP[1] / 2)
     for x0, x1, _ in SPINE_CUTS:
         n = 2 if x1 - x0 >= 45 else 1
-        for i in range(n):
-            x = x0 + (x1 - x0) * (i + 1) / (n + 1)
-            if TAIL_ROOT[0] - 3 < x < TAIL_ROOT[0] + TAIL_ROOT[1] + 3:
-                x = TAIL_ROOT[0] - 6
+        for i in range(n):           # in each share of the piece, the thickest spot clear of the tail
+            a = x0 + (x1 - x0) * i / n + KEY_CAP[1]
+            b = x0 + (x1 - x0) * (i + 1) / n - KEY_CAP[1]
+            cand = [x for x in np.linspace(a, b, 25) if not tail[0] < x < tail[1]]
+            if not cand:
+                continue
+            x = max(cand, key=thick)
             z = float(spine_z(x))
             cap_holes = cap_holes + M(key_slots([(x, 0, z)], "z", z, KEY_CAP, "x"))
             n_keys += 1
@@ -1050,8 +1056,13 @@ def build():
             poses[k] = lambda w: rot(w, "y", -90)
         elif k.startswith("spine_"):
             i = int(k.split("_")[1]) - 1
-            up = 90 if SPINE_CUTS[i][1] <= 100 else -90   # stand on the bigger end face
-            poses[k] = lambda w, up=up: rot(w, "y", up)
+            if SPINE_CUTS[i][1] <= 55:       # nose piece: lie on its flat, sloping underside
+                (x0, z0), (x1, z1) = SPINE_LINE[0], SPINE_LINE[1]
+                tilt = math.degrees(math.atan2(z1 - z0, x1 - x0))
+                poses[k] = lambda w, t=tilt: rot(w, "y", t)
+            else:                             # others stand on their bigger end face
+                up = 90 if SPINE_CUTS[i][1] <= 100 else -90
+                poses[k] = lambda w, up=up: rot(w, "y", up)
         elif k == "nose_glazing":
             poses[k] = lambda w: rot(w, "y", 90)      # spigot down
         else:
