@@ -23,14 +23,17 @@ There are two versions. They're identical except for how the wings print:
 | Wings | Inner and outer panels, tailplane | Black, Dark Earth, Dark Green |
 | Nacelles | 8 nacelle halves | Black, Dark Earth, Dark Green |
 | Fins, roundels and codes | Fins, roundel inlays, NP-G code letters | Black, Red, Blue, Yellow, White |
-| Clear and guns | Canopy, rear roof glazing, nose, turrets, astrodome, gun packs | Black, Clear |
+| Canopies and turrets | Canopy, rear roof glazing, nose, turrets, astrodome, gun packs | Black, Silk Silver |
 | Display stand | Camo plinth with badge and name, swept blade | Black, Dark Earth, Dark Green, Yellow, White |
 | Props and gear | Props, prop shafts, exhausts, gear, wheels, pins, keys | Black, Yellow |
 
-Suggested settings:
-- PLA, matte for the camo.
-- 0.16–0.2 mm layers, 2 walls, 10–15% gyroid infill, no supports.
-- A brim on everything that stands on end. The front fuselage is 183 mm tall and the outer wings are about 165 mm.
+Print settings are already in the files, set up for the X2D 0.4 mm nozzle:
+
+- **Layers:** 0.16 mm, or 0.12 mm on the canopy plate and the props, gear and keys plate.
+- **Infill and supports:** gyroid 15% infill, no supports.
+- **Brim:** a 6 mm brim on everything that stands on end. The fuselage sections also get 3 walls.
+
+Filament presets are left as PLA Basic. In Bambu Studio, pick your own preset for each slot (matte for the camo, silk for the canopies) so the temperatures match. The canopy and turret slot is set to **silk silver** for a display finish. Swap it for clear PETG if you want see-through glazing, and print the black frames in PETG on that plate too.
 
 The single-colour STLs are in `stl/`, with the wings flat. The on-end wing STLs are in `stl/wings_on_end/`.
 

@@ -328,8 +328,9 @@ def pack(items, bed, gap=8.0):
     return [p["items"] for p in plates]
 
 
-def project_settings(template, filaments):
+def project_settings(template, filaments, overrides=None):
     d = json.load(open(template))
+    d.update(overrides or {})
     n0 = len(d["filament_colour"])
     n = len(filaments)
     for k, v in list(d.items()):
@@ -362,10 +363,12 @@ def project_settings(template, filaments):
     return json.dumps(d, indent=4)
 
 
-def write_3mf(path, objects, plates, template, filaments, title):
+def write_3mf(path, objects, plates, template, filaments, title, overrides=None):
     """Write a Bambu Studio project 3MF.
     objects: [dict(name, volumes=[(filament_slot, V, F)], placement=(plate, x, y))]
     plates: plate names; template: Bambu project_settings JSON (or None);
+    overrides: print settings replacing the template's (e.g. {"layer_height": "0.16"});
+    an object may carry "settings": {key: value} for per-object overrides (layer height, brim...);
     filaments: {slot: (name, hex)}; title: model title."""
     ns = ('xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" '
           'xmlns:BambuStudio="http://schemas.bambulab.com/package/2021" '
@@ -421,7 +424,9 @@ def write_3mf(path, objects, plates, template, filaments, title):
             '    </part>\n' for vid, colour, n in vol_ids)
         settings.append(f'  <object id="{oid}">\n    <metadata key="name" value={quoteattr(obj["name"])}/>\n'
                         f'    <metadata key="extruder" value="{vol_ids[0][1]}"/>\n'
-                        f'    <metadata face_count="{faces}"/>\n{parts}  </object>\n')
+                        + "".join(f'    <metadata key="{sk}" value={quoteattr(str(sv))}/>\n'
+                                  for sk, sv in obj.get("settings", {}).items())
+                        + f'    <metadata face_count="{faces}"/>\n{parts}  </object>\n')
     z.writestr("3D/3dmodel.model", f'<?xml version="1.0" encoding="UTF-8"?>\n<model unit="millimeter" xml:lang="en-US" {ns}>\n'
                ' <metadata name="Application">BambuStudio-02.08.02.61</metadata>\n'
                ' <metadata name="BambuStudio:3mfVersion">1</metadata>\n'
@@ -446,7 +451,7 @@ def write_3mf(path, objects, plates, template, filaments, title):
     z.writestr("Metadata/model_settings.config", '<?xml version="1.0" encoding="UTF-8"?>\n<config>\n'
                + "".join(settings) + "".join(plate_xml) + '</config>\n')
     if template:
-        z.writestr("Metadata/project_settings.config", project_settings(template, filaments))
+        z.writestr("Metadata/project_settings.config", project_settings(template, filaments, overrides))
     z.writestr("Metadata/slice_info.config", '<?xml version="1.0" encoding="UTF-8"?>\n<config>\n  <header>\n'
                '    <header_item key="X-BBL-Client-Type" value="slicer"/>\n'
                '    <header_item key="X-BBL-Client-Version" value="02.08.02.61"/>\n  </header>\n</config>\n')

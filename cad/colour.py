@@ -43,7 +43,7 @@ FILAMENTS = {                # slot: (name, hex colour)
     5: ("Blue", "#24386B"),
     6: ("Yellow", "#E3B21C"),
     7: ("White", "#EDEDED"),
-    8: ("Clear", "#DDEBF2"),
+    8: ("Silk Silver", "#C7CCD1"),   # canopies and turrets: silk silver display glazing (swap for clear if wanted)
 }
 BLACK, EARTH, GREEN, RED, BLUE, YELLOW, WHITE, CLEAR = range(1, 9)
 
@@ -500,8 +500,38 @@ def pack(items):
     return K.pack(items, BED, PLATE_GAP)
 
 
+# Print settings: the template is the X2D 0.20 mm Standard profile; these replace it
+PRINT_OVERRIDES = {
+    "layer_height": "0.16",
+    "sparse_infill_pattern": "gyroid",
+    "sparse_infill_density": "15%",
+    "enable_support": "0",
+    "brim_type": "auto_brim",
+}
+TALL_BRIM = {"brim_type": "outer_only", "brim_width": "6"}
+
+
+def object_settings(name):
+    """Per-object overrides, written into the 3MF next to each object."""
+    s = {}
+    if name in CLEAR_PARTS or name.startswith(("guns_", "prop", "exhaust", "main_gear", "main_wheel",
+                                              "tail_gear", "tail_wheel", "pin_", "wheel_up", "key_")):
+        # fine detail and silk sheen; whole plates share one height (the prime tower needs that)
+        s["layer_height"] = "0.12"
+    if name in ("fuselage_front", "fuselage_rear"):
+        s.update(TALL_BRIM, wall_loops="3")
+    if name.startswith("spine_") and not name.startswith("spine_01"):
+        s.update(TALL_BRIM)                         # standing on an end face
+    if name.startswith("wing_") and H.WING_POSE == "end":
+        s.update(TALL_BRIM)
+    return s
+
+
 def write_3mf(path, objects, plates, template):
-    K.write_3mf(path, objects, plates, template, FILAMENTS, "Halifax B.II Srs IA snap kit 1:60")
+    for o in objects:
+        o["settings"] = object_settings(o["name"])
+    K.write_3mf(path, objects, plates, template, FILAMENTS, "Halifax B.II Srs IA snap kit 1:60",
+                PRINT_OVERRIDES)
 
 
 # ============================================================
@@ -528,7 +558,7 @@ PLATE_GROUPS = [            # parts kept together by colour set (max 5 colours a
     ("Wings", lambda n: n.startswith(("wing_", "tailplane"))),
     ("Nacelles", lambda n: n.startswith("nacelle")),
     ("Fins, roundels and codes", lambda n: n.startswith(("fin_", "roundel_", "code_"))),
-    ("Clear and guns", lambda n: n in CLEAR_PARTS or n.startswith("guns")),
+    ("Canopies and turrets (silk silver)", lambda n: n in CLEAR_PARTS or n.startswith("guns")),
     ("Display stand", lambda n: n.startswith("stand")),
     ("Props and gear", lambda n: True),
 ]
