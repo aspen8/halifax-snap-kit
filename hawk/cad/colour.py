@@ -56,11 +56,12 @@ ROUNDEL = lambda d: [(BLUE, d), (WHITE, d * 2 / 3), (RED, d / 3)]
 
 FUSE_ROUNDEL = (187.3, 9.0, 10.6)        # x, z, diameter (Revell side view)
 WING_ROUNDEL = (162.2, 94.8, 15.0)       # x, |y|, diameter (Revell top view)
-LETTERS = ("ROYAL AIR FORCE", 143.0, 7.0, 60.0, 5.2)   # text, x centre, z centre, length, height:
+LETTERS = ("ROYAL AIR FORCE", 143.0, 7.6, 60.0, 5.2)   # text, x centre, z centre, length, height:
                                                          # kept below the side pod's top edge (HobbyBoss)
 # Cheat line: (x, z of the stripe centre), constant width. Traced from the Revell side view and
 # smoothed (the trace is broken by leader lines and labels).
-CHEAT_LINE = [(6.5, 2.9), (20.0, 3.2), (45.0, 3.4), (80.0, 3.6), (111.0, 3.9)]
+CHEAT_LINE = [(6.5, 2.9), (20.0, 3.2), (45.0, 3.4), (80.0, 3.5), (111.0, 3.5), (150.0, 3.5),
+              (178.0, 3.8), (183.0, 4.4)]     # continuous under the lettering into the roundel (photos)
 CHEAT_W = 1.9    # point on the band's front edge, dz/dx, width along x
 WHITE_DIR = ROOT / "ref" / "hawk_white"
 
@@ -179,10 +180,29 @@ def z_inlay(P, sec, side, depth=INLAY_DEPTH, fit=INLAY_FIT):
 
 
 def y_inlay(P, sec, side, depth=INLAY_DEPTH, fit=INLAY_FIT):
+    """Inlay of a flat shape (x, z) pressed into a side surface (side=+1 starboard, -1 port).
+    Like kitlib.make_section_inlay, but samples inside the shape itself and skips shapes the
+    part doesn't reach (a stripe chunk that misses the surface returns None)."""
+    import trimesh
     if (P ^ prism_y(sec)).is_empty():
         return P, None
-    P2, plug = K.make_section_inlay(P, sec, side, depth, fit)
-    return P2, (None if plug.is_empty() else plug)
+    V, F = mesh_of(P)
+    tm = trimesh.Trimesh(V, F, process=False)
+    x0, z0, x1, z1 = sec.bounds()
+    A, B = np.meshgrid(np.linspace(x0, x1, 60), np.linspace(z0, z1, 12))
+    o = np.c_[A.ravel(), np.full(A.size, 500.0 * side), B.ravel()]
+    d = np.tile([0, -float(side), 0], (A.size, 1))
+    loc, _, _ = tm.ray.intersects_location(o, d, multiple_hits=False)
+    if not len(loc):
+        return P, None
+    flat = (loc[:, 1] * side).min() - depth
+    keep = (mf.Manifold.cube([1000, 500, 1000]).translate([-500, flat, -500]) if side > 0 else
+            mf.Manifold.cube([1000, 500, 1000]).translate([-500, -flat - 500, -500]))
+    socket = prism_y(sec) ^ keep
+    plug = K.largest_piece(P ^ prism_y(sec.offset(-fit, mf.JoinType.Round)) ^ keep)[0]
+    if plug.is_empty():
+        return P, None
+    return P - socket, plug
 
 
 def chunks(sec, x_edges):

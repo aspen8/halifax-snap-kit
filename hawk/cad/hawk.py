@@ -115,20 +115,20 @@ FR_KEYS = [(-6.0, 15.0), (6.0, 15.0), (-8.0, 2.0), (8.0, 2.0), (0.0, 27.0)]   # 
 
 # --- Intakes: D-section fairings each side, (x, y_outer, z_top, z_bottom)
 INTAKE_STATIONS = [            # x, y_outer, z_top, z_bottom: the side pods (intake trunks)
-    (90.5, 21.4, 12.6, -4.6),
-    (92.5, 22.3, 13.4, -5.6),
-    (98.0, 23.1, 13.8, -6.6),
-    (104.0, 23.6, 13.6, -7.0),
-    (113.0, 23.2, 13.2, -6.4),     # behind the wing LE the pod sits on the wing:
-    (130.0, 21.6, 12.6, -6.0),     # keep its bottom above the wing underside (no slivers)
+    (90.5, 21.4, 13.8, -4.6),      # intake top near Z 15 (Revell side view, head-on photo)
+    (92.5, 22.3, 14.6, -5.6),
+    (98.0, 23.1, 15.0, -6.6),
+    (104.0, 23.6, 14.8, -7.0),
+    (113.0, 23.2, 14.2, -6.4),     # behind the wing LE the pod sits on the wing:
+    (130.0, 21.6, 13.2, -6.0),     # keep its bottom above the wing underside (no slivers)
     (150.0, 19.6, 12.0, -5.6),
     (165.0, 17.4, 11.4, -5.0),     # stays tall to the end of the lettering (HobbyBoss side view)
     (178.0, 15.8, 10.6, -4.2),
     (190.0, 14.6, 7.6, -3.0),
 ]
 INTAKE_Y_IN = 10.0           # inner edge of the fairing (buried in the body)
-INTAKE_N = 3.0
-INTAKE_MOUTH = (91.0, 9.0, 1.0)   # x of the lip, depth of the duct recess, lip wall
+INTAKE_N = 2.4               # rounded pods (head-on photo)
+INTAKE_MOUTH = (91.0, 18.0, 1.0)  # x of the lip, depth of the duct (deep: reads dark), lip wall
 SPLITTER_GAP = 0.6           # mm, boundary-layer gap between the lip and the fuselage
 
 # --- Canopy (cut with a sloping plane through these two (x, z) points)
@@ -186,8 +186,10 @@ POD_KEYS = [0.30, 0.72]
 POD_KEY = 4.0
 
 # --- Landing gear
-NOSE_GEAR_X = 52.0
-MAIN_GEAR = (150.0, 46.0)    # x, |y| of the main leg socket (in the wing)
+NOSE_GEAR_X = 40.0           # photos: the nose wheel sits well forward
+MAIN_GEAR = (150.0, 43.0)    # x, |y| of the main leg socket (rear spar); track 3.47 m
+MAIN_TRAIL = 18.0            # mm the axle trails behind the socket (wheels sit near the wing TE)
+MAIN_PLUG_DEPTH = 2.6        # the wing is 4.1 mm thick here: keep >= 0.8 mm above the socket
 MAIN_WHEEL = (15.0, 5.0)     # diameter, width
 NOSE_WHEEL = (11.0, 4.0)
 GEAR_DROP = 22.0
@@ -364,12 +366,23 @@ def body():
     return to_m(loft([egg_wire(*s) for s in FUSE_STATIONS]))
 
 
+def canopy_line(step=2.0):
+    """The canopy top line as one continuous curve: a smoothing spline through the measured
+    points (they wobble by a few tenths), resampled densely, so the ruled loft follows it exactly."""
+    from scipy.interpolate import UnivariateSpline
+    t = np.array(SPINE_STATIONS, float)
+    xs = np.arange(t[0, 0], t[-1, 0] + 1e-6, step)
+    sz = UnivariateSpline(t[:, 0], t[:, 2], k=3, s=len(t) * 0.12)
+    sw = UnivariateSpline(t[:, 0], t[:, 1], k=3, s=len(t) * 0.02)
+    return [(x, float(sw(x)), float(sz(x))) for x in xs]
+
+
 @cached
 def spine():
     ws = []
-    for x, hw, top in SPINE_STATIONS:
+    for x, hw, top in canopy_line():
         ws.append(superellipse_wire(x, hw, top, min(fuse_at(x)[2], 24.0) - 6.0, SPINE_N))
-    return to_m(loft(ws))
+    return to_m(loft(ws, ruled=True))
 
 
 def dense(table, step=3.0):
@@ -400,7 +413,7 @@ def intake_mouth(side):
         _, yo, zt, zb = st
         yi = fuse_at(x)[1] + SPLITTER_GAP + lip
         yo, zt, zb = yo - lip, zt - lip, zb + lip
-        ws.append(superellipse_wire(x, (yo - yi) / 2, zt, zb, 3.4, side * (yo + yi) / 2))
+        ws.append(superellipse_wire(x, (yo - yi) / 2, zt, zb, 2.4, side * (yo + yi) / 2))
     return to_m(loft(ws, ruled=True))
 
 
@@ -820,19 +833,24 @@ def main_gear(side):
     zb = wing_underside_z(y)
     d, w = MAIN_WHEEL
     z_axle = zb - GEAR_DROP + d / 2
-    f = union([box(x - 2.0, x + 2.0, y - 2.0, y + 2.0, z_axle - 2.2, zb - 0.1),    # oleo leg
-               box(x - 2.2, x + 2.2, y - 2.2, y + 2.2, zb - 0.2, zb + 3.6),         # plug
-               box(x - 2.0, x + 6.0, y - 1.2, y + 1.2, zb - 5.0, zb - 0.1)])        # side brace stub
-    f = f - cyl((x, y - 20, z_axle), AXLE_HOLE_TIGHT, 40, "y", 24)
+    xa = x + MAIN_TRAIL
+    L = math.hypot(xa - x, zb - z_axle)
+    ang = math.degrees(math.atan2(xa - x, zb - z_axle))                     # leg raked aft
+    leg = rot_about(box(x - 2.0, x + 2.0, y - 2.0, y + 2.0, zb - L - 2.0, zb - 0.1), (x, y, zb), "y", -ang)
+    leg = leg - box(x - 20, x + 40, y - 10, y + 10, zb - 0.1, zb + 20)   # trimmed flush under the wing
+    f = union([leg,
+               box(x - 2.2, x + 2.2, y - 2.2, y + 2.2, zb - 0.2, zb + MAIN_PLUG_DEPTH),   # plug
+               box(xa - 2.6, xa + 2.6, y - 2.0, y + 2.0, z_axle - 2.6, z_axle + 2.6)])  # axle boss
+    f = f - cyl((xa, y - 20, z_axle), AXLE_HOLE_TIGHT, 40, "y", 24)
     axle_y = y + side * (2.0 + 0.5 + w / 2)
-    return f, (x, axle_y, z_axle)
+    return f, (xa, axle_y, z_axle)
 
 
 def main_socket(side):
     x, y = MAIN_GEAR
     y *= side
     zb = wing_underside_z(y)
-    return box(x - 2.2 - FIT, x + 2.2 + FIT, y - 2.2 - FIT, y + 2.2 + FIT, zb - 1, zb + 3.9)
+    return box(x - 2.2 - FIT, x + 2.2 + FIT, y - 2.2 - FIT, y + 2.2 + FIT, zb - 1, zb + MAIN_PLUG_DEPTH + 0.3)
 
 
 def axle_pin(start, axis, sign, length, head=True):

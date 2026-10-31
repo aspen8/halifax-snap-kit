@@ -22,6 +22,8 @@ VIEWS = {
     "under": ((0.0001, 0.0, -1.0), "Underside"),
     "rear34": ((1.1, -0.9, 0.55), "Rear 3/4"),
     "front": ((-1.0, -0.25, 0.25), "Front"),
+    "head": ((-1.0, 0.0, 0.03), "Head-on"),
+    "stbd": ((0.0, 1.0, 0.02), "Starboard side"),
 }
 
 

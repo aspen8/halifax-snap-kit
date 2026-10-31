@@ -13,6 +13,10 @@ Fully printed multi-colour snap kit for the Bambu Lab X2D, built the Halifax v2 
 
 ![canopy and spine](docs/canopy_spine.png)
 
+Against photos (top: real aircraft, bottom: model):
+
+![photo comparison](docs/photo_comparison.png)
+
 > **Status: v1, not yet test-printed.** The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs). The fits use the Halifax fit-test numbers. Print the fuselage joint, one wing root and a few letter inlays first.
 
 ## Print it
@@ -30,7 +34,7 @@ Open `kit/hawk_kit.3mf` in Bambu Studio. Its 6 plates have the filaments already
 
 Suggested settings: PLA, 0.16 mm layers for the inlay and gear plates and 0.2 mm elsewhere, 2 walls, 15% gyroid infill, no supports. Use a brim on the front fuselage section, which stands 159 mm tall.
 
-## Kit contents (92 parts)
+## Kit contents (98 parts)
 
 - **Airframe:**
   - radome with pitot probe
@@ -44,8 +48,8 @@ Suggested settings: PLA, 0.16 mm layers for the inlay and gear plates and 0.2 mm
   - solid clear canopy with a black windscreen arch, a slanted rear frame and a sill frame
   - tandem tub with the raised rear seat, side consoles, 2 seats (headboxes, firing handles, grey cushions), 2 instrument panels with coamings, and control columns
 - **White inlays:**
-  - cheat line in 8 pieces
-  - tail swoosh, 2 pieces per side
+  - cheat line in 14 pieces (it runs unbroken from the nose, under the lettering, into the roundel)
+  - tail swoosh, 3 pieces per side
   - 9 belly-stripe pieces
   - 26 letters ("ROYAL AIR FORCE" on each side)
 - **Roundels:**
@@ -89,8 +93,12 @@ The shape is measured from the Revell 04284 Hawk T.1A (Red Arrows) instruction s
 - The undersides are flat from 15% chord, so the wings and tailplanes print without supports.
 - Behind the cockpit the fuselage uses an "egg" cross-section. It's widest at the side pods and rounder on top, following the spine line, so the top is smooth with no separate spine ridge.
 - The fin's leading edge sweeps forward below 36 mm into a thin dorsal fillet that rises out of the spine at about X 192, as on the real aircraft.
-- The canopy ends with a slanted rear frame around X 128–134. It sits on a sill plane that follows the cockpit deck. Under it, the seats are placed where the pilots actually sit (seat backs at X 76 and X 112), with at least 1.2 mm of clear canopy over each headbox.
-- The side pods (intake trunks) stay tall back to X 178, so "ROYAL AIR FORCE" sits entirely on them, as on the HobbyBoss sheet.
+- The canopy top line is one continuous convex curve: a smoothing spline through the measured points, lofted densely so there is no wobble. It ends with a slanted rear frame around X 128–134. It sits on a sill plane that follows the cockpit deck. Under it, the seats are placed where the pilots actually sit (seat backs at X 76 and X 112), with at least 1.2 mm of clear canopy over each headbox.
+- The side pods (intake trunks) are rounded, with 18 mm deep ducts that read dark, as in the head-on photo. Their tops reach Z 15. They stay tall back to X 178, so "ROYAL AIR FORCE" sits entirely on them.
+- **Gear (positions from photos):**
+  - The nose leg is at X 40.
+  - The main legs plug in at X 150, where the wing is 4.1 mm thick, and rake aft so the wheels sit at X 168, near the trailing edge. The track is 3.47 m.
+- **Fuselage depth below the nose line:** the sources disagree. Revell and the side-on photo give about 8 mm under the cockpit; HobbyBoss gives 14 mm. The model follows Revell and the photo.
 - The fin is 10% thick (the real one is about 8.5%), so the key slots between its halves keep their wall.
 
 ## Markings
@@ -100,8 +108,8 @@ The scheme is the current one, with the Union-flag fin. It combines two sheets:
 - **Fin flag and tail swoosh:** traced from the HobbyBoss 81738 side views with `tools/trace_colours.py`, one trace per side. The specs are `tools/fin_flag_*.json` and `tools/side_white_*.json`.
   - Each view is fitted to the model through its fin corners and the nose tip, so the flag lands exactly on our fin.
   - That fit drifts by 2–4 mm lower down the fuselage. So the swoosh is warped vertically to meet the roundel at its lower end, while it still joins the fin's white band at the root.
-- **Cheat line, lettering and roundels:** follow the Revell sheet.
-  - The cheat line is a constant-width stripe along the Revell trace.
+- **Cheat line, lettering and roundels:** follow the Revell sheet and the photos.
+  - The cheat line is a constant-width stripe along the Revell trace. As in the photos, it continues under "ROYAL AIR FORCE" into the roundel, where the swoosh takes over.
   - The lettering is regenerated as text, so it reads correctly on both sides.
   - The roundels are Type D (red, white and blue in thirds).
 - **Underside chevrons and belly stripes:** traced from the Revell underside view (`tools/white_regions.py`).
@@ -144,7 +152,8 @@ Checks: run `tools/interference.py` on the assembled STLs without the `key_*` fi
 | `revell_04284_p15.png`, `revell_04284_p16.png` | Those pages rendered at 400 dpi | Calibrated views |
 | `hawk/hobbyboss_81738_sheet2.webp` | HobbyBoss 81738 marking sheet II (current scheme) | Union-flag fin and tail swoosh, both sides |
 | `hawk/hobbyboss_81738_sheets1_2.webp` | HobbyBoss 81738 sheets I and II, small | The older blue-fin scheme, for a future variant |
-| `hawk/photo_red_arrows_port_xx253.png` | Red Arrows Hawk in flight, port side | Detail checks |
+| `hawk/photo_*.png/.webp` | Red Arrows photos: side-on taxiing (starboard), head-on, port flight, fin close-ups both sides, high 3/4 | Canopy line, intakes, gear positions, cheat line, fin flag |
+| `hawk/render_50th_scheme_port.png`, `hawk/photo_port_ground_2010_bluefin.png` | Other schemes | Future variants |
 
 ## Known gaps and next steps
 

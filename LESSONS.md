@@ -177,6 +177,13 @@ The Hawk was the second kit, and the first built from scratch on the v2 approach
 - **Lettering belongs on the panel it is painted on.** Check the side pod's top edge against the letter height along their whole length. Raise or extend the pod (within the plan-view widths) rather than shrinking the text.
 - **Ask for photos.** Red Arrows photos are easy to get, and the user offered more. Side-on, top-down and 3/4 views of the canopy and the fin root settle shapes that kit sheets draw loosely.
 
+### Using photos (second review)
+- **Render the model from the photo's viewpoint and put the two side by side.** `tools/render.py` has `stbd`, `port` and `head` views, and `--focus` and `--zoom` for framing. That's how the photos showed the continuous cheat line, the gear positions and the round intakes.
+- **A curve the eye follows (canopy, spine) must be one smooth curve.** Measured points wobble by a few tenths. Fit a smoothing spline (`UnivariateSpline`, small `s`), resample every 2 mm, and loft ruled. Then check that the second difference doesn't change sign.
+- **Settle a disagreement by counting sources.** On fuselage depth, Revell and the side-on photo agreed and HobbyBoss didn't. A low camera and a long lens make an aircraft look deeper, so measure photos on a grid against the nose tip and the length.
+- **Gear sockets need wall too.** Moving the main leg aft put its socket at 80% chord, where the wing is 2.4 mm thick. Measure the local thickness, put the socket where it leaves at least 0.6 mm above, and rake the leg to put the wheel where the photo shows it.
+- **Any helper that casts rays must handle a miss.** `kitlib.make_section_inlay` crashed on a stripe chunk whose sample rays missed the surface. The Hawk's `y_inlay` samples inside the shape and returns nothing when nothing is hit.
+
 ### Checks that caught real bugs on the Hawk
 - **Interference:** run it without the `key_*` STLs, which are modelled at the origin. It found the tongue clash, the tilted stand key and a fin-cap sliver.
 - **Overhang:** found the canopy standing on its pegs.
