@@ -115,3 +115,61 @@ Run all three on the full build. Every one caught something on the Halifax that 
 - **Do awkward booleans with mesh tools.** The scalloped body/spine split failed in OCC (the CAD kernel); doing that one cut in manifold3d fixed it. Parts in `build()` can be trimesh meshes.
 - **A fine-layer plate for small detail parts** (exhausts, wheels, props, gear). Not done on the Halifax yet.
 
+
+## What the Hawk added (1:40 jet, v2 style, built from a scanned kit sheet)
+
+The Hawk was the second kit, and the first built from scratch on the v2 approach. `hawk/` is the cleaner template for the next aircraft: copy it rather than the Halifax.
+
+### Setup
+- **Python 3.10–3.12 only.** CadQuery has no 3.13 wheels. `uv venv --python 3.12 .venv` fetches a suitable Python. Then `pip install -r requirements.txt`, which includes `rtree` (trimesh ray casting needs it) and `pymupdf` (to render the reference PDFs).
+- **Disk.** CadQuery, OCP and VTK take about 1.5 GB installed. Check free space first: a half-finished install on a full disk wastes time.
+- **macOS has no EGL.** `cad/render_colour.py` (pyrender) won't run there. `tools/render.py` is a numpy point-splat renderer: about 5 s for 400k triangles, and `--skip gear_,stand` gives flight views.
+
+### References
+- **Copy every reference into `ref/` the moment it arrives.** Images pasted into a chat sit in a temporary folder and were lost mid-build. Ask for files on disk.
+- **Scanned instruction sheets are fine.** `tools/silhouette.py` makes the outline mask (blur, threshold, largest component, fill holes). Leader lines and part numbers pollute side views, so read those outlines by hand from `tools/grid.py` zooms instead.
+- **Each view on a sheet has its own scale.** The Revell Hawk side view is drawn 12% larger than the plan view. Calibrate the plan by the span and the side by the length.
+- **Check the drawing's symmetry.** The Hawk plan view's wings sit 20 px off the fuselage centreline, and its two half-spans differ by 5%, in both the top and underside views. Average the halves, each normalised by its own half-span.
+- **Cross-check against real data.** Wing area, root chord, and overall length including the probe all came within 1%, which confirmed the calibration.
+- **Paint can be traced too.** `tools/white_regions.py` keeps what is inside the silhouette and still paper-white after a small blur. The underside chevrons and belly stripes came out clean. Side views need the canopy glass, labels and roundel rings filtered out, and long stripes are better redrawn as a smooth parametric band along the traced path.
+- **Regenerate lettering as text,** with `text_section`, mirrored on starboard. A traced word would read backwards on the other side.
+
+### Geometry pipeline
+- **Booleans in manifold3d only.** CadQuery makes the lofts and primitives, and `to_m()` tessellates them. The Hawk build went from more than 10 minutes, unfinished, in OCC to 8 s.
+- **`mf.CrossSection([pts])` uses the Positive fill rule.** A clockwise outline silently gives an empty solid, and `A + empty` came out empty too: the fin vanished. Always build sections with `kitlib.cs` (even-odd).
+- **Smooth OCC lofts through sparse, unevenly spaced stations can twist and overshoot.** The intake fairing reached the far side of the aircraft. Resample the stations every 3 mm with PCHIP (`dense()`), use ruled lofts, and print each loft's bounding box.
+- **Overlap joined primitives by about 1 mm.** Faces that only touch become separate pieces: the probe cone and its boss did.
+- **A fairing sitting on a wing must not reach below the wing's underside.** Otherwise the wing cut leaves slivers hanging under it.
+- **Print poses must rotate, never mirror.** Mirroring a port part makes it a starboard part.
+- **Keep a cached function per sub-solid** (`@cached`). Parts reuse the body, the wing and the canopy zone many times.
+
+### Joints
+- **Low wings show under a rounded belly.** Root tongues reaching past the centreline ran into the other wing's root. Stop them about 5 mm past the centreline, and alternate them fore and aft.
+- **Stand key.** Build it straight in the model frame and join it to the blade after rotating the stand to its pitch. A key tilted with the pitch rubs its straight sockets. Keep it clear of the tongue pockets.
+- **Locators on the print face break the pose.** Pegs under the canopy made it stand on their tips. Locate it from a mating part instead: the cockpit insert's headboxes and coamings nest into pockets in the solid canopy.
+- **A fin printed as two flat halves** carries the spine cap (everything above a flat root plane) and the dorsal fillet. The fuselage keeps a flat seat and a tongue slot.
+- **A body of revolution such as a pod or tank** prints as two halves split on the centreline, with keys. Use separate keys into the belly, never pegs on a curved face.
+
+### Colour, v2 style
+- **Long thin stripes become chunked inlays.** Cut them at section joints, at steps in the surface (the intake lip), and every 38 mm. `kitlib.clip` pads its box by 1 mm, which is right for cropping prisms but wrong for chunking, because the chunks overlap. Use an exact rectangle.
+- **Widen stripes to at least 1.8 mm.** Make letters 0.15 mm bolder, with a 0.12 mm fit, so the plug strokes stay about 1 mm.
+- **Through-disc roundels.** On a wing printed flat, one disc coloured right through shows on both surfaces.
+- **Colour that's on the print-bed face is nearly free.** Only the first layers change colour. The Hawk's underside chevrons and the Union flag on the fin halves (a thin part) are painted into the skin this way.
+- **Find a plinth's deck height from the geometry, not the bounding box.** The raised boss at the blade foot was taller than the deck, and the lettering and pinstripe came out empty.
+
+### Checks that caught real bugs on the Hawk
+- **Interference:** run it without the `key_*` STLs, which are modelled at the origin. It found the tongue clash, the tilted stand key and a fin-cap sliver.
+- **Overhang:** found the canopy standing on its pegs.
+- **Largest-piece report:** found the floating probe and the intake slivers.
+- **Count the inlays per side:** an asymmetric count gave away the padded `clip`.
+- **Rebuild into a fresh output folder,** or old part files linger next to the new ones.
+
+### Starting the next aircraft: checklist
+1. Brief: type and mark, span or scale, markings, display (gear, stand or both), colours per plate.
+2. Free disk space, set up the venv, then copy `hawk/` to `<aircraft>/`.
+3. References into `ref/`. Render the PDF pages at 400 dpi, then get outlines (`silhouette.py`, `grid.py`) and calibrate each view in `<aircraft>/tools/refs.json`.
+4. Station tables, then `tools/ref_overlay.py --refs <aircraft>/tools/refs.json`, iterating until the outline sits on the lines. Check against real dimensions.
+5. Split for printing (sections on end, flat panels, halves for round parts), with keys and shaped sockets.
+6. Colour: inlays for anything that would cost colour changes on many layers, skin paint for bed-face colour.
+7. Checks (single pieces, interference without keys, overhangs, inlay counts), renders, 3MF.
+8. Fold what you learned back into this file and the README.

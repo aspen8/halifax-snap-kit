@@ -1,7 +1,17 @@
+# Printed snap kits
+
+Fully printed multi-colour snap kits in the style of PB94's MasterBuilds, for the Bambu Lab X2D: no glue, no filament pins, at most 5 colours on any plate.
+
+| Kit | Scale | Folder | Status |
+|---|---|---|---|
+| Handley Page Halifax B Mk II Series IA | 1:60, 500 mm span | repo root (`cad/`, `stl/`, `kit/`) | v2 |
+| BAE Hawk T.1A, Red Arrows | 1:40, 235 mm span | [`hawk/`](hawk/README.md) | v1, first full build |
+
+Starting a new aircraft? Read `LESSONS.md`, then copy `hawk/` (the newer, faster pipeline) as the template. The shared toolkit is `cad/kitlib.py` and `tools/`.
+
 # Halifax snap kit
 
 Handley Page Halifax B Mk II Series IA (Merlin XX), 1:60 scale, 500 mm span.
-A fully printed multi-colour snap kit in the style of PB94's MasterBuilds, for the Bambu Lab X2D: no glue, no filament pins, at most 5 colours on any plate.
 
 ![colour render](docs/colour_render.png)
 
@@ -97,13 +107,19 @@ The single-colour STLs are in `stl/`, with the wings flat. The on-end wing STLs 
   - `overhang.py`: printability of the print poses.
   - `colour_check.py`: stray colours, e.g. camo on the underside.
   - `closeup.py`: close-up renders.
+- `tools/` also holds the reference-drawing tools added for the Hawk, which work for any aircraft:
+  - `silhouette.py`: aircraft outline mask from a shaded painting-guide view.
+  - `grid.py`: zoomed crop with a labelled pixel grid, for reading outline points by hand.
+  - `white_regions.py`: traces the white paint areas off a view into model-space polygons.
+  - `render.py`: colour renders without OpenGL. `cad/render_colour.py` needs EGL, which macOS doesn't have.
 - `LESSONS.md`: the workflow, X2D tolerances and pitfalls. Read it before starting the next aircraft.
 
-To rebuild (Python 3.10–3.12):
+To rebuild (Python 3.10–3.12; CadQuery needs about 1.5 GB of disk):
 
 ```
-pip install cadquery trimesh manifold3d scikit-image matplotlib shapely lxml
-python cad/colour.py out [project_settings.json]
+python3.12 -m venv .venv            # or: uv venv --python 3.12 .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python cad/colour.py out [project_settings.json]
 ```
 
 ## Accuracy
