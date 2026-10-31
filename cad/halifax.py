@@ -42,8 +42,8 @@ KEY_END_GAP = 0.3            # mm, slot is this much deeper than half a key
 KEY_LR = (8.0, 10.0, 2.4)    # fuselage port/starboard halves (width along x)
 KEY_FR = (12.0, 6.0, 2.4)    # front/rear fuselage joint (width along z)
 KEY_NAC = (7.0, 6.0, 2.0)    # nacelle halves (width along x)
-KEY_FIN = (4.0, 7.0, 1.6)    # tailplane tip into fin: length along y, width along x, thickness z
-FIN_KEY_AT = (0.22, 0.50)    # key positions, fractions of the tip chord
+KEY_FIN = (4.0, 6.0, 1.6)    # tailplane tip into fin: length along y, width along x, thickness z
+FIN_KEY_AT = (0.24,)         # one key at the thickest part of the tip (mid-chord broke through)
 
 AXLE_HOLE_TIGHT = 2.35       # mm, printed 1.8 mm pins grip here (X2D fit test)
 AXLE_HOLE_LOOSE = 2.65       # mm, ...and spin freely here (X2D fit test)
@@ -797,7 +797,7 @@ def fin_key_slots(side):
     """Key slots across the tailplane-tip / fin joint (cut into both parts)."""
     y_tip = FIN_Y - FIN_T / 2 + FIN_POCKET
     x0, c = TAIL_TIP
-    pts = [(x0 + f * c, 0, TAIL_FLOOR + 0.47 * TAIL_TC * c) for f in FIN_KEY_AT]
+    pts = [(x0 + f * c, 0, TAIL_FLOOR + 0.46 * TAIL_TC * c) for f in FIN_KEY_AT]   # mid-thickness
     KEY_COUNTS["key_fin"] = (KEY_FIN, 2 * len(pts))
     return key_slots(pts, "y", side * y_tip, KEY_FIN, "x")
 
