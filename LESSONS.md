@@ -167,6 +167,16 @@ The Hawk was the second kit, and the first built from scratch on the v2 approach
 - **Keys across a thin split break through the skin.** The first fin-half keys were 6 mm across in a 2 mm half. Check every slot against a 0.3 mm outer layer: `(slot ^ (P - P.translate(-0.3 * n))).volume()` must be 0. Use full keys only where the part is thick (the spine cap), short keys about 2.2 mm across at 30% chord elsewhere, and thicken the section slightly if needed (fin thickness from 8.5% to 10% of chord).
 - **STL interference has rounding noise.** Coplanar seats (the fin on the spine) showed up as 18 mm³ "overlaps" in the float32 STLs but 0 on the exact manifolds. Confirm anything small on the manifolds before changing geometry.
 
+### Shape details that looked wrong in renders (user review)
+- **Don't model a spine as a narrow loft on a flat-topped body.** It reads as a ridge on a shelf. Behind the cockpit, use one body section that takes the whole top line: an "egg" superellipse that is widest at z_w, with a rounder upper half (`egg_wire`, n_up ≈ 2.0–2.3).
+- **A fin fillet is part of the fin.** A flat plate glued ahead of the fin looked kinked. Instead, sweep the fin's leading edge forward below a height (offset ∝ (z0 − z)^1.3), cap the thickness at the fin's own, and loft densely (ruled). It then rises out of the spine smoothly.
+- **Canopy:**
+  - Limit the glazing to the canopy bubble's plan footprint (`spine().project()`). Otherwise, where the sill plane dips under the deck, a full-width slice of fuselage becomes "glass".
+  - End the canopy with a slanted rear cut where the real frame is, not where the drawing's top line fades into the spine.
+  - Put the seats where the pilots sit (about 40% and 75% along a tandem canopy), and check headroom: `(cockpit.translate(z + wall) ^ canopy_zone) - outer` must be empty. A headbox poking through the solid canopy showed up as a black block.
+- **Lettering belongs on the panel it is painted on.** Check the side pod's top edge against the letter height along their whole length. Raise or extend the pod (within the plan-view widths) rather than shrinking the text.
+- **Ask for photos.** Red Arrows photos are easy to get, and the user offered more. Side-on, top-down and 3/4 views of the canopy and the fin root settle shapes that kit sheets draw loosely.
+
 ### Checks that caught real bugs on the Hawk
 - **Interference:** run it without the `key_*` STLs, which are modelled at the origin. It found the tongue clash, the tilted stand key and a fin-cap sliver.
 - **Overhang:** found the canopy standing on its pegs.

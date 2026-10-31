@@ -61,6 +61,7 @@ KEY_FIN_SMALL = (2.2, 4.0, 1.2)   # fin halves, in the thin fin (slot only 1.25 
 # Plan half-widths from the Revell top view; top/bottom lines from the side view.
 # z_top is the shoulder/deck line: the canopy and dorsal spine are a separate loft.
 FUSE_STATIONS = [
+    # x, half_width, z_top, z_bottom, squareness  (front: symmetric superellipse; top = deck line)
     (0.8,   1.6,   0.6,  -0.6, 2.0),
     (2.4,   4.6,   2.0,  -2.0, 2.0),
     (5.4,   7.2,   3.9,  -3.4, 2.1),
@@ -74,18 +75,24 @@ FUSE_STATIONS = [
     (70.0, 12.0,  17.5,  -8.2, 2.7),
     (90.0, 12.1,  20.0,  -8.4, 2.7),
     (110.0, 12.6, 22.0,  -8.5, 2.7),
-    (140.0, 13.8, 23.5,  -7.9, 2.6),
-    (170.0, 14.6, 23.5,  -6.6, 2.5),
-    (190.0, 14.4, 23.0,  -4.4, 2.4),
-    (208.0, 13.6, 22.0,  -3.0, 2.3),
-    (226.0, 12.9, 20.6,  -2.0, 2.2),
-    (240.0, 11.6, 19.4,  -1.3, 2.2),
-    (252.0, 10.2, 17.6,  -0.6, 2.2),
-    (264.2,  8.6, 14.6,   1.0, 2.2),
+    (124.0, 13.2, 23.0,  -8.3, 2.7),
+    # behind the cockpit the body takes the whole top line (no separate spine): an "egg"
+    # section, widest at z_w, rounder above (n_up) than below. x, hw, top, bottom, n_lo, z_w, n_up
+    (134.0, 13.6, 33.6,  -8.0, 2.6, 8.0, 2.3),
+    (140.0, 13.8, 35.5,  -7.9, 2.6, 8.0, 2.2),
+    (152.6, 14.2, 33.6,  -7.4, 2.5, 8.0, 2.1),
+    (166.7, 14.6, 32.4,  -6.7, 2.5, 8.0, 2.05),
+    (180.9, 14.5, 31.2,  -5.2, 2.4, 8.0, 2.0),
+    (195.0, 14.1, 29.2,  -3.9, 2.4, 8.0, 2.0),
+    (208.0, 13.6, 27.6,  -3.0, 2.3, 8.0, 2.0),
+    (226.0, 12.9, 25.9,  -2.0, 2.2, 8.0, 2.0),
+    (240.0, 11.6, 24.6,  -1.3, 2.2, 8.0, 2.0),
+    (252.0, 10.2, 21.6,  -0.6, 2.2, 8.0, 2.0),
+    (264.2,  8.6, 14.6,   1.0, 2.2, 7.8, 2.1),
 ]
 FUSE_END_X = 264.2
 # Canopy and dorsal spine: (x, half_width, z_top); bottom is buried 6 mm in the body
-SPINE_STATIONS = [
+SPINE_STATIONS = [            # canopy and the fairing just behind it (aft of x 140 the body takes over)
     (37.0,  8.6, 13.0),
     (41.0,  9.4, 15.6),
     (47.0, 10.0, 19.4),
@@ -96,14 +103,8 @@ SPINE_STATIONS = [
     (105.0, 10.7, 37.3),
     (112.0, 10.6, 37.3),
     (126.1, 10.2, 36.2),
-    (138.8,  9.6, 35.4),
-    (152.6,  8.6, 33.4),
-    (166.7,  7.6, 32.3),
-    (180.9,  6.4, 31.2),
-    (195.0,  4.8, 29.2),
-    (215.0,  3.4, 26.8),
-    (240.0,  2.6, 25.2),
-    (256.0,  2.2, 22.5),
+    (138.8,  9.6, 35.2),
+    (142.0,  9.0, 34.4),
 ]
 SPINE_N = 2.3
 NOSE_SPLIT_X = 21.0          # radome joint
@@ -113,15 +114,17 @@ FUSE_SPLIT_X = 179.5         # front/rear section joint: between the lettering a
 FR_KEYS = [(-6.0, 15.0), (6.0, 15.0), (-8.0, 2.0), (8.0, 2.0), (0.0, 27.0)]   # (y, z) on the joint face
 
 # --- Intakes: D-section fairings each side, (x, y_outer, z_top, z_bottom)
-INTAKE_STATIONS = [
+INTAKE_STATIONS = [            # x, y_outer, z_top, z_bottom: the side pods (intake trunks)
     (90.5, 21.4, 12.6, -4.6),
     (92.5, 22.3, 13.4, -5.6),
     (98.0, 23.1, 13.8, -6.6),
-    (104.0, 23.6, 13.5, -7.0),
-    (113.0, 23.2, 12.6, -6.4),     # behind the wing LE the fairing sits on the wing:
-    (130.0, 21.6, 10.6, -6.0),     # keep its bottom above the wing underside (no slivers)
-    (150.0, 19.2, 8.2, -5.6),
-    (172.0, 15.6, 5.0, -4.6),
+    (104.0, 23.6, 13.6, -7.0),
+    (113.0, 23.2, 13.2, -6.4),     # behind the wing LE the pod sits on the wing:
+    (130.0, 21.6, 12.6, -6.0),     # keep its bottom above the wing underside (no slivers)
+    (150.0, 19.6, 12.0, -5.6),
+    (165.0, 17.4, 11.4, -5.0),     # stays tall to the end of the lettering (HobbyBoss side view)
+    (178.0, 15.8, 10.6, -4.2),
+    (190.0, 14.6, 7.6, -3.0),
 ]
 INTAKE_Y_IN = 10.0           # inner edge of the fairing (buried in the body)
 INTAKE_N = 3.0
@@ -129,9 +132,10 @@ INTAKE_MOUTH = (91.0, 9.0, 1.0)   # x of the lip, depth of the duct recess, lip 
 SPLITTER_GAP = 0.6           # mm, boundary-layer gap between the lip and the fuselage
 
 # --- Canopy (cut with a sloping plane through these two (x, z) points)
-CANOPY_X = (38.0, 139.0)
-CANOPY_PLANE = ((38.0, 13.4), (139.0, 27.6))
-COCKPIT_CAVITY = (43.0, 134.0, 7.6, 3.0)  # x0, x1, half-width, floor z
+CANOPY_X = (38.0, 140.0)
+CANOPY_PLANE = ((38.0, 13.4), (134.0, 22.4))     # sill plane, close under the cockpit deck line
+CANOPY_REAR = ((121.0, 40.0), (134.5, 22.0))     # slanted rear edge of the glazing (x, z) -> (x, z)
+COCKPIT_CAVITY = (44.0, 128.0, 7.6, 3.0)  # x0, x1, half-width, floor z
 CANOPY_PEGS = []             # none: the cockpit insert locates the canopy (headbox and coaming pockets)
 CANOPY_PEG_D = 1.6
 
@@ -291,6 +295,21 @@ def superellipse_wire(x, hw, z_top, z_bot, n, yc=0.0):
     return cq.Wire.assembleEdges([cq.Edge.makeSpline(p, periodic=True)])
 
 
+def egg_wire(x, hw, z_top, z_bot, n_lo, z_w=None, n_up=None, pts=64):
+    """Section widest at z_w: upper half a superellipse of exponent n_up up to z_top,
+    lower half exponent n_lo down to z_bot (z_w=None: the symmetric superellipse)."""
+    if z_w is None:
+        return superellipse_wire(x, hw, z_top, z_bot, n_lo)
+    out = []
+    for i in range(pts):
+        t = 2 * math.pi * i / pts
+        c, s_ = math.cos(t), math.sin(t)
+        n = n_up if s_ >= 0 else n_lo
+        h = (z_top - z_w) if s_ >= 0 else (z_w - z_bot)
+        out.append(V(x, hw * math.copysign(abs(c) ** (2 / n), c), z_w + h * math.copysign(abs(s_) ** (2 / n), s_)))
+    return cq.Wire.assembleEdges([cq.Edge.makeSpline(out, periodic=True)])
+
+
 def loft(wires, ruled=False):
     s = cq.Solid.makeLoft(wires, ruled)
     if s.Volume() < 0:
@@ -318,11 +337,13 @@ KEY_COUNTS = {}
 # OUTER SHAPE
 # ============================================================
 def fuse_at(x):
-    return interp(FUSE_STATIONS, x)
+    """(x, half_width, z_top, z_bottom, n) at x (z_top: the body top line)."""
+    a = [s[:5] for s in FUSE_STATIONS]
+    return interp(a, x)
 
 
 def spine_top(x):
-    return interp(SPINE_STATIONS, x)[2]
+    return interp(SPINE_STATIONS, x)[2] if x <= SPINE_STATIONS[-1][0] else fuse_at(x)[2]
 
 
 _CACHE = {}
@@ -340,14 +361,14 @@ def cached(fn):
 
 @cached
 def body():
-    return to_m(loft([superellipse_wire(*s) for s in FUSE_STATIONS]))
+    return to_m(loft([egg_wire(*s) for s in FUSE_STATIONS]))
 
 
 @cached
 def spine():
     ws = []
     for x, hw, top in SPINE_STATIONS:
-        ws.append(superellipse_wire(x, hw, top, fuse_at(x)[2] - 6.0, SPINE_N))
+        ws.append(superellipse_wire(x, hw, top, min(fuse_at(x)[2], 24.0) - 6.0, SPINE_N))
     return to_m(loft(ws))
 
 
@@ -530,20 +551,38 @@ def tailplane(side):
 # ============================================================
 # FIN (two halves)
 # ============================================================
-def fin_section(z):
+FIN_FILLET_Z = 36.0          # below this the leading edge sweeps forward into the dorsal fillet
+FIN_FILLET_K = (1.05, 1.3)    # LE offset forward = k * (FIN_FILLET_Z - z) ** p
+
+
+def fin_le(z):
     (lx0, lz0), (lx1, lz1) = FIN_LE
-    (tx0, tz0), (tx1, tz1) = FIN_TE
     le = lx0 + (z - lz0) * (lx1 - lx0) / (lz1 - lz0)
-    te = tx0 + (z - tz0) * (tx1 - tx0) / (tz1 - tz0)
+    if z < FIN_FILLET_Z:
+        k, pw = FIN_FILLET_K
+        le -= k * (FIN_FILLET_Z - z) ** pw
+    return le
+
+
+def fin_te(z):
+    (tx0, tz0), (tx1, tz1) = FIN_TE
+    return tx0 + (z - tz0) * (tx1 - tx0) / (tz1 - tz0)
+
+
+def fin_section(z):
+    """Symmetric NACA 00xx section at height z. The fillet's long chords keep the thickness of
+    the fin at FIN_FILLET_Z, so the fillet is a thin swept extension, not a fat wedge."""
+    le, te = fin_le(z), fin_te(z)
     c = te - le
+    c_t = min(c, fin_te(FIN_FILLET_Z) - fin_le(FIN_FILLET_Z))
     up, lo = [], []
-    n = 32
+    n = 36
     for i in range(n + 1):
         x = (1 - math.cos(math.pi * i / n)) / 2
         yt = 5 * FIN_TC * (0.2969 * math.sqrt(x) - 0.1260 * x - 0.3516 * x**2
-                           + 0.2843 * x**3 - 0.1036 * x**4) + x * 0.25 / c
-        up.append(V(le + x * c, yt * c, z))
-        lo.append(V(le + x * c, -yt * c, z))
+                           + 0.2843 * x**3 - 0.1036 * x**4) * c_t + x * 0.25
+        up.append(V(le + x * c, yt, z))
+        lo.append(V(le + x * c, -yt, z))
     return cq.Wire.assembleEdges([cq.Edge.makeSpline(up), cq.Edge.makeLine(up[-1], lo[-1]),
                                   cq.Edge.makeSpline(list(reversed(lo)))])
 
@@ -552,8 +591,8 @@ FIN_X0 = 182.0               # fin part starts here (behind the section joint)
 
 
 def fin_cap():
-    """The spine above the fin root plane: printed with the fin, cut from the fuselage."""
-    return outer() ^ box(FIN_X0, 262.0, -8.0, 8.0, FIN_ROOT_Z, 80.0)
+    """The rear fuselage top above the fin root plane: printed with the fin, cut from the fuselage."""
+    return outer() ^ box(FIN_X0, 262.0, -30.0, 30.0, FIN_ROOT_Z, 80.0)
 
 
 def fin_tongue(grow=0.0):
@@ -564,11 +603,9 @@ def fin_tongue(grow=0.0):
 
 @cached
 def fin_whole():
-    f = to_m(loft([fin_section(FIN_ROOT_Z - 1.0), fin_section(FIN_TOP)], ruled=True))
-    # dorsal fillet: a thin fairing ahead of the fin root, blended into the spine
-    pts = np.array([(176.0, 26.0), (186.0, 28.6), (195.0, 30.2), (201.0, 32.0), (206.5, 34.8), (209.0, 26.0)])
-    fil = K.cs([pts]).extrude(2.2).translate([0, 0, -1.1]).rotate([90, 0, 0])
-    whole = (f + fil + fin_cap()) ^ box(FIN_X0, 300, -20, 20, FIN_ROOT_Z, 100)
+    zs = list(np.arange(FIN_ROOT_Z - 1.0, FIN_FILLET_Z, 1.0)) + [FIN_FILLET_Z, FIN_TOP]
+    f = to_m(loft([fin_section(z) for z in zs], ruled=True))     # dense ruled loft: smooth fillet
+    whole = (f + fin_cap()) ^ box(FIN_X0, 300, -30, 30, FIN_ROOT_Z, 100)
     return whole + fin_tongue()
 
 
@@ -591,6 +628,14 @@ def fin_halves():
 # ============================================================
 # CANOPY AND COCKPIT
 # ============================================================
+@cached
+def canopy_region(grow=0.0):
+    """The glazing: inside the canopy bubble's plan footprint (so the deck beside it stays
+    fuselage) and inside canopy_zone."""
+    foot = spine().project().offset(grow, mf.JoinType.Round)
+    return canopy_zone(grow) ^ K.prism_z(foot)
+
+
 def canopy_plane_z(x):
     (xa, za), (xb, zb) = CANOPY_PLANE
     return za + (x - xa) * (zb - za) / (xb - xa)
@@ -602,16 +647,21 @@ def canopy_angle():
 
 
 def canopy_zone(grow=0.0):
+    """Above the sill plane, behind the windscreen base and ahead of the slanted rear edge."""
     (xa, za), _ = CANOPY_PLANE
     x0, x1 = CANOPY_X
     blk = box(x0 - 20, x1 + 20, -30, 30, za - grow, za + 50)
     blk = rot_about(blk, (xa, 0, za), "y", -canopy_angle())
-    return blk ^ box(x0 - grow, x1 + grow, -30, 30, -10, 60)
+    (ra, rza), (rb, rzb) = CANOPY_REAR
+    ang = math.degrees(math.atan2(rb - ra, rza - rzb))           # lean of the rear edge from vertical
+    rear = rot_about(box(ra - 200, ra + grow, -30, 30, rzb - 30, rza + 30), (ra, 0, rza), "y", -ang)
+    return blk ^ box(x0 - grow, x1 + grow, -30, 30, -10, 60) ^ rear
 
 
-SEATS = [(66.0, 0.0), (106.0, 4.5)]   # x of the seat back, floor rise (the rear seat sits higher)
-SEAT = (11.0, 13.0, 23.0)             # depth, width, height above its floor
-PANELS = [(49.0, 0.0), (88.0, 4.5)]   # instrument panel x, floor rise
+SEATS = [(76.0, 0.0), (112.0, 4.5)]   # x of the seat back, floor rise (the rear seat sits higher)
+SEAT = (11.0, 13.0, 22.0)             # depth, width, height above its floor
+PANELS = [(52.0, 0.0), (91.0, 4.5)]   # instrument panel x, floor rise
+CANOPY_MIN_WALL = 1.2                 # mm of clear canopy kept over every seat and coaming
 
 
 @cached
@@ -620,8 +670,8 @@ def cockpit():
     cx0, cx1, chw, cz = COCKPIT_CAVITY
     w = chw - FIT
     parts = [box(cx0 + FIT, cx1 - FIT, -w, w, cz, cz + 1.6),
-             box(84.0, cx1 - FIT, -w, w, cz, cz + 1.6 + 4.5)]
-    for x0, x1, rise in ((cx0 + FIT, 84.0, 0.0), (84.0, cx1 - FIT, 4.5)):
+             box(87.0, cx1 - FIT, -w, w, cz, cz + 1.6 + 4.5)]
+    for x0, x1, rise in ((cx0 + FIT, 87.0, 0.0), (87.0, cx1 - FIT, 4.5)):
         for s in (1, -1):
             parts.append(box(x0, x1, *sorted((s * w, s * (w - 2.4))), cz, cz + 1.6 + rise + 5.0))
     for xs, rise in SEATS:
@@ -648,7 +698,7 @@ def cockpit():
 
 @cached
 def canopy():
-    c = outer() ^ canopy_zone(-FIT)
+    c = outer() ^ canopy_region(-FIT)
     ck = cockpit()
     clear = union([ck, ck.translate([0, 0, FIT]), ck.translate([FIT, 0, 0]), ck.translate([-FIT, 0, 0])])
     c = c - clear
@@ -811,7 +861,7 @@ def fuselage_body():
     for s in (1, -1):                                   # intakes sit on the wing
         w = wing_assembled(s)
         b = b - w - w.translate([0, 0, FIT]) - w.translate([0, 0, -FIT])
-    b = b - canopy_zone()
+    b = b - canopy_region()
     cx0, cx1, chw, cz = COCKPIT_CAVITY
     b = b - box(cx0, cx1, -chw, chw, cz, 45)
     for x, y in CANOPY_PEGS:

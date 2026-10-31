@@ -11,6 +11,8 @@ Fully printed multi-colour snap kit for the Bambu Lab X2D, built the Halifax v2 
 
 ![fin close-up](docs/fin_closeup.png)
 
+![canopy and spine](docs/canopy_spine.png)
+
 > **Status: v1, not yet test-printed.** The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs). The fits use the Halifax fit-test numbers. Print the fuselage joint, one wing root and a few letter inlays first.
 
 ## Print it
@@ -39,7 +41,7 @@ Suggested settings: PLA, 0.16 mm layers for the inlay and gear plates and 0.2 mm
   - smoke pod (2 halves)
   - 3 aerials
 - **Cockpit:**
-  - solid clear canopy with black frames
+  - solid clear canopy with a black windscreen arch, a slanted rear frame and a sill frame
   - tandem tub with the raised rear seat, side consoles, 2 seats (headboxes, firing handles, grey cushions), 2 instrument panels with coamings, and control columns
 - **White inlays:**
   - cheat line in 8 pieces
@@ -85,6 +87,11 @@ The shape is measured from the Revell 04284 Hawk T.1A (Red Arrows) instruction s
 - The side views on the sheet are drawn about 12% larger than the plan views, so each view has its own calibration.
 - The plan view's wings sit about 20 px off the fuselage centreline, and its two halves differ by 5%. The model uses the average of the two halves.
 - The undersides are flat from 15% chord, so the wings and tailplanes print without supports.
+- Behind the cockpit the fuselage uses an "egg" cross-section. It's widest at the side pods and rounder on top, following the spine line, so the top is smooth with no separate spine ridge.
+- The fin's leading edge sweeps forward below 36 mm into a thin dorsal fillet that rises out of the spine at about X 192, as on the real aircraft.
+- The canopy ends with a slanted rear frame around X 128–134. It sits on a sill plane that follows the cockpit deck. Under it, the seats are placed where the pilots actually sit (seat backs at X 76 and X 112), with at least 1.2 mm of clear canopy over each headbox.
+- The side pods (intake trunks) stay tall back to X 178, so "ROYAL AIR FORCE" sits entirely on them, as on the HobbyBoss sheet.
+- The fin is 10% thick (the real one is about 8.5%), so the key slots between its halves keep their wall.
 
 ## Markings
 
