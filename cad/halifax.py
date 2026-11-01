@@ -134,7 +134,8 @@ DORSAL_X = 195.0             # Boulton Paul Type A Mk VIII (Revell side view)
 DORSAL_R = 8.0               # mm, hole radius in the roof
 DORSAL_DOME_R = 9.0
 DORSAL_DOME_DROP = 0.3       # sphere centre below the base: ~7.5 mm tall above the roof
-DORSAL_GUN_Z = 2.5           # mm, gun pack height above the turret base
+DORSAL_COLLAR = 2.5          # mm, cylindrical collar under the dome: taller turret (photos)
+DORSAL_GUN_Z = 3.0           # mm, gun pack height above the turret base
 TAIL_TURRET_R = 9.0          # (old hemisphere turret, unused)
 TAIL_TURRET_Z = -2.2
 # Boulton Paul Type E rear turret (Revell side and plan views): a tall glazed turret on a flat
@@ -150,8 +151,9 @@ TAIL_CONE = [(344.0, 9.5, 2.0, -14.0, 2.6), (352.0, 9.0, 1.0, -13.0, 2.5), (356.
 TT_FAIRING = [(336.0, 2.5, 10.8, 6.0, 2.2), (341.0, 4.5, 12.6, 6.0, 2.4), (345.2, 6.0, 14.0, 6.0, 2.6)]
 GUN_D = 1.2                  # mm, barrel diameter (printable minimum)
 GUN_LEN = 13.0               # mm, exposed barrel length
-GUN_PITCH = 2.6              # mm, spacing of the four barrels
-GUN_BLOCK = (4.0, 12.0, 2.4)  # breech block x, y, z
+GUN_PITCH = 2.4              # mm, vertical spacing of each stacked pair
+GUN_BLOCK = (4.0, 9.0, 4.2)   # breech block x, y, z (two stacked pairs)
+GUN_SIDE = 3.2               # mm, each pair this far either side of the centreline
 
 # --- Wing planform (projected): (y, x_leading_edge, chord)
 # Measured from the Revell 1/72 Halifax B/GR II Srs IA plan views, scaled to span:
@@ -183,7 +185,7 @@ NACELLES = [
 ]
 NACELLE_W = 22.0             # mm, max width
 NACELLE_H = 21.0             # mm, max height of the body (oval)
-RADIATOR_X = 6.0             # mm, chin radiator start behind nacelle front
+RADIATOR_X = 1.5             # mm, chin radiator starts right behind the spinner (photos)
 RADIATOR_LEN = 30.0
 RADIATOR_R = 6.0
 NACELLE_PROFILE = [(0.0, 0.30), (0.02, 0.62), (0.06, 0.86), (0.13, 0.98), (0.25, 1.0),
@@ -201,15 +203,16 @@ HEX_AF, HEX_LEN, HEX_SOCKET_AF = 3.6, 2.5, 4.0   # socket: press fit, scaled fro
 PIN_D = 2.5                  # mm, printed axle pins (1.8 mm snapped coming off the plate)
 
 # --- Exhausts (after PB94: a separate bar of stacks plugged into a side slot)
-EXH_X0 = 6.0                 # mm behind the nacelle front
-EXH_LEN = 18.0               # mm, Merlin bank of six
+EXH_X0 = 5.0                 # mm behind the nacelle front
+EXH_LEN = 26.0               # mm, flame-damper shroud running back to the wing leading edge
 EXH_H = 2.6                  # mm, bar height
 EXH_Z = 0.8                  # mm above the nacelle centreline
 EXH_DEPTH = 2.0              # mm into the nacelle
+EXH_SHROUD_D = 3.4             # mm, flame-damper tube diameter (Halifax II photos)
 EXH_PROUD = 0.5              # mm proud of the widest nacelle point
-EXH_STUBS = 6
+EXH_STUBS = 0                # (stub stacks replaced by a shroud tube)
 # --- Radiator intake (recess + vanes at the front of each chin radiator)
-RAD_INTAKE = (4.0, 3.2, 2.6, 2.2)        # depth, half-width, below/above centre
+RAD_INTAKE = (5.0, 3.6, 3.0, 2.4)        # depth, half-width, below/above centre: intake under the prop
 RAD_VANES = (0.9, 2.3)                   # |y| of the vanes, either side of centre
 RAD_VANE_T = 0.5
 # --- Astrodome (clear, plugs into the roof) and D/F loop fairing (moulded on)
@@ -526,11 +529,12 @@ def fuselage_parts(wing_tongues):
 # TURRETS AND GUNS
 # ============================================================
 def gun_pack():
+    """Breech block with four barrels: a vertically stacked pair either side (Boulton Paul)."""
     bx, by, bz = GUN_BLOCK
     g = box(0, bx, -by / 2, by / 2, 0, bz)
-    for i in range(4):
-        y = (i - 1.5) * GUN_PITCH
-        g = g.union(cyl((bx - 0.2, y, GUN_D / 2), GUN_D, GUN_LEN + 0.2, "x"))
+    for y in (-GUN_SIDE, GUN_SIDE):
+        for z in (bz / 2 - GUN_PITCH / 2, bz / 2 + GUN_PITCH / 2):
+            g = g.union(cyl((bx - 0.2, y, z), GUN_D, GUN_LEN + 0.2, "x"))
     return g
 
 
@@ -546,8 +550,10 @@ def gun_slot(at, direction):
 def dorsal_turret():
     _, _, top, _, _ = interp(FUSE_STATIONS, DORSAL_X)
     base_z = top - 1.2                       # sits on the roof edges
-    dome = (wp(cq.Solid.makeSphere(DORSAL_DOME_R, V(DORSAL_X, 0, base_z - DORSAL_DOME_DROP)))
-            .intersect(box(DORSAL_X - 20, DORSAL_X + 20, -20, 20, base_z, 40)))
+    dome = (wp(cq.Solid.makeSphere(DORSAL_DOME_R, V(DORSAL_X, 0, base_z + DORSAL_COLLAR - DORSAL_DOME_DROP)))
+            .intersect(box(DORSAL_X - 20, DORSAL_X + 20, -20, 20, base_z + DORSAL_COLLAR, 40)))
+    r_c = (DORSAL_DOME_R ** 2 - DORSAL_DOME_DROP ** 2) ** 0.5
+    dome = dome.union(cyl((DORSAL_X, 0, base_z), 2 * r_c, DORSAL_COLLAR + 0.01, "z"))
     plug = cyl((DORSAL_X, 0, top - 3.0 + FIT), 2 * (DORSAL_R - FIT), base_z - top + 3.0, "z")
     t = dome.union(plug)
     # guns point aft out of a slot at the back of the dome
@@ -862,8 +868,17 @@ def exhaust_bank(index, side, face, slot=False):
         bar = bar.union(cyl((xx, lo, zm), h, hi - lo, "y"))
     if slot:
         return bar
-    pitch = EXH_LEN / EXH_STUBS
-    for k in range(EXH_STUBS):
+    # flame-damper shroud: a tube along the bar, rounded front, tapered tail
+    r = EXH_SHROUD_D / 2
+    yt = Y + face * (y_out + r - 0.6)
+    tube = cyl((xs + r, yt, zm), EXH_SHROUD_D, EXH_LEN - r - 5.0, "x")
+    tail = wp(cq.Solid.makeCone(r, 0.7, 5.0, V(xe - 5.0, yt, zm), V(1, 0, 0)))
+    nose = wp(cq.Solid.makeSphere(r, V(xs + r, yt, zm)))
+    shroud = tube.union(tail).union(nose)
+    shroud = shroud.intersect(box(xs - 1, xe + 1, min(lo, hi) - 10, max(lo, hi) + 10, zm - r - 1, zm + r + 1))
+    bar = bar.union(shroud)
+    pitch = EXH_LEN / max(EXH_STUBS, 1)
+    for k in range(EXH_STUBS):   # (none: kept for reference)
         xk = xs + (k + 0.5) * pitch
         yb = Y + face * (y_out - 0.05)
         yt = Y + face * (y_out + 1.4)

@@ -221,7 +221,14 @@ def colour_part(name, P, pat):
     if name in ("fuselage_front", "fuselage_rear"):     # black body; codes are inlays
         return {BLACK: P}
     if name.startswith("spine_"):                          # one camo colour per piece
-        return {GREEN if name.endswith("green") else EARTH: P}
+        base = GREEN if name.endswith("green") else EARTH
+        x0, L, w, d = H.DF_LOOP                            # ...except the D/F loop housing: black
+        f, mx, mw = H.DF_MAST
+        top = H.interp(H.FUSE_STATIONS, x0 + f * L)[2]
+        df = H_box(x0 - 1, x0 + L + 1, -w, w, top + 0.15, 60)
+        if (P ^ df).volume() > 1.0:
+            return paint(P, [(BLACK, df)], base=base)
+        return {base: P}
     if name.startswith("fuselage_"):
         s = 1 if name.endswith("stbd") else -1
         side = S["+y"] if s > 0 else S["-y"]
@@ -575,7 +582,7 @@ def add_object(objs, name, posed, out, whole):
 PLATE_GROUPS = [            # parts kept together by colour set (max 5 colours a plate)
     ("Fuselage", lambda n: n.startswith("fuselage")),
     ("Spine (Dark Green)", lambda n: n.startswith("spine_") and n.endswith("green")),
-    ("Spine (Dark Earth)", lambda n: n.startswith("spine_") and n.endswith("earth")),
+    ("Spine (Dark Earth, black D/F loop)", lambda n: n.startswith("spine_") and n.endswith("earth")),
     ("Wings", lambda n: n.startswith(("wing_", "tailplane"))),
     ("Nacelles", lambda n: n.startswith("nacelle")),
     ("Fins, roundels and codes", lambda n: n.startswith(("fin_", "roundel_", "code_"))),
