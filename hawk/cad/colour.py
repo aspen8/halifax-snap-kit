@@ -357,9 +357,11 @@ def paint(P, ops, base=RED):
     return K.paint(P, ops, base)
 
 
-CANOPY_FRAMES_X = [(57.0, 2.6, RED),             # windscreen arch: body colour and thick (photos)
-                   (84.0, 2.0, WHITE)]            # hoop between the cockpits, behind the front
-                                                  # seat (cream on the aircraft; white is closest)
+CANOPY_FRAMES_X = [(59.5, 2.6, -23.0, RED),     # windscreen arch: x at the sill, width, lean (deg,
+                                                  # + = top aft), colour. Body colour, thick, leaning
+                                                  # forward at the top (side photo, Revell side view)
+                   (84.0, 2.0, 19.0, WHITE)]      # hoop between the cockpits, leaning back at the top
+                                                  # (side photo; cream on the aircraft, white is closest)
 CANOPY_REAR_FRAME = 1.8                           # mm, frame along the slanted rear edge
 CANOPY_SILL = 0.9                                 # mm of black along the canopy's bottom edge
 NOSE_DOME = (4.0, 9.0, 36.0, 62.0)                # height above the sill at the centre, half-width,
@@ -401,7 +403,8 @@ def colour_part(name, P):
         sill = [(x, H.canopy_sill_z(x)) for x in xs]
         under = cs([np.array(sill + [(140.0, -20.0), (30.0, -20.0)])])
         band = cs([np.array([(x, z + CANOPY_SILL) for x, z in sill] + [(x, z - 0.05) for x, z in sill[::-1]])])
-        hoops = [(c, shell ^ K.slab("x", x, w)) for x, w, c in CANOPY_FRAMES_X]
+        hoops = [(c, shell ^ H.rot_about(K.slab("x", x, w), (x, 0.0, H.canopy_sill_z(x)), "y", a))
+                 for x, w, a, c in CANOPY_FRAMES_X]
         (ra, rza), (rb, rzb) = H.CANOPY_REAR
         ang = math.degrees(math.atan2(rb - ra, rza - rzb))
         keep = H.rot_about(K.box(ra - 200, ra - CANOPY_REAR_FRAME, -50, 50, rzb - 30, rza + 30), (ra, 0, rza), "y", -ang)

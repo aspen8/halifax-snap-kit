@@ -54,8 +54,9 @@ Suggested settings: PLA, 0.16 mm layers for the inlay and gear plates and 0.2 mm
   - 2 tailplanes with 10° anhedral
   - smoke pod (2 halves)
   - 3 aerials
+  - 2 small ram-air scoops on the spine shoulders just behind the canopy (X 130–144), teardrop-shaped with a forward-facing opening (side photos)
 - **Cockpit:**
-  - solid clear canopy with a thick red windscreen arch, a white hoop between the cockpits, an upright rear frame and a curved black sill frame. The red nose top domes up into the windscreen (painted), so from the front the glass base is an arch that comes down at the sides, as on the aircraft
+  - solid clear canopy with a thick red windscreen arch (X 59.5 at the sill, leaning 23° forward at the top), a white hoop between the cockpits (X 84, leaning 19° back), an upright rear frame and a curved black sill frame. The red nose top domes up into the windscreen (painted), so from the front the glass base is an arch that comes down at the sides, as on the aircraft
   - tandem tub with the raised rear seat, side consoles, 2 seats (headboxes, firing handles, grey cushions), 2 instrument panels with coamings, and control columns
 - **White inlays:**
   - cheat line, 3 pieces per side: thickening to the lettering's height on the side pod, stopping at the lettering. On the radome it is painted into the skin instead, so it wraps round the tip and the two sides join across the front of the nose, just above the probe
@@ -180,5 +181,4 @@ Checks: run `tools/interference.py` on the assembled STLs without the `key_*` fi
 - Add the older blue-fin scheme (HobbyBoss sheet I, Revell 2010) as an option.
 - Add the ventral strakes, the airbrake outline, the canopy detonating-cord (MDC) lines and the intake auxiliary doors.
 - Add gear doors for the gear-down display.
-- Add the two small ducts on top of the fuselage, one each side, just behind the canopy.
 - Print a fit coupon for the letter inlays and the nose end of the cheat line: both are about 1–1.3 mm wide, at the printable limit.

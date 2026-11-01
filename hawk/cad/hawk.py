@@ -986,10 +986,50 @@ def jet_pipe_cut():
     return pipe - cone
 
 
+# --- Small ram-air scoops on the spine shoulders, just behind the canopy (side photos)
+SPINE_DUCT = (130.0, 144.0, 32.5, 3.6, 1.8)   # x front, x rear, z where it sits, width, height proud
+SPINE_DUCT_MOUTH = (2.2, 1.0, 3.0)            # opening width, height, depth
+
+
+def _surface_point(m, x, z):
+    """(y, normal angle in degrees) where the starboard surface of m crosses height z at x."""
+    import shapely.geometry as sg
+    sec = _section_x(m, x)
+    P = max((sg.Polygon(np.asarray(p)) for p in sec.to_polygons()), key=lambda q: q.area)
+    hit = sg.LineString([(-z, 0.0), (-z, 80.0)]).intersection(P.exterior)
+    pts = [hit] if hit.geom_type == "Point" else list(hit.geoms)
+    y = max(q.y for q in pts)
+    dz = 0.4
+    hit = sg.LineString([(-(z + dz), 0.0), (-(z + dz), 80.0)]).intersection(P.exterior)
+    ya = max(q.y for q in ([hit] if hit.geom_type == "Point" else list(hit.geoms)))
+    return y, math.degrees(math.atan2(-(ya - y), dz))   # outward normal, degrees from +y
+
+
+@cached
+def spine_ducts():
+    """Two teardrop scoops, blunt front with a forward-facing opening, tapering aft into the skin."""
+    x0, x1, zc, w, h = SPINE_DUCT
+    mw, mh, md = SPINE_DUCT_MOUTH
+    o = outer()
+    y0, phi = _surface_point(o, (x0 + x1) / 2, zc)
+    ws = []
+    for t in np.linspace(0.0, 1.0, 12):
+        x = x0 + t * (x1 - x0)
+        f = 0.85 + 0.15 * min(1.0, t / 0.2) if t < 0.2 else 1.0 - 0.85 * ((t - 0.2) / 0.8) ** 1.3
+        ws.append(superellipse_wire(x, w / 2 * f, h * f, -2.0, 2.6, 0.0))
+    body_ = to_m(loft(ws, ruled=True))
+    mouth = box(x0 - 1.0, x0 + md, -mw / 2, mw / 2, h - mh - 0.35, h - 0.35)
+    out = mf.Manifold()
+    for side in (1, -1):
+        d = (body_ - mouth).rotate([phi - 90.0, 0, 0]).translate([0, y0, zc])
+        out = out + (d if side > 0 else d.mirror([0, 1, 0]))
+    return out
+
+
 @cached
 def fuselage_body():
     """The whole fuselage (all sections) with every socket, pocket and cut."""
-    b = outer()
+    b = outer() + spine_ducts()
     for s in (1, -1):                                   # intakes sit on the wing
         w = wing_assembled(s)
         b = b - w - w.translate([0, 0, FIT]) - w.translate([0, 0, -FIT])
