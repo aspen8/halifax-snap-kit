@@ -200,6 +200,8 @@ The Hawk was the second kit, and the first built from scratch on the v2 approach
 - **Watch the ends of a blend.** A ruled loft between a section without the pods and one with them makes a wedge; just ahead of an intake it partly plugged the duct. Leave the pods out of the blend ahead of the lip. The overhang report caught it: about 90 mm² of new downward-facing area at the intakes.
 - **Look at the shape in grey.** Paint hides lumps. A grey render from high 3/4 front and rear showed the canopy ledge at once.
 - **Fade fairings out where the real ones end.** The Hawk's intake trunks are flush with the body by the wing trailing edge. Letters can run on past that onto the fuselage side.
+- **Cross-check against another 3D model if one exists.** `tools/compare_ref_model.py` scales it to our fuselage length and overlays sections. It found what the drawings had hidden: our rear fuselage was 3 mm too wide a side, because I had traced the wing-root and pod outline in the plan view, not the fuselage edge. Don't trust the other model blindly either. Check each disagreement against the drawings (this one's canopy was too low and its body a plain tube), and use it for measuring only: keep your own geometry and respect its licence.
+- **Re-check key slot walls after any width change.** Narrowing the body left two fuselage joint keys 0.15 mm from the skin. Measure the signed distance from each slot's corners to `outer()` and keep at least 2 mm.
 - **Expect late feedback to come in bursts.** Batch the fixes into one rebuild, but render each area close up (low 3/4 views for undersides, a tight fin view) before calling it done.
 
 ### Checks that caught real bugs on the Hawk

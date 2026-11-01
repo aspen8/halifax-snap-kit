@@ -58,7 +58,8 @@ KEY_FIN = (6.0, 5.0, 1.8)    # fin halves, in the spine cap (across the split, a
 KEY_FIN_SMALL = (2.2, 4.0, 1.2)   # fin halves, in the thin fin (slot only 1.25 mm deep per half)
 
 # --- Fuselage main body: (x, half_width, z_top, z_bottom, squareness)
-# Plan half-widths from the Revell top view; top/bottom lines from the side view.
+# Plan half-widths from the Revell top view (the fuselage edge itself, about 11.5 behind the
+# cockpit, not the wing-root and pod outline outside it); top/bottom lines from the side view.
 # z_top is the shoulder/deck line: the canopy and dorsal spine are a separate loft.
 FUSE_STATIONS = [
     # x, half_width, z_top, z_bottom, squareness  (front: symmetric superellipse; top = deck line)
@@ -70,24 +71,24 @@ FUSE_STATIONS = [
     (17.3, 10.0,   8.2,  -6.2, 2.3),
     (23.3, 10.9,   9.9,  -7.0, 2.4),
     (29.2, 11.4,  11.4,  -7.4, 2.5),
-    (38.5, 11.8,  13.6,  -7.7, 2.6),
-    (53.0, 11.9,  15.4,  -7.9, 2.7),
-    (70.0, 12.0,  17.5,  -8.2, 2.7),
-    (90.0, 12.1,  20.0,  -8.4, 2.7),
-    (110.0, 12.6, 22.0,  -8.5, 2.7),
-    (124.0, 13.2, 23.0,  -8.3, 2.7),
+    (38.5, 11.3,  13.6,  -7.7, 2.7),
+    (53.0, 11.4,  15.4,  -7.9, 3.0),
+    (70.0, 11.4,  17.5,  -8.2, 3.0),
+    (90.0, 11.5,  20.0,  -8.4, 3.0),
+    (110.0, 11.7, 22.0,  -8.5, 3.0),
+    (124.0, 11.8, 23.0,  -8.3, 2.9),
     # behind the cockpit the body takes the whole top line (no separate spine): an "egg"
     # section, widest at z_w, rounder above (n_up) than below. x, hw, top, bottom, n_lo, z_w, n_up
-    (134.0, 13.6, 33.6,  -8.0, 2.6, 8.0, 2.3),
-    (140.0, 13.8, 35.5,  -7.9, 2.6, 8.0, 2.2),
-    (152.6, 14.2, 33.6,  -7.4, 2.5, 8.0, 2.1),
-    (166.7, 14.6, 32.4,  -6.7, 2.5, 8.0, 2.05),
-    (180.9, 14.5, 31.2,  -5.2, 2.4, 8.0, 2.0),
-    (195.0, 14.1, 29.2,  -3.9, 2.4, 8.0, 2.0),
-    (208.0, 13.6, 27.6,  -3.0, 2.3, 8.0, 2.0),
-    (226.0, 12.9, 25.9,  -2.0, 2.2, 8.0, 2.0),
-    (240.0, 11.6, 24.6,  -1.3, 2.3, 8.0, 2.5),
-    (252.0, 10.2, 23.0,  -0.6, 2.5, 8.0, 3.2),     # nearly level to the end (Revell side view),
+    (134.0, 11.8, 33.6,  -8.0, 2.6, 8.0, 2.3),
+    (140.0, 11.7, 35.5,  -7.9, 2.6, 8.0, 2.2),
+    (152.6, 11.6, 33.6,  -7.4, 2.5, 8.0, 2.1),
+    (166.7, 11.6, 32.4,  -6.7, 2.5, 8.0, 2.05),
+    (180.9, 11.6, 31.2,  -5.2, 2.4, 8.0, 2.0),
+    (195.0, 11.6, 29.2,  -3.9, 2.4, 8.0, 2.0),
+    (208.0, 11.5, 27.6,  -3.0, 2.3, 8.0, 2.0),
+    (226.0, 11.2, 25.9,  -2.0, 2.2, 8.0, 2.0),
+    (240.0, 10.8, 24.6,  -1.3, 2.3, 8.0, 2.5),
+    (252.0, 10.0, 23.0,  -0.6, 2.5, 8.0, 3.2),     # nearly level to the end (Revell side view),
     (264.2,  8.8, 20.2,   1.0, 2.7, 7.8, 3.8),     # squared off: flat top edge at the end (photos)
 ]
 FUSE_END_X = 264.2
@@ -111,25 +112,28 @@ NOSE_SPLIT_X = 21.0          # radome joint
 KEY_NOSE = (8.0, 6.0, 2.2)   # radome key: length across the joint, width (z), thickness (y)
 PROBE = (34.0, 1.6, 1.1, 3.2, 3.0)    # length, base d, tip d, boss d, boss length
 FUSE_SPLIT_X = 179.5         # front/rear section joint: between the lettering and the roundel
-FR_KEYS = [(-6.0, 15.0), (6.0, 15.0), (-8.0, 2.0), (8.0, 2.0), (0.0, 27.0)]   # (y, z) on the joint face
+FR_KEYS = [(-6.0, 15.0), (6.0, 15.0), (-6.0, 3.0), (6.0, 3.0), (0.0, 25.0)]   # (y, z) on the joint face, >= 2.3 mm wall
 
 # --- Intakes: D-section fairings each side, (x, y_outer, z_top, z_bottom)
 INTAKE_STATIONS = [            # x, y_outer, z_top, z_bottom: the side pods (intake trunks)
-    (89.0, 20.5, 12.9, -3.7),      # rounded lip (head-on photo)
-    (89.6, 21.0, 13.4, -4.2),
-    (90.5, 21.4, 13.8, -4.6),      # intake top near Z 15 (Revell side view, head-on photo)
-    (92.5, 22.3, 14.6, -5.6),
-    (98.0, 23.1, 15.0, -6.6),
-    (104.0, 23.6, 14.8, -7.0),
-    (113.0, 23.2, 14.2, -6.4),     # behind the wing LE the pod sits on the wing:
-    (130.0, 21.6, 13.2, -6.0),     # keep its bottom above the wing underside (no slivers)
-    (150.0, 19.2, 12.0, -5.6),
-    (160.0, 17.0, 11.4, -5.2),     # fades into the body by the wing trailing edge (X 169)
-    (168.0, 14.9, 10.8, -4.6),
-    (176.0, 13.6, 9.6, -3.8),
+    # boxy D-section pods: flat top just above the lettering (Revell side view), near-vertical
+    # outer side and flat bottom (cross-sections checked against a reference Hawk model)
+    (89.0, 20.0, 12.6, -3.6),      # rounded lip (head-on photo)
+    (89.6, 20.5, 13.1, -4.1),
+    (90.5, 20.9, 13.5, -4.5),
+    (92.5, 21.4, 14.2, -5.2),
+    (98.0, 21.7, 14.8, -6.0),
+    (104.0, 21.8, 15.2, -6.4),
+    (113.0, 21.7, 15.6, -6.4),     # behind the wing LE the pod sits on the wing:
+    (125.0, 21.2, 15.8, -6.2),     # keep its bottom above the wing underside (no slivers)
+    (137.0, 20.2, 15.4, -5.8),
+    (147.0, 17.8, 14.4, -5.4),
+    (155.0, 14.8, 12.8, -5.0),     # fades into the body by the wing trailing edge
+    (162.0, 12.6, 11.2, -4.6),
+    (170.0, 11.0, 9.8, -4.0),
 ]
 INTAKE_Y_IN = 10.0           # inner edge of the fairing (buried in the body)
-INTAKE_N = 2.4               # rounded pods (head-on photo)
+INTAKE_N = 3.0               # boxy pods (reference model cross-sections)
 INTAKE_MOUTH = (91.0, 18.0, 1.0)  # x of the lip, depth of the duct (deep: reads dark), lip wall
 SPLITTER_GAP = 0.6           # mm, boundary-layer gap between the lip and the fuselage
 
@@ -384,7 +388,7 @@ def canopy_line(step=2.0):
     return [(x, float(sw(x)), float(sz(x))) for x in xs]
 
 
-CANOPY_BULGE = (1.04, 2.5)     # width factor, height of the widest point above the sill
+CANOPY_BULGE = (1.03, 2.5)     # width factor, height of the widest point above the sill
 CANOPY_BULGE_X = (118.0, 134.0)   # bulge eases out over this x range (behind the glazing)
 CANOPY_BULGE_X0 = (48.0, 62.0)    # and eases in over this one (behind the windscreen base)
 CANOPY_N = (3.0, 2.15)         # egg exponents: below / above the widest point
@@ -448,7 +452,7 @@ def intake_mouth(side):
         _, yo, zt, zb = st
         yi = fuse_at(x)[1] + SPLITTER_GAP + lip
         yo, zt, zb = yo - lip, zt - lip, zb + lip
-        ws.append(superellipse_wire(x, (yo - yi) / 2, zt, zb, 2.4, side * (yo + yi) / 2))
+        ws.append(superellipse_wire(x, (yo - yi) / 2, zt, zb, INTAKE_N, side * (yo + yi) / 2))
     return to_m(loft(ws, ruled=True))
 
 
@@ -461,7 +465,7 @@ def splitter_gap(side):
     return box(x0 - 3.0, x0 + 6.0, y0, y1, zb + 1.0, zt - 1.0)
 
 
-BLEND_R = 8.0                # mm, fillet radius filling the creases (pod tops and canopy sill into the body)
+BLEND_R = 4.5                # mm, fillet radius filling the creases (pod tops and canopy sill into the body)
 BLEND_X = (34.0, 192.0)      # x range of the blend (from ahead of the windscreen to behind the pods)
 BLEND_ZC = 4.0               # z of the polar centre used to resample each section
 BLEND_N = 144                # points per section

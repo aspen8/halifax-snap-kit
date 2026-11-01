@@ -112,6 +112,7 @@ The single-colour STLs are in `stl/`, with the wings flat. The on-end wing STLs 
   - `grid.py`: zoomed crop with a labelled pixel grid, for reading outline points by hand.
   - `white_regions.py`: traces the white paint areas off a view into model-space polygons.
   - `trace_colours.py`: traces flat colour areas (a fin flag, say) off a colour painting guide onto a model region. It fits the drawing to the model through matching points.
+  - `compare_ref_model.py`: cross-sections of our model against someone else's 3MF/STL of the same aircraft, scaled to our fuselage length.
   - `render.py`: colour renders without OpenGL. `cad/render_colour.py` needs EGL, which macOS doesn't have.
 - `LESSONS.md`: the workflow, X2D tolerances and pitfalls. Read it before starting the next aircraft.
 
