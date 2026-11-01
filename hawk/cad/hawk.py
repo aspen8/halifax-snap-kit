@@ -482,6 +482,23 @@ BELLY_Z = 2.0                # below this z each section is filled to its hull (
 BELLY_R = 6.5                # mm, radius of the pods' lower outer corners
 
 
+SILL_FLAT = (40.0, 124.0, 3.0)   # x range, and the z the upright side runs down to
+
+
+def _sill_wall(sec, x):
+    """Rectangle |y| <= (half-width just above the canopy sill), from SILL_FLAT[2] up to the sill."""
+    import shapely.geometry as sg
+    zs = canopy_sill_z(x) + 0.4
+    P = max((sg.Polygon(np.asarray(p)) for p in sec.to_polygons()), key=lambda q: q.area)
+    hit = sg.LineString([(-zs, 0.0), (-zs, 80.0)]).intersection(P.exterior)
+    pts = [hit] if hit.geom_type == "Point" else list(getattr(hit, "geoms", []))
+    if not pts:
+        return mf.CrossSection()
+    ys = min(q.y for q in pts if q.y > 0)              # the canopy/spine side, not a pod
+    z0 = SILL_FLAT[2]
+    return mf.CrossSection.square([zs - z0, 2 * ys]).translate([-zs, -ys])
+
+
 def _section_x(m, x):
     """CrossSection (y, z) of a manifold at x."""
     r = m.translate([-x, 0, 0]).rotate([0, -90, 0])      # x -> z
@@ -513,6 +530,10 @@ def pod_blend():
                 BELLY_R, mf.JoinType.Round, circular_segments=48)
             low = mf.CrossSection.square([60.0, 80.0]).translate([-BELLY_Z, -40.0])
             sec = (sec - low) + (rounded ^ low)
+        if SILL_FLAT[0] <= x <= SILL_FLAT[1]:
+            # flat, upright side under the canopy edge (photos): fill the body's waist below the
+            # sill out to the section's width just above it, down to SILL_FLAT[2]
+            sec = sec + _sill_wall(sec, x)
         r = float(np.interp(x, BLEND_R[0], BLEND_R[1]))
         sec = sec.offset(r, mf.JoinType.Round, circular_segments=48).offset(
             -r, mf.JoinType.Round, circular_segments=48)
