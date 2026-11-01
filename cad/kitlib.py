@@ -305,7 +305,8 @@ def pack(items, bed, gap=8.0):
     Returns [[(name, x, y, rot90)], ...]."""
     plates = []                       # each: list of shelves [y, height, x_used] + items
     for name, (w, h) in items:
-        rot = w > bed[0] >= h
+        # lie long parts across the shelf when they fit that way (shallower shelves)
+        rot = (w > bed[0] >= h) or (h > w and h <= bed[0])
         if rot:
             w, h = h, w
         placed = False
@@ -332,10 +333,14 @@ def pack(items, bed, gap=8.0):
 # Bambu Studio project settings for the X2D (0.4 nozzle, PLA Basic, 0.20 mm Standard), saved
 # from Bambu Studio. Without them a 3MF opens as bare geometry: no colours, no plates.
 DEFAULT_TEMPLATE = Path(__file__).with_name("bambu_x2d_project_settings.json")
+WIPE_TOWER = (200.0, 12.0)   # prime tower corner on every plate. It is 35 mm wide plus ribs and brim:
+                             # at x 214 it ran off the X2D bed. Keep x > 190 free of parts.
 
 
-def project_settings(template, filaments):
+def project_settings(template, filaments, n_plates=1):
     d = json.load(open(template))
+    d["wipe_tower_x"] = [f"{WIPE_TOWER[0]:g}"] * n_plates
+    d["wipe_tower_y"] = [f"{WIPE_TOWER[1]:g}"] * n_plates
     n0 = len(d["filament_colour"])
     n = len(filaments)
     for k, v in list(d.items()):
@@ -451,7 +456,7 @@ def write_3mf(path, objects, plates, template, filaments, title):
                          f'{inst}  </plate>\n')
     z.writestr("Metadata/model_settings.config", '<?xml version="1.0" encoding="UTF-8"?>\n<config>\n'
                + "".join(settings) + "".join(plate_xml) + '</config>\n')
-    z.writestr("Metadata/project_settings.config", project_settings(template or DEFAULT_TEMPLATE, filaments))
+    z.writestr("Metadata/project_settings.config", project_settings(template or DEFAULT_TEMPLATE, filaments, len(plates)))
     z.writestr("Metadata/slice_info.config", '<?xml version="1.0" encoding="UTF-8"?>\n<config>\n  <header>\n'
                '    <header_item key="X-BBL-Client-Type" value="slicer"/>\n'
                '    <header_item key="X-BBL-Client-Version" value="02.08.02.61"/>\n  </header>\n</config>\n')

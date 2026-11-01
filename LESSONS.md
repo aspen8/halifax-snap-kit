@@ -233,3 +233,27 @@ The Hawk was the second kit, and the first built from scratch on the v2 approach
 ### A 3MF without project settings opens as bare geometry
 
 The Hawk's first 3MF was built without the Bambu settings template (it was an optional command-line argument), so it had no `Metadata/project_settings.config`. Bambu Studio called the config invalid and loaded the parts with no colours and no plates. The template now lives in the repo (`cad/bambu_x2d_project_settings.json`) and `write_3mf` uses it by default. Before handing a kit over, slice its smallest plate with the Bambu Studio command line: `/Applications/BambuStudio.app/Contents/MacOS/BambuStudio --slice N --outputdir DIR kit.3mf` should end with `"error_string": "Success."` in `DIR/result.json`.
+
+### Paint markings in rather than pressing in inlays, when the plate has colours to spare
+
+On the Hawk, the press-in inlays (26 letters, cheat-line and belly-stripe pieces, roundels) were fiddly, and the wing roundels sat in through-holes with nothing to hold them. Version 2 paints every marking into the part's skin instead. It costs purge filament, because the side markings on a fuselage printed on end change colour on most layers, but there are no loose pieces and nothing to fit. Keep each plate at 5 colours or fewer. When painting, let the region reach past the outer surface and stop it at `inner_core`. Intersecting it with a skin that ends exactly on the surface leaves thin red films over the white, which show as specks.
+
+### Don't trace markings straight off a stippled drawing
+
+The traced underside white had gaps everywhere the drawing's panel lines crossed it. Fit straight lines to the trace, clip them to the part's planform, and plot the result over the trace to check it. Most aircraft markings are straight-edged.
+
+### Cut a canopy part above its painted edge, not below it
+
+If the canopy part is cut below its visible edge, it carries fuselage colour. Cut it on a plane through the two ends of the visible edge, so the edge lies on or below the plane: the canopy part is then canopy only, and the cut becomes the visible edge. Don't paint the bit of glazing that dips below the plane onto the fuselage: on the Hawk that strip added two colours to the fuselage plate and about 220 g of purge. Anything that rises above the edge, such as the Hawk's nose dome, stays on the fuselage, and the canopy gets a recess for it, grown by the fit clearance.
+
+### Build at the measuring scale and scale at the end
+
+To go from 1:40 to 1:32, every part is scaled by 1.25 when it's written out (`PRINT_K` in `hawk.py`), and nothing is re-measured. Divide the fit clearances and pin sizes by the same factor, so they come out at their tested print size. Keys, panel lines and paint depth can simply grow.
+
+### Loft stations with `linspace`, not `arange`
+
+`np.arange(x0 - g, x1 + g, 1.0)` stops short of `x1 + g`. The grown nose dome ended 0.24 mm early, and the canopy overlapped the fuselage by 2.6 mm³. Use `np.linspace` with both ends included.
+
+### Slice every plate with the Bambu Studio command line before handing a kit over
+
+Opening the 3MF is not enough. On the X2D the right nozzle can't reach the leftmost 20.5 mm of the bed (`extruder_printable_area` in the settings), and plates with 5 colours use both nozzles. Parts packed against the left edge then fail with "G-code outside of the printable area". The prime tower needs its own clear lane too: the template's tower positions came from the Halifax plates and sat in the middle of the bed. The tower is also wider than its nominal 35 mm (ribs and brim): at x 214 it ran off the right edge. `colour.py` now packs with a 22 mm left margin and leaves x > 190 free; `kitlib.WIPE_TOWER` puts the tower at x 200 on every plate.

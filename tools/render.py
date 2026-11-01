@@ -84,7 +84,7 @@ def render(meshes, d, size=(900, 640), up=(0, 0, 1), focus=None, zoom=1.0, densi
         px = np.stack([P @ s, -(P @ u)], -1) * scale          # (n, 3, 2)
         e1, e2 = px[:, 1] - px[:, 0], px[:, 2] - px[:, 0]
         area = 0.5 * np.abs(e1[:, 0] * e2[:, 1] - e1[:, 1] * e2[:, 0])
-        k = np.minimum(np.ceil(area * density * density).astype(int) + 1, 4000)
+        k = np.minimum(np.ceil(area * density * density).astype(int) + 1, 200000)   # big flat faces need many
         idx = np.repeat(np.arange(len(F)), k)
         r1, r2 = rng.random(len(idx)), rng.random(len(idx))
         flip = r1 + r2 > 1

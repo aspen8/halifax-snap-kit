@@ -5,14 +5,16 @@ Run:  python colour.py OUT_DIR [project_settings_template.json]   (default: cad/
       ONLY=name,name python colour.py OUT_DIR      (just some parts)
 
 Scheme: Red Arrows Hawk T.1A, current Union-flag fin (traced from the HobbyBoss 81738 sheet).
-  - Fuselage sections print red, on end. White cheat line, tail swoosh, belly stripes,
-    "ROYAL AIR FORCE" and the fuselage roundels are press-in inlays (Halifax v2 style).
-    Stripe shapes are traced from the Revell 04284 views (hawk/tools/white_regions.py,
-    kept in ref/hawk_white/, not in git); the lettering is regenerated as text.
-  - Wings print flat: the white underside chevrons are in the bottom skin (first layers).
-    Roundels are through-discs, so they show above and below.
+  - Fuselage sections print red, on end. The white cheat line, tail swoosh, belly stripes,
+    "ROYAL AIR FORCE" and the roundels are painted into the skin (multi-colour, no inlays).
+    The lettering is regenerated as text; the stripes are drawn from lines fitted to the
+    Revell 04284 views (hawk/tools/white_regions.py, kept in ref/hawk_white/, not in git).
+  - Wings print flat: the white underside chevrons and the lower roundels are in the bottom
+    skin (first layers), the upper roundels in the top skin.
   - Fin halves print flat: the traced white swoosh and Union flag in the outer skin.
-  - Canopy clear with black frames; cockpit black/grey; gear grey with black tyres.
+  - Canopy opaque with black frames, no red; gear grey with black tyres.
+Everything is built at 1:40 (the shape's measuring scale) and scaled by H.PRINT_K to 1:32
+when written out.
 """
 import json
 import math
@@ -33,25 +35,21 @@ ROOT = Path(__file__).resolve().parents[2]
 # ============================================================
 # PARAMETERS
 # ============================================================
-SKIN = 0.8                   # mm, coloured skin depth
+SKIN = 0.8                   # mm at 1:40 (1.0 printed), coloured skin depth
 FIN_SKIN = 0.6               # the fin halves are thin
 SKIN_OUT = 0.05              # skins reach just past the surface (no zero-thickness slivers)
-INLAY_DEPTH = 1.2
-INLAY_FIT = 0.15
-LETTER_BOLD = 0.15           # mm, letters grown before cutting (thicker strokes print better)
-LETTER_FIT = 0.12
-STRIPE_MIN_W = 1.3           # mm, stripes are widened to at least this (printable inlays, as thin as the letters)
-CHUNK = 38.0                 # mm, long stripes are split into inlays this long
+LETTER_BOLD = 0.15           # mm, letters grown (thicker strokes print better)
+STRIPE_MIN_W = 1.0           # mm at 1:40 (1.25 printed), stripes are widened to at least this
 
 FILAMENTS = {
     1: ("Red", "#C8102E"),
     2: ("White", "#F2F2F2"),
     3: ("Blue", "#1F2D6B"),
     4: ("Black", "#1C1C1C"),
-    5: ("Clear", "#DDEBF2"),
+    5: ("Canopy", "#3B4652"),     # opaque: load any canopy colour (smoke grey, dark blue...)
     6: ("Grey", "#8C9096"),
 }
-RED, WHITE, BLUE, BLACK, CLEAR, GREY = range(1, 7)
+RED, WHITE, BLUE, BLACK, CANOPY, GREY = range(1, 7)
 ROUNDEL = lambda d: [(BLUE, d), (WHITE, d * 2 / 3), (RED, d / 3)]
 
 FUSE_ROUNDEL = (187.3, 9.0, 10.6)        # x, z, diameter (Revell side view)
@@ -69,7 +67,8 @@ SWOOSH_TOP = (223.5, 25.0, 0.57, 0.82, 8.0)   # x, z where it meets the fin flag
 FIN_FLAG_ABOVE = 0.4               # mm above the fuselage top line where the fin flag starts
 WHITE_DIR = ROOT / "ref" / "hawk_white"
 
-BED = (230.0, 250.0)
+BED = (168.0, 236.0)         # packing area, x from BED_MARGIN: x > 190 is left for the prime tower
+BED_MARGIN = (22.0, 10.0)    # the X2D's right nozzle can't reach x < 20.5, and brims need room
 PLATE_GAP = 8.0
 
 # ============================================================
@@ -145,21 +144,43 @@ def letters_section(side):
     return t.offset(LETTER_BOLD, mf.JoinType.Round)
 
 
+# Underside white (Revell 04284 under view, lines fitted to the traced areas in ref/hawk_white/
+# under.json): a chevron on each wing - a band along the leading-edge side, widening outboard,
+# and a strip along the trailing edge - running into two stripes along the belly that meet in
+# a U under the jet pipe. Straight lines, so the drawing's panel lines leave no gaps.
+CHEVRON_OUT = ((110.0, 16.9), 0.825)     # outer edge: point (x, |y|), slope d|y|/dx
+CHEVRON_IN = ((118.0, 16.1), 0.547)      # inner edge of the band
+CHEVRON_TE_X = 161.5                     # inner edge of the trailing-edge strip
+BELLY_LO = ((161.5, 9.6), (256.0, 1.0))  # belly stripe inner edge (x, |y|)
+BELLY_HI = ((161.5, 12.4), (256.0, 3.4)) # ...outer edge
+BELLY_END = (253.4, 256.9)               # x range of the bar joining the two stripes
+
+
+def _rect(a0, b0, a1, b1):
+    return mf.CrossSection.square([a1 - a0, b1 - b0]).translate([a0, b0])
+
+
+def _halfplane(pt, slope, below):
+    (x0, y0) = pt
+    f = lambda x: y0 + slope * (x - x0)
+    far = -300.0 if below else 300.0
+    return cs([np.array([(40.0, f(40.0)), (300.0, f(300.0)), (300.0, far), (40.0, far)])])
+
+
 def under_white():
-    """White on the underside, (x, y): wing chevrons and belly stripes."""
-    keep = []
-    for r in rings("under"):
-        a = 0.5 * abs(np.dot(r[:, 0], np.roll(r[:, 1], 1)) - np.dot(r[:, 1], np.roll(r[:, 0], 1)))
-        cx, cy = r.mean(0)
-        if a < 3.0:
-            continue
-        if math.hypot(cx - WING_ROUNDEL[0], abs(cy) - WING_ROUNDEL[1]) < WING_ROUNDEL[2] / 2 + 2:
-            continue
-        if cx < 60:                                     # labels by the nose
-            continue
-        keep.append(r)
-    sec = close(cs(keep), 1.6)                         # bridge the drawing's panel lines
-    return sec.offset(-0.7, mf.JoinType.Round).offset(0.7, mf.JoinType.Round).simplify(0.05)
+    """White on the underside, (x, y), both sides."""
+    band = (_halfplane(*CHEVRON_OUT, True)
+            ^ (_halfplane(*CHEVRON_IN, False) + _rect(CHEVRON_TE_X, -300.0, 300.0, 300.0))
+            ^ _rect(95.0, 4.0, 200.0, 200.0)
+            ^ H.wing(1).project())                                    # on the wing only
+    (a0, l0), (a1, l1) = BELLY_LO
+    (_, h0), (_, h1) = BELLY_HI
+    belly = cs([np.array([(a0, l0), (a1, l1), (a1, h1), (a0, h0)])])
+    belly = belly + _rect(CHEVRON_TE_X, l0, 171.5, h0 + 1.0)       # joins the trailing-edge strip
+    half = band + belly
+    sec = half + half.mirror([0.0, 1.0])
+    e0, e1 = BELLY_END
+    return sec + _rect(e0, -h1, e1, h1)
 
 
 def fuselage_plan(x0, x1, inset=0.0, n=160):
@@ -169,126 +190,34 @@ def fuselage_plan(x0, x1, inset=0.0, n=160):
 
 
 # ============================================================
-# INLAYS
+# MARKINGS (painted into the outer skin)
 # ============================================================
-def z_inlay(P, sec, side, depth=INLAY_DEPTH, fit=INLAY_FIT):
-    """Inlay of a flat shape (x, y) pressed into a top (side=+1) or bottom (side=-1) surface."""
-    import trimesh
-    V, F = mesh_of(P)
-    tm = trimesh.Trimesh(V, F, process=False)
-    x0, y0, x1, y1 = sec.bounds()
-    A, B = np.meshgrid(np.linspace(x0, x1, 40), np.linspace(y0, y1, 12))
-    o = np.c_[A.ravel(), B.ravel(), np.full(A.size, 500.0 * side)]
-    d = np.tile([0, 0, -float(side)], (A.size, 1))
-    loc, _, _ = tm.ray.intersects_location(o, d, multiple_hits=False)
-    if not len(loc):
-        return P, None
-    flat = (loc[:, 2] * side).min() - depth
-    keep = (mf.Manifold.cube([1000, 1000, 500]).translate([-500, -500, flat]) if side > 0 else
-            mf.Manifold.cube([1000, 1000, 500]).translate([-500, -500, -flat - 500]))
-    socket = prism_z(sec) ^ keep
-    plug = K.largest_piece(P ^ prism_z(sec.offset(-fit, mf.JoinType.Round)) ^ keep)[0]
-    return P - socket, plug
+def roundel_ops(x, c, d, axis, region):
+    """Roundel rings painted into region (a skin): [(colour, volume)], outer ring first."""
+    return [(colour, region ^ K.cyl_axis(x, c, dd / 2, axis)) for colour, dd in ROUNDEL(d)]
 
 
-def y_inlay(P, sec, side, depth=INLAY_DEPTH, fit=INLAY_FIT):
-    """Inlay of a flat shape (x, z) pressed into a side surface (side=+1 starboard, -1 port).
-    Like kitlib.make_section_inlay, but samples inside the shape itself and skips shapes the
-    part doesn't reach (a stripe chunk that misses the surface returns None)."""
-    import trimesh
-    if (P ^ prism_y(sec)).is_empty():
-        return P, None
-    V, F = mesh_of(P)
-    tm = trimesh.Trimesh(V, F, process=False)
-    x0, z0, x1, z1 = sec.bounds()
-    A, B = np.meshgrid(np.linspace(x0, x1, 60), np.linspace(z0, z1, 12))
-    o = np.c_[A.ravel(), np.full(A.size, 500.0 * side), B.ravel()]
-    d = np.tile([0, -float(side), 0], (A.size, 1))
-    loc, _, _ = tm.ray.intersects_location(o, d, multiple_hits=False)
-    if not len(loc):
-        return P, None
-    flat = (loc[:, 1] * side).min() - depth
-    keep = (mf.Manifold.cube([1000, 500, 1000]).translate([-500, flat, -500]) if side > 0 else
-            mf.Manifold.cube([1000, 500, 1000]).translate([-500, -flat - 500, -500]))
-    socket = prism_y(sec) ^ keep
-    plug = K.largest_piece(P ^ prism_y(sec.offset(-fit, mf.JoinType.Round)) ^ keep)[0]
-    if plug.is_empty():
-        return P, None
-    return P - socket, plug
-
-
-def chunks(sec, x_edges):
-    """Split a section at the given x positions (and every CHUNK mm), keeping only real pieces."""
-    x0, _, x1, _ = sec.bounds()
-    cuts = sorted(set([x0 - 1] + [x for x in x_edges if x0 < x < x1] + [x1 + 1]))
-    out = []
-    for a, b in zip(cuts, cuts[1:]):
-        n = max(1, int(math.ceil((b - a) / CHUNK)))
-        for i in range(n):
-            lo, hi = a + (b - a) * i / n, a + (b - a) * (i + 1) / n
-            piece = sec ^ mf.CrossSection.square([hi - lo, 400.0]).translate([lo, -200.0])  # exact (kitlib.clip pads 1 mm)
-            for comp in piece.decompose():
-                if comp.area() > 2.0:
-                    out.append(comp)
-    return out
-
-
-INLAY_POSE = {("y", 1): [90, 0, 0], ("y", -1): [-90, 0, 0], ("z", 1): [0, 0, 0], ("z", -1): [180, 0, 0]}
-
-
-def fuselage_inlays(name, P):
-    """Sockets in a fuselage section/radome + its inlays: [(name, {colour: vol}, rot, whole)]."""
-    out = []
+def fuselage_markings(name, P):
+    """Paint ops for a fuselage section: cheat line, swoosh, lettering, roundels, belly stripes."""
+    # regions reach past the surface and stop at the inner core: ending them exactly on the
+    # surface leaves thin sheets of base red over the paint (LESSONS.md)
+    core = K.inner_core(P, SKIN)
     x0, _, _, x1, _, _ = P.bounding_box()
-    tag = {"radome": "nose", "fuselage_front": "front", "fuselage_rear": "rear"}[name]
-    edges = [H.INTAKE_STATIONS[0][0], H.NOSE_SPLIT_X, H.FUSE_SPLIT_X]
-    for side, st in ((1, "stbd"), (-1, "port")):
-        stripes = widen(side_stripes(side), STRIPE_MIN_W)
-        k = 0
-        # the radome's band is painted (colour_part), so it can wrap round the tip
-        for piece in ([] if name == "radome" else chunks(clip(stripes, x0, -100, x1, 100), edges)):
-            P, plug = y_inlay(P, piece, side)
-            if plug is not None:
-                k += 1
-                out.append((f"inlay_stripe_{tag}_{st}_{k}", {WHITE: plug}, INLAY_POSE[("y", side)], plug))
+    ops = []
+    for side in (1, -1):
+        half = K.box(-50.0, 400.0, 0.0 if side > 0 else -100.0, 100.0 if side > 0 else 0.0, -100.0, 100.0)
+        sk = half - core
+        if name != "radome":                   # the radome's band is painted in colour_part
+            ops.append((WHITE, sk ^ prism_y(widen(side_stripes(side), STRIPE_MIN_W))))
         if name == "fuselage_front":
-            for i, letter in enumerate(sorted(letters_section(side).decompose(),
-                                              key=lambda c: c.bounds()[0] * (-side))):
-                P, plug = y_inlay(P, letter, side, fit=LETTER_FIT)
-                if plug is not None:
-                    out.append((f"inlay_letter_{st}_{i + 1:02d}", {WHITE: plug}, INLAY_POSE[("y", side)], plug))
+            ops.append((WHITE, sk ^ prism_y(letters_section(side))))
         if name == "fuselage_rear":
             x, z, d = FUSE_ROUNDEL
-            P, vols, plug = K.make_inlay(P, (x, z), d, ROUNDEL(d), "y", side, INLAY_DEPTH, INLAY_FIT)
-            out.append((f"roundel_fuselage_{st}", vols, INLAY_POSE[("y", side)], plug))
-    if name in ("fuselage_rear", "fuselage_front"):
-        belly = under_white() ^ fuselage_plan(max(x0, 150), x1, inset=1.0)
-        k = 0
-        for piece in chunks(belly, [H.FUSE_SPLIT_X]):
-            if piece.area() < 4.0:
-                continue
-            P, plug = z_inlay(P, piece, -1)
-            if plug is not None:
-                k += 1
-                out.append((f"inlay_belly_{tag}_{k}", {WHITE: plug}, INLAY_POSE[("z", -1)], plug))
-    return P, out
-
-
-def wing_roundel(P, side):
-    """Through-disc roundel (shows top and bottom)."""
-    x, y, d = WING_ROUNDEL
-    y *= side
-    r = d / 2
-    socket = K.cyl_axis(x, y, r, "z")
-    plug = K.largest_piece(P ^ K.cyl_axis(x, y, r - INLAY_FIT, "z"))[0]
-    vols, prev = {}, None
-    for colour, dd in reversed(ROUNDEL(d)):
-        cyl = K.cyl_axis(x, y, dd / 2, "z")
-        c = plug ^ (cyl if prev is None else cyl - prev)
-        if c.volume() > 1e-3:
-            vols[colour] = vols[colour] + c if colour in vols else c
-        prev = cyl
-    return P - socket, vols, plug
+            ops += roundel_ops(x, z, d, "y", sk)
+    if name in ("fuselage_front", "fuselage_rear"):
+        below = K.box(-50.0, 400.0, -100.0, 100.0, -100.0, 0.0)
+        ops.append((WHITE, (below - core) ^ prism_z(under_white() ^ fuselage_plan(max(x0, 150.0), x1))))
+    return ops
 
 
 # ============================================================
@@ -364,26 +293,16 @@ CANOPY_FRAMES_X = [(59.5, 2.6, -23.0, RED),     # windscreen arch: x at the sill
                                                   # (side photo; cream on the aircraft, white is closest)
 CANOPY_REAR_FRAME = 1.8                           # mm, frame along the slanted rear edge
 CANOPY_SILL = 0.9                                 # mm of black along the canopy's bottom edge
-NOSE_DOME = (4.0, 9.0, 36.0, 62.0)                # height above the sill at the centre, half-width,
-                                                  # x range: the red nose top domes up into the
-                                                  # windscreen, so the glass base is an arch
-                                                  # (head-on photos), not a straight line
-
-
-def nose_dome():
-    """Region below an elliptical arch over the canopy sill, ahead of the windscreen arch."""
-    h, w, x0, x1 = NOSE_DOME
-    ws = []
-    for x in np.arange(x0, x1 + 1e-6, 1.0):
-        zs = H.canopy_sill_z(x)
-        ws.append(H.egg_wire(x, w, zs + h, zs - 8.0, 6.0, zs, 2.0))
-    return H.to_m(H.loft(ws, ruled=True))
+                                                  # (the red nose dome is hawk.nose_dome, on the fuselage)
 
 
 def colour_part(name, P):
     if name.startswith("wing_"):
         S = skins(P)
-        return paint(P, [(WHITE, S["down"] ^ prism_z(under_white()))])
+        x, y, d = WING_ROUNDEL
+        y *= 1 if name.endswith("stbd") else -1
+        return paint(P, [(WHITE, S["down"] ^ prism_z(under_white()))]
+                     + roundel_ops(x, y, d, "z", S["up"]) + roundel_ops(x, y, d, "z", S["down"]))
     if name.startswith("fin_"):
         S = skins(P, FIN_SKIN)
         side = S["+y"] if name.endswith("stbd") else S["-y"]
@@ -396,21 +315,21 @@ def colour_part(name, P):
             ops.append((colour, side ^ prism_y(sec)))
         return paint(P, ops)
     if name == "canopy":
-        # Below the curved sill line the canopy part is fuselage: red. A black sill frame runs
-        # above it, the windscreen arch and the rear frame are black on the shell.
+        # Opaque canopy colour; black sill frame and rear frame, the red windscreen arch and the
+        # white hoop. The part is cut above the sill, so it carries no fuselage red.
         shell = P - K.inner_core(P, 0.7)
         xs = np.linspace(30.0, 140.0, 111)
-        sill = [(x, H.canopy_sill_z(x)) for x in xs]
-        under = cs([np.array(sill + [(140.0, -20.0), (30.0, -20.0)])])
-        band = cs([np.array([(x, z + CANOPY_SILL) for x, z in sill] + [(x, z - 0.05) for x, z in sill[::-1]])])
+        # the canopy's bottom edge is its flat cut (the fuselage stays red below it): the sill
+        # frame runs along that edge
+        sill = [(x, H.canopy_plane_z(x) + H.FIT) for x in xs]
+        band = cs([np.array([(x, z + CANOPY_SILL) for x, z in sill] + [(x, z - 1.0) for x, z in sill[::-1]])])
         hoops = [(c, shell ^ H.rot_about(K.slab("x", x, w), (x, 0.0, H.canopy_sill_z(x)), "y", a))
                  for x, w, a, c in CANOPY_FRAMES_X]
         (ra, rza), (rb, rzb) = H.CANOPY_REAR
         ang = math.degrees(math.atan2(rb - ra, rza - rzb))
         keep = H.rot_about(K.box(ra - 200, ra - CANOPY_REAR_FRAME, -50, 50, rzb - 30, rza + 30), (ra, 0, rza), "y", -ang)
         rear = P - (P ^ keep)
-        return paint(P, [(BLACK, (shell ^ prism_y(band)) + (shell ^ rear))] + hoops +
-                     [(RED, P ^ prism_y(under)), (RED, P ^ nose_dome())], base=CLEAR)
+        return paint(P, [(BLACK, (shell ^ prism_y(band)) + (shell ^ rear))] + hoops, base=CANOPY)
     if name == "radome":
         # the cheat line painted into the skin: a side-on band that also crosses the front of
         # the nose, where both sides meet just above the probe boss
@@ -418,14 +337,8 @@ def colour_part(name, P):
         probe = H.box(-60.0, 3.4, -bd / 2 - 0.15, bd / 2 + 0.15, -bd / 2 - 0.15, bd / 2 + 0.15)
         band = prism_y(cheat_front()) - K.inner_core(P, SKIN) - probe
         return paint(P, [(WHITE, band)])
-    if name == "cockpit":
-        cush = mf.Manifold()
-        for xs, rise in H.SEATS:
-            d, sw, sh = H.SEAT
-            z0 = H.COCKPIT_CAVITY[3] + 1.6 + rise
-            cush = cush + K.box(xs - d + 0.8, xs - 2.3, -sw / 2 + 2.4, sw / 2 - 2.4, z0 + 4.4, z0 + 6.0)
-            cush = cush + K.box(xs - 3.6, xs - 2.3, -sw / 2 + 1.0, sw / 2 - 1.0, z0 + 6.3, z0 + sh * 0.69)
-        return paint(P, [(GREY, cush)], base=BLACK)
+    if name in ("fuselage_front", "fuselage_rear"):
+        return paint(P, fuselage_markings(name, P))
     if name.startswith("wheel_"):
         x0, y0, z0, x1, y1, z1 = P.bounding_box()
         c = ((x0 + x1) / 2, (z0 + z1) / 2)
@@ -434,8 +347,6 @@ def colour_part(name, P):
         return paint(P, [(GREY, hub)], base=BLACK)
     if name.startswith(("gear_", "pin_")):
         return {GREY: P}
-    if name in ("cockpit",):
-        return {BLACK: P}
     if name == "stand_base":
         return stand_paint(P)
     if name == "stand_post":
@@ -446,8 +357,9 @@ def colour_part(name, P):
 # ============================================================
 # DISPLAY STAND (black plinth, raised white lettering, red/white/blue pinstripe)
 # ============================================================
-STAND_LINES = [("BAE SYSTEMS HAWK T.1A", 7.0), ("RED ARROWS", 9.0), ("ROYAL AIR FORCE AEROBATIC TEAM", 4.2)]
-STAND_TEXT_Y = (-24.0, -36.0, -46.5)
+STAND_LINES = [("RED ARROWS", 8.0), ("BAE SYSTEMS HAWK T.1A", 5.0), ("ROYAL AIR FORCE AEROBATIC TEAM", 3.6)]
+STAND_TEXT = (11.0, 2.6, 64.0, -16.0)   # last line's distance from the front edge, line gap, max line
+                                         # length, centre x from the plinth centre (clear of the blade boss)
 STAND_RELIEF = 0.6
 
 
@@ -469,17 +381,21 @@ STAND_TEXT_SEC = [None]
 
 
 def stand_decorate(P):
-    """Raised lettering on the plinth top (front edge, viewer on -y)."""
+    """Raised lettering on the plinth top, in the strip in front of the blade (viewer on -y):
+    reading lines run along x, first line furthest back."""
     lv = stand_level(P)
-    x0, y0, z0, x1, y1, z1 = lv.bounding_box()
-    xc = H.STAND_X + H.STAND_BASE_DX
+    bl, bw, _ = H.STAND_BASE
+    edge, gap, wmax, dx = STAND_TEXT
+    xc = H.STAND_X + H.STAND_BASE_DX + dx
     secs = mf.CrossSection()
-    for (txt, h), y in zip(STAND_LINES, STAND_TEXT_Y):
+    y = -bw / 2 + edge
+    for txt, h in reversed(STAND_LINES):
         t = text_section(txt, h, 0, 0)
         a, b, c, d = t.bounds()
-        if c - a > H.STAND_BASE[0] - 26:
-            t = t.scale([(H.STAND_BASE[0] - 26) / (c - a), 1.0])
-        secs = secs + t.translate([xc - 18.0, y + H.STAND_BASE[1] / 2 - 2])
+        if c - a > wmax:
+            t = t.scale([wmax / (c - a), 1.0])
+        secs = secs + t.translate([xc, y + h / 2])
+        y += h + gap
     top = deck_z()
     raised = secs.extrude(STAND_RELIEF + 0.05).translate([0, 0, top - 0.05])
     lv = lv + raised
@@ -522,8 +438,7 @@ PLATE_GROUPS = [            # parts kept together by colour set (max 5 colours a
     ("Fuselage and red parts", lambda n: n.startswith(("fuselage", "radome", "tailplane", "smoke_pod",
                                                         "aerial", "key_"))),
     ("Wings", lambda n: n.startswith("wing_")),
-    ("Fins, roundels and white inlays", lambda n: n.startswith(("fin_", "roundel_", "inlay_"))),
-    ("Canopy and cockpit", lambda n: n in ("canopy", "cockpit")),
+    ("Fins and canopy", lambda n: n.startswith("fin_") or n == "canopy"),
     ("Display stand", lambda n: n.startswith("stand")),
     ("Gear", lambda n: True),
 ]
@@ -549,26 +464,12 @@ if __name__ == "__main__":
         P = D.apply(name, P)
         if name == "stand_base":
             P, _ = stand_decorate(P)
-        extra = []
-        if name in ("radome", "fuselage_front", "fuselage_rear"):
-            P, extra = fuselage_inlays(name, P)
-        if name.startswith("wing_"):
-            s = 1 if name.endswith("stbd") else -1
-            P, vols_r, plug = wing_roundel(P, s)
-            extra.append((f"roundel_wing_{name.split('_')[-1]}", vols_r, None, plug))
         vols = colour_part(name, P)
-        pose = poses[name]
-        jobs = [(name, vols, pose, P)]
-        for n, iv, rot, plug in extra:
-            if rot is None:                                   # through-disc: print like its wing
-                jobs.append((n, iv, pose, plug))
-            else:
-                jobs.append((n, iv, (lambda m, r=rot: m.rotate(r)), plug))
-        for jname, jvols, pf, whole in jobs:
-            for c, v in jvols.items():
-                Vv, F = mesh_of(v)
-                preview.append((c, Vv, F, jname))
-            add_object(objs, jname, {c: pf(v) for c, v in jvols.items()}, out, pf(whole))
+        pf = lambda m, pose=poses[name]: pose(m).scale([H.PRINT_K] * 3)     # print pose, at 1:32
+        for c, v in vols.items():
+            Vv, F = mesh_of(v.scale([H.PRINT_K] * 3))
+            preview.append((c, Vv, F, name))
+        add_object(objs, name, {c: pf(v) for c, v in vols.items()}, out, pf(P))
         print(f"  [{name}] {time.time() - t0:.1f}s", file=sys.stderr, flush=True)
     # plates
     plates_all, seen = [], set()
@@ -586,7 +487,7 @@ if __name__ == "__main__":
             if rot90:
                 sx, sy = o["size"]
                 vols = {c: v.rotate([0, 0, 90]).translate([sy, 0, 0]) for c, v in vols.items()}
-            objects.append({"name": n, "placement": (pi, x, y),
+            objects.append({"name": n, "placement": (pi, x + BED_MARGIN[0], y + BED_MARGIN[1]),
                             "volumes": [(c, *mesh_of(v)) for c, v in sorted(vols.items())]})
     import trimesh
     scene = trimesh.Scene()
@@ -604,5 +505,5 @@ if __name__ == "__main__":
         assert len(cols) <= MAX_COLOURS, f"plate {i + 1} needs {len(cols)} colours"
     if not only:
         K.write_3mf(out / "hawk_kit.3mf", objects, names, template, FILAMENTS,
-                    "BAE Hawk T.1A Red Arrows snap kit 1:40")
+                    "BAE Hawk T.1A Red Arrows snap kit 1:32")
         print("wrote", out / "hawk_kit.3mf")

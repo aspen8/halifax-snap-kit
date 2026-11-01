@@ -5,7 +5,7 @@ Fully printed multi-colour snap kits in the style of PB94's MasterBuilds, for th
 | Kit | Scale | Folder | Status |
 |---|---|---|---|
 | Handley Page Halifax B Mk II Series IA | 1:60, 500 mm span | repo root (`cad/`, `stl/`, `kit/`) | v2 |
-| BAE Hawk T.1A, Red Arrows | 1:40, 235 mm span | [`hawk/`](hawk/README.md) | v1, first full build |
+| BAE Hawk T.1A, Red Arrows | 1:32, 293 mm span | [`hawk/`](hawk/README.md) | v2, painted markings |
 
 Starting a new aircraft? Read `LESSONS.md`, then copy `hawk/` (the newer, faster pipeline) as the template. The shared toolkit is `cad/kitlib.py` and `tools/`.
 

@@ -1,12 +1,14 @@
 """
-BAE Systems Hawk T.1A, Red Arrows, 1:40 scale (234.75 mm span) snap kit.
+BAE Systems Hawk T.1A, Red Arrows, 1:32 scale (293.4 mm span) snap kit.
 
 Run:  python hawk.py OUT_DIR [PART ...]
-Writes every kit part as an STL in print orientation (OUT_DIR/print/) and in
-assembled position (OUT_DIR/assembled/).
+Writes every kit part as an STL in print orientation at 1:32 (OUT_DIR/print/) and in
+assembled position at 1:40 (OUT_DIR/assembled/, the frame the checks and colour.py work in).
 
 Axes (assembled): X = distance aft of the nose tip (probe excluded), Y = span
-(+ = starboard), Z = up, Z = 0 at the nose tip. Units mm at model scale.
+(+ = starboard), Z = up, Z = 0 at the nose tip. Units: mm at 1:40, the scale the shape was
+measured at. Every part is scaled by PRINT_K (1:40 -> 1:32) when it is written out, so fit
+clearances and pin sizes below are divided by PRINT_K to come out at their tested print size.
 
 Shape from the Revell 04284 Hawk T.1A plan and side views (hawk/tools/refs.json),
 scaled to the real span of 9.39 m. Checks: wing area 16.8 m2 (real 16.69),
@@ -16,12 +18,11 @@ Kit layout (Halifax v2 / Lancaster style; no supports):
   radome       red nose cone with the pitot probe, stands on its back face
   fuselage     front and rear full-width red sections, printed on end (no centre seam)
   fin          two halves split on the centreline, printed flat (Union flag in the skin)
-  canopy       clear, solid (100% infill), seat headboxes nest in it
-  cockpit      tandem tub: floor, consoles, 2 seats, 2 panels and coamings
+  canopy       opaque, solid, cut just above the painted sill (no red on it), keyed to the fuselage
   wings        one per side, flat underside (white underside chevrons print face down)
   tailplane    one per side (10 deg anhedral)
   smoke pod    centreline pod keyed into the belly
-  inlays       white cheat line, swoosh and lettering, roundels (press fit)
+  markings     cheat line, swoosh, lettering, stripes and roundels painted into the parts
   gear         nose leg and 2 main legs with wheels (or fly it on the stand)
   stand        swept blade on a plinth
 
@@ -42,17 +43,20 @@ import kitlib as K  # noqa: E402
 # ============================================================
 # PARAMETERS
 # ============================================================
-SCALE = 40.0
-SPAN = 9390.0 / SCALE        # 234.75 mm
+SCALE = 40.0                 # shape scale: all lengths below are at 1:40
+KIT_SCALE = 32.0             # print scale
+PRINT_K = SCALE / KIT_SCALE  # 1.25: every part is scaled by this when written out
+SPAN = 9390.0 / SCALE        # 234.75 mm at 1:40 (293.4 mm printed)
+_P = 1.0 / PRINT_K           # print-size lengths (fits, pins) are given at print size times this
 
-# --- Fit and printing (X2D, PLA; Halifax fit test, see LESSONS.md)
-FIT = 0.15                   # mm, sliding clearance per side
-KEY_FIT = 0.15               # printed key press fit per side
-KEY_END_GAP = 0.3
-AXLE_HOLE_TIGHT = 2.35       # printed 1.8 mm pins grip here
-AXLE_HOLE_LOOSE = 2.65       # ...and spin here
-PIN_D = 1.8
-PIN_HEAD = (3.6, 0.8)
+# --- Fit and printing (X2D, PLA; Halifax fit test, see LESSONS.md), at print size
+FIT = 0.15 * _P              # mm, sliding clearance per side
+KEY_FIT = 0.15 * _P          # printed key press fit per side
+KEY_END_GAP = 0.3 * _P
+AXLE_HOLE_TIGHT = 2.35 * _P  # printed 1.8 mm pins grip here
+AXLE_HOLE_LOOSE = 2.65 * _P  # ...and spin here
+PIN_D = 1.8 * _P
+PIN_HEAD = (3.6 * _P, 0.8 * _P)
 KEY_FR = (10.0, 5.0, 2.2)    # front/rear fuselage joint key: length across the split, width (z), thickness (y)
 KEY_FIN = (6.0, 5.0, 1.8)    # fin halves, in the spine cap (across the split, along x, thickness z)
 KEY_FIN_SMALL = (2.2, 4.0, 1.2)   # fin halves, in the thin fin (slot only 1.25 mm deep per half)
@@ -146,17 +150,23 @@ INTAKE_OPENING = (0.6, 2.2, 8.6, -0.7, 2.5)   # inner lip (outside the splitter 
 SPLITTER_GAP = 0.6           # mm, boundary-layer gap between the lip and the fuselage
 
 # --- Canopy (cut with a sloping plane through these two (x, z) points)
-CANOPY_X = (38.0, 140.0)
-CANOPY_PLANE = ((38.0, 13.4), (134.0, 22.4))     # sill plane, close under the cockpit deck line
+CANOPY_X = (36.0, 140.0)
+CANOPY_PLANE = ((36.0, 13.3), (126.0, 27.6))     # through the ends of the sill line, so the whole
+                                                 # sill lies on or below it: the canopy part has no
+                                                 # red, and its bottom edge is straight
 CANOPY_REAR = ((122.0, 40.0), (125.0, 21.0))     # rear frame of the glazing, nearly upright (HobbyBoss)
 # Visible lower edge of the glazing (x, z): level under the front cockpit, curving up under the
-# rear seat (HobbyBoss side view, shifted to our windscreen base). The part is still cut on the
-# flat CANOPY_PLANE (it prints on it); colour.py paints the canopy red below this line.
+# rear seat (HobbyBoss side view, shifted to our windscreen base). The part is cut on the flat
+# CANOPY_PLANE just above it (it prints on it), and that cut is the visible bottom edge: the
+# fuselage stays red below it. The sill line still places the frames and the nose dome.
 CANOPY_SILL = [(36.0, 13.3), (49.8, 14.7), (68.3, 16.0), (81.7, 18.0), (95.1, 20.7),
                (108.5, 23.4), (122.0, 26.7), (126.0, 27.6)]
-COCKPIT_CAVITY = (44.0, 121.0, 7.6, 3.0)  # x0, x1, half-width, floor z
-CANOPY_PEGS = []             # none: the cockpit insert locates the canopy (headbox and coaming pockets)
-CANOPY_PEG_D = 1.6
+CANOPY_KEYS = [72.0, 106.0]  # x of the canopy-to-fuselage keys, on the centreline
+KEY_CANOPY = (8.0, 5.0, 2.2)  # length across the sill plane, width (along x), thickness (y)
+NOSE_DOME = (4.0, 9.0, 36.0, 62.0)   # height above the sill at the centre, half-width, x range:
+                                     # the red nose top domes up into the windscreen, so the glass
+                                     # base is an arch (head-on photos). It stays on the fuselage;
+                                     # the canopy has a matching recess.
 
 # --- Wing planform (Revell top view, both halves averaged):
 # LE x = 102.8 + 55.8 eta, TE x = 169.3 + 12.3 eta, y = eta * SPAN/2
@@ -219,11 +229,11 @@ STAND_KEY = 5.0
 STAND_KEY_DEPTH = 8.0
 STAND_PITCH = 6.0
 STAND_HEIGHT = 85.0
-STAND_BASE = (170.0, 110.0, 12.0)
+STAND_BASE = (120.0, 80.0, 10.0)   # length, width, thickness at 1:40 (150 x 100 mm printed)
 STAND_BASE_DX = 18.0
-STAND_BASE_R = 14.0
-STAND_BASE_BEVEL = 3.5
-STAND_FOOT_DX = 55.0
+STAND_BASE_R = 10.0
+STAND_BASE_BEVEL = 3.0
+STAND_FOOT_DX = 50.0
 STAND_BLADE = (16.0, 8.0, 6.5)
 STAND_TENON = (11.0, 4.0, 8.0)
 STAND_BOSS = (32.0, 15.0, 3.0)
@@ -758,7 +768,7 @@ def fin_halves():
 
 
 # ============================================================
-# CANOPY AND COCKPIT
+# CANOPY
 # ============================================================
 @cached
 def canopy_region(grow=0.0):
@@ -797,53 +807,30 @@ def canopy_zone(grow=0.0):
     return blk ^ box(x0 - grow, x1 + grow, -30, 30, -10, 60) ^ rear
 
 
-SEATS = [(76.0, 0.0), (112.0, 4.5)]   # x of the seat back, floor rise (the rear seat sits higher)
-SEAT = (11.0, 13.0, 22.0)             # depth, width, height above its floor
-PANELS = [(52.0, 0.0), (91.0, 4.5)]   # instrument panel x, floor rise
-CANOPY_MIN_WALL = 1.2                 # mm of clear canopy kept over every seat and coaming
+def nose_dome(grow=0.0):
+    """The red nose top that domes up into the windscreen: under an elliptical arch over the
+    canopy sill. Part of the fuselage; the canopy is cut round it (grown by FIT)."""
+    h, w, x0, x1 = NOSE_DOME
+    ws = []
+    for x in np.linspace(x0 - grow, x1 + grow, int(round(x1 - x0)) + 1):   # ends exactly at x0, x1
+        zs = canopy_sill_z(x)
+        ws.append(egg_wire(x, w + grow, zs + h + grow, zs - 8.0, 6.0, zs, 2.0))
+    return to_m(loft(ws, ruled=True))
 
 
-@cached
-def cockpit():
-    """Tandem tub: floor (stepped for the raised rear seat), consoles, seats, panels."""
-    cx0, cx1, chw, cz = COCKPIT_CAVITY
-    w = chw - FIT
-    parts = [box(cx0 + FIT, cx1 - FIT, -w, w, cz, cz + 1.6),
-             box(87.0, cx1 - FIT, -w, w, cz, cz + 1.6 + 4.5)]
-    for x0, x1, rise in ((cx0 + FIT, 87.0, 0.0), (87.0, cx1 - FIT, 4.5)):
-        for s in (1, -1):
-            parts.append(box(x0, x1, *sorted((s * w, s * (w - 2.4))), cz, cz + 1.6 + rise + 5.0))
-    for xs, rise in SEATS:
-        d, sw, sh = SEAT
-        z0 = cz + 1.6 + rise
-        parts += [
-            box(xs - d, xs, -sw / 2 + 1.5, sw / 2 - 1.5, z0, z0 + 4.5),                     # pan
-            box(xs - 2.4, xs, -sw / 2, sw / 2, z0, z0 + sh * 0.72),                          # back
-            box(xs - 4.4, xs + 0.6, -sw / 2 + 1.2, sw / 2 - 1.2, z0 + sh * 0.70, z0 + sh),   # headbox
-            box(xs - d + 1.0, xs - 2.4, -sw / 2 + 2.6, sw / 2 - 2.6, z0 + 4.5, z0 + 5.6),   # seat cushion
-            box(xs - 3.4, xs - 2.4, -sw / 2 + 1.2, sw / 2 - 1.2, z0 + 6.5, z0 + sh * 0.68),  # back cushion
-            cyl((xs - 4.4, 0, z0 + sh - 1.4), 1.6, -1.4, "x", 16),                           # firing handle
-            box(xs - d - 0.5, xs - d + 1.5, -1.0, 1.0, z0 + 2.0, z0 + 4.5),                  # seat-pan handle
-        ]
-    for xp, rise in PANELS:
-        z0 = cz + 1.6 + rise
-        top = canopy_plane_z(xp) - 0.6
-        parts += [box(xp - 1.2, xp + 1.2, -w + 0.6, w - 0.6, z0, top),            # panel
-                  box(xp - 4.5, xp + 1.2, -w + 1.4, w - 1.4, top - 1.6, top),     # coaming
-                  box(xp + 6.0, xp + 7.4, -0.7, 0.7, z0, z0 + 7.0)]               # control column
-    # rear cockpit blast screen frame (sits under the canopy, between the cockpits)
-    return union(parts)
+def canopy_key_slots():
+    """Slots for printed keys across the sill plane, made level and tipped onto the plane."""
+    (xa, za), _ = CANOPY_PLANE
+    s = to_m(K.key_slots([(x, 0.0, za) for x in CANOPY_KEYS], "z", za, KEY_CANOPY, "x", KEY_FIT, KEY_END_GAP))
+    KEY_COUNTS["key_canopy"] = (KEY_CANOPY, len(CANOPY_KEYS))
+    return rot_about(s, (xa, 0, za), "y", -canopy_angle())
 
 
 @cached
 def canopy():
+    """Solid and opaque: only the glazing above the sill plane, round the nose dome."""
     c = outer() ^ canopy_region(-FIT)
-    ck = cockpit()
-    clear = union([ck, ck.translate([0, 0, FIT]), ck.translate([FIT, 0, 0]), ck.translate([-FIT, 0, 0])])
-    c = c - clear
-    for x, y in CANOPY_PEGS:
-        for s in (1, -1):
-            c = c + cyl((x, s * y, canopy_plane_z(x) - 2.2), CANOPY_PEG_D, 2.6, "z", 20)
+    c = c - nose_dome(FIT) - canopy_key_slots()
     return K.largest_piece(c)[0]
 
 
@@ -1045,12 +1032,7 @@ def fuselage_body():
     for s in (1, -1):                                   # intakes sit on the wing
         w = wing_assembled(s)
         b = b - w - w.translate([0, 0, FIT]) - w.translate([0, 0, -FIT])
-    b = b - canopy_region()
-    cx0, cx1, chw, cz = COCKPIT_CAVITY
-    b = b - box(cx0, cx1, -chw, chw, cz, 45)
-    for x, y in CANOPY_PEGS:
-        for s in (1, -1):
-            b = b - cyl((x, s * y, canopy_plane_z(x) - 2.6), CANOPY_PEG_D + 2 * FIT, 3.2, "z", 20)
+    b = b - (canopy_region() - nose_dome()) - canopy_key_slots()
     for s in (1, -1):
         b = b - intake_mouth(s) - splitter_gap(s)
         b = b - wing_tongue(s, FIT) - tail_tongue(s, FIT)
@@ -1152,7 +1134,6 @@ def build():
     parts["canopy"] = canopy()
     (xa, za), _ = CANOPY_PLANE
     poses["canopy"] = lambda m: rot_about(m, (xa, 0, za), "y", canopy_angle())
-    parts["cockpit"], poses["cockpit"] = cockpit(), R()
     ps, pp = smoke_pod()
     parts["smoke_pod_stbd"], poses["smoke_pod_stbd"] = ps, R(rx=90)
     parts["smoke_pod_port"], poses["smoke_pod_port"] = pp, R(rx=-90)
@@ -1206,13 +1187,13 @@ if __name__ == "__main__":
         m, dropped = K.largest_piece(m)
         if any(v > 1.0 for v in dropped):
             print(f"!! {name}: dropped loose pieces {[round(v, 1) for v in dropped if v > 1.0]} mm3")
-        mesh_tm(m).export(OUT_DIR / "assembled" / f"{name}.stl")
-        pm = mesh_tm(poses[name](m))
+        mesh_tm(m).export(OUT_DIR / "assembled" / f"{name}.stl")      # at 1:40 (the checks' frame)
+        pm = mesh_tm(poses[name](m).scale([PRINT_K] * 3))               # at print scale
         lo, hi = pm.bounds
         pm.apply_translation(-lo)
         ext = hi - lo
         a, b = sorted(ext[:2])
-        fits = "ok" if a <= 230 and b <= 250 else "TOO BIG"
+        fits = "ok" if a <= 230 and b <= 250 and ext[2] <= 250 else "TOO BIG"
         pm.export(OUT_DIR / "print" / f"{name}.stl")
         print(f"{name:24s} watertight={pm.is_watertight!s:5s} {ext[0]:6.1f} x {ext[1]:6.1f} x {ext[2]:5.1f} mm"
-              f"  {m.volume() / 1000:6.2f} cc  {fits}", flush=True)
+              f"  {m.volume() * PRINT_K ** 3 / 1000:6.2f} cc  {fits}", flush=True)
