@@ -48,13 +48,13 @@ The single-colour STLs are in `stl/`, in print orientation.
   - All press into black-lined sockets.
 - **Clear parts:** perspex nose, cockpit canopy, rear roof glazing, astrodome, dorsal and tail turrets, all with black frame lines. Plus 2 gun packs.
 - **Engines:** 4 props with yellow tips, 4 prop shafts with captive flanges (the props spin), 8 exhaust banks.
-- **Gear:** 2 main gear forks and wheels, tailwheel and printed axle pins. For display on the stand there are 2 wheels-up inserts that show the retracted main wheels.
+- **Gear:** 2 main gear forks and wheels, tailwheel and printed 2.5 mm axle pins. For display on the stand there are 2 wheels-up inserts that show the retracted main wheels.
 - **Connector keys:**
   - 10 spine to body.
   - 6 at the front/rear joint.
   - 2 at the inner/outer wing joints.
-  - 8 in the nacelles.
   - 2 at the tailplane tips into the fins.
+  - 4 nacelle locks (2 sizes): each joins the nacelle halves and pins the nacelle into a pocket in the wing underside.
 - **Display stand:**
   - A swept "swan-neck" blade that prints flat on its side.
   - A plinth (190 × 120 mm, bevelled underside) with a Dark Earth/Dark Green camo top and a yellow pinstripe.
@@ -74,9 +74,14 @@ The single-colour STLs are in `stl/`, in print orientation.
    - Slide both inner wing root tongues into their side pockets, port forward and starboard aft.
    - Lay the tailplane on its seat.
    - Press the spine pieces on, nose to tail, on their keys. The piece over the tail holds the tailplane down, and the piece over the joint locks the two sections together.
-   - Press in the red code letters and the roundels.
+   - Press in the red code letters and the roundels. Each fuselage roundel has an off-centre peg, so it only fits one way round and grips.
 2. **Wings.** Join each outer panel to its inner panel with a wing key. The joint faces set the 5° dihedral. Press the wing roundels into their sockets.
-3. **Nacelles.** Push the exhaust banks into their side slots. Drop a prop shaft into the inboard half, with its flange in the pocket. Close the outboard half around the wing on the nacelle keys, then press the prop onto the hex boss.
+3. **Nacelles.**
+   - Push the exhaust banks into their side slots.
+   - Drop a prop shaft into the inboard half, with its flange in the pocket.
+   - Push the nacelle lock key up into its pocket in the wing underside (the longer key is for the inner nacelles).
+   - Close both halves around the wing and the key.
+   - Press the prop onto the hex boss last.
 4. **Tail.** Push a key into each tailplane tip and press the fins on.
 5. **Turrets.** Fit the gun packs into the turrets. Pin the turrets on: the dorsal turret rotates.
 6. **Display.** Either fit the gear (wheels on the headed pins, forks into their sockets) or put the model on the stand. With the gear down it sits tail-down at 8.7°. For the stand, push the blade's tenon into the plinth, fit the wheels-up inserts, and lower the model onto the key at the blade tip: it sits 5° nose-up.
