@@ -116,21 +116,23 @@ FR_KEYS = [(-6.0, 15.0), (6.0, 15.0), (-6.0, 3.0), (6.0, 3.0), (0.0, 25.0)]   # 
 
 # --- Intakes: D-section fairings each side, (x, y_outer, z_top, z_bottom)
 INTAKE_STATIONS = [            # x, y_outer, z_top, z_bottom: the side pods (intake trunks)
-    # boxy D-section pods: flat top just above the lettering (Revell side view), near-vertical
-    # outer side and flat bottom (cross-sections checked against a reference Hawk model)
+    # boxy D-section pods (cross-sections checked against a reference Hawk model). Side views:
+    # the top edge climbs quickly behind the inlet, then runs nearly level and sweeps back
+    # into the fuselage side below the spine; the outer side tapers in over the same length.
     (89.0, 20.0, 12.6, -3.6),      # rounded lip (head-on photo)
     (89.6, 20.5, 13.1, -4.1),
     (90.5, 20.9, 13.5, -4.5),
-    (92.5, 21.4, 14.2, -5.2),
-    (98.0, 21.7, 14.8, -6.0),
-    (104.0, 21.8, 15.2, -6.4),
-    (113.0, 21.7, 15.6, -6.4),     # behind the wing LE the pod sits on the wing:
-    (125.0, 21.2, 15.8, -6.2),     # keep its bottom above the wing underside (no slivers)
-    (137.0, 20.2, 15.4, -5.8),
-    (147.0, 17.8, 14.4, -5.4),
-    (155.0, 14.8, 12.8, -5.0),     # fades into the body by the wing trailing edge
-    (162.0, 12.6, 11.2, -4.6),
-    (170.0, 11.0, 9.8, -4.0),
+    (92.5, 21.4, 14.4, -5.2),
+    (98.0, 21.7, 15.9, -6.0),
+    (104.0, 21.8, 16.8, -6.4),
+    (113.0, 21.7, 17.4, -6.4),     # behind the wing LE the pod sits on the wing:
+    (125.0, 21.2, 17.7, -6.2),     # keep its bottom above the wing underside (no slivers)
+    (137.0, 20.0, 17.6, -5.8),
+    (147.0, 18.2, 17.2, -5.4),
+    (156.0, 16.0, 16.4, -5.0),     # fades into the body by the wing trailing edge
+    (164.0, 13.9, 15.2, -4.6),
+    (172.0, 12.2, 13.6, -4.0),
+    (180.0, 11.0, 12.0, -3.4),
 ]
 INTAKE_Y_IN = 10.0           # inner edge of the fairing (buried in the body)
 INTAKE_N = 3.0               # boxy pods (reference model cross-sections)
@@ -465,7 +467,7 @@ def splitter_gap(side):
     return box(x0 - 3.0, x0 + 6.0, y0, y1, zb + 1.0, zt - 1.0)
 
 
-BLEND_R = 4.5                # mm, fillet radius filling the creases (pod tops and canopy sill into the body)
+BLEND_R = 6.0                # mm, fillet radius filling the creases (pod tops and canopy sill into the body)
 BLEND_X = (34.0, 192.0)      # x range of the blend (from ahead of the windscreen to behind the pods)
 BLEND_ZC = 4.0               # z of the polar centre used to resample each section
 BLEND_N = 144                # points per section
