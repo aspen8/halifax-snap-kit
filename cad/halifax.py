@@ -44,6 +44,8 @@ KEY_LR = (8.0, 10.0, 2.4)    # fuselage port/starboard halves (width along x)
 KEY_FR = (12.0, 6.0, 2.4)    # front/rear fuselage joint (width along z)
 KEY_NAC = (11.0, 6.0, 3.0)   # nacelle lock: upright (length z), straddles the halves (thickness y),
                              # top 4 mm in a pocket in the wing underside, 7 mm down into the nacelle
+NACELLE_TAIL_FROM = (0.70, 0.62)   # where the lower tail fairing starts, fraction of nacelle length
+NACELLE_TAIL_START = ((10.0, 8.0), (7.0, 7.0))   # its depth below the wing and half-width there
 NACELLE_KEY_AT = (0.30, 0.06)   # chord fraction of the lock for each nacelle (deep wing and nacelle body)
 KEY_NAC_OUTER = (8.0, 6.0, 3.0)  # the outer nacelles are shallower: 3.5 mm up into the wing, 4.5 mm down
 NACELLE_KEY_UP = (4.0, 3.5)      # how far each lock goes up into the wing
@@ -141,6 +143,7 @@ TT_X0, TT_REAR, TT_FLOOR, TT_TOP, TT_HW = 345.0, 362.3, -3.0, 14.4, 8.4
 TT_PIVOT = TT_REAR - TT_HW              # centre of the rounded rear: pin position
 TT_TOP_R = 9.0                          # rounded rear-top edge (side view)
 TT_GUN_Z = 3.8                          # gun pack height
+TT_TOP_FILLET = 4.5                     # rounding of the turret's top edges
 TT_BOSS = (9.0, 3.0)                    # diameter, height of the boss the turret presses over (no pin)
 TAIL_CONE = [(344.0, 9.5, 2.0, -14.0, 2.6), (352.0, 9.0, 1.0, -13.0, 2.5), (356.0, 8.4, 0.0, -10.5, 2.4),
              (359.0, 7.2, -1.0, -8.0, 2.3), (361.0, 5.2, -1.6, -5.4, 2.1), (362.0, 2.8, -2.2, -4.0, 2.0)]
@@ -578,6 +581,7 @@ def tail_turret():
                                                        (TT_REAR - r + 1, TT_TOP))
             .lineTo(TT_X0 + 0.3, TT_TOP).close().extrude(30, both=True))
     t = plan.intersect(side)
+    t = t.faces(">Z").edges().fillet(TT_TOP_FILLET)   # domed top all round (photos)
     t = t.cut(gun_slot((TT_REAR - 1.5, 0, TT_GUN_Z), +1))
     t = t.cut(cyl((TT_PIVOT, 0, TT_FLOOR - 0.1), TT_BOSS[0] + 2 * KEY_FIT, TT_BOSS[1] + 0.3, "z"))   # sits over the boss
     return t
@@ -761,11 +765,40 @@ def nacelle_lock_slot(index, side, wing_panel):
     return key_slots([(x, yc, zc)], "z", zc, key, "x")
 
 
+def wing_underside(wing_panel, x, y):
+    probe = wing_panel.intersect(box(x - 0.05, x + 0.05, y - 0.05, y + 0.05, -100, 100))
+    return probe.val().BoundingBox().zmin
+
+
+def nacelle_tail(index, side, wing_panel):
+    """Lower nacelle fairing carried on under the wing to the trailing edge (Revell side view,
+    photos): starts inside the nacelle body and tapers to a point under the trailing edge."""
+    yc, zc, x0, length = NACELLES[index]
+    y = yc * side
+    s = abs(y)
+    if s < WING_JOINT_Y:
+        _, le, c = interp(PLANFORM, s)
+    else:
+        le, c, _ = outer_planform(s)
+    te = le + c - 1.0
+    xa = x0 + NACELLE_TAIL_FROM[index] * length
+    depth0, hw0 = NACELLE_TAIL_START[index]
+    secs = []
+    for f in np.linspace(0, 1, 6):
+        x = xa + f * (te - xa)
+        wb = wing_underside(wing_panel, x, y)
+        hw = 1.5 + (hw0 - 1.5) * (1 - f) ** 0.7       # broad "boat" tail, blunt end
+        dp = 1.0 + (depth0 - 1.0) * (1 - f) ** 1.0
+        secs.append(superellipse_wire(x, hw, wb + 1.5, wb - dp, 2.6))
+    return wp(cq.Solid.makeLoft(secs, ruled=False)).translate((0, y, 0))
+
+
 def nacelle_parts(index, side, wing_panel):
     yc, zc, x0, length = NACELLES[index]
     body = nacelle_body(zc, x0, length).translate((0, yc * side, 0))
     if index == 0:   # undercarriage housing under the inner nacelles
         body = body.union(gear_bath(yc * side, zc))
+    body = body.union(nacelle_tail(index, side, wing_panel))   # lower fairing back to the trailing edge
     # notch for the wing, with clearance top and bottom
     body = (body.cut(wing_panel)
             .cut(wing_panel.translate((0, 0, FIT)))
