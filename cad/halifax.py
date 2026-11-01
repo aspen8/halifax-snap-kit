@@ -1248,7 +1248,9 @@ def build():
         for side, tag in ((1, "stbd"), (-1, "port")):
             for face, ftag in ((1, "a"), (-1, "b")):
                 n = f"exhaust{i + 1}_{tag}_{'outboard' if face == side else 'inboard'}"
-                parts[n] = exhaust_bank(i, side, face)
+                wi, wo = wings[side]          # shroud stops where it meets the wing leading edge
+                parts[n] = (exhaust_bank(i, side, face).cut(wi).cut(wo)
+                            .cut(wi.translate((-FIT, 0, 0))).cut(wo.translate((-FIT, 0, 0))))
                 poses[n] = lambda w, fc=face: rot(w, "x", 90 * fc)   # flat back on the bed
     parts["turret_dorsal"] = dorsal_turret()
     poses["turret_dorsal"] = lambda w: w
