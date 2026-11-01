@@ -242,7 +242,9 @@ def colour_part(name, P, pat):
         idx = int(name[7]) - 1
         zc = H.NACELLES[idx][1]
         upper = mf.Manifold.cube([1000, 1000, 500]).translate([-500, -500, zc - 1.0])
-        skin = (S["up"] + S["+y"] + S["-y"]) ^ upper
+        # the whole outer skin above the line, including the forward-facing cowling front
+        # (up/side skins alone left the front black with a ragged edge)
+        skin = (ALL - K.inner_core(P, SKIN)) ^ upper
         return paint(P, [(EARTH, skin), (GREEN, skin ^ plan)])
     if name.startswith("fin_"):
         s = 1 if name.endswith("stbd") else -1
