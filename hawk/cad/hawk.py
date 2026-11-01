@@ -124,15 +124,16 @@ INTAKE_STATIONS = [            # x, y_outer, z_top, z_bottom: the side pods (int
     (90.5, 20.9, 12.9, -4.5),
     (92.5, 21.4, 13.5, -5.2),
     (98.0, 21.7, 14.2, -6.0),      # top climbs a little behind the inlet, staying well clear of
-    (104.0, 21.8, 14.6, -6.4),     # the canopy sill (head-on photo)
-    (113.0, 21.7, 15.0, -6.4),     # behind the wing LE the pod sits on the wing:
-    (125.0, 21.2, 15.2, -6.2),     # keep its bottom above the wing underside (no slivers)
-    (137.0, 20.0, 15.0, -5.8),
-    (147.0, 18.2, 14.6, -5.4),
-    (156.0, 16.0, 13.8, -3.6),     # fades into the body by the wing trailing edge: the bottom
-    (164.0, 13.9, 12.8, -0.6),     # rises up the fuselage side as the pod tapers in, so nothing
-    (172.0, 12.2, 11.6, 3.0),      # sticks out below
-    (180.0, 11.0, 10.4, 6.0),
+    (104.0, 21.8, 14.6, -6.4),     # the canopy sill (head-on photo). Widest here, then the
+    (110.0, 21.3, 14.9, -6.4),     # sides turn in at once (convex shoulder, reference model)...
+    (118.0, 20.0, 15.1, -6.3),     # behind the wing LE the pod sits on the wing:
+    (126.0, 18.4, 15.1, -6.0),     # keep its bottom above the wing underside (no slivers)
+    (134.0, 16.8, 14.8, -5.4),     # ...and taper almost straight back...
+    (142.0, 15.2, 14.2, -4.4),
+    (150.0, 13.8, 13.4, -2.6),     # ...easing into the body side (concave): the bottom rises up
+    (158.0, 12.6, 12.4, 0.0),      # the fuselage side as the pod tapers in, so nothing sticks
+    (166.0, 11.9, 11.2, 3.0),      # out below
+    (174.0, 11.4, 10.0, 6.0),
 ]
 INTAKE_Y_IN = 10.8           # inner edge of the pods, just inside the body side: their rounded
                              # inner top corner leaves a notch, so they read as separate at the inlet
