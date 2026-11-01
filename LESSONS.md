@@ -128,3 +128,13 @@ Fixes:
 
 For a display model, quality beats purge cost.
 
+## Small printed pins snap
+
+1.8 mm pins and a 2.4 mm prop shaft broke coming off the plate. Use at least 2.5 mm for loose pins (head 5.5 mm) and 3.2 mm for prop shafts. Keep the fit-test clearances (+0.55 to grip, +0.85 to spin for upright holes) and leave at least 1.2 mm of wall round every hole.
+
+## Locating inlays and nacelles
+
+- A plain round press-fit inlay falls out, and its curved face can go in rotated. Add an off-centre peg on the socket floor with a gripping hole in the inlay back.
+- Nacelle halves need a positive lock to the wing, not just a clamp. Use one upright key that straddles the halves and goes up into a pocket in the wing underside. It replaces several tiny, fiddly keys.
+- Colour nacelles with the full outer skin above the line (`inner_core`), not only up and side faces, or forward-facing cowlings stay black.
+

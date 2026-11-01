@@ -48,8 +48,8 @@ NACELLE_KEY_AT = (0.30, 0.15)   # chord fraction of the lock for each nacelle (d
 KEY_FIN = (4.0, 6.0, 1.6)    # tailplane tip into fin: length along y, width along x, thickness z
 FIN_KEY_AT = (0.24,)         # one key at the thickest part of the tip (mid-chord broke through)
 
-AXLE_HOLE_TIGHT = 2.35       # mm, printed 1.8 mm pins grip here (X2D fit test)
-AXLE_HOLE_LOOSE = 2.65       # mm, ...and spin freely here (X2D fit test)
+AXLE_HOLE_TIGHT = 3.05       # mm, printed 2.5 mm pins grip here (fit-test clearance +0.55)
+AXLE_HOLE_LOOSE = 3.35       # mm, ...and spin freely here (fit-test clearance +0.85)
 WALL = 1.6                   # mm, nose spigot inset from the skin
 
 # --- Fuselage stations: (x, half_width, z_top, z_bottom, squareness)
@@ -176,11 +176,11 @@ PROP_D = 3886.0 / SCALE      # ~64.5 mm
 PROP_GAP = 1.2               # mm, prop backplate to nacelle front (thrust collar sits here)
 # Printed prop shaft (after PB94): flange captured inside the nacelle halves,
 # thrust collar outside, hex boss that the prop presses onto. Spins freely.
-SHAFT_D, BORE_D = 2.4, 3.1         # mm (bore scaled from the X2D pin test: small holes print ~0.5 mm tight)
-FLANGE_D, FLANGE_T, CAVITY_D = 4.0, 1.2, 4.9
-COLLAR_D, COLLAR_T = 5.0, 0.8
-HEX_AF, HEX_LEN, HEX_SOCKET_AF = 3.0, 2.5, 3.4   # socket: press fit, scaled from the pin test
-PIN_D = 1.8                  # mm, printed axle pins (wheels, turrets)
+SHAFT_D, BORE_D = 3.2, 3.9         # mm (2.4 mm snapped; bore keeps the +0.7 spin clearance)
+FLANGE_D, FLANGE_T, CAVITY_D = 5.2, 1.2, 6.1
+COLLAR_D, COLLAR_T = 6.0, 0.8
+HEX_AF, HEX_LEN, HEX_SOCKET_AF = 3.6, 2.5, 4.0   # socket: press fit, scaled from the pin test
+PIN_D = 2.5                  # mm, printed axle pins (1.8 mm snapped coming off the plate)
 
 # --- Exhausts (after PB94: a separate bar of stacks plugged into a side slot)
 EXH_X0 = 6.0                 # mm behind the nacelle front
@@ -200,7 +200,7 @@ DF_LOOP = (117.3, 14.1, 4.0, 4.5)        # nose x, length, width, depth of the t
 DF_MAST = (0.41, 2.8, 2.0)              # mast position (fraction of length from the nose), x-length, width
 DF_PROFILE = [(0.0, 0.05), (0.04, 0.55), (0.12, 0.85), (0.3, 1.0), (0.55, 0.85), (0.8, 0.45), (1.0, 0.04)]
 DF_TOP = 7.9                 # mm, fairing top above the roof (stalk + housing)
-PIN_HEAD = (4.6, 0.8)        # head diameter, thickness (covers the 2.65 spin holes)
+PIN_HEAD = (5.5, 1.0)        # head diameter, thickness
 SPINNER_LEN = 7.5
 SPINNER_R = 4.8
 BLADE_T = 1.2                # mm
@@ -225,13 +225,13 @@ MAIN_AXLE_X = 120.0          # mm, just aft of the radiator (Revell side view)
 MAIN_AXLE_Z = -51.0          # mm
 MAIN_WHEEL_D = 26.0          # mm (~1.57 m)
 MAIN_WHEEL_W = 9.0
-MAIN_LEG = (5.0, 3.0)        # leg section: x (fore-aft), y; 1.3 mm walls round the axle hole
+MAIN_LEG = (6.0, 3.0)        # leg section: x (fore-aft), y; ~1.5 mm walls round the axle hole
 MAIN_PLUG = (8.0, 6.0)       # plug y-width, depth into the nacelle socket
 TAIL_AXLE_X = 334.0
 TAIL_LEG_DROP = 9.0          # mm, axle below the fuselage bottom
 TAIL_WHEEL_D = 9.0
 TAIL_WHEEL_W = 4.5
-TAIL_LEG = (4.5, 2.5)        # leg section; ~1 mm walls round the axle hole
+TAIL_LEG = (5.5, 2.5)        # leg section; ~1.2 mm walls round the axle hole
 TAIL_PLUG = (5.0, 5.0)
 
 # --- Display stand (in-flight pose, gear removed)
