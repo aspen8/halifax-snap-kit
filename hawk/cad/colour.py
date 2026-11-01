@@ -197,24 +197,23 @@ def roundel_ops(x, c, d, axis, region):
     return [(colour, region ^ K.cyl_axis(x, c, dd / 2, axis)) for colour, dd in ROUNDEL(d)]
 
 
-def fuselage_markings(name, P):
-    """Paint ops for a fuselage section: cheat line, swoosh, lettering, roundels, belly stripes."""
+def fuselage_markings(P):
+    """Paint ops for any fuselage section: cheat line, swoosh, lettering, roundels and belly
+    stripes (each lands only where the section has skin). The stripes go right through in y,
+    so at the nose tip the band crosses the front, just above the probe boss (head-on photo)."""
     # regions reach past the surface and stop at the inner core: ending them exactly on the
     # surface leaves thin sheets of base red over the paint (LESSONS.md)
     core = K.inner_core(P, SKIN)
     x0, _, _, x1, _, _ = P.bounding_box()
-    ops = []
+    _, _, _, bd, bl = H.PROBE
+    probe = K.box(-60.0, 3.4, -bd / 2 - 0.15, bd / 2 + 0.15, -bd / 2 - 0.15, bd / 2 + 0.15)
+    ops = [(WHITE, (prism_y(widen(side_stripes(1), STRIPE_MIN_W)) - core) - probe)]
     for side in (1, -1):
-        half = K.box(-50.0, 400.0, 0.0 if side > 0 else -100.0, 100.0 if side > 0 else 0.0, -100.0, 100.0)
-        sk = half - core
-        if name != "radome":                   # the radome's band is painted in colour_part
-            ops.append((WHITE, sk ^ prism_y(widen(side_stripes(side), STRIPE_MIN_W))))
-        if name == "fuselage_front":
-            ops.append((WHITE, sk ^ prism_y(letters_section(side))))
-        if name == "fuselage_rear":
-            x, z, d = FUSE_ROUNDEL
-            ops += roundel_ops(x, z, d, "y", sk)
-    if name in ("fuselage_front", "fuselage_rear"):
+        sk = K.box(-50.0, 400.0, 0.0 if side > 0 else -100.0, 100.0 if side > 0 else 0.0, -100.0, 100.0) - core
+        ops.append((WHITE, sk ^ prism_y(letters_section(side))))
+        x, z, d = FUSE_ROUNDEL
+        ops += roundel_ops(x, z, d, "y", sk)
+    if x1 > 150.0:
         below = K.box(-50.0, 400.0, -100.0, 100.0, -100.0, 0.0)
         ops.append((WHITE, (below - core) ^ prism_z(under_white() ^ fuselage_plan(max(x0, 150.0), x1))))
     return ops
@@ -330,15 +329,13 @@ def colour_part(name, P):
         keep = H.rot_about(K.box(ra - 200, ra - CANOPY_REAR_FRAME, -50, 50, rzb - 30, rza + 30), (ra, 0, rza), "y", -ang)
         rear = P - (P ^ keep)
         return paint(P, [(BLACK, (shell ^ prism_y(band)) + (shell ^ rear))] + hoops, base=CANOPY)
-    if name == "radome":
-        # the cheat line painted into the skin: a side-on band that also crosses the front of
-        # the nose, where both sides meet just above the probe boss
-        _, _, _, bd, bl = H.PROBE
-        probe = H.box(-60.0, 3.4, -bd / 2 - 0.15, bd / 2 + 0.15, -bd / 2 - 0.15, bd / 2 + 0.15)
-        band = prism_y(cheat_front()) - K.inner_core(P, SKIN) - probe
-        return paint(P, [(WHITE, band)])
-    if name in ("fuselage_front", "fuselage_rear"):
-        return paint(P, fuselage_markings(name, P))
+    if name.startswith("fuselage_"):
+        return paint(P, fuselage_markings(P))
+    if name == "nozzle":
+        # grey metal outside and on the rim, black inside the void
+        n = H.NOZZLE
+        inside = H.cyl((H.FUSE_END_X - 10.0, 0, H.JET_PIPE[2]), 2 * (n["r"] - n["wall"] + 0.5), 20.0, "x", 96)   # black lining 0.6 mm printed
+        return paint(P, [(BLACK, inside)], base=GREY)
     if name.startswith("wheel_"):
         x0, y0, z0, x1, y1, z1 = P.bounding_box()
         c = ((x0 + x1) / 2, (z0 + z1) / 2)
@@ -435,7 +432,7 @@ def add_object(objs, name, posed, out, whole):
 
 
 PLATE_GROUPS = [            # parts kept together by colour set (max 5 colours a plate)
-    ("Fuselage and red parts", lambda n: n.startswith(("fuselage", "radome", "tailplane", "smoke_pod",
+    ("Fuselage and red parts", lambda n: n.startswith(("fuselage", "tailplane", "smoke_pod",
                                                         "aerial", "key_"))),
     ("Wings", lambda n: n.startswith("wing_")),
     ("Fins and canopy", lambda n: n.startswith("fin_") or n == "canopy"),

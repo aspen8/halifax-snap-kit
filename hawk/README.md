@@ -17,6 +17,10 @@ Painted markings, the opaque canopy and the underside chevrons:
 
 ![markings and canopy](docs/v2_markings_canopy.png)
 
+The jet nozzle, a separate part:
+
+![nozzle](docs/nozzle.png)
+
 The 150 × 100 mm plinth:
 
 ![stand](docs/stand_v2.png)
@@ -35,7 +39,7 @@ Against photos (top: real aircraft, bottom: model):
 
 ![photo comparison](docs/photo_comparison.png)
 
-> **Status: v2, not yet test-printed.** The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs). The fits use the Halifax fit-test numbers. Print the fuselage joint, one wing root and the canopy keys first.
+> **Status: v3, not yet test-printed.** The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs). The fits use the Halifax fit-test numbers. Print the fuselage joint, one wing root and the canopy keys first.
 
 ## Print it
 
@@ -43,26 +47,26 @@ Open `kit/hawk_kit.3mf` in Bambu Studio. Its 5 plates have the filaments already
 
 | Plate | Parts | Filaments |
 |---|---|---|
-| Fuselage and red parts | Front and rear fuselage on end (brim), radome on its back face (probe up), tailplanes, smoke pod halves, aerials, keys. The cheat line, swoosh, "ROYAL AIR FORCE", roundels and belly stripes are painted in | Red, White, Blue |
+| Fuselage and red parts | Nose, middle and rear fuselage sections on end (brim), tailplanes, smoke pod halves, aerials, keys. The cheat line, swoosh, "ROYAL AIR FORCE", roundels and belly stripes are painted in | Red, White, Blue |
 | Wings | Both wings flat; white underside chevrons and lower roundels in the first layers, upper roundels in the last | Red, White, Blue |
 | Fins and canopy | Fin halves (Union flag in the skin), canopy | Red, White, Blue, Black, Canopy |
 | Display stand | Plinth with red/white/blue pinstripe and raised lettering, swept blade | Black, Red, White, Blue |
-| Gear | Nose and main legs, wheels, axle pins | Grey, Black |
+| Gear | Nose and main legs, wheels, axle pins, jet nozzle (spigot down) | Grey, Black |
 
-Suggested settings: PLA, 0.16 mm layers for the gear plate and 0.2 mm elsewhere, 2 walls, 15% gyroid infill, no supports. Use a brim on the front fuselage section, which stands 198 mm tall. Painting the markings in costs purge filament on the fuselage plate (the side markings change colour on most layers); that was chosen over press-in inlays.
+Suggested settings: PLA, 0.16 mm layers for the gear plate and 0.2 mm elsewhere, 2 walls, 15% gyroid infill, no supports. Use a brim on the fuselage sections (the middle one stands 117 mm tall). Painting the markings in costs purge filament on the fuselage plate (the side markings change colour on most layers); that was chosen over press-in inlays.
 
-## Kit contents (42 parts)
+## Kit contents (36 parts)
 
 - **Airframe:**
-  - radome with pitot probe
-  - front and rear fuselage sections
+  - 3 fuselage sections: nose (with the radome and the pitot probe), middle (cockpit, intakes and wing roots) and rear. The probe is shorter and thicker than scale (30 × 3 mm printed, against 42 × 2 mm) so it survives handling.
   - 2 fin halves, which carry the spine cap and the dorsal fillet
   - 2 wings
   - 2 tailplanes with 10° anhedral
-  - smoke pod (2 halves)
+  - smoke pod (2 halves), with pegs moulded on its pylon that push into the belly
+  - jet nozzle: a separate grey ring standing 3.75 mm out of the tail, black inside, with a 12 mm deep void, a step ring, an exhaust cone and 6 struts at the bottom. A spigot plugs it into a countersunk socket in the tail.
   - 3 aerials
   - 2 small ram-air scoops on the spine shoulders just behind the canopy (X 130–144), teardrop-shaped with a forward-facing opening (side photos)
-- **Canopy:** solid and opaque, so there is no cockpit inside. It has a thick red windscreen arch (X 59.5 at the sill, leaning 23° forward at the top), a white hoop between the cockpits (X 84, leaning 19° back), an upright rear frame and a black sill frame. It is cut on a flat plane through the two ends of the drawn bottom edge, so the part is canopy only, with no fuselage red, and prints flat on that plane. That straight cut is the canopy's visible bottom edge, with the black sill frame along it; the drawn edge dips up to 2.5 mm lower under the front cockpit, but on the aircraft it reads as nearly straight. The red nose top domes up into the windscreen and stays on the fuselage; the canopy has a matching recess, so from the front the glass base is an arch, as on the aircraft. Two printed keys locate it.
+- **Canopy:** solid and opaque, so there is no cockpit inside. It has a thick red windscreen arch (X 59.5 at the sill, leaning 23° forward at the top), a white hoop between the cockpits (X 84, leaning 19° back), an upright rear frame and a black sill frame. It is cut on a flat plane through the two ends of the drawn bottom edge, so the part is canopy only, with no fuselage red, and its underside is flat apart from two pockets. That straight cut is the canopy's visible bottom edge, with the black sill frame along it; the drawn edge dips up to 2.5 mm lower under the front cockpit, but on the aircraft it reads as nearly straight. Two tabs moulded on the fuselage (one on the nose section, one on the middle) drop into the pockets, so there are no loose canopy keys. (An earlier version had the red nose dome rising into the windscreen; it needed a recess under the canopy and was dropped for the flat underside.)
 - **Painted markings** (no inlays):
   - cheat line: from the nose tip, where the two sides join across the front just above the probe, thickening to the lettering's height on the side pod and stopping at the lettering
   - tail swoosh: from behind the roundel, sweeping up to the fin flag
@@ -70,13 +74,10 @@ Suggested settings: PLA, 0.16 mm layers for the gear plate and 0.2 mm elsewhere,
   - fuselage roundels, and wing roundels on the top and the bottom of each wing
   - underside chevrons and belly stripes
 - **Gear:** nose leg, 2 main legs, 3 wheels with grey hubs, headed axle pins.
-- **Keys:**
-  - 5 at the fuselage joint
-  - 1 radome key
-  - 2 canopy keys
-  - 3 joining the fin halves (1 full key in the spine cap, 2 short ones lower in the fin)
-  - 3 joining the pod halves
-  - 2 pod-to-belly
+- **Keys** (fewer and bigger than before: 17.5 × 8.75 × 3.75 mm for the fuselage):
+  - 2 at the nose/middle joint and 3 at the middle/rear joint
+  - 2 joining the fin halves, in the spine cap
+  - 2 joining the pod halves
 - **Stand:** a swept blade on a 150 × 100 mm plinth. The model sits 6° nose-up on a key that passes through the smoke pod. The raised lettering runs in three lines across the strip in front of the blade, reading from the front: RED ARROWS, BAE SYSTEMS HAWK T.1A, ROYAL AIR FORCE AEROBATIC TEAM.
 
 **Surface detail:**
@@ -84,17 +85,15 @@ Suggested settings: PLA, 0.16 mm layers for the gear plate and 0.2 mm elsewhere,
 - Access panels and a fuel filler cap.
 - Rivet rows on the spars.
 - Intake ducts with a boundary-layer splitter gap.
-- A recessed jet pipe with its cone.
+- The jet nozzle (above).
 
 ## Assembly
 
-1. **Canopy.** Push the 2 canopy keys into the slots on top of the front section and press the canopy on.
-2. **Fuselage.**
-   - Join the front and rear sections on the 5 joint keys.
-   - Key the radome on.
-3. **Fin.** Join the halves on their 3 keys: the full key goes in the spine cap, the 2 short ones in the fin. Then push the fin's root tongue into the slot in the spine.
+1. **Fuselage.** Join the nose to the middle section on 2 keys and the middle to the rear on 3. Push the nozzle's spigot into the tail.
+2. **Canopy.** Press it down onto the two tabs on top of the nose and middle sections; it bridges the joint.
+3. **Fin.** Join the halves on their 2 keys in the spine cap. Then push the fin's root tongue into the slot in the spine.
 4. **Wings and tailplanes.** Slide the root tongues into the side pockets. On both the wings and the tailplanes, the port tongue goes forward and the starboard tongue aft.
-5. **Smoke pod.** Join the halves on 3 keys and push them onto the 2 belly keys.
+5. **Smoke pod.** Join the halves on 2 keys and push the pylon's pegs into the belly.
 6. **Display.** Either fit the gear (wheels on the headed pins, legs into their sockets) or use the stand: push the blade's tenon into the plinth and lower the model onto the key.
 
 ## Accuracy
@@ -105,7 +104,7 @@ The shape is measured from the Revell 04284 Hawk T.1A (Red Arrows) instruction s
 - As cross-checks, the wing area comes out at 16.8 m² (real 16.69), the root chord at 2.66 m (real 2.65), and the length including the probe at 11.96 m.
 - The side views on the sheet are drawn about 12% larger than the plan views, so each view has its own calibration.
 - The plan view's wings sit about 20 px off the fuselage centreline, and its two halves differ by 5%. The model uses the average of the two halves.
-- The undersides are flat from 15% chord, so the wings and tailplanes print without supports.
+- The undersides are flat from 15% chord, so the wings and tailplanes print without supports. Ahead of that the lower nose of the section is replaced by a 50° slope from the leading edge to the bed: the true curve rose off the bed at under 45° and would have sagged. It adds a little fullness under the leading edge (about 4 mm of chord printed).
 - Behind the cockpit the fuselage uses an "egg" cross-section. It's widest at the side pods and rounder on top, following the spine line, so the top is smooth with no separate spine ridge.
 - The fin's leading edge sweeps forward below 36 mm into a thin dorsal fillet that rises out of the spine at about X 192, as on the real aircraft.
 - The windscreen front is a rounded U in plan (Revell top view), so the glazing rises out of the nose instead of starting as a flat, full-width sliver.

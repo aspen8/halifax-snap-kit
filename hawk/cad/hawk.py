@@ -15,10 +15,11 @@ scaled to the real span of 9.39 m. Checks: wing area 16.8 m2 (real 16.69),
 root chord 2.66 m (real 2.65), length with probe 11.96 m.
 
 Kit layout (Halifax v2 / Lancaster style; no supports):
-  radome       red nose cone with the pitot probe, stands on its back face
-  fuselage     front and rear full-width red sections, printed on end (no centre seam)
+  fuselage     nose (with the radome and a short, stout probe), middle and rear full-width red
+               sections, printed on end (no centre seam)
   fin          two halves split on the centreline, printed flat (Union flag in the skin)
-  canopy       opaque, solid, cut just above the painted sill (no red on it), keyed to the fuselage
+  canopy       opaque, solid, flat underneath; drops onto 2 tabs moulded on the fuselage
+  nozzle       separate jet nozzle with a deep void and exhaust cone, plugs into the tail
   wings        one per side, flat underside (white underside chevrons print face down)
   tailplane    one per side (10 deg anhedral)
   smoke pod    centreline pod keyed into the belly
@@ -57,9 +58,9 @@ AXLE_HOLE_TIGHT = 2.35 * _P  # printed 1.8 mm pins grip here
 AXLE_HOLE_LOOSE = 2.65 * _P  # ...and spin here
 PIN_D = 1.8 * _P
 PIN_HEAD = (3.6 * _P, 0.8 * _P)
-KEY_FR = (10.0, 5.0, 2.2)    # front/rear fuselage joint key: length across the split, width (z), thickness (y)
-KEY_FIN = (6.0, 5.0, 1.8)    # fin halves, in the spine cap (across the split, along x, thickness z)
-KEY_FIN_SMALL = (2.2, 4.0, 1.2)   # fin halves, in the thin fin (slot only 1.25 mm deep per half)
+# Keys are few and big (about 17 x 9 x 4 mm printed): small ones were fiddly to handle.
+KEY_FR = (14.0, 7.0, 3.0)    # fuselage joint keys: length across the split, width (z), thickness (y)
+KEY_FIN = (10.0, 7.0, 2.6)   # fin halves, in the spine cap (across the split, along x, thickness z)
 
 # --- Fuselage main body: (x, half_width, z_top, z_bottom, squareness)
 # Plan half-widths from the Revell top view (the fuselage edge itself, about 11.5 behind the
@@ -112,11 +113,12 @@ SPINE_STATIONS = [            # canopy and the fairing just behind it (aft of x 
     (142.0,  9.0, 34.4),
 ]
 SPINE_N = 2.3
-NOSE_SPLIT_X = 21.0          # radome joint
-KEY_NOSE = (8.0, 6.0, 2.2)   # radome key: length across the joint, width (z), thickness (y)
-PROBE = (34.0, 1.6, 1.1, 3.2, 3.0)    # length, base d, tip d, boss d, boss length
-FUSE_SPLIT_X = 179.5         # front/rear section joint: between the lettering and the roundel
-FR_KEYS = [(-6.0, 15.0), (6.0, 15.0), (-6.0, 3.0), (6.0, 3.0), (0.0, 25.0)]   # (y, z) on the joint face, >= 2.3 mm wall
+NOSE_SPLIT_X = 86.0          # nose/middle section joint (the radome is part of the nose section)
+NOSE_KEYS = [(0.0, -1.5), (0.0, 9.5)]   # (y, z) of the KEY_FR keys on that joint
+PROBE = (24.0, 2.4, 1.6, 3.6, 3.0)    # length, base d, tip d, boss d, boss length: shorter and
+                                      # thicker than scale (34 x 1.6) so it survives handling
+FUSE_SPLIT_X = 179.5         # middle/rear section joint: between the lettering and the roundel
+FR_KEYS = [(-5.5, 5.0), (5.5, 5.0), (0.0, 19.0)]   # (y, z) on the joint face (below the fin cap at z 24)
 
 # --- Intakes: D-section fairings each side, (x, y_outer, z_top, z_bottom)
 INTAKE_STATIONS = [            # x, y_outer, z_top, z_bottom: the side pods (intake trunks)
@@ -161,12 +163,10 @@ CANOPY_REAR = ((122.0, 40.0), (125.0, 21.0))     # rear frame of the glazing, ne
 # fuselage stays red below it. The sill line still places the frames and the nose dome.
 CANOPY_SILL = [(36.0, 13.3), (49.8, 14.7), (68.3, 16.0), (81.7, 18.0), (95.1, 20.7),
                (108.5, 23.4), (122.0, 26.7), (126.0, 27.6)]
-CANOPY_KEYS = [72.0, 106.0]  # x of the canopy-to-fuselage keys, on the centreline
-KEY_CANOPY = (8.0, 5.0, 2.2)  # length across the sill plane, width (along x), thickness (y)
-NOSE_DOME = (4.0, 9.0, 36.0, 62.0)   # height above the sill at the centre, half-width, x range:
-                                     # the red nose top domes up into the windscreen, so the glass
-                                     # base is an arch (head-on photos). It stays on the fuselage;
-                                     # the canopy has a matching recess.
+CANOPY_TABS = [(64.0, 78.0), (96.0, 112.0)]   # x ranges of the tabs moulded on the fuselage
+                                              # (one per section), which the canopy drops onto
+CANOPY_TAB = (5.0, 4.0)      # width (y), height above the sill plane; the aft end is chamfered
+                             # (the sections print nose up, so it would overhang)
 
 # --- Wing planform (Revell top view, both halves averaged):
 # LE x = 102.8 + 55.8 eta, TE x = 169.3 + 12.3 eta, y = eta * SPAN/2
@@ -177,6 +177,7 @@ TC_ROOT, TC_TIP = 0.109, 0.090
 Z_FLOOR = -7.6               # wing underside at the centreline
 DIHEDRAL = 2.0               # deg
 WING_FLAT_FROM = 0.15
+WING_LE_ANGLE = 50.0         # degrees: the underside rises no shallower than this to the leading edge
 WING_TE_T = 0.6
 WING_ROOT_Y = 6.0            # panel starts here (inside the fuselage, trimmed by it)
 ROOT_TONGUE = {-1: (117.0, 131.0), 1: (137.0, 151.0)}   # port forward, starboard aft
@@ -201,17 +202,20 @@ FIN_TOP = 70.5
 FIN_ROOT_Z = 24.0            # fin root (the spine is cut flat here to take it)
 FIN_TC = 0.10               # real ~8.5%; 10% leaves wall round the half keys
 FIN_TONGUE = (210.0, 244.0, 4.0)   # x0, x1, depth of the root tongue into the spine
-FIN_KEYS = [(196.0, 25.0)]                 # full keys in the thick spine cap: (x, z)
-FIN_KEYS_SMALL = [(223.1, 36.0), (229.2, 44.0)]   # small keys at 30% chord, where the fin is thickest
+FIN_KEYS = [(189.0, 26.5), (201.0, 26.5)]   # keys in the thick spine cap: (x, z)
 
 # --- Jet pipe
-JET_PIPE = (7.0, 5.4, 6.8)   # depth, radius, z centre
+JET_PIPE = (7.0, 5.4, 6.8)   # (old blind pipe) depth, radius, z centre: the nozzle part replaces it
+# Jet nozzle (separate part, plugs into the tail): radius of the visible ring, how far it stands
+# out of the tail, wall, spigot radius and length into the fuselage, depth of the void.
+NOZZLE = dict(r=5.0, out=3.0, wall=1.0, spig_r=4.0, spig_len=8.0, void=10.0)   # r 5.0 keeps 0.7 mm
+                                                                                 # of tail below the socket
 
 # --- Smoke pod (centreline): (fraction of length, radius) profile
 POD_X0, POD_LEN = 92.0, 95.0
 POD_PROFILE = [(0.0, 0.8), (0.03, 2.6), (0.10, 4.2), (0.22, 5.0), (0.75, 5.0), (0.92, 4.4), (1.0, 3.0)]
 POD_PYLON = (8.0, 2.6, 3.0)   # fore/aft inset, half-width, height
-POD_KEYS = [0.30, 0.72]
+POD_KEYS = [0.116, 0.72]     # pylon pegs: the front one sits ahead of the port wing tongue (X 117-124)
 POD_KEY = 4.0
 
 # --- Landing gear
@@ -592,6 +596,12 @@ def flat_bottom_section(tc, chord, te_t=WING_TE_T, n=40, camber=0.012):
     up = [rr(pp) for pp in up]
     lo = [(x, max(z, 0.0)) for x, z in (rr(pp) for pp in lo[:k + 1])]
     lo[-1] = (lo[-1][0], 0.0)
+    # Printability: the parts print on this flat underside, and the nose's lower curve rose
+    # off the bed too gently (under 45 degrees) over the front 15% of chord. From the leading
+    # edge it now drops at WING_LE_ANGLE to the bed and stays flat from there.
+    xle, zle = lo[0]
+    sl = math.tan(math.radians(WING_LE_ANGLE))
+    lo = [lo[0]] + [(x, max(0.0, zle - sl * (x - xle))) for x, _ in lo[1:]]
     return list(reversed(up)) + lo[1:], lo[-1], (xt, 0.0), up[-1]
 
 
@@ -759,11 +769,8 @@ def fin_seat():
 def fin_halves():
     f = fin_whole()
     pts = [(x, 0.0, z) for x, z in FIN_KEYS]
-    small = [(x, 0.0, z) for x, z in FIN_KEYS_SMALL]
-    slots = (to_m(K.key_slots(pts, "y", 0.0, KEY_FIN, "x", KEY_FIT, KEY_END_GAP))
-             + to_m(K.key_slots(small, "y", 0.0, KEY_FIN_SMALL, "x", KEY_FIT, 0.15)))
+    slots = to_m(K.key_slots(pts, "y", 0.0, KEY_FIN, "x", KEY_FIT, KEY_END_GAP))
     KEY_COUNTS["key_fin"] = (KEY_FIN, len(pts))
-    KEY_COUNTS["key_fin_small"] = (KEY_FIN_SMALL, len(small))
     return f ^ box(0, 400, 0, 20, -50, 100), (f ^ box(0, 400, -20, 0, -50, 100)), slots
 
 
@@ -807,30 +814,25 @@ def canopy_zone(grow=0.0):
     return blk ^ box(x0 - grow, x1 + grow, -30, 30, -10, 60) ^ rear
 
 
-def nose_dome(grow=0.0):
-    """The red nose top that domes up into the windscreen: under an elliptical arch over the
-    canopy sill. Part of the fuselage; the canopy is cut round it (grown by FIT)."""
-    h, w, x0, x1 = NOSE_DOME
-    ws = []
-    for x in np.linspace(x0 - grow, x1 + grow, int(round(x1 - x0)) + 1):   # ends exactly at x0, x1
-        zs = canopy_sill_z(x)
-        ws.append(egg_wire(x, w + grow, zs + h + grow, zs - 8.0, 6.0, zs, 2.0))
-    return to_m(loft(ws, ruled=True))
-
-
-def canopy_key_slots():
-    """Slots for printed keys across the sill plane, made level and tipped onto the plane."""
+def canopy_tabs(grow=0.0):
+    """Tabs standing on the sill plane, made level and tipped onto the plane. grow > 0: the
+    canopy's pockets for them (clearance all round and 0.3 mm over the top)."""
     (xa, za), _ = CANOPY_PLANE
-    s = to_m(K.key_slots([(x, 0.0, za) for x in CANOPY_KEYS], "z", za, KEY_CANOPY, "x", KEY_FIT, KEY_END_GAP))
-    KEY_COUNTS["key_canopy"] = (KEY_CANOPY, len(CANOPY_KEYS))
-    return rot_about(s, (xa, 0, za), "y", -canopy_angle())
+    w, h = CANOPY_TAB
+    g = grow
+    tabs = []
+    for x0, x1 in CANOPY_TABS:
+        prof = np.array([(x0 - g, za - 1.0), (x1 + g, za - 1.0), (x1 + g, za + 0.2),
+                         (x1 - 0.9 * h + g, za + h + (0.3 if g else 0.0)), (x0 - g, za + h + (0.3 if g else 0.0))])
+        tabs.append(K.cs([prof]).extrude(w + 2 * g).translate([0, 0, -(w / 2 + g)]).rotate([90, 0, 0]))
+    return rot_about(union(tabs), (xa, 0, za), "y", -canopy_angle())
 
 
 @cached
 def canopy():
-    """Solid and opaque: only the glazing above the sill plane, round the nose dome."""
+    """Solid and opaque, flat underneath, with pockets for the fuselage's tabs."""
     c = outer() ^ canopy_region(-FIT)
-    c = c - nose_dome(FIT) - canopy_key_slots()
+    c = c - canopy_tabs(FIT)
     return K.largest_piece(c)[0]
 
 
@@ -843,18 +845,26 @@ def pod_geom():
     return zb, zb - POD_PYLON[2] - r
 
 
-POD_KEY_DIM = (6.0, 4.0, 2.0)   # pod-to-belly keys: length across the joint (z), width (x), thickness (y)
-POD_HALF_KEYS = [0.2, 0.5, 0.82]   # pod halves keys (fraction of length)
-KEY_POD_HALF = (6.0, 4.0, 1.8)
+POD_PEG = (7.0, 3.2, 4.0)       # pegs moulded on the pylon top into the belly: length (x), width (y), height
+POD_HALF_KEYS = [0.3, 0.7]      # pod halves keys (fraction of length)
+KEY_POD_HALF = (7.0, 6.0, 2.5)
 
 
 def pod_key_points():
     return [(POD_X0 + f * POD_LEN, 0.0, fuse_at(POD_X0 + f * POD_LEN)[3]) for f in POD_KEYS]
 
 
+def pod_pegs(grow=0.0):
+    """Pegs on the pod's pylon top (split down the middle with the pod halves, so each half
+    prints its share flat); grow > 0 gives the belly sockets."""
+    L, w, h = POD_PEG
+    g = grow
+    return union([box(x - L / 2 - g, x + L / 2 + g, -w / 2 - g, w / 2 + g, z - 2.0, z + h + (0.3 if g else 0.0))
+                  for x, _, z in pod_key_points()])
+
+
 def pod_key_slots():
-    return union([to_m(K.key_slots([p], "z", p[2], POD_KEY_DIM, "x", KEY_FIT, KEY_END_GAP))
-                  for p in pod_key_points()])
+    return pod_pegs(FIT)
 
 
 @cached
@@ -866,11 +876,10 @@ def smoke_pod():
     pylon = box(POD_X0 + i0, POD_X0 + POD_LEN - i0, -hw, hw, zc, zb + 4.0)
     p = (pod + pylon) - body()
     k = STAND_KEY / 2 + FIT
-    p = p - box(STAND_X - k, STAND_X + k, -k, k, zc - 20, zb + 1) - pod_key_slots()
+    p = (p + pod_pegs()) - box(STAND_X - k, STAND_X + k, -k, k, zc - 20, zb + 1)
     pts = [(POD_X0 + f * POD_LEN, 0.0, zc) for f in POD_HALF_KEYS]
     slots = to_m(K.key_slots(pts, "y", 0.0, KEY_POD_HALF, "x", KEY_FIT, KEY_END_GAP))
     KEY_COUNTS["key_pod"] = (KEY_POD_HALF, len(pts))
-    KEY_COUNTS["key_pod_belly"] = (POD_KEY_DIM, len(POD_KEYS))
     return (p ^ box(0, 400, 0, 50, -100, 100)) - slots, (p ^ box(0, 400, -50, 0, -100, 100)) - slots
 
 
@@ -979,10 +988,38 @@ def axle_pin(start, axis, sign, length, head=True):
 # FUSELAGE SECTIONS
 # ============================================================
 def jet_pipe_cut():
-    d, r, zc = JET_PIPE
-    pipe = cyl((FUSE_END_X - d, 0, zc), 2 * r, d + 1, "x")
-    cone = cone_x(FUSE_END_X - d - 0.01, 2 * r * 0.55, FUSE_END_X - d + 2.5, 0.4, 0, zc)
-    return pipe - cone
+    """Socket in the tail for the nozzle's spigot, countersunk for its chamfered flange."""
+    n, zc = NOZZLE, JET_PIPE[2]
+    r = n["spig_r"] + FIT
+    sock = cyl((FUSE_END_X - n["spig_len"] - 0.4, 0, zc), 2 * r, n["spig_len"] + 1.4, "x", 64)
+    cham = n["r"] - n["spig_r"]
+    return sock + cone_x(FUSE_END_X - cham - 0.01, 2 * r, FUSE_END_X + 0.01, 2 * (n["r"] + FIT), 0, zc)
+
+
+@cached
+def nozzle():
+    """Jet nozzle: a ring standing out of the tail with a deep void, a stepped inner pipe, an
+    exhaust cone and 6 struts at the bottom; a spigot plugs it into the tail. The flange's
+    underside is chamfered at 45 degrees so it prints spigot-down without overhangs."""
+    n, zc = NOZZLE, JET_PIPE[2]
+    X = FUSE_END_X
+    r, out, wall = n["r"], n["out"], n["wall"]
+    sr, sl = n["spig_r"] - FIT, n["spig_len"]
+    cham = r - sr                                                   # 45 degrees
+    body = (cyl((X - sl, 0, zc), 2 * sr, sl + 0.01, "x", 64)
+            + cone_x(X - cham, 2 * sr, X + 0.01, 2 * r, 0, zc)
+            + cyl((X, 0, zc), 2 * r, out, "x", 96))
+    lip = cone_x(X + out - 0.6, 2 * (r - wall), X + out + 0.01, 2 * (r - wall * 0.45), 0, zc)  # thin exit lip
+    void = (cyl((X, 0, zc), 2 * (r - wall), out + 0.01, "x", 96)                # wide exit (not into
+                                                                                 # the flange: too thin)
+            + cyl((X + out - n["void"], 0, zc), 2 * (sr - 0.9), n["void"] - 3.9, "x", 64))   # deeper pipe
+    floor = X + out - n["void"]
+    cone = cone_x(floor - 0.01, 2 * (sr - 1.4), floor + 6.5, 0.6, 0, zc)        # exhaust cone
+    struts = union([rot_about(box(floor - 0.01, floor + 1.6, -0.35, 0.35, zc, zc + sr), (0, 0, zc), "x", a)
+                    for a in range(0, 360, 60)])
+    ring = (cyl((X - 0.01, 0, zc), 2 * (r - wall), 0.6, "x", 96)                      # step ring at the
+            - cyl((X - 5, 0, zc), 2 * (r - wall - 0.9), 20, "x", 96))                 # bottom of the exit
+    return (body - void - lip) + cone + (struts ^ cyl((floor - 1, 0, zc), 2 * (sr - 0.6), 4, "x", 64)) + ring
 
 
 # --- Small ram-air scoops on the spine shoulders, just behind the canopy (side photos)
@@ -1032,7 +1069,7 @@ def fuselage_body():
     for s in (1, -1):                                   # intakes sit on the wing
         w = wing_assembled(s)
         b = b - w - w.translate([0, 0, FIT]) - w.translate([0, 0, -FIT])
-    b = b - (canopy_region() - nose_dome()) - canopy_key_slots()
+    b = b - canopy_region() + canopy_tabs()
     for s in (1, -1):
         b = b - intake_mouth(s) - splitter_gap(s)
         b = b - wing_tongue(s, FIT) - tail_tongue(s, FIT)
@@ -1051,17 +1088,17 @@ def fuselage_body():
 @cached
 def fuselage_sections():
     b = fuselage_body()
-    nk = to_m(K.key_slots([(NOSE_SPLIT_X, 0.0, 0.5)], "x", NOSE_SPLIT_X, KEY_NOSE, "z", KEY_FIT, KEY_END_GAP))
-    KEY_COUNTS["key_nose"] = (KEY_NOSE, 1)
+    nk = to_m(K.key_slots([(NOSE_SPLIT_X, y, z) for y, z in NOSE_KEYS], "x", NOSE_SPLIT_X, KEY_FR, "z",
+                          KEY_FIT, KEY_END_GAP))
     L, d0, d1, bd, bl = PROBE
     probe = cyl((-bl + 0.4, 0, 0), bd, bl + 2.6, "x", 24) + cone_x(-bl - L + 0.4, d1, -bl + 1.4, d0)
-    radome = ((outer() ^ box(-5, NOSE_SPLIT_X, -40, 40, -40, 40)) + probe) - nk
     pts = [(FUSE_SPLIT_X, y, z) for y, z in FR_KEYS]
     keys = to_m(K.key_slots(pts, "x", FUSE_SPLIT_X, KEY_FR, "z", KEY_FIT, KEY_END_GAP))
-    KEY_COUNTS["key_fuselage_joint"] = (KEY_FR, len(pts))
-    front = (b ^ box(NOSE_SPLIT_X, FUSE_SPLIT_X, -60, 60, -60, 100)) - nk - keys
+    KEY_COUNTS["key_fuselage"] = (KEY_FR, len(pts) + len(NOSE_KEYS))
+    nose = ((b ^ box(-5, NOSE_SPLIT_X, -60, 60, -60, 100)) + probe) - nk
+    mid = (b ^ box(NOSE_SPLIT_X, FUSE_SPLIT_X, -60, 60, -60, 100)) - nk - keys
     rear = (b ^ box(FUSE_SPLIT_X, 400, -60, 60, -60, 100)) - keys
-    return radome, front, rear
+    return nose, mid, rear
 
 
 # ============================================================
@@ -1118,10 +1155,11 @@ def R(rx=0, ry=0, rz=0):
 def build():
     """Returns {name: Manifold (assembled frame)}, {name: pose function -> print pose}."""
     parts, poses = {}, {}
-    radome, front, rear = fuselage_sections()
-    parts["radome"], poses["radome"] = radome, R(ry=90)             # back face down, probe up
-    parts["fuselage_front"], poses["fuselage_front"] = front, R(ry=90)    # joint face down, nose up
-    parts["fuselage_rear"], poses["fuselage_rear"] = rear, R(ry=-90)      # joint face down, jet pipe up
+    nose, mid, rear = fuselage_sections()
+    parts["fuselage_nose"], poses["fuselage_nose"] = nose, R(ry=90)    # joint face down, probe up
+    parts["fuselage_mid"], poses["fuselage_mid"] = mid, R(ry=90)       # aft joint face down
+    parts["fuselage_rear"], poses["fuselage_rear"] = rear, R(ry=-90)   # joint face down, tail up
+    parts["nozzle"], poses["nozzle"] = nozzle(), R(ry=-90)             # spigot down
     fs, fp, fslots = fin_halves()
     parts["fin_stbd"], poses["fin_stbd"] = fs - fslots, R(rx=90)       # split face down
     parts["fin_port"], poses["fin_port"] = fp - fslots, R(rx=-90)

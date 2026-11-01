@@ -257,3 +257,19 @@ To go from 1:40 to 1:32, every part is scaled by 1.25 when it's written out (`PR
 ### Slice every plate with the Bambu Studio command line before handing a kit over
 
 Opening the 3MF is not enough. On the X2D the right nozzle can't reach the leftmost 20.5 mm of the bed (`extruder_printable_area` in the settings), and plates with 5 colours use both nozzles. Parts packed against the left edge then fail with "G-code outside of the printable area". The prime tower needs its own clear lane too: the template's tower positions came from the Halifax plates and sat in the middle of the bed. The tower is also wider than its nominal 35 mm (ribs and brim): at x 214 it ran off the right edge. `colour.py` now packs with a 22 mm left margin and leaves x > 190 free; `kitlib.WIPE_TOWER` puts the tower at x 200 on every plate.
+
+### Keep connector keys few and big, and mould pegs where the print plane allows
+
+At 1:32 the Hawk's 16 printed keys, the smallest 2.75 × 5 × 1.5 mm, were fiddly. Version 3 has 9, the fuselage ones 17.5 × 8.75 × 3.75 mm. Where a part prints lying on its split face, a peg that stands in that plane (the smoke pod's pylon pegs, split between the two halves) prints flat with the profile, so it can be moulded on instead of being a loose key. Pegs on a part that prints on end, like the canopy tabs on the fuselage, need their downward-facing end chamfered.
+
+### Check a new peg or socket against every part, not just its mate
+
+The smoke pod's front peg went up into the port wing's root tongue, which crosses under the belly only 1 mm above the pod. The interference check caught it (19.6 mm³). Run `tools/interference.py` after any change to joints.
+
+### Thin walls vanish in the slicer
+
+Bambu drops anything thinner than about one line width. When a whole layer of an object comes out empty, it reports "Object can't be printed for empty layer". The nozzle's exit void cut into its chamfered flange and left a 0.4 mm ring, and painting it in two colours made each colour thinner still. Keep walls at least 1 mm printed, and at least one line width (0.4 mm) per colour.
+
+### Give a flat-bottomed aerofoil a steep lower nose
+
+A flat underside from 15% chord still leaves the lower nose rising off the bed at under 45°: about 1,050 mm² of overhang per wing on the Hawk. Replace the lower nose with a straight 50° slope from the leading edge down to the bed (`WING_LE_ANGLE`). That cut the overhang to about 300 mm², and the extra fullness under the leading edge is hardly visible.
