@@ -114,7 +114,7 @@ The shape is measured from the Revell 04284 Hawk T.1A (Red Arrows) instruction s
 - **Cross-check against another model.** The fuselage and pod sections were compared with a 1:72 Hawk 3MF by Greenwater (`tools/compare_ref_model.py`, result in `docs/ref_model_sections.png`). Widths and pod shape now agree. Where they disagree, the model follows the Revell drawings: the reference's canopy and spine are 3–5 mm lower and its windscreen starts further forward, and its fuselage is a constant-width tube.
 - The side pods fade into the fuselage by the wing trailing edge (X 168). The end of "ROYAL AIR FORCE" sits on the fuselage side just behind them.
 - The rear top line stays nearly level from the fin to the jet pipe (Revell side view), and the end is squared off, as in the photos.
-- The side pods (intake trunks) are rounded, with 18 mm deep ducts that read dark, as in the head-on photo. Their tops reach Z 15.
+- The side pods (intake trunks) are rounded, with 18 mm deep ducts that read dark, as in the head-on photo. Each opening is a rounded oval 6.5 × 9.3 mm, about two-thirds of the pod's visible width and half its height, set inboard next to the splitter gap with a thick outer lip and deep lips above and below (`docs/intake_comparison.png`). Their tops reach Z 15.
 - **Gear (positions from photos):**
   - The nose leg is at X 40.
   - The main legs plug in at X 150, where the wing is 4.1 mm thick, and rake aft so the wheels sit at X 168, near the trailing edge. The track is 3.47 m.

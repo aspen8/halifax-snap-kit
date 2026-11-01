@@ -178,6 +178,7 @@ The Hawk was the second kit, and the first built from scratch on the v2 approach
 - **Ask for photos.** Red Arrows photos are easy to get, and the user offered more. Side-on, top-down and 3/4 views of the canopy and the fin root settle shapes that kit sheets draw loosely.
 
 ### Using photos (second review)
+- **Size openings as ratios from a head-on photo, not as a wall thickness.** I cut the intake as the pod section minus a 1 mm lip, so it filled almost the whole pod front. On the Hawk the opening is about 2/3 of the pod's width and 1/2 its height. Measure the ratios off the photo and set the opening explicitly. The renderer doesn't shade inside a blind hole, so check openings with a cross-section plot (duct filled black), not a head-on render.
 - **Render the model from the photo's viewpoint and put the two side by side.** `tools/render.py` has `stbd`, `port` and `head` views, and `--focus` and `--zoom` for framing. That's how the photos showed the continuous cheat line, the gear positions and the round intakes.
 - **A curve the eye follows (canopy, spine) must be one smooth curve.** Measured points wobble by a few tenths. Fit a smoothing spline (`UnivariateSpline`, small `s`), resample every 2 mm, and loft ruled. Then check that the second difference doesn't change sign.
 - **Settle a disagreement by counting sources.** On fuselage depth, Revell and the side-on photo agreed and HobbyBoss didn't. A low camera and a long lens make an aircraft look deeper, so measure photos on a grid against the nose tip and the length.

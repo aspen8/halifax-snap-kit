@@ -138,7 +138,11 @@ INTAKE_STATIONS = [            # x, y_outer, z_top, z_bottom: the side pods (int
 INTAKE_Y_IN = 10.8           # inner edge of the pods, just inside the body side: their rounded
                              # inner top corner leaves a notch, so they read as separate at the inlet
 INTAKE_N = 3.0               # boxy pods (reference model cross-sections)
-INTAKE_MOUTH = (91.0, 18.0, 1.0)  # x of the lip, depth of the duct (deep: reads dark), lip wall
+INTAKE_MOUTH = (91.0, 18.0)  # x of the lip, depth of the duct (deep: reads dark)
+INTAKE_OPENING = (0.6, 2.2, 8.6, -0.7, 2.5)   # inner lip (outside the splitter gap), outer lip,
+                             # z top, z bottom, superellipse exponent. Head-on photo: the opening
+                             # is a rounded oval, ~2/3 of the pod's visible width and ~1/2 its
+                             # height, with a thick outer lip and deep lips above and below
 SPLITTER_GAP = 0.6           # mm, boundary-layer gap between the lip and the fuselage
 
 # --- Canopy (cut with a sloping plane through these two (x, z) points)
@@ -449,14 +453,14 @@ def intake_fairing(side):
 
 @cached
 def intake_mouth(side):
-    """Duct recess behind the lip, leaving a lip wall and a splitter gap to the body."""
-    x0, depth, lip = INTAKE_MOUTH
+    """Duct recess behind the lip: a rounded oval well inside the pod front (thick lips)."""
+    x0, depth = INTAKE_MOUTH
+    lip_in, lip_out, zt, zb, n = INTAKE_OPENING
+    yo = INTAKE_STATIONS[3][1] - lip_out
     ws = []
-    for x, st in ((x0 - 2.0, INTAKE_STATIONS[3]), (x0 + depth, INTAKE_STATIONS[4])):
-        _, yo, zt, zb = st
-        yi = fuse_at(x)[1] + SPLITTER_GAP + lip
-        yo, zt, zb = yo - lip, zt - lip, zb + lip
-        ws.append(superellipse_wire(x, (yo - yi) / 2, zt, zb, INTAKE_N, side * (yo + yi) / 2))
+    for x in (x0 - 2.0, x0 + depth):
+        yi = fuse_at(x0)[1] + SPLITTER_GAP + lip_in
+        ws.append(superellipse_wire(x, (yo - yi) / 2, zt, zb, n, side * (yo + yi) / 2))
     return to_m(loft(ws, ruled=True))
 
 
