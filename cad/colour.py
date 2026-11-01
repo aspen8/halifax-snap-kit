@@ -78,6 +78,8 @@ FIN_FLASH = (309.0, 15.0, 33.0, 7.0, 1.5)  # x start, z0, z1, red/blue width, wh
 PROP_TIP = 3.0               # mm of yellow at the prop tips
 INLAY_DEPTH = 1.2            # mm, roundel inlay depth at its shallowest point
 INLAY_FIT = 0.15             # mm, radial clearance (press fit, as KEY_FIT from the fit test)
+FUSE_INLAY_DEPTH = 2.4       # fuselage roundels sit deeper, to take the locating peg
+ROUNDEL_PEG = (4.0, 3.0, 3.0, 3.5, 1.4)   # off-centre peg (x, z offset), peg dia, hole dia (grip), length
 C1_RINGS = lambda d: [(YELLOW, d), (BLUE, d * 0.889), (WHITE, d / 3 + 1.8), (RED, d / 3)]
 B_RINGS = lambda d: [(BLUE, d), (RED, d * 0.4)]
 
@@ -450,7 +452,8 @@ def inlays_for(name, P):
     if name == "fuselage_rear":
         for s, tag in ((-1, "port"), (1, "stbd")):
             x, z, d = FUSE_ROUNDEL
-            P, vols, plug = make_inlay(P, (x, z), d, C1_RINGS(d), "y", s)
+            P, vols, plug = K.make_inlay(P, (x, z), d, C1_RINGS(d), "y", s, FUSE_INLAY_DEPTH,
+                                         INLAY_FIT, ROUNDEL_PEG)
             out.append((f"roundel_fuselage_{tag}", vols, [90 * s, 0, 0], plug))
             # squadron code and aircraft letter as red press-in inlays, read nose-to-tail
             rx = FUSE_ROUNDEL[0]

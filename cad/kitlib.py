@@ -208,7 +208,7 @@ def surface_extreme(P, centre, r, axis, side):
     return (loc[:, 1] * side).min()          # distance outward from the centreline
 
 
-def make_inlay(P, centre, d, rings, axis, side=1, depth=1.2, fit=0.1):
+def make_inlay(P, centre, d, rings, axis, side=1, depth=1.2, fit=0.1, peg=None):
     """Cut a socket in P for a multi-ring inlay (e.g. a roundel).
     rings: [(colour, diameter)], outermost first. depth: inlay depth at the shallowest
     point of the surface; fit: radial press-fit clearance.
@@ -223,6 +223,25 @@ def make_inlay(P, centre, d, rings, axis, side=1, depth=1.2, fit=0.1):
         keep = mf.Manifold.cube([1000, 500, 1000]).translate([-500, -flat - 500, -500])
     socket = cyl_axis(*centre, r, axis) ^ keep         # a plain cylinder: no sheets left on the surface
     plug = largest_piece(P ^ cyl_axis(*centre, r - fit, axis) ^ keep)[0]   # no stray rivet specks
+    peg_solid = None
+    if peg:   # (offset a, offset b, peg dia, hole dia, peg length): an off-centre peg on the
+              # socket floor keys the inlay's rotation and grips it like a printed pin
+        oa, ob, pd, hd, pl = peg
+        ca, cb = centre[0] + oa, centre[1] + ob
+        if axis == "z":
+            floor = flat
+            peg_solid = mf.Manifold.cylinder(pl + 0.5, pd / 2, pd / 2, 32).translate([ca, cb, floor - 0.5])
+            hole = mf.Manifold.cylinder(pl + 0.3, hd / 2, hd / 2, 32).translate([ca, cb, floor - 0.01])
+        else:
+            # cylinders along +y (side > 0) or -y, starting just behind the socket floor
+            along = [-90, 0, 0] if side > 0 else [90, 0, 0]
+            peg_solid = (mf.Manifold.cylinder(pl + 0.5, pd / 2, pd / 2, 32).rotate(along)
+                         .translate([ca, side * (flat - 0.5), cb]))
+            hole = (mf.Manifold.cylinder(pl + 0.3, hd / 2, hd / 2, 32).rotate([-90, 0, 0])
+                    .translate([ca, flat - 0.01, cb]) if side > 0 else
+                    mf.Manifold.cylinder(pl + 0.3, hd / 2, hd / 2, 32).rotate([90, 0, 0])
+                    .translate([ca, -flat + 0.01, cb]))
+        plug = plug - hole
     # Each ring is the plug cut by a tube (cylinder minus the previous cylinder). Subtracting
     # the inner ring solids instead leaves zero-thickness sheets on the surface, where their
     # top faces coincide with the plug's.
@@ -233,7 +252,10 @@ def make_inlay(P, centre, d, rings, axis, side=1, depth=1.2, fit=0.1):
         if c.volume() > 1e-3:
             vols[colour] = vols[colour] + c if colour in vols else c
         prev = cyl
-    return P - socket, vols, plug
+    P = P - socket
+    if peg_solid is not None:
+        P = P + peg_solid
+    return P, vols, plug
 
 
 def make_section_inlay(P, sec, side, depth=1.2, fit=0.15):

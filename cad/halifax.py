@@ -42,7 +42,9 @@ KEY_FIT = 0.15               # mm, press fit per side (fit test on the X2D)
 KEY_END_GAP = 0.3            # mm, slot is this much deeper than half a key
 KEY_LR = (8.0, 10.0, 2.4)    # fuselage port/starboard halves (width along x)
 KEY_FR = (12.0, 6.0, 2.4)    # front/rear fuselage joint (width along z)
-KEY_NAC = (7.0, 6.0, 2.0)    # nacelle halves (width along x)
+KEY_NAC = (11.0, 6.0, 3.0)   # nacelle lock: upright (length z), straddles the halves (thickness y),
+                             # top 4 mm in a pocket in the wing underside, 7 mm down into the nacelle
+NACELLE_KEY_AT = (0.30, 0.15)   # chord fraction of the lock for each nacelle (deep wing and nacelle body)
 KEY_FIN = (4.0, 6.0, 1.6)    # tailplane tip into fin: length along y, width along x, thickness z
 FIN_KEY_AT = (0.24,)         # one key at the thickest part of the tip (mid-chord broke through)
 
@@ -168,7 +170,6 @@ RADIATOR_LEN = 30.0
 RADIATOR_R = 6.0
 NACELLE_PROFILE = [(0.0, 0.30), (0.02, 0.62), (0.06, 0.86), (0.13, 0.98), (0.25, 1.0),
                    (0.45, 0.95), (0.70, 0.70), (0.90, 0.35), (1.0, 0.08)]
-NACELLE_PINS = [(0.13, -2.0), (0.6, -7.0)]   # (fraction of nacelle length, dz)
 
 # --- Propellers: Rotol 3-blade, 12 ft 9 in
 PROP_D = 3886.0 / SCALE      # ~64.5 mm
@@ -663,6 +664,23 @@ def nacelle_body(zc, x0, length):
     return body.union(rad).translate((0, 0, zc))
 
 
+def nacelle_lock_slot(index, side, wing_panel):
+    """Slot for the nacelle lock key: 4 mm up into the wing underside, 7 mm down into the nacelle,
+    centred on the nacelle split plane (half of its thickness in each half)."""
+    yc = NACELLES[index][0] * side
+    s = abs(yc)
+    if s <= PLANFORM[1][0] or s < WING_JOINT_Y:
+        _, le, c = interp(PLANFORM, s)
+    else:
+        le, c, _ = outer_planform(s)
+    x = le + NACELLE_KEY_AT[index] * c
+    probe = wing_panel.intersect(box(x - 0.05, x + 0.05, yc - 0.05, yc + 0.05, -100, 100))
+    wb = probe.val().BoundingBox().zmin            # wing underside at the key
+    length = KEY_NAC[0]
+    zc = wb + 4.0 - length / 2
+    return key_slots([(x, yc, zc)], "z", zc, KEY_NAC, "x")
+
+
 def nacelle_parts(index, side, wing_panel):
     yc, zc, x0, length = NACELLES[index]
     body = nacelle_body(zc, x0, length).translate((0, yc * side, 0))
@@ -696,12 +714,11 @@ def nacelle_parts(index, side, wing_panel):
     # prop shaft bearing: bore through the nose, cavity for the captive flange
     body = body.cut(cyl((x0 - 1, yc * side, zc), BORE_D, 6.2, "x"))
     body = body.cut(cyl((x0 + 5.2, yc * side, zc), CAVITY_D, 1.6, "x"))
-    # pins from the inboard half into the outboard half
-    pts = [(x0 + f * length, 0, zc + dz) for f, dz in NACELLE_PINS]
+    # one upright lock: joins the two halves and pins the nacelle into a pocket in the wing
     y = yc * side
-    holes = key_slots(pts, "y", y, KEY_NAC, "x")
+    holes = nacelle_lock_slot(index, side, wing_panel)
     n0 = KEY_COUNTS.get("key_nacelle", (KEY_NAC, 0))[1]
-    KEY_COUNTS["key_nacelle"] = (KEY_NAC, n0 + len(pts))
+    KEY_COUNTS["key_nacelle"] = (KEY_NAC, n0 + 1)
     inboard = box(-10, 400, y - 50, y, -80, 80) if side > 0 else box(-10, 400, y, y + 50, -80, 80)
     outboard = box(-10, 400, y, y + 50, -80, 80) if side > 0 else box(-10, 400, y - 50, y, -80, 80)
     return body.intersect(inboard).cut(holes), body.intersect(outboard).cut(holes)
@@ -1026,6 +1043,9 @@ def build():
         for i in range(len(NACELLES)):
             pnl = inner.union(outer)          # tongue pocket must stay clear too
             inb, outb = nacelle_parts(i, side, pnl)
+            lock = nacelle_lock_slot(i, side, pnl)     # matching pocket in the wing underside
+            parts[f"wing_inner_{tag}"] = parts[f"wing_inner_{tag}"].cut(lock)
+            parts[f"wing_outer_{tag}"] = parts[f"wing_outer_{tag}"].cut(lock)
             parts[f"nacelle{i + 1}_{tag}_inboard"] = inb
             parts[f"nacelle{i + 1}_{tag}_outboard"] = outb
             poses[f"nacelle{i + 1}_{tag}_inboard"] = lambda w, s=side: rot(w, "x", -90 * s)
