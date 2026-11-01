@@ -244,7 +244,7 @@ The traced underside white had gaps everywhere the drawing's panel lines crossed
 
 ### Cut a canopy part above its painted edge, not below it
 
-If the canopy part is cut below its visible edge, it carries fuselage colour. Cut it on a plane through the two ends of the visible edge, so the edge lies on or below the plane: the canopy part is then canopy only, and the cut becomes the visible edge. Don't paint the bit of glazing that dips below the plane onto the fuselage: on the Hawk that strip added two colours to the fuselage plate and about 220 g of purge. Anything that rises above the edge, such as the Hawk's nose dome, stays on the fuselage, and the canopy gets a recess for it, grown by the fit clearance.
+If the canopy part is cut below its visible edge, it carries fuselage colour. Cut it on a plane through the two ends of the visible edge, so the edge lies on or below the plane: the canopy part is then canopy only, and the cut becomes the visible edge. Don't paint the bit of glazing that dips below the plane onto the fuselage: on the Hawk that strip added two colours to the fuselage plate and about 220 g of purge. Anything that rises above the edge, such as the Hawk's nose dome, stays on the fuselage. Don't cut a recess for it under the canopy: that left an odd pocket in the flat underside. Instead, cut the canopy's front off on a vertical plane where its material first reaches outside the dome. Find that plane by measuring `(canopy region) - dome` along x. Ahead of it the cross-section is all dome and stays on the fuselage; behind it is all canopy.
 
 ### Build at the measuring scale and scale at the end
 

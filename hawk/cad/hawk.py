@@ -163,6 +163,13 @@ CANOPY_REAR = ((122.0, 40.0), (125.0, 21.0))     # rear frame of the glazing, ne
 # fuselage stays red below it. The sill line still places the frames and the nose dome.
 CANOPY_SILL = [(36.0, 13.3), (49.8, 14.7), (68.3, 16.0), (81.7, 18.0), (95.1, 20.7),
                (108.5, 23.4), (122.0, 26.7), (126.0, 27.6)]
+NOSE_DOME = (4.0, 9.0, 36.0, 62.0)   # height above the sill at the centre, half-width, x range:
+                                     # the red nose top domes up into the windscreen (head-on photos)
+DOME_CUT_X = 46.0            # the canopy's front is cut off on this vertical plane, where its glass
+                             # first reaches outside the dome (measured: (outer ^ canopy_region)
+                             # - nose_dome() starts at X 46.0). Ahead of it the canopy region is all
+                             # dome and stays red on the nose section; behind it is all canopy, so
+                             # the canopy needs no recess and its underside stays flat.
 CANOPY_TABS = [(64.0, 78.0), (96.0, 112.0)]   # x ranges of the tabs moulded on the fuselage
                                               # (one per section), which the canopy drops onto
 CANOPY_TAB = (5.0, 4.0)      # width (y), height above the sill plane; the aft end is chamfered
@@ -814,6 +821,17 @@ def canopy_zone(grow=0.0):
     return blk ^ box(x0 - grow, x1 + grow, -30, 30, -10, 60) ^ rear
 
 
+def nose_dome(grow=0.0):
+    """The red nose top that domes up into the windscreen: under an elliptical arch over the
+    canopy sill."""
+    h, w, x0, x1 = NOSE_DOME
+    ws = []
+    for x in np.linspace(x0 - grow, x1 + grow, int(round(x1 - x0)) + 1):   # ends exactly at x0, x1
+        zs = canopy_sill_z(x)
+        ws.append(egg_wire(x, w + grow, zs + h + grow, zs - 8.0, 6.0, zs, 2.0))
+    return to_m(loft(ws, ruled=True))
+
+
 def canopy_tabs(grow=0.0):
     """Tabs standing on the sill plane, made level and tipped onto the plane. grow > 0: the
     canopy's pockets for them (clearance all round and 0.3 mm over the top)."""
@@ -830,8 +848,9 @@ def canopy_tabs(grow=0.0):
 
 @cached
 def canopy():
-    """Solid and opaque, flat underneath, with pockets for the fuselage's tabs."""
-    c = outer() ^ canopy_region(-FIT)
+    """Solid and opaque, flat underneath, with pockets for the fuselage's tabs; its front is a
+    vertical face at DOME_CUT_X, against the red nose dome."""
+    c = outer() ^ canopy_region(-FIT) ^ box(DOME_CUT_X + FIT, 400, -60, 60, -60, 100)
     c = c - canopy_tabs(FIT)
     return K.largest_piece(c)[0]
 
@@ -1069,7 +1088,7 @@ def fuselage_body():
     for s in (1, -1):                                   # intakes sit on the wing
         w = wing_assembled(s)
         b = b - w - w.translate([0, 0, FIT]) - w.translate([0, 0, -FIT])
-    b = b - canopy_region() + canopy_tabs()
+    b = b - (canopy_region() ^ box(DOME_CUT_X, 400, -60, 60, -60, 100)) + canopy_tabs()   # dome stays
     for s in (1, -1):
         b = b - intake_mouth(s) - splitter_gap(s)
         b = b - wing_tongue(s, FIT) - tail_tongue(s, FIT)
