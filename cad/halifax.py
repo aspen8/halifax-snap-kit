@@ -95,8 +95,11 @@ SPINE_LINE = [(0, -14.2), (52.3, 2.0), (75, 2.0), (85, 1.4), (290, 1.4),  # one 
               (299, 4.0), (360, 4.0)]   # x, z: body/spine split (tail: the tailplane floor)
 SPINE_WAVE = (0.7, 7.5, 85.0, 290.0)    # scallop amplitude, period, from x, to x
 SPINE_CUTS = [(13.0, 52.3, "earth"), (72.8, 100.0, "green"),
-              (100.0, 150.2, "earth"), (150.2, 186.0, "green"), (186.0, 230.0, "earth"),
-              (230.0, 288.0, "green"), (288.0, 343.0, "earth"), (343.0, 360.0, "green")]
+              (100.0, 150.2, "earth"), (150.2, 204.5, "green"), (204.5, 230.0, "earth"),
+              (230.0, 288.0, "green"), (288.0, 360.0, "earth")]   # x at SPINE_REF_Z
+# camo edges lean aft going up (NP-G profile): slope dx/dz of each boundary plane, by its x
+SPINE_SLANT = {100.0: 0.15, 150.2: 0.24, 204.5: 0.44, 230.0: 0.57, 288.0: 0.24}   # 204.5: just aft of the turret opening, under the dome
+SPINE_REF_Z = 6.5            # height at which the boundary x values are measured
 SPINE_GAP = 0.1              # mm, end clearance between neighbouring spine pieces
 KEY_CAP = (7.0, 6.0, 2.0)    # spine to body keys: length along z, width along x, thickness y
 JOINT_LIP = 7.0              # mm, length of the internal joining lip
@@ -130,8 +133,18 @@ DORSAL_R = 8.0               # mm, hole radius in the roof
 DORSAL_DOME_R = 9.0
 DORSAL_DOME_DROP = 0.3       # sphere centre below the base: ~7.5 mm tall above the roof
 DORSAL_GUN_Z = 2.5           # mm, gun pack height above the turret base
-TAIL_TURRET_R = 9.0          # Boulton Paul Type E
+TAIL_TURRET_R = 9.0          # (old hemisphere turret, unused)
 TAIL_TURRET_Z = -2.2
+# Boulton Paul Type E rear turret (Revell side and plan views): a tall glazed turret on a flat
+# floor, on top of the lower fuselage, which carries on underneath as a tapering cone
+TT_X0, TT_REAR, TT_FLOOR, TT_TOP, TT_HW = 345.0, 362.3, -3.0, 14.4, 8.4
+TT_PIVOT = TT_REAR - TT_HW              # centre of the rounded rear: pin position
+TT_TOP_R = 9.0                          # rounded rear-top edge (side view)
+TT_GUN_Z = 3.8                          # gun pack height
+TT_BOSS = (9.0, 3.0)                    # diameter, height of the boss the turret presses over (no pin)
+TAIL_CONE = [(344.0, 9.5, 2.0, -14.0, 2.6), (352.0, 9.0, 1.0, -13.0, 2.5), (356.0, 8.4, 0.0, -10.5, 2.4),
+             (359.0, 7.2, -1.0, -8.0, 2.3), (361.0, 5.2, -1.6, -5.4, 2.1), (362.0, 2.8, -2.2, -4.0, 2.0)]
+TT_FAIRING = [(336.0, 2.5, 10.8, 6.0, 2.2), (341.0, 4.5, 12.6, 6.0, 2.4), (345.2, 6.0, 14.0, 6.0, 2.6)]
 GUN_D = 1.2                  # mm, barrel diameter (printable minimum)
 GUN_LEN = 13.0               # mm, exposed barrel length
 GUN_PITCH = 2.6              # mm, spacing of the four barrels
@@ -355,6 +368,42 @@ def spine_upper():
             .lineTo(400.0, 80.0).lineTo(-6.0, 80.0).close().extrude(60, both=True))
 
 
+def spine_end_pose(piece):
+    """Pose that stands a spine piece on one of its flat (possibly slanted) end faces:
+    whichever leaves less overhang."""
+    m = mesh(piece)
+    n, a = m.face_normals, m.area_faces
+    best = None
+    for sgn in (-1, 1):                # front (-x) or rear (+x) end
+        sel = (n[:, 0] * sgn > 0.8)
+        if not sel.any():
+            continue
+        # the end plane is the biggest group of faces sharing one slant (ignore slot walls etc.)
+        ang = np.degrees(np.arctan2(n[sel, 2], np.abs(n[sel, 0])))
+        bins = np.round(ang)
+        vals = np.unique(bins)
+        main = vals[np.argmax([a[sel][bins == v].sum() for v in vals])]
+        grp = np.zeros(len(n), bool)
+        grp[np.where(sel)[0][np.abs(ang - main) < 1.5]] = True
+        nrm = (n[grp] * a[grp, None]).sum(0)
+        nrm /= np.linalg.norm(nrm)
+        th = math.degrees(math.atan2(nrm[2], nrm[0]))
+        for t in [th + 90, th - 90, -th + 90, -th - 90]:
+            M = K.pose_matrix(lambda w, t=t: rot(w, "y", t))
+            if (M[:3, :3] @ nrm)[2] > -0.99:
+                continue
+            pm = m.copy()
+            pm.apply_transform(M)
+            zmin = pm.bounds[0][2]
+            pn, pc = pm.face_normals, pm.triangles_center
+            over = pm.area_faces[(pn[:, 2] < -0.64) & (pc[:, 2] > zmin + 0.3)].sum()
+            bed = pm.area_faces[(pn[:, 2] < -0.98) & (pc[:, 2] < zmin + 0.2)].sum()
+            score = over - 0.2 * bed
+            if best is None or score < best[0]:
+                best = (score, t)
+    return lambda w, t=best[1]: rot(w, "y", t)
+
+
 def fuselage_parts(wing_tongues):
     """Full-width black body sections (printed on end) and single-colour spine pieces."""
     outer = fuselage_solid()
@@ -366,13 +415,14 @@ def fuselage_parts(wing_tongues):
     if H2S_RADOME:
         outer = outer.union(radome())
         body = outer
+    # rear: turret seat (flat floor), lower tail cone under the turret, fairing up into its front
+    body = body.cut(box(TT_X0, 400, -30, 30, TT_FLOOR, 40))   # cone and fairing are added as meshes below
     _, _, top_d, _, _ = interp(FUSE_STATIONS, DORSAL_X)
     body = body.cut(box(cx0, cx1, -30, 30, cz, 30))                          # canopy
     body = body.cut(box(rx0, rx1, -30, 30, rz, 30))                          # rear roof glazing
     for (k0, k1, khw, kh), z in ((CANOPY_KEY, cz), (CANOPY_REAR_KEY, rz)):  # locating bosses
         body = body.union(box(k0, k1, -khw, khw, z - 0.5, z + kh))
     body = body.cut(cyl((DORSAL_X, 0, top_d - 3.0), 2 * DORSAL_R, 20, "z"))  # dorsal turret
-    body = body.cut(cyl((DORSAL_X, 0, top_d - 3.0), AXLE_HOLE_TIGHT, -5, "z"))
     for c in tailplane_slot_cuts():
         body = body.cut(c)
     body = body.union(df_loop_fairing()).cut(astrodome_socket())
@@ -383,13 +433,12 @@ def fuselage_parts(wing_tongues):
     _, _, _, bot_s, _ = interp(FUSE_STATIONS, STAND_X)
     k = STAND_KEY / 2 + FIT
     body = body.cut(box(STAND_X - k, STAND_X + k, -k, k, bot_s - 1, bot_s + STAND_KEY_DEPTH + 0.3))
-    body = body.cut(cyl((FUSE_END_X + 0.1, 0, TAIL_TURRET_Z), AXLE_HOLE_TIGHT, -5, "x"))
-    # socket for the nose spigot
+    # nose locator: a wide peg standing out of the fuselage nose face; the glazing slots over it
+    # (the fuselage prints on end, so the peg builds straight up; the glazing prints flat-back down)
     sl, shw, sz0, sz1 = NOSE_SPIGOT_BOX
-    body = body.cut(box(NOSE_SPLIT_X - 0.1, NOSE_SPLIT_X + sl + 0.4, -shw - FIT, shw + FIT,
-                        sz0 - FIT, sz1 + FIT))
     glass_zone = box(-5, NOSE_SPLIT_X, -50, 50, -60, NOSE_GLASS_TOP)
     body = body.cut(glass_zone)
+    body = body.union(box(NOSE_SPLIT_X - sl, NOSE_SPLIT_X + 0.5, -shw, shw, sz0, sz1))
 
     # spine (camo) pieces above the split line; full-width black body below it.
     # The split is done with mesh booleans (manifold3d): OCC fails on this cut.
@@ -404,7 +453,8 @@ def fuselage_parts(wing_tongues):
     def mbox(x0, x1, y0, y1, z0, z1):
         return K.box(x0, x1, y0, y1, z0, z1)
 
-    B = M(body)
+    B = M(body) + M(tail_cone()) + M(tail_fairing())        # OCC's union of these isn't watertight
+    B = B + M(cyl((TT_PIVOT, 0, TT_FLOOR - 0.5), TT_BOSS[0], TT_BOSS[1] + 0.5, "z"))   # turret boss
     pts = [(float(x), float(spine_z(x))) for x in np.arange(-6.0, 401.0, 0.5)] + [(400.0, 80.0), (-6.0, 80.0)]
     upper = K.prism_y(K.cs([np.array(pts)]))
     cap, Bb = B ^ upper, B - upper
@@ -427,8 +477,8 @@ def fuselage_parts(wing_tongues):
     for x0, x1, _ in SPINE_CUTS:
         n = 2 if x1 - x0 >= 45 else 1
         for i in range(n):           # in each share of the piece, the thickest spot clear of the tail
-            a = x0 + (x1 - x0) * i / n + KEY_CAP[1]
-            b = x0 + (x1 - x0) * (i + 1) / n - KEY_CAP[1]
+            a = x0 + (x1 - x0) * i / n + KEY_CAP[1] + 6 * SPINE_SLANT.get(x0, 0.0)
+            b = x0 + (x1 - x0) * (i + 1) / n - KEY_CAP[1] - 6 * SPINE_SLANT.get(x1, 0.0)
             cand = [x for x in np.linspace(a, b, 25) if not tail[0] < x < tail[1]]
             if not cand:
                 continue
@@ -442,13 +492,21 @@ def fuselage_parts(wing_tongues):
     for sec_name, (a, b) in (("front", (-5, FUSE_SPLIT_X)), ("rear", (FUSE_SPLIT_X, 400))):
         parts[f"fuselage_{sec_name}"] = T(K.largest_piece((Bb ^ mbox(a, b, -50, 50, -60, 60))
                                                           - fr_holes - cap_holes)[0])
+    def behind(xb, gap):
+        """Half-space aft of the slanted boundary plane x = xb + k (z - ref) (+ gap)."""
+        k = SPINE_SLANT.get(xb, 0.0)
+        z0, z1 = -100.0, 100.0
+        x = lambda z: xb + gap + k * (z - SPINE_REF_Z)
+        return K.prism_y(K.cs([np.array([(x(z0), z0), (500.0, z0), (500.0, z1), (x(z1), z1)])]))
+
     for i, (x0, x1, col) in enumerate(SPINE_CUTS):
-        piece = (cap ^ mbox(x0 + SPINE_GAP / 2, x1 - SPINE_GAP / 2, -50, 50, -60, 60)) - cap_holes
+        piece = (cap ^ behind(x0, SPINE_GAP / 2)) - behind(x1, -SPINE_GAP / 2) - cap_holes
         parts[f"spine_{i + 1:02d}_{col}"] = T(K.largest_piece(piece)[0])
 
     # perspex chin dome with a plug into the front section
     parts["nose_glazing"] = (outer.intersect(glass_zone)
-                             .union(box(NOSE_SPLIT_X - 0.5, NOSE_SPLIT_X + sl, -shw, shw, sz0, sz1)))
+                             .cut(box(NOSE_SPLIT_X - sl - 0.4, NOSE_SPLIT_X + 1, -shw - KEY_FIT, shw + KEY_FIT,
+                                      sz0 - KEY_FIT, sz1 + KEY_FIT)))
 
     # glazing: drop-ins with flat bottoms (print flat), recessed over the fuselage bosses
     def recess(key, z):
@@ -492,16 +550,36 @@ def dorsal_turret():
     # guns point aft out of a slot at the back of the dome
     t = t.cut(gun_slot((DORSAL_X + DORSAL_DOME_R - 2.0, 0, base_z + DORSAL_GUN_Z), +1))
     t = t.cut(fuselage_solid().cut(cyl((DORSAL_X, 0, top - 3.0), 2 * DORSAL_R, 20, "z")))
-    # filament pin hole to the locating boss
-    t = t.cut(cyl((DORSAL_X, 0, base_z - 2), AXLE_HOLE_LOOSE, 5, "z"))
+    # no pin: the wide plug turns in the roof hole
     return t
 
 
+def tail_cone():
+    """Lower rear fuselage carried on under the turret, flat on top (the turret floor)."""
+    secs = [superellipse_wire(x, hw, top, bot, n) for x, hw, top, bot, n in TAIL_CONE]
+    cone = wp(cq.Solid.makeLoft(secs, ruled=True))      # ruled: no bulge below the fuselage line
+    return cone.intersect(box(TAIL_CONE[0][0], 400, -30, 30, -40, TT_FLOOR))
+
+
+def tail_fairing():
+    """Fairing from the spine up into the turret front."""
+    secs = [superellipse_wire(x, hw, top, bot, n) for x, hw, top, bot, n in TT_FAIRING]
+    return wp(cq.Solid.makeLoft(secs, ruled=False))
+
+
 def tail_turret():
-    t = (wp(cq.Solid.makeSphere(TAIL_TURRET_R, V(FUSE_END_X, 0, TAIL_TURRET_Z), angleDegrees1=-90))
-         .intersect(box(FUSE_END_X, FUSE_END_X + 20, -20, 20, -30, 30)))
-    t = t.cut(gun_slot((FUSE_END_X + TAIL_TURRET_R - 1.5, 0, TAIL_TURRET_Z - 1.2), +1))
-    t = t.cut(cyl((FUSE_END_X - 0.1, 0, TAIL_TURRET_Z), AXLE_HOLE_TIGHT, 4, "x"))
+    """Type E turret: plan = rounded rear, side = rounded rear-top; sits on the tail cone floor."""
+    plan = (W("XY").moveTo(TT_X0 + 0.3, -TT_HW).lineTo(TT_PIVOT, -TT_HW)
+            .threePointArc((TT_REAR, 0), (TT_PIVOT, TT_HW)).lineTo(TT_X0 + 0.3, TT_HW).close()
+            .extrude(TT_TOP - TT_FLOOR + 2).translate((0, 0, TT_FLOOR - 1)))
+    r = TT_TOP_R
+    side = (W("XZ").moveTo(TT_X0 + 0.3, TT_FLOOR).lineTo(TT_REAR + 1, TT_FLOOR)
+            .lineTo(TT_REAR + 1, TT_TOP - r).threePointArc((TT_REAR - r * (1 - 0.7071) + 0.6, TT_TOP - r * (1 - 0.7071)),
+                                                       (TT_REAR - r + 1, TT_TOP))
+            .lineTo(TT_X0 + 0.3, TT_TOP).close().extrude(30, both=True))
+    t = plan.intersect(side)
+    t = t.cut(gun_slot((TT_REAR - 1.5, 0, TT_GUN_Z), +1))
+    t = t.cut(cyl((TT_PIVOT, 0, TT_FLOOR - 0.1), TT_BOSS[0] + 2 * KEY_FIT, TT_BOSS[1] + 0.3, "z"))   # sits over the boss
     return t
 
 
@@ -1087,11 +1165,10 @@ def build():
                 (x0, z0), (x1, z1) = SPINE_LINE[0], SPINE_LINE[1]
                 tilt = math.degrees(math.atan2(z1 - z0, x1 - x0))
                 poses[k] = lambda w, t=tilt: rot(w, "y", t)
-            else:                             # others stand on their bigger end face
-                up = 90 if SPINE_CUTS[i][1] <= 100 else -90
-                poses[k] = lambda w, up=up: rot(w, "y", up)
+            else:                             # others stand on their bigger (slanted) end face
+                poses[k] = spine_end_pose(v)
         elif k == "nose_glazing":
-            poses[k] = lambda w: rot(w, "y", 90)      # spigot down
+            poses[k] = lambda w: rot(w, "y", 90)      # flat back face down, dome up
         else:
             poses[k] = lambda w: w
 
@@ -1105,10 +1182,6 @@ def build():
     parts["pin_tail_wheel"] = axle_pin((TAIL_AXLE_X, tspan / 2, bot_t - TAIL_LEG_DROP), "y", -1, tspan)
     poses["pin_tail_wheel"] = lambda w: rot(w, "x", -90)
     _, _, top_d, _, _ = interp(FUSE_STATIONS, DORSAL_X)
-    parts["pin_dorsal_turret"] = axle_pin((DORSAL_X, 0, top_d - 7.6), "z", 1, 9.0, head=False)
-    poses["pin_dorsal_turret"] = lambda w: w
-    parts["pin_tail_turret"] = axle_pin((FUSE_END_X - 4.6, 0, TAIL_TURRET_Z), "x", 1, 8.0, head=False)
-    poses["pin_tail_turret"] = lambda w: rot(w, "y", 90)
     post, base, sax = stand_parts()
     parts["stand_post"], parts["stand_base"] = post, base
     poses["stand_post"] = lambda w: rot(w.rotate(*sax, STAND_PITCH), "x", 90)
@@ -1132,12 +1205,12 @@ def build():
     parts["turret_dorsal"] = dorsal_turret()
     poses["turret_dorsal"] = lambda w: w
     parts["turret_tail"] = tail_turret()
-    poses["turret_tail"] = lambda w: rot(w, "y", -90)
+    poses["turret_tail"] = lambda w: w               # upright on its flat floor
     _, _, top, _, _ = interp(FUSE_STATIONS, DORSAL_X)
     parts["guns_dorsal"] = gun_pack().translate(
         (DORSAL_X + DORSAL_DOME_R - 2.0 - GUN_BLOCK[0], 0, top - 1.2 + DORSAL_GUN_Z))
     parts["guns_tail"] = gun_pack().translate(
-        (FUSE_END_X + TAIL_TURRET_R - 1.5 - GUN_BLOCK[0], 0, TAIL_TURRET_Z - 1.2))
+        (TT_REAR - 1.5 - GUN_BLOCK[0], 0, TT_GUN_Z))
     poses["guns_dorsal"] = poses["guns_tail"] = lambda w: w
     return parts, poses
 

@@ -382,7 +382,7 @@ CANOPY_RAILS = [(2.4, 52.6, 72.4), (8.0, 57.6, 72.4)]   # (z, x0, x1): sill, and
 CANOPY_ROOF_BARS = [(2.8, 55.4)]            # (|y|, x0): roof bars, from the screen's lower frame to the rear
 # Windscreen lower frame seen from above (x, |y|): from the cant rail's front end, in to the
 # roof bars, then the V notch to the apex. Every bar ends on another frame, as on the real thing.
-CANOPY_SCREEN_FRAME = [(57.6, 10.5), (55.4, 2.8), (52.6, 0.0)]
+CANOPY_SCREEN_FRAME = [(57.6, 9.0), (55.4, 2.8), (52.6, 0.0)]   # starts where the cant rail meets the side frame
 CANOPY_SCREEN_DIAG = ((57.6, 8.0), (53.4, 2.6))         # side quarter-light frame (x, z)
 # Rear roof glazing (Revell plan, and the user's photo): centre panel with the astrodome,
 # side panels split by diagonals from the rear outer corner to the front inner corner
@@ -415,8 +415,13 @@ def frames(name, P):
             for (xa, ya), (xb, yb) in zip(pts, pts[1:]):
                 roof = roof + D.band((xa, sg * ya), (xb, sg * yb), W)
             roof = roof + mf.CrossSection.circle(W / 2, 12).translate([pts[1][0], sg * pts[1][1]])
-        f = f + (D.prism_z(roof) ^ top)
-        f = f + D.prism_y(D.band(*CANOPY_SCREEN_DIAG, W))
+        # each line stops at the member it meets: roof lines inside the cant rail, the side
+        # quarter-light frame only on the sides and below the rail
+        yr = CANOPY_SCREEN_FRAME[0][1] + W / 2
+        f = f + (D.prism_z(roof) ^ top ^ H_box(-100, 400, -yr, yr, -100, 100))
+        zr = CANOPY_RAILS[1][0] + W / 2
+        sides = H_box(-100, 400, 8.0, 100, -100, zr) + H_box(-100, 400, -100, -8.0, -100, zr)
+        f = f + (D.prism_y(D.band(*CANOPY_SCREEN_DIAG, W)) ^ sides)
         return sk ^ f
     if name == "canopy_rear":
         g0, g1 = REAR_GLASS_X
@@ -439,7 +444,12 @@ def frames(name, P):
         _, _, top, _, _ = H.interp(H.FUSE_STATIONS, x)
         return sk ^ (slab("x", x) + slab("y", 0.0) + slab("z", top + 2.0))
     if name == "turret_tail":
-        return sk ^ (slab("y", 0.0) + slab("z", H.TAIL_TURRET_Z) + slab("x", H.FUSE_END_X + 5.0))
+        # Type E frames (Revell side view): base ring, front post, waist rail, roof centre bar
+        f = (H_box(-100, 400, -100, 100, -100, H.TT_FLOOR + 1.2) + slab("x", H.TT_X0 + 4.0)
+             + (slab("z", H.TT_FLOOR + 8.0) ^ H_box(H.TT_X0 + 4.0, 400, -100, 100, -100, 100))
+             + (slab("y", 0.0) ^ H_box(-100, 400, -100, 100, H.TT_FLOOR + 8.0, 100))
+             + H_box(-100, H.TT_X0 + 1.2, -100, 100, -100, 100))
+        return sk ^ f
     return mf.Manifold()
 
 
