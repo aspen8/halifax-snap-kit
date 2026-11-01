@@ -27,6 +27,8 @@ VIEWS = {
     "low34": ((-0.7, -1.0, -0.55), "Port 3/4 from below"),
     "lowside": ((0.15, -1.0, -0.4), "Port side from below"),
     "nose34": ((-1.0, -0.8, 0.35), "Nose 3/4"),
+    "high34": ((-0.5, -1.0, 0.9), "High port 3/4"),
+    "highrear": ((0.9, -0.8, 0.8), "High rear 3/4"),
     "lowfront": ((-1.0, -0.7, -0.35), "Front 3/4 from below"),
     "lowrear": ((1.0, -0.8, -0.3), "Rear 3/4 from below"),
 }

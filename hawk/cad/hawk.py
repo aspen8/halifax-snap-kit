@@ -121,10 +121,10 @@ INTAKE_STATIONS = [            # x, y_outer, z_top, z_bottom: the side pods (int
     (104.0, 23.6, 14.8, -7.0),
     (113.0, 23.2, 14.2, -6.4),     # behind the wing LE the pod sits on the wing:
     (130.0, 21.6, 13.2, -6.0),     # keep its bottom above the wing underside (no slivers)
-    (150.0, 19.6, 12.0, -5.6),
-    (165.0, 17.4, 11.4, -5.0),     # stays tall to the end of the lettering (HobbyBoss side view)
-    (178.0, 15.8, 10.6, -4.2),
-    (190.0, 14.6, 7.6, -3.0),
+    (150.0, 19.2, 12.0, -5.6),
+    (160.0, 17.0, 11.4, -5.2),     # fades into the body by the wing trailing edge (X 169)
+    (168.0, 14.9, 10.8, -4.6),
+    (176.0, 13.6, 9.6, -3.8),
 ]
 INTAKE_Y_IN = 10.0           # inner edge of the fairing (buried in the body)
 INTAKE_N = 2.4               # rounded pods (head-on photo)
@@ -445,12 +445,14 @@ def splitter_gap(side):
     return box(x0 - 3.0, x0 + 6.0, y0, y1, zb + 1.0, zt - 1.0)
 
 
-BLEND_R = 4.0                # mm, fillet radius filling the crease between the side pods and the body
-BLEND_X = (90.7, 192.0)      # x range of the blend (from the intake lip back)
+BLEND_R = 5.0                # mm, fillet radius filling the creases (pods to body, canopy to deck)
+BLEND_X = (34.0, 192.0)      # x range of the blend (from ahead of the windscreen to behind the pods)
 BLEND_ZC = 4.0               # z of the polar centre used to resample each section
 BLEND_N = 144                # points per section
 BELLY_Z = 2.0                # below this z each section is filled to its hull (flush pod undersides)
 BELLY_R = 6.5                # mm, radius of the pods' lower outer corners
+CANOPY_WAIST_Z = (8.0, 16.5)  # sections filled to their hull above this z: ahead of the pods / alongside them
+CANOPY_WAIST_X = (40.0, 52.0)  # over the windscreen that height comes down from 30 to the first value
 
 
 def _section_x(m, x):
@@ -462,10 +464,11 @@ def _section_x(m, x):
 
 @cached
 def pod_blend():
-    """Body + pods, section by section, with the concave crease closed (offset +r then -r),
-    resampled radially and lofted ruled: the pods blend into the fuselage with no seam."""
+    """Body + canopy + pods, section by section, with the concave creases closed (offset +r
+    then -r), resampled radially and lofted ruled: the pods and the canopy blend into the
+    fuselage with no seam or ledge."""
     import shapely.geometry as sg
-    base = union([body(), intake_fairing(1), intake_fairing(-1)])
+    base = union([body(), spine(), intake_fairing(1), intake_fairing(-1)])
     ws = []
     th = np.linspace(0, 2 * math.pi, BLEND_N, endpoint=False)
     for x in np.arange(BLEND_X[0], BLEND_X[1] + 1e-6, 1.5):
@@ -483,6 +486,17 @@ def pod_blend():
             sec = (sec - low) + (rounded ^ low)
         sec = sec.offset(BLEND_R, mf.JoinType.Round, circular_segments=48).offset(
             -BLEND_R, mf.JoinType.Round, circular_segments=48)
+        # above the pods the section is filled to its hull: no waist between the fuselage sides
+        # and the canopy, the sides run up into the canopy sill in one line. Over the
+        # windscreen the hull height comes down gradually, keeping its rounded front.
+        if x < INTAKE_STATIONS[0][0] - 2.0:
+            zc = float(np.interp(x, CANOPY_WAIST_X, (30.0, CANOPY_WAIST_Z[0])))
+        else:
+            zc = CANOPY_WAIST_Z[1]
+        up = mf.CrossSection.square([60.0, 80.0]).translate([-zc - 60.0, -40.0])
+        top = sec ^ up
+        if not top.is_empty():
+            sec = sec + top.hull()
         polys = sec.to_polygons()
         P = max((sg.Polygon(np.asarray(p)) for p in polys), key=lambda q: q.area)
         pts = []
