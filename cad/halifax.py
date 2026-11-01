@@ -44,7 +44,9 @@ KEY_LR = (8.0, 10.0, 2.4)    # fuselage port/starboard halves (width along x)
 KEY_FR = (12.0, 6.0, 2.4)    # front/rear fuselage joint (width along z)
 KEY_NAC = (11.0, 6.0, 3.0)   # nacelle lock: upright (length z), straddles the halves (thickness y),
                              # top 4 mm in a pocket in the wing underside, 7 mm down into the nacelle
-NACELLE_KEY_AT = (0.30, 0.15)   # chord fraction of the lock for each nacelle (deep wing and nacelle body)
+NACELLE_KEY_AT = (0.30, 0.06)   # chord fraction of the lock for each nacelle (deep wing and nacelle body)
+KEY_NAC_OUTER = (8.0, 6.0, 3.0)  # the outer nacelles are shallower: 3.5 mm up into the wing, 4.5 mm down
+NACELLE_KEY_UP = (4.0, 3.5)      # how far each lock goes up into the wing
 KEY_FIN = (4.0, 6.0, 1.6)    # tailplane tip into fin: length along y, width along x, thickness z
 FIN_KEY_AT = (0.24,)         # one key at the thickest part of the tip (mid-chord broke through)
 
@@ -676,9 +678,9 @@ def nacelle_lock_slot(index, side, wing_panel):
     x = le + NACELLE_KEY_AT[index] * c
     probe = wing_panel.intersect(box(x - 0.05, x + 0.05, yc - 0.05, yc + 0.05, -100, 100))
     wb = probe.val().BoundingBox().zmin            # wing underside at the key
-    length = KEY_NAC[0]
-    zc = wb + 4.0 - length / 2
-    return key_slots([(x, yc, zc)], "z", zc, KEY_NAC, "x")
+    key = KEY_NAC if index == 0 else KEY_NAC_OUTER
+    zc = wb + NACELLE_KEY_UP[index] - key[0] / 2
+    return key_slots([(x, yc, zc)], "z", zc, key, "x")
 
 
 def nacelle_parts(index, side, wing_panel):
@@ -717,8 +719,8 @@ def nacelle_parts(index, side, wing_panel):
     # one upright lock: joins the two halves and pins the nacelle into a pocket in the wing
     y = yc * side
     holes = nacelle_lock_slot(index, side, wing_panel)
-    n0 = KEY_COUNTS.get("key_nacelle", (KEY_NAC, 0))[1]
-    KEY_COUNTS["key_nacelle"] = (KEY_NAC, n0 + 1)
+    kname, key = ("key_nacelle", KEY_NAC) if index == 0 else ("key_nacelle_outer", KEY_NAC_OUTER)
+    KEY_COUNTS[kname] = (key, KEY_COUNTS.get(kname, (key, 0))[1] + 1)
     inboard = box(-10, 400, y - 50, y, -80, 80) if side > 0 else box(-10, 400, y, y + 50, -80, 80)
     outboard = box(-10, 400, y, y + 50, -80, 80) if side > 0 else box(-10, 400, y - 50, y, -80, 80)
     return body.intersect(inboard).cut(holes), body.intersect(outboard).cut(holes)
