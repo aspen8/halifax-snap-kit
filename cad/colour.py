@@ -81,6 +81,7 @@ INLAY_FIT = 0.15             # mm, radial clearance (press fit, as KEY_FIT from 
 FUSE_INLAY_DEPTH = 2.4       # fuselage roundels sit deeper, to take the locating peg
 ROUNDEL_PEG = (4.0, 3.0, 3.0, 3.5, 1.4)   # off-centre peg (x, z offset), peg dia, hole dia (grip), length
 WING_INLAY_DEPTH = 2.0       # wing roundels: a little deeper too, for their peg
+BACK_MIRROR = {"z": True, 1: False, -1: True}   # so the L/R on each inlay's back reads correctly
 WING_ROUNDEL_PEG = (-6.0, 3.0, 3.0, 3.5, 1.2)  # (x, y offset; toward the thicker leading edge) ...
 C1_RINGS = lambda d: [(YELLOW, d), (BLUE, d * 0.889), (WHITE, d / 3 + 1.8), (RED, d / 3)]
 B_RINGS = lambda d: [(BLUE, d), (RED, d * 0.4)]
@@ -451,14 +452,16 @@ def inlays_for(name, P):
     if name.startswith("wing_outer"):
         s = 1 if name.endswith("stbd") else -1
         x, y, d = WING_ROUNDEL
+        hand = "R" if s > 0 else "L"
         P, vols, plug = K.make_inlay(P, (x, s * y), d, B_RINGS(d), "z", 1, WING_INLAY_DEPTH,
-                                     INLAY_FIT, WING_ROUNDEL_PEG)
+                                     INLAY_FIT, WING_ROUNDEL_PEG, (hand, 6.0, 6.0, -4.0, BACK_MIRROR["z"]))
         out.append((f"roundel_wing_{name.split('_')[-1]}", vols, [0, 0, 0], plug))
     if name == "fuselage_rear":
         for s, tag in ((-1, "port"), (1, "stbd")):
             x, z, d = FUSE_ROUNDEL
+            hand = "R" if s > 0 else "L"
             P, vols, plug = K.make_inlay(P, (x, z), d, C1_RINGS(d), "y", s, FUSE_INLAY_DEPTH,
-                                         INLAY_FIT, ROUNDEL_PEG)
+                                         INLAY_FIT, ROUNDEL_PEG, (hand, 6.0, -4.0, -3.0, BACK_MIRROR[s]))
             out.append((f"roundel_fuselage_{tag}", vols, [90 * s, 0, 0], plug))
             # squadron code and aircraft letter as red press-in inlays, read nose-to-tail
             rx = FUSE_ROUNDEL[0]

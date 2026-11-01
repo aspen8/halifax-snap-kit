@@ -208,7 +208,7 @@ def surface_extreme(P, centre, r, axis, side):
     return (loc[:, 1] * side).min()          # distance outward from the centreline
 
 
-def make_inlay(P, centre, d, rings, axis, side=1, depth=1.2, fit=0.1, peg=None):
+def make_inlay(P, centre, d, rings, axis, side=1, depth=1.2, fit=0.1, peg=None, label=None):
     """Cut a socket in P for a multi-ring inlay (e.g. a roundel).
     rings: [(colour, diameter)], outermost first. depth: inlay depth at the shallowest
     point of the surface; fit: radial press-fit clearance.
@@ -245,6 +245,14 @@ def make_inlay(P, centre, d, rings, axis, side=1, depth=1.2, fit=0.1, peg=None):
     # Each ring is the plug cut by a tube (cylinder minus the previous cylinder). Subtracting
     # the inner ring solids instead leaves zero-thickness sheets on the surface, where their
     # top faces coincide with the plug's.
+    if label:   # (text, height, offset a, offset b, mirror): engraved 0.4 mm into the inlay's back
+        txt, lh, la, lb, lmirror = label
+        sec = text_section(txt, lh, centre[0] + la, centre[1] + lb, lmirror)
+        if axis == "z":
+            plug = plug - (prism_z(sec) ^ mf.Manifold.cube([1000, 1000, 0.41]).translate([-500, -500, flat - 0.01]))
+        else:
+            y0 = flat - 0.01 if side > 0 else -flat - 0.4
+            plug = plug - (prism_y(sec) ^ mf.Manifold.cube([1000, 0.41, 1000]).translate([-500, y0, -500]))
     vols, prev = {}, None
     for colour, dd in reversed(rings):               # innermost first
         cyl = cyl_axis(*centre, dd / 2, axis)
