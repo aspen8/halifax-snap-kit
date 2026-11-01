@@ -17,6 +17,7 @@ import json
 import math
 import uuid
 import zipfile
+from pathlib import Path
 from xml.sax.saxutils import escape, quoteattr
 
 import cadquery as cq
@@ -328,6 +329,11 @@ def pack(items, bed, gap=8.0):
     return [p["items"] for p in plates]
 
 
+# Bambu Studio project settings for the X2D (0.4 nozzle, PLA Basic, 0.20 mm Standard), saved
+# from Bambu Studio. Without them a 3MF opens as bare geometry: no colours, no plates.
+DEFAULT_TEMPLATE = Path(__file__).with_name("bambu_x2d_project_settings.json")
+
+
 def project_settings(template, filaments):
     d = json.load(open(template))
     n0 = len(d["filament_colour"])
@@ -365,7 +371,7 @@ def project_settings(template, filaments):
 def write_3mf(path, objects, plates, template, filaments, title):
     """Write a Bambu Studio project 3MF.
     objects: [dict(name, volumes=[(filament_slot, V, F)], placement=(plate, x, y))]
-    plates: plate names; template: Bambu project_settings JSON (or None);
+    plates: plate names; template: Bambu project_settings JSON (None: DEFAULT_TEMPLATE);
     filaments: {slot: (name, hex)}; title: model title."""
     ns = ('xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" '
           'xmlns:BambuStudio="http://schemas.bambulab.com/package/2021" '
@@ -445,8 +451,7 @@ def write_3mf(path, objects, plates, template, filaments, title):
                          f'{inst}  </plate>\n')
     z.writestr("Metadata/model_settings.config", '<?xml version="1.0" encoding="UTF-8"?>\n<config>\n'
                + "".join(settings) + "".join(plate_xml) + '</config>\n')
-    if template:
-        z.writestr("Metadata/project_settings.config", project_settings(template, filaments))
+    z.writestr("Metadata/project_settings.config", project_settings(template or DEFAULT_TEMPLATE, filaments))
     z.writestr("Metadata/slice_info.config", '<?xml version="1.0" encoding="UTF-8"?>\n<config>\n  <header>\n'
                '    <header_item key="X-BBL-Client-Type" value="slicer"/>\n'
                '    <header_item key="X-BBL-Client-Version" value="02.08.02.61"/>\n  </header>\n</config>\n')

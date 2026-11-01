@@ -229,3 +229,7 @@ The Hawk was the second kit, and the first built from scratch on the v2 approach
 6. Colour: inlays for anything that would cost colour changes on many layers, skin paint for bed-face colour.
 7. Checks (single pieces, interference without keys, overhangs, inlay counts), renders, 3MF.
 8. Fold what you learned back into this file and the README.
+
+### A 3MF without project settings opens as bare geometry
+
+The Hawk's first 3MF was built without the Bambu settings template (it was an optional command-line argument), so it had no `Metadata/project_settings.config`. Bambu Studio called the config invalid and loaded the parts with no colours and no plates. The template now lives in the repo (`cad/bambu_x2d_project_settings.json`) and `write_3mf` uses it by default. Before handing a kit over, slice its smallest plate with the Bambu Studio command line: `/Applications/BambuStudio.app/Contents/MacOS/BambuStudio --slice N --outputdir DIR kit.3mf` should end with `"error_string": "Success."` in `DIR/result.json`.

@@ -124,6 +124,8 @@ python3.12 -m venv .venv            # or: uv venv --python 3.12 .venv
 .venv/bin/python cad/colour.py out [project_settings.json]
 ```
 
+The optional settings file is a Bambu Studio project settings JSON. Without it the build uses `cad/bambu_x2d_project_settings.json` (X2D, 0.4 nozzle, PLA Basic).
+
 ## Accuracy
 
 Geometry was measured from the Revell 1/72 Halifax B/GR II Srs IA plan views and a 51 Sqn side profile.

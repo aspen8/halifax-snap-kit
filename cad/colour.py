@@ -1,7 +1,7 @@
 """
 Colour the Halifax kit and write a multi-colour Bambu Studio 3MF.
 
-Run:  python colour.py OUT_DIR [project_settings_template.json]
+Run:  python colour.py OUT_DIR [project_settings_template.json]   (default: cad/bambu_x2d_project_settings.json)
 
 Each kit part becomes one object made of several volumes, one per colour.
 Colour lives in a skin SKIN mm deep under the visible surface; the rest of

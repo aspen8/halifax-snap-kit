@@ -1,7 +1,7 @@
 """
 Colour the Hawk kit (Red Arrows) and write a multi-colour Bambu Studio 3MF.
 
-Run:  python colour.py OUT_DIR [project_settings_template.json]
+Run:  python colour.py OUT_DIR [project_settings_template.json]   (default: cad/bambu_x2d_project_settings.json)
       ONLY=name,name python colour.py OUT_DIR      (just some parts)
 
 Scheme: Red Arrows Hawk T.1A, current Union-flag fin (traced from the HobbyBoss 81738 sheet).
