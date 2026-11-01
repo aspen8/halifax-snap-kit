@@ -190,6 +190,14 @@ The Hawk was the second kit, and the first built from scratch on the v2 approach
 - **Read the drawing for the rear frame, not the top line.** HobbyBoss shows an almost upright canopy rear frame. The first version slanted it to meet the spine, which looked wrong.
 - **A stripe can be in the model and still not read.** A 1.9 mm line low on a rounded pod looked absent at normal viewing size. Size stripes against the lettering in the photos (about 0.4 × the letter height), and set the letters on the line.
 
+### Fourth review: undersides, plan views, stripes as one design, tails
+- **Fill the underside too, not just the creases.** A 4 mm closing still left a dip between each pod bottom and the belly. Below a set height, fill each section to its convex hull, then round the pods' lower outer corners with a large opening (`offset(-R).offset(+R)`, R 6.5 mm, applied below that height only). Plot the cross-sections (body, pods, wing) before and after: the problem and the fix are obvious there and invisible in a side render.
+- **Check every glazing outline in plan, not only in side view.** The canopy's side profile was right, but its front started at full width and came out of the flat nose deck as a wide sliver. The Revell plan shows the windscreen front as a rounded U: scale the section width with an ellipse over the first 10 mm.
+- **Model a cheat line as one parametric design, not a trace plus a line.** Real schemes taper, break for the lettering and resume. Build it as ribbons along centrelines with a width function: thin at the nose, growing to the letter height at the pod, stopping 2 mm short of the letters. Behind the roundel, a cubic Bezier runs level and then sweeps up into the fin flag's white at the root, widening as it climbs. One curve flows; a traced L-shape warped to fit had a visible kink.
+- **Clip the fin artwork to where the fin actually shows.** The fin part carries the spine cap and the dorsal fillet, which read as fuselage. Clip the flag to above the fuselage top line and behind the fin's straight leading edge. That also removes trace artefacts by the fillet (page background picked up as white). Let the fuselage swoosh run up to the same line so the two meet exactly.
+- **Don't let tails droop.** Check the top line from the fin to the jet pipe against the side view. The Hawk's is nearly level, and the end is squared off (a flatter, higher upper exponent on the last sections), not tapered to a point.
+- **Expect late feedback to come in bursts.** Batch the fixes into one rebuild, but render each area close up (low 3/4 views for undersides, a tight fin view) before calling it done.
+
 ### Checks that caught real bugs on the Hawk
 - **Interference:** run it without the `key_*` STLs, which are modelled at the origin. It found the tongue clash, the tilted stand key and a fin-cap sliver.
 - **Overhang:** found the canopy standing on its pegs.

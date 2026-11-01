@@ -86,9 +86,9 @@ FUSE_STATIONS = [
     (195.0, 14.1, 29.2,  -3.9, 2.4, 8.0, 2.0),
     (208.0, 13.6, 27.6,  -3.0, 2.3, 8.0, 2.0),
     (226.0, 12.9, 25.9,  -2.0, 2.2, 8.0, 2.0),
-    (240.0, 11.6, 24.6,  -1.3, 2.2, 8.0, 2.0),
-    (252.0, 10.2, 21.6,  -0.6, 2.2, 8.0, 2.0),
-    (264.2,  8.6, 14.6,   1.0, 2.2, 7.8, 2.1),
+    (240.0, 11.6, 24.6,  -1.3, 2.3, 8.0, 2.5),
+    (252.0, 10.2, 23.0,  -0.6, 2.5, 8.0, 3.2),     # nearly level to the end (Revell side view),
+    (264.2,  8.8, 20.2,   1.0, 2.7, 7.8, 3.8),     # squared off: flat top edge at the end (photos)
 ]
 FUSE_END_X = 264.2
 # Canopy and dorsal spine: (x, half_width, z_top); bottom is buried 6 mm in the body
@@ -382,10 +382,24 @@ def canopy_line(step=2.0):
     return [(x, float(sw(x)), float(sz(x))) for x in xs]
 
 
+WINDSCREEN_NOSE = (38.5, 10.5)   # x of the windscreen tip, length of its rounded front (Revell plan view)
+
+
+def windscreen_k(x):
+    """Plan-view width factor: the windscreen front is a rounded U, not a full-width sliver."""
+    x0, L = WINDSCREEN_NOSE
+    t = (x - x0) / L
+    return 1.0 if t >= 1.0 else math.sqrt(max(0.0, 1.0 - (1.0 - t) ** 2))
+
+
 @cached
 def spine():
     ws = []
-    for x, hw, top in canopy_line():
+    x0, L = WINDSCREEN_NOSE
+    for x, hw, top in canopy_line(1.0):
+        if x < x0 + 0.4:
+            continue
+        hw = max(0.6, hw * windscreen_k(x))
         ws.append(superellipse_wire(x, hw, top, min(fuse_at(x)[2], 24.0) - 6.0, SPINE_N))
     return to_m(loft(ws, ruled=True))
 
@@ -432,9 +446,11 @@ def splitter_gap(side):
 
 
 BLEND_R = 4.0                # mm, fillet radius filling the crease between the side pods and the body
-BLEND_X = (93.0, 192.0)      # x range of the blend (behind the intake lip)
+BLEND_X = (90.7, 192.0)      # x range of the blend (from the intake lip back)
 BLEND_ZC = 4.0               # z of the polar centre used to resample each section
 BLEND_N = 144                # points per section
+BELLY_Z = 2.0                # below this z each section is filled to its hull (flush pod undersides)
+BELLY_R = 6.5                # mm, radius of the pods' lower outer corners
 
 
 def _section_x(m, x):
@@ -454,6 +470,17 @@ def pod_blend():
     th = np.linspace(0, 2 * math.pi, BLEND_N, endpoint=False)
     for x in np.arange(BLEND_X[0], BLEND_X[1] + 1e-6, 1.5):
         sec = _section_x(base, x)
+        # flush underside: below BELLY_Z the section is filled to its convex hull, so the pod
+        # bottoms run straight into the belly (no dip between pod and fuselage)
+        lo = sec ^ mf.CrossSection.square([60.0, 80.0]).translate([-BELLY_Z, -40.0])
+        if not lo.is_empty():
+            sec = sec + lo.hull()
+            # round the pods' lower outer corners with a large radius, so their sides flow
+            # into the belly instead of ending at a hard edge (below BELLY_Z only)
+            rounded = sec.offset(-BELLY_R, mf.JoinType.Round, circular_segments=48).offset(
+                BELLY_R, mf.JoinType.Round, circular_segments=48)
+            low = mf.CrossSection.square([60.0, 80.0]).translate([-BELLY_Z, -40.0])
+            sec = (sec - low) + (rounded ^ low)
         sec = sec.offset(BLEND_R, mf.JoinType.Round, circular_segments=48).offset(
             -BLEND_R, mf.JoinType.Round, circular_segments=48)
         polys = sec.to_polygons()

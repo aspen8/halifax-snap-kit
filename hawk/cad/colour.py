@@ -40,7 +40,7 @@ INLAY_DEPTH = 1.2
 INLAY_FIT = 0.15
 LETTER_BOLD = 0.15           # mm, letters grown before cutting (thicker strokes print better)
 LETTER_FIT = 0.12
-STRIPE_MIN_W = 1.8           # mm, stripes are widened to at least this (printable inlays)
+STRIPE_MIN_W = 1.3           # mm, stripes are widened to at least this (printable inlays, as thin as the letters)
 CHUNK = 38.0                 # mm, long stripes are split into inlays this long
 
 FILAMENTS = {
@@ -58,11 +58,13 @@ FUSE_ROUNDEL = (187.3, 9.0, 10.6)        # x, z, diameter (Revell side view)
 WING_ROUNDEL = (162.2, 94.8, 15.0)       # x, |y|, diameter (Revell top view)
 LETTERS = ("ROYAL AIR FORCE", 143.0, 8.2, 60.0, 5.2)   # letters sit on the cheat line   # text, x centre, z centre, length, height:
                                                          # kept below the side pod's top edge (HobbyBoss)
-# Cheat line: (x, z of the stripe centre), constant width. Traced from the Revell side view and
-# smoothed (the trace is broken by leader lines and labels).
-CHEAT_LINE = [(6.5, 2.9), (20.0, 3.2), (45.0, 3.4), (80.0, 3.6), (111.0, 3.8), (150.0, 3.9),
-              (178.0, 4.1), (183.0, 4.6)]     # continuous under the lettering into the roundel (photos)
-CHEAT_W = 2.3                # bold, as in the photos (about 0.4 x the letter height)    # point on the band's front edge, dz/dx, width along x
+# Cheat line (photos): thin at the nose, thickening to the lettering's height on the side pod,
+# broken for "ROYAL AIR FORCE", resumed behind the roundel and swept up onto the fin in one curve.
+CHEAT_NOSE = (6.5, 2.35, 1.3)      # x, lower edge z, width at the nose tip
+CHEAT_POD_X = 95.0                 # full letter height reached here (on the pod)
+CHEAT_GAP = 2.0                    # mm of red between the band and the lettering
+SWOOSH_TOP = (223.5, 25.0, 0.57, 0.82, 8.0)   # x, z where it meets the fin flag, direction, width there
+FIN_FLAG_ABOVE = 0.4               # mm above the fuselage top line where the fin flag starts
 WHITE_DIR = ROOT / "ref" / "hawk_white"
 
 BED = (230.0, 250.0)
@@ -82,40 +84,48 @@ def close(sec, r):
     return sec.offset(r, mf.JoinType.Round).offset(-r, mf.JoinType.Round)
 
 
-def swoosh(side):
-    """The tail swoosh (current scheme) traced from the HobbyBoss 81738 side views
-    (tools/trace_colours.py, hawk/tools/side_white_*.json). That calibration is fitted at the fin,
-    so the trace is warped in z to meet our roundel at its lower end while staying put at the fin root."""
-    tag = "stbd" if side > 0 else "port"
-    rs = [np.array(r) for r in json.load(open(WHITE_DIR / f"side_hb_{tag}.json"))["classes"]["white"]]
+def _ribbon(c, w):
+    """Band along a centreline c (N, 2) with widths w (N): its outline as one polygon."""
+    t = np.gradient(c, axis=0)
+    t /= np.linalg.norm(t, axis=1)[:, None]
+    nrm = np.c_[-t[:, 1], t[:, 0]] * (np.asarray(w)[:, None] / 2)
+    return cs([np.vstack([c + nrm, (c - nrm)[::-1]])])
+
+
+def cheat_front():
+    """Nose to the lettering: lower edge rising gently, width growing to the letter height."""
+    x0, zl0, w0 = CHEAT_NOSE
+    _, xc, zc, length, h = LETTERS
+    x_end = xc - length / 2 - CHEAT_GAP
+    xs = np.linspace(x0, x_end, 140)
+    t = np.clip((xs - x0) / (CHEAT_POD_X - x0), 0, 1)
+    ease = t * t * (3 - 2 * t) * 0.35 + t * 0.65            # gradual, settling onto the pod
+    lo = zl0 + (zc - h / 2 - zl0) * ease
+    w = w0 + (h - w0) * ease
+    c = np.c_[xs, lo + w / 2]
+    return _ribbon(c, w) + mf.CrossSection.circle(w0 / 2, 16).translate([x0, zl0 + w0 / 2])
+
+
+def cheat_rear():
+    """From behind the roundel, level at the letter height, then one smooth curve up onto the fin
+    (a cubic Bezier into the flag's white at the fin root), widening as it climbs."""
+    _, xc, zc, length, h = LETTERS
     rx, rz, rd = FUSE_ROUNDEL
-    rings, hb_roundel = [], None
-    for r in rs:
-        x0, z0 = r.min(0)
-        x1, z1 = r.max(0)
-        a = 0.5 * abs(np.dot(r[:, 0], np.roll(r[:, 1], 1)) - np.dot(r[:, 1], np.roll(r[:, 0], 1)))
-        if abs((x0 + x1) / 2 - rx) < 3 and 40 < a < 70:
-            hb_roundel = (z0 + z1) / 2                  # the roundel's white ring in the drawing
-        elif x0 > 178.0 and a > 100:
-            rings.append(r)                             # the swoosh itself
-    top = H.FIN_ROOT_Z + 0.6
-    dz = rz - hb_roundel
-    out = []
-    for r in rings:
-        z = r[:, 1]
-        w = np.clip((top - z) / (top - hb_roundel), 0, 1)
-        out.append(np.c_[r[:, 0], z + dz * w])
-    sec = cs(out) - mf.CrossSection.circle(rd / 2 + 0.6, 64).translate([rx, rz])
-    return sec.offset(-0.4, mf.JoinType.Round).offset(0.4, mf.JoinType.Round)
+    x3, z3, dx, dz, w3 = SWOOSH_TOP
+    P = np.array([(rx, zc), (rx + 20.0, zc), (x3 - dx * 13.0, z3 - dz * 13.0), (x3, z3)])
+    u = np.linspace(0, 1, 120)[:, None]
+    c = ((1 - u) ** 3 * P[0] + 3 * (1 - u) ** 2 * u * P[1] + 3 * (1 - u) * u * u * P[2] + u ** 3 * P[3])
+    c = np.vstack([c, [x3 + dx * 6.0, z3 + dz * 6.0]])     # runs on to the fin root line
+    s = np.clip((np.r_[u[:, 0], 1.0] - 0.3) / 0.7, 0, 1)
+    w = h + (w3 - h) * s
+    sec = _ribbon(c, w)
+    return sec - mf.CrossSection.circle(rd / 2 + 0.6, 64).translate([rx, rz])
 
 
 def side_stripes(side):
-    """White on the fuselage side, (x, z): the cheat line (parametric, along the Revell trace)
-    and the tail swoosh (HobbyBoss trace)."""
-    line = mf.CrossSection()
-    for p0, p1 in zip(CHEAT_LINE, CHEAT_LINE[1:]):
-        line = line + K.band(p0, p1, CHEAT_W) + mf.CrossSection.circle(CHEAT_W / 2, 16).translate(list(p1))
-    return line + swoosh(side)
+    """White on the fuselage side, (x, z): the cheat line in front of the lettering, and the band
+    behind the roundel that sweeps up onto the fin. The same on both sides."""
+    return cheat_front() + cheat_rear()
 
 
 def widen(sec, wmin):
@@ -319,8 +329,25 @@ def fin_flag(side):
                 continue
             keep.append(r)
         if keep:
-            ops.append((colour, cs(keep)))
+            ops.append((colour, cs(keep) ^ fin_surface()))
     return ops
+
+
+def above_fuselage(off, x0=170.0, x1=270.0):
+    """(x, z) region above the fuselage top line, raised by off."""
+    xs = np.linspace(x0, x1, 120)
+    line = [(x, H.fuse_at(x)[2] + off) for x in xs]
+    return cs([np.array(line + [(x1, 120.0), (x0, 120.0)])])
+
+
+def fin_surface():
+    """Where the fin itself shows: above the fuselage line and behind the fin's straight leading
+    edge. The flag stays off the spine cap and the red dorsal fillet."""
+    (lx0, lz0), (lx1, lz1) = H.FIN_LE
+    k = (lx1 - lx0) / (lz1 - lz0)
+    le = lambda z: lx0 + (z - lz0) * k + 0.8
+    behind = cs([np.array([(le(0.0), 0.0), (300.0, 0.0), (300.0, 120.0), (le(120.0), 120.0)])])
+    return above_fuselage(FIN_FLAG_ABOVE) ^ behind
 
 
 def paint(P, ops, base=RED):
@@ -339,14 +366,13 @@ def colour_part(name, P):
     if name.startswith("fin_"):
         S = skins(P, FIN_SKIN)
         side = S["+y"] if name.endswith("stbd") else S["-y"]
-        top = S["up"]
-        sw = side_stripes(1 if name.endswith("stbd") else -1) ^ cs([np.array([(176, H.FIN_ROOT_Z - 1), (240, H.FIN_ROOT_Z - 1),
-                                           (240, H.FIN_ROOT_Z + 3), (176, H.FIN_ROOT_Z + 3)])])
+        # the swoosh runs up to the fin root line, where the flag's white takes over
+        sw = (side_stripes(1 if name.endswith("stbd") else -1)
+              ^ cs([np.array([(176, H.FIN_ROOT_Z - 1), (240, H.FIN_ROOT_Z - 1), (240, 60.0), (176, 60.0)])])
+              ) - above_fuselage(FIN_FLAG_ABOVE + 0.3)
         ops = [(WHITE, side ^ prism_y(sw))]
         for colour, sec in fin_flag(1 if name.endswith("stbd") else -1):
             ops.append((colour, side ^ prism_y(sec)))
-        ops.append((WHITE, top ^ prism_z(fuselage_plan(205, 226, inset=-2.0) ^
-                                         cs([np.array([(213.5, -10), (223.5, -10), (223.5, 10), (213.5, 10)])]))))
         return paint(P, ops)
     if name == "canopy":
         # Below the curved sill line the canopy part is fuselage: red. A black sill frame runs

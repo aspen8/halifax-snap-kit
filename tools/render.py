@@ -4,7 +4,7 @@ Software renderer (numpy point splatting, no OpenGL: works on macOS) for any kit
   python tools/render.py preview.glb out.png [--views a,b,...] [--size 900x640]
   python tools/render.py STL_DIR out.png          (grey, all STLs in a folder)
 
-Views: port34, stbd34, top, port, under, rear34, front, closeup_cockpit.
+Views: port34, stbd34, top, port, under, rear34, front, head, stbd, low34, lowside, nose34.
 """
 import argparse
 import glob
@@ -24,6 +24,11 @@ VIEWS = {
     "front": ((-1.0, -0.25, 0.25), "Front"),
     "head": ((-1.0, 0.0, 0.03), "Head-on"),
     "stbd": ((0.0, 1.0, 0.02), "Starboard side"),
+    "low34": ((-0.7, -1.0, -0.55), "Port 3/4 from below"),
+    "lowside": ((0.15, -1.0, -0.4), "Port side from below"),
+    "nose34": ((-1.0, -0.8, 0.35), "Nose 3/4"),
+    "lowfront": ((-1.0, -0.7, -0.35), "Front 3/4 from below"),
+    "lowrear": ((1.0, -0.8, -0.3), "Rear 3/4 from below"),
 }
 
 
