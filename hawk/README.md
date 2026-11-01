@@ -13,9 +13,11 @@ Fully printed multi-colour snap kit for the Bambu Lab X2D, built the Halifax v2 
 
 ![canopy and spine](docs/canopy_spine.png)
 
-Shape without paint:
+Shape without paint, and head-on against a photo:
 
 ![grey shape](docs/shape_grey.png)
+
+![head-on comparison](docs/head_on_comparison.png)
 
 Against photos (top: real aircraft, bottom: model):
 
@@ -100,7 +102,9 @@ The shape is measured from the Revell 04284 Hawk T.1A (Red Arrows) instruction s
 - The windscreen front is a rounded U in plan (Revell top view), so the glazing rises out of the nose instead of starting as a flat, full-width sliver.
 - The canopy's lower edge follows the HobbyBoss side view: nearly level under the front cockpit, curving up under the rear seat to an almost upright rear frame at X 122–125. The part is still cut on a flat plane so it prints flat. Below the curved edge it's painted red, with a black sill frame along the edge.
 - The canopy top line is one continuous convex curve: a smoothing spline through the measured points, lofted densely so there is no wobble. It ends with a slanted rear frame around X 128–134. It sits on a sill plane that follows the cockpit deck. Under it, the seats are placed where the pilots actually sit (seat backs at X 76 and X 112), with at least 1.2 mm of clear canopy over each headbox.
-- The fuselage, canopy and side pods are blended as one skin from X 34 to 192. Each cross-section is closed with a 5 mm radius, filled to its hull below Z 2 (pod undersides flush with the belly, lower outer corners rounded at 6.5 mm), and filled to its hull above the pods. So the fuselage sides rise straight into the canopy sill, with no ledge or waist, and there's no crease where the pods meet the body.
+- The fuselage, canopy and side pods are blended as one skin from X 34 to 192. Each cross-section has its concave creases closed with an 8 mm radius (the pod tops roll up into the fuselage sides) and is filled to its hull below Z 2 (pod undersides flush with the belly, lower outer corners rounded at 6.5 mm). Ahead of the intake lip the pods are left out of the blend, so nothing plugs the intakes.
+- The canopy section is an egg shape, checked against the head-on photo: its sides run up from the fuselage, curve slightly out just above the sill (widest 2.5 mm above it, 4% wider than the spine table) and round over the top. The bulge eases in behind the windscreen and out behind the glazing.
+- The intake lips are rounded: the pods start 1.5 mm ahead of the lip with a smaller section.
 - The side pods fade into the fuselage by the wing trailing edge (X 168). The end of "ROYAL AIR FORCE" sits on the fuselage side just behind them.
 - The rear top line stays nearly level from the fin to the jet pipe (Revell side view), and the end is squared off, as in the photos.
 - The side pods (intake trunks) are rounded, with 18 mm deep ducts that read dark, as in the head-on photo. Their tops reach Z 15.

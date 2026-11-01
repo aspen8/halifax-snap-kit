@@ -115,6 +115,8 @@ FR_KEYS = [(-6.0, 15.0), (6.0, 15.0), (-8.0, 2.0), (8.0, 2.0), (0.0, 27.0)]   # 
 
 # --- Intakes: D-section fairings each side, (x, y_outer, z_top, z_bottom)
 INTAKE_STATIONS = [            # x, y_outer, z_top, z_bottom: the side pods (intake trunks)
+    (89.0, 20.5, 12.9, -3.7),      # rounded lip (head-on photo)
+    (89.6, 21.0, 13.4, -4.2),
     (90.5, 21.4, 13.8, -4.6),      # intake top near Z 15 (Revell side view, head-on photo)
     (92.5, 22.3, 14.6, -5.6),
     (98.0, 23.1, 15.0, -6.6),
@@ -382,6 +384,10 @@ def canopy_line(step=2.0):
     return [(x, float(sw(x)), float(sz(x))) for x in xs]
 
 
+CANOPY_BULGE = (1.04, 2.5)     # width factor, height of the widest point above the sill
+CANOPY_BULGE_X = (118.0, 134.0)   # bulge eases out over this x range (behind the glazing)
+CANOPY_BULGE_X0 = (48.0, 62.0)    # and eases in over this one (behind the windscreen base)
+CANOPY_N = (3.0, 2.15)         # egg exponents: below / above the widest point
 WINDSCREEN_NOSE = (38.5, 10.5)   # x of the windscreen tip, length of its rounded front (Revell plan view)
 
 
@@ -399,8 +405,18 @@ def spine():
     for x, hw, top in canopy_line(1.0):
         if x < x0 + 0.4:
             continue
-        hw = max(0.6, hw * windscreen_k(x))
-        ws.append(superellipse_wire(x, hw, top, min(fuse_at(x)[2], 24.0) - 6.0, SPINE_N))
+        bot = min(fuse_at(x)[2], 24.0) - 6.0
+        # over the cockpit the glazing bulges out just above the sill and rounds over the top
+        # (head-on photo): an egg section, widest CANOPY_BULGE[1] mm above the sill. Behind the
+        # canopy it eases back to the plain spine section.
+        t = float(np.clip((x - CANOPY_BULGE_X[0]) / (CANOPY_BULGE_X[1] - CANOPY_BULGE_X[0]), 0, 1))
+        zw = (1 - t) * (canopy_sill_z(x) + CANOPY_BULGE[1]) + t * (top + bot) / 2
+        zw = min(zw, top - 3.0)
+        t0 = float(np.clip((x - CANOPY_BULGE_X0[0]) / (CANOPY_BULGE_X0[1] - CANOPY_BULGE_X0[0]), 0, 1))
+        hw = max(0.6, hw * windscreen_k(x) * (1 + (CANOPY_BULGE[0] - 1) * (1 - t) * t0))
+        if t0 < 1.0:                     # windscreen: widest point eases down from mid-height
+            zw = t0 * zw + (1 - t0) * (top + bot) / 2
+        ws.append(egg_wire(x, hw, top, bot, CANOPY_N[0], zw, CANOPY_N[1]))
     return to_m(loft(ws, ruled=True))
 
 
@@ -428,7 +444,7 @@ def intake_mouth(side):
     """Duct recess behind the lip, leaving a lip wall and a splitter gap to the body."""
     x0, depth, lip = INTAKE_MOUTH
     ws = []
-    for x, st in ((x0 - 2.0, INTAKE_STATIONS[1]), (x0 + depth, INTAKE_STATIONS[2])):
+    for x, st in ((x0 - 2.0, INTAKE_STATIONS[3]), (x0 + depth, INTAKE_STATIONS[4])):
         _, yo, zt, zb = st
         yi = fuse_at(x)[1] + SPLITTER_GAP + lip
         yo, zt, zb = yo - lip, zt - lip, zb + lip
@@ -439,20 +455,18 @@ def intake_mouth(side):
 def splitter_gap(side):
     """Slot between the intake lip and the body (boundary-layer splitter), 6 mm deep."""
     x0 = INTAKE_MOUTH[0]
-    _, yo, zt, zb = INTAKE_STATIONS[1]
+    _, yo, zt, zb = INTAKE_STATIONS[3]
     yi = fuse_at(x0)[1]
     y0, y1 = sorted((side * (yi - 0.2), side * (yi + SPLITTER_GAP)))
     return box(x0 - 3.0, x0 + 6.0, y0, y1, zb + 1.0, zt - 1.0)
 
 
-BLEND_R = 5.0                # mm, fillet radius filling the creases (pods to body, canopy to deck)
+BLEND_R = 8.0                # mm, fillet radius filling the creases (pod tops and canopy sill into the body)
 BLEND_X = (34.0, 192.0)      # x range of the blend (from ahead of the windscreen to behind the pods)
 BLEND_ZC = 4.0               # z of the polar centre used to resample each section
 BLEND_N = 144                # points per section
 BELLY_Z = 2.0                # below this z each section is filled to its hull (flush pod undersides)
 BELLY_R = 6.5                # mm, radius of the pods' lower outer corners
-CANOPY_WAIST_Z = (8.0, 16.5)  # sections filled to their hull above this z: ahead of the pods / alongside them
-CANOPY_WAIST_X = (40.0, 52.0)  # over the windscreen that height comes down from 30 to the first value
 
 
 def _section_x(m, x):
@@ -469,10 +483,12 @@ def pod_blend():
     fuselage with no seam or ledge."""
     import shapely.geometry as sg
     base = union([body(), spine(), intake_fairing(1), intake_fairing(-1)])
+    nose = union([body(), spine()])        # ahead of the intake lip: no pods (a ruled step into
+                                           # them would plug the front of the intakes)
     ws = []
     th = np.linspace(0, 2 * math.pi, BLEND_N, endpoint=False)
     for x in np.arange(BLEND_X[0], BLEND_X[1] + 1e-6, 1.5):
-        sec = _section_x(base, x)
+        sec = _section_x(base if x >= INTAKE_MOUTH[0] else nose, x)
         # flush underside: below BELLY_Z the section is filled to its convex hull, so the pod
         # bottoms run straight into the belly (no dip between pod and fuselage)
         lo = sec ^ mf.CrossSection.square([60.0, 80.0]).translate([-BELLY_Z, -40.0])
@@ -486,17 +502,6 @@ def pod_blend():
             sec = (sec - low) + (rounded ^ low)
         sec = sec.offset(BLEND_R, mf.JoinType.Round, circular_segments=48).offset(
             -BLEND_R, mf.JoinType.Round, circular_segments=48)
-        # above the pods the section is filled to its hull: no waist between the fuselage sides
-        # and the canopy, the sides run up into the canopy sill in one line. Over the
-        # windscreen the hull height comes down gradually, keeping its rounded front.
-        if x < INTAKE_STATIONS[0][0] - 2.0:
-            zc = float(np.interp(x, CANOPY_WAIST_X, (30.0, CANOPY_WAIST_Z[0])))
-        else:
-            zc = CANOPY_WAIST_Z[1]
-        up = mf.CrossSection.square([60.0, 80.0]).translate([-zc - 60.0, -40.0])
-        top = sec ^ up
-        if not top.is_empty():
-            sec = sec + top.hull()
         polys = sec.to_polygons()
         P = max((sg.Polygon(np.asarray(p)) for p in polys), key=lambda q: q.area)
         pts = []
