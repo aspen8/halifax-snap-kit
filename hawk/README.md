@@ -28,7 +28,7 @@ Open `kit/hawk_kit.3mf` in Bambu Studio. Its 6 plates have the filaments already
 | Fuselage and red parts | Front and rear fuselage on end (brim), radome on its back face (probe up), tailplanes, smoke pod halves, aerials, keys | Red |
 | Wings | Both wings flat; white underside chevrons in the first layers | Red, White |
 | Fins, roundels and white inlays | Fin halves (Union flag in the skin), roundels, cheat-line, belly-stripe and letter inlays | Red, White, Blue |
-| Canopy and cockpit | Solid canopy (print at 100% infill for clarity), tandem cockpit tub | Clear, Black, Grey |
+| Canopy and cockpit | Solid canopy (print at 100% infill for clarity), tandem cockpit tub | Clear, Black, Red, Grey |
 | Display stand | Plinth with red/white/blue pinstripe and raised lettering, swept blade | Black, Red, White, Blue |
 | Gear | Nose and main legs, wheels, axle pins | Grey, Black |
 
@@ -45,7 +45,7 @@ Suggested settings: PLA, 0.16 mm layers for the inlay and gear plates and 0.2 mm
   - smoke pod (2 halves)
   - 3 aerials
 - **Cockpit:**
-  - solid clear canopy with a black windscreen arch, a slanted rear frame and a sill frame
+  - solid clear canopy with a black windscreen arch, an upright rear frame and a curved sill frame
   - tandem tub with the raised rear seat, side consoles, 2 seats (headboxes, firing handles, grey cushions), 2 instrument panels with coamings, and control columns
 - **White inlays:**
   - cheat line in 14 pieces (it runs unbroken from the nose, under the lettering, into the roundel)
@@ -93,7 +93,9 @@ The shape is measured from the Revell 04284 Hawk T.1A (Red Arrows) instruction s
 - The undersides are flat from 15% chord, so the wings and tailplanes print without supports.
 - Behind the cockpit the fuselage uses an "egg" cross-section. It's widest at the side pods and rounder on top, following the spine line, so the top is smooth with no separate spine ridge.
 - The fin's leading edge sweeps forward below 36 mm into a thin dorsal fillet that rises out of the spine at about X 192, as on the real aircraft.
+- The canopy's lower edge follows the HobbyBoss side view: nearly level under the front cockpit, curving up under the rear seat to an almost upright rear frame at X 122–125. The part is still cut on a flat plane so it prints flat. Below the curved edge it's painted red, with a black sill frame along the edge.
 - The canopy top line is one continuous convex curve: a smoothing spline through the measured points, lofted densely so there is no wobble. It ends with a slanted rear frame around X 128–134. It sits on a sill plane that follows the cockpit deck. Under it, the seats are placed where the pilots actually sit (seat backs at X 76 and X 112), with at least 1.2 mm of clear canopy over each headbox.
+- The side pods blend into the fuselage with no crease. Each cross-section of body plus pods from X 93 to 192 has its concave corners filled with a 4 mm radius, and the result is lofted as one skin.
 - The side pods (intake trunks) are rounded, with 18 mm deep ducts that read dark, as in the head-on photo. Their tops reach Z 15. They stay tall back to X 178, so "ROYAL AIR FORCE" sits entirely on them.
 - **Gear (positions from photos):**
   - The nose leg is at X 40.

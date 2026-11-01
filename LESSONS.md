@@ -184,6 +184,12 @@ The Hawk was the second kit, and the first built from scratch on the v2 approach
 - **Gear sockets need wall too.** Moving the main leg aft put its socket at 80% chord, where the wing is 2.4 mm thick. Measure the local thickness, put the socket where it leaves at least 0.6 mm above, and rake the leg to put the wheel where the photo shows it.
 - **Any helper that casts rays must handle a miss.** `kitlib.make_section_inlay` crashed on a stripe chunk whose sample rays missed the surface. The Hawk's `y_inlay` samples inside the shape and returns nothing when nothing is hit.
 
+### Third review: blends, sill lines, stripes that read
+- **Blend a fairing into the body by closing its cross-sections.** At each X, slice body plus pods (`Manifold.slice` after rotating X to Z), apply `offset(+r).offset(-r)` (round joins) to fill the concave corner, resample radially from a fixed centre (farthest ray hit, 144 points), and loft ruled every 1.5 mm. Union the result with the raw shapes. It only adds material in the creases: check `(blend - raw).volume()` and where it lands.
+- **A visible edge doesn't have to be the print split.** The Hawk canopy's lower edge is a curve, but the part still has to sit flat on the bed. Keep the flat cut plane and paint the edge: the canopy is red below the curve, with a black sill band along it. That adds a colour to the canopy plate, so check the 5-colour limit.
+- **Read the drawing for the rear frame, not the top line.** HobbyBoss shows an almost upright canopy rear frame. The first version slanted it to meet the spine, which looked wrong.
+- **A stripe can be in the model and still not read.** A 1.9 mm line low on a rounded pod looked absent at normal viewing size. Size stripes against the lettering in the photos (about 0.4 × the letter height), and set the letters on the line.
+
 ### Checks that caught real bugs on the Hawk
 - **Interference:** run it without the `key_*` STLs, which are modelled at the origin. It found the tongue clash, the tilted stand key and a fin-cap sliver.
 - **Overhang:** found the canopy standing on its pegs.

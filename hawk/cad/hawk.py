@@ -134,8 +134,13 @@ SPLITTER_GAP = 0.6           # mm, boundary-layer gap between the lip and the fu
 # --- Canopy (cut with a sloping plane through these two (x, z) points)
 CANOPY_X = (38.0, 140.0)
 CANOPY_PLANE = ((38.0, 13.4), (134.0, 22.4))     # sill plane, close under the cockpit deck line
-CANOPY_REAR = ((121.0, 40.0), (134.5, 22.0))     # slanted rear edge of the glazing (x, z) -> (x, z)
-COCKPIT_CAVITY = (44.0, 128.0, 7.6, 3.0)  # x0, x1, half-width, floor z
+CANOPY_REAR = ((122.0, 40.0), (125.0, 21.0))     # rear frame of the glazing, nearly upright (HobbyBoss)
+# Visible lower edge of the glazing (x, z): level under the front cockpit, curving up under the
+# rear seat (HobbyBoss side view, shifted to our windscreen base). The part is still cut on the
+# flat CANOPY_PLANE (it prints on it); colour.py paints the canopy red below this line.
+CANOPY_SILL = [(36.0, 13.3), (49.8, 14.7), (68.3, 16.0), (81.7, 18.0), (95.1, 20.7),
+               (108.5, 23.4), (122.0, 26.7), (126.0, 27.6)]
+COCKPIT_CAVITY = (44.0, 121.0, 7.6, 3.0)  # x0, x1, half-width, floor z
 CANOPY_PEGS = []             # none: the cockpit insert locates the canopy (headbox and coaming pockets)
 CANOPY_PEG_D = 1.6
 
@@ -426,10 +431,52 @@ def splitter_gap(side):
     return box(x0 - 3.0, x0 + 6.0, y0, y1, zb + 1.0, zt - 1.0)
 
 
+BLEND_R = 4.0                # mm, fillet radius filling the crease between the side pods and the body
+BLEND_X = (93.0, 192.0)      # x range of the blend (behind the intake lip)
+BLEND_ZC = 4.0               # z of the polar centre used to resample each section
+BLEND_N = 144                # points per section
+
+
+def _section_x(m, x):
+    """CrossSection (y, z) of a manifold at x."""
+    r = m.translate([-x, 0, 0]).rotate([0, -90, 0])      # x -> z
+    sec = r.slice(0.0)
+    return sec                                            # coords: (-z, y) after the rotation
+
+
+@cached
+def pod_blend():
+    """Body + pods, section by section, with the concave crease closed (offset +r then -r),
+    resampled radially and lofted ruled: the pods blend into the fuselage with no seam."""
+    import shapely.geometry as sg
+    base = union([body(), intake_fairing(1), intake_fairing(-1)])
+    ws = []
+    th = np.linspace(0, 2 * math.pi, BLEND_N, endpoint=False)
+    for x in np.arange(BLEND_X[0], BLEND_X[1] + 1e-6, 1.5):
+        sec = _section_x(base, x)
+        sec = sec.offset(BLEND_R, mf.JoinType.Round, circular_segments=48).offset(
+            -BLEND_R, mf.JoinType.Round, circular_segments=48)
+        polys = sec.to_polygons()
+        P = max((sg.Polygon(np.asarray(p)) for p in polys), key=lambda q: q.area)
+        pts = []
+        for t in th:
+            # section coords are (u, v) = (-z, y): centre at u = -BLEND_ZC
+            d = np.array([-math.sin(t), math.cos(t)])      # direction for (y=cos, z=sin)
+            c = np.array([-BLEND_ZC, 0.0])
+            ray = sg.LineString([c, c + d * 80.0])
+            hit = ray.intersection(P.exterior)
+            ptsh = [hit] if hit.geom_type == "Point" else list(getattr(hit, "geoms", []))
+            far = max(ptsh, key=lambda q: (q.x - c[0]) ** 2 + (q.y - c[1]) ** 2)
+            u, v = far.x, far.y
+            pts.append(V(x, v, -u))
+        ws.append(cq.Wire.makePolygon(pts, close=True))
+    return to_m(loft(ws, ruled=True))
+
+
 @cached
 def outer():
-    """Body, canopy/spine and intake fairings (fin, wings, tail are separate)."""
-    return union([body(), spine(), intake_fairing(1), intake_fairing(-1)])
+    """Body, canopy/spine and side pods (blended), without fin, wings, tail."""
+    return union([body(), spine(), intake_fairing(1), intake_fairing(-1), pod_blend()])
 
 
 # ============================================================
@@ -647,6 +694,13 @@ def canopy_region(grow=0.0):
     fuselage) and inside canopy_zone."""
     foot = spine().project().offset(grow, mf.JoinType.Round)
     return canopy_zone(grow) ^ K.prism_z(foot)
+
+
+def canopy_sill_z(x):
+    """Visible glazing edge (the painted sill line), smooth through CANOPY_SILL."""
+    from scipy.interpolate import PchipInterpolator
+    t = np.array(CANOPY_SILL)
+    return float(PchipInterpolator(t[:, 0], t[:, 1])(np.clip(x, t[0, 0], t[-1, 0])))
 
 
 def canopy_plane_z(x):

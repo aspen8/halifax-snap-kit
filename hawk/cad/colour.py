@@ -56,13 +56,13 @@ ROUNDEL = lambda d: [(BLUE, d), (WHITE, d * 2 / 3), (RED, d / 3)]
 
 FUSE_ROUNDEL = (187.3, 9.0, 10.6)        # x, z, diameter (Revell side view)
 WING_ROUNDEL = (162.2, 94.8, 15.0)       # x, |y|, diameter (Revell top view)
-LETTERS = ("ROYAL AIR FORCE", 143.0, 7.6, 60.0, 5.2)   # text, x centre, z centre, length, height:
+LETTERS = ("ROYAL AIR FORCE", 143.0, 8.2, 60.0, 5.2)   # letters sit on the cheat line   # text, x centre, z centre, length, height:
                                                          # kept below the side pod's top edge (HobbyBoss)
 # Cheat line: (x, z of the stripe centre), constant width. Traced from the Revell side view and
 # smoothed (the trace is broken by leader lines and labels).
-CHEAT_LINE = [(6.5, 2.9), (20.0, 3.2), (45.0, 3.4), (80.0, 3.5), (111.0, 3.5), (150.0, 3.5),
-              (178.0, 3.8), (183.0, 4.4)]     # continuous under the lettering into the roundel (photos)
-CHEAT_W = 1.9    # point on the band's front edge, dz/dx, width along x
+CHEAT_LINE = [(6.5, 2.9), (20.0, 3.2), (45.0, 3.4), (80.0, 3.6), (111.0, 3.8), (150.0, 3.9),
+              (178.0, 4.1), (183.0, 4.6)]     # continuous under the lettering into the roundel (photos)
+CHEAT_W = 2.3                # bold, as in the photos (about 0.4 x the letter height)    # point on the band's front edge, dz/dx, width along x
 WHITE_DIR = ROOT / "ref" / "hawk_white"
 
 BED = (230.0, 250.0)
@@ -349,18 +349,22 @@ def colour_part(name, P):
                                          cs([np.array([(213.5, -10), (223.5, -10), (223.5, 10), (213.5, 10)])]))))
         return paint(P, ops)
     if name == "canopy":
+        # Below the curved sill line the canopy part is fuselage: red. A black sill frame runs
+        # above it, the windscreen arch and the rear frame are black on the shell.
         shell = P - K.inner_core(P, 0.7)
+        xs = np.linspace(30.0, 140.0, 111)
+        sill = [(x, H.canopy_sill_z(x)) for x in xs]
+        under = cs([np.array(sill + [(140.0, -20.0), (30.0, -20.0)])])
+        band = cs([np.array([(x, z + CANOPY_SILL) for x, z in sill] + [(x, z - 0.05) for x, z in sill[::-1]])])
         frames = mf.Manifold()
         for x, w in CANOPY_FRAMES_X:
             frames = frames + K.slab("x", x, w)
-        (xa, za), _ = H.CANOPY_PLANE
-        sill = P - (P ^ H.rot_about(K.box(0, 400, -50, 50, za + CANOPY_SILL, za + 100), (xa, 0, za),
-                                     "y", -H.canopy_angle()))
         (ra, rza), (rb, rzb) = H.CANOPY_REAR
         ang = math.degrees(math.atan2(rb - ra, rza - rzb))
         keep = H.rot_about(K.box(ra - 200, ra - CANOPY_REAR_FRAME, -50, 50, rzb - 30, rza + 30), (ra, 0, rza), "y", -ang)
         rear = P - (P ^ keep)
-        return paint(P, [(BLACK, (shell ^ frames) + sill + (shell ^ rear))], base=CLEAR)
+        return paint(P, [(BLACK, (shell ^ (frames + prism_y(band))) + (shell ^ rear)),
+                         (RED, P ^ prism_y(under))], base=CLEAR)
     if name == "cockpit":
         cush = mf.Manifold()
         for xs, rise in H.SEATS:
