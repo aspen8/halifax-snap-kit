@@ -79,12 +79,12 @@ FUSE_STATIONS = [
     (124.0, 11.8, 23.0,  -8.3, 2.9),
     # behind the cockpit the body takes the whole top line (no separate spine): an "egg"
     # section, widest at z_w, rounder above (n_up) than below. x, hw, top, bottom, n_lo, z_w, n_up
-    (134.0, 11.8, 33.6,  -8.0, 2.6, 8.0, 2.3),
-    (140.0, 11.7, 35.5,  -7.9, 2.6, 8.0, 2.2),
-    (152.6, 11.6, 33.6,  -7.4, 2.5, 8.0, 2.1),
-    (166.7, 11.6, 32.4,  -6.7, 2.5, 8.0, 2.05),
-    (180.9, 11.6, 31.2,  -5.2, 2.4, 8.0, 2.0),
-    (195.0, 11.6, 29.2,  -3.9, 2.4, 8.0, 2.0),
+    (134.0, 11.8, 33.6,  -8.0, 2.6, 13.0, 2.7),     # upright sides behind the canopy (photos):
+    (140.0, 11.7, 35.5,  -7.9, 2.6, 13.0, 2.7),     # widest higher up and squarer above, so
+    (152.6, 11.6, 33.6,  -7.4, 2.5, 12.5, 2.6),     # the side runs up flat and only rounds
+    (166.7, 11.6, 32.4,  -6.7, 2.5, 12.0, 2.5),     # over near the top
+    (180.9, 11.6, 31.2,  -5.2, 2.4, 11.0, 2.35),
+    (195.0, 11.6, 29.2,  -3.9, 2.4, 9.5, 2.15),
     (208.0, 11.5, 27.6,  -3.0, 2.3, 8.0, 2.0),
     (226.0, 11.2, 25.9,  -2.0, 2.2, 8.0, 2.0),
     (240.0, 10.8, 24.6,  -1.3, 2.3, 8.0, 2.5),
@@ -473,7 +473,7 @@ def splitter_gap(side):
     return box(x0 - 3.0, x0 + 6.0, y0, y1, zb + 1.0, zt - 1.0)
 
 
-BLEND_R = ((80.0, 92.0, 118.0, 150.0), (6.0, 1.2, 1.5, 6.0))   # fillet radius vs x: soft at the canopy,
+BLEND_R = ((80.0, 92.0, 118.0, 145.0, 165.0), (6.0, 1.2, 1.5, 2.5, 6.0))   # fillet radius vs x: soft at the canopy,
                              # tight at the inlet (pods nearly separate), soft again where they fade
 BLEND_X = (34.0, 192.0)      # x range of the blend (from ahead of the windscreen to behind the pods)
 BLEND_ZC = 4.0               # z of the polar centre used to resample each section
@@ -482,21 +482,8 @@ BELLY_Z = 2.0                # below this z each section is filled to its hull (
 BELLY_R = 6.5                # mm, radius of the pods' lower outer corners
 
 
-SILL_FLAT = (40.0, 124.0, 3.0)   # x range, and the z the upright side runs down to
-
-
-def _sill_wall(sec, x):
-    """Rectangle |y| <= (half-width just above the canopy sill), from SILL_FLAT[2] up to the sill."""
-    import shapely.geometry as sg
-    zs = canopy_sill_z(x) + 0.4
-    P = max((sg.Polygon(np.asarray(p)) for p in sec.to_polygons()), key=lambda q: q.area)
-    hit = sg.LineString([(-zs, 0.0), (-zs, 80.0)]).intersection(P.exterior)
-    pts = [hit] if hit.geom_type == "Point" else list(getattr(hit, "geoms", []))
-    if not pts:
-        return mf.CrossSection()
-    ys = min(q.y for q in pts if q.y > 0)              # the canopy/spine side, not a pod
-    z0 = SILL_FLAT[2]
-    return mf.CrossSection.square([zs - z0, 2 * ys]).translate([-zs, -ys])
+HULL_X0 = 60.0               # from just behind the windscreen frame: convex sections above the pods
+HULL_DZ = 0.6                # mm above the pod top where the hull starts
 
 
 def _section_x(m, x):
@@ -530,10 +517,14 @@ def pod_blend():
                 BELLY_R, mf.JoinType.Round, circular_segments=48)
             low = mf.CrossSection.square([60.0, 80.0]).translate([-BELLY_Z, -40.0])
             sec = (sec - low) + (rounded ^ low)
-        if SILL_FLAT[0] <= x <= SILL_FLAT[1]:
-            # flat, upright side under the canopy edge (photos): fill the body's waist below the
-            # sill out to the section's width just above it, down to SILL_FLAT[2]
-            sec = sec + _sill_wall(sec, x)
+        if x >= HULL_X0:
+            # convex upper fuselage (photos): above the pod tops each section is filled to its
+            # hull, so canopy, spine and body meet with flat, upright sides and no waist or groove;
+            # the pods and the notch beside them (below) are left alone
+            zc = float(np.interp(x, [s_[0] for s_ in INTAKE_STATIONS], [s_[2] for s_ in INTAKE_STATIONS])) + HULL_DZ
+            up = sec ^ mf.CrossSection.square([80.0, 80.0]).translate([-zc - 80.0, -40.0])
+            if not up.is_empty():
+                sec = sec + up.hull()
         r = float(np.interp(x, BLEND_R[0], BLEND_R[1]))
         sec = sec.offset(r, mf.JoinType.Round, circular_segments=48).offset(
             -r, mf.JoinType.Round, circular_segments=48)
