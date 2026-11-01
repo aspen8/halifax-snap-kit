@@ -60,7 +60,9 @@ LETTERS = ("ROYAL AIR FORCE", 143.0, 8.2, 60.0, 5.2)   # letters sit on the chea
                                                          # kept below the side pod's top edge (HobbyBoss)
 # Cheat line (photos): thin at the nose, thickening to the lettering's height on the side pod,
 # broken for "ROYAL AIR FORCE", resumed behind the roundel and swept up onto the fin in one curve.
-CHEAT_NOSE = (6.5, 2.35, 1.3)      # x, lower edge z, width at the nose tip
+CHEAT_NOSE = (1.8, 1.75, 1.1)      # x, lower edge z, width at the nose tip: the band starts right
+                                   # at the tip, just above the probe boss, so the two sides join
+                                   # across the front of the nose (head-on photo)
 CHEAT_POD_X = 95.0                 # full letter height reached here (on the pod)
 CHEAT_GAP = 2.0                    # mm of red between the band and the lettering
 SWOOSH_TOP = (223.5, 25.0, 0.57, 0.82, 8.0)   # x, z where it meets the fin flag, direction, width there
@@ -243,7 +245,8 @@ def fuselage_inlays(name, P):
     for side, st in ((1, "stbd"), (-1, "port")):
         stripes = widen(side_stripes(side), STRIPE_MIN_W)
         k = 0
-        for piece in chunks(clip(stripes, x0, -100, x1, 100), edges):
+        # the radome's band is painted (colour_part), so it can wrap round the tip
+        for piece in ([] if name == "radome" else chunks(clip(stripes, x0, -100, x1, 100), edges)):
             P, plug = y_inlay(P, piece, side)
             if plug is not None:
                 k += 1
@@ -354,9 +357,25 @@ def paint(P, ops, base=RED):
     return K.paint(P, ops, base)
 
 
-CANOPY_FRAMES_X = [(57.0, 1.8)]                   # windscreen arch: (x, width)
+CANOPY_FRAMES_X = [(57.0, 2.6, RED),             # windscreen arch: body colour and thick (photos)
+                   (84.0, 2.0, WHITE)]            # hoop between the cockpits, behind the front
+                                                  # seat (cream on the aircraft; white is closest)
 CANOPY_REAR_FRAME = 1.8                           # mm, frame along the slanted rear edge
 CANOPY_SILL = 0.9                                 # mm of black along the canopy's bottom edge
+NOSE_DOME = (4.0, 9.0, 36.0, 62.0)                # height above the sill at the centre, half-width,
+                                                  # x range: the red nose top domes up into the
+                                                  # windscreen, so the glass base is an arch
+                                                  # (head-on photos), not a straight line
+
+
+def nose_dome():
+    """Region below an elliptical arch over the canopy sill, ahead of the windscreen arch."""
+    h, w, x0, x1 = NOSE_DOME
+    ws = []
+    for x in np.arange(x0, x1 + 1e-6, 1.0):
+        zs = H.canopy_sill_z(x)
+        ws.append(H.egg_wire(x, w, zs + h, zs - 8.0, 6.0, zs, 2.0))
+    return H.to_m(H.loft(ws, ruled=True))
 
 
 def colour_part(name, P):
@@ -382,15 +401,20 @@ def colour_part(name, P):
         sill = [(x, H.canopy_sill_z(x)) for x in xs]
         under = cs([np.array(sill + [(140.0, -20.0), (30.0, -20.0)])])
         band = cs([np.array([(x, z + CANOPY_SILL) for x, z in sill] + [(x, z - 0.05) for x, z in sill[::-1]])])
-        frames = mf.Manifold()
-        for x, w in CANOPY_FRAMES_X:
-            frames = frames + K.slab("x", x, w)
+        hoops = [(c, shell ^ K.slab("x", x, w)) for x, w, c in CANOPY_FRAMES_X]
         (ra, rza), (rb, rzb) = H.CANOPY_REAR
         ang = math.degrees(math.atan2(rb - ra, rza - rzb))
         keep = H.rot_about(K.box(ra - 200, ra - CANOPY_REAR_FRAME, -50, 50, rzb - 30, rza + 30), (ra, 0, rza), "y", -ang)
         rear = P - (P ^ keep)
-        return paint(P, [(BLACK, (shell ^ (frames + prism_y(band))) + (shell ^ rear)),
-                         (RED, P ^ prism_y(under))], base=CLEAR)
+        return paint(P, [(BLACK, (shell ^ prism_y(band)) + (shell ^ rear))] + hoops +
+                     [(RED, P ^ prism_y(under)), (RED, P ^ nose_dome())], base=CLEAR)
+    if name == "radome":
+        # the cheat line painted into the skin: a side-on band that also crosses the front of
+        # the nose, where both sides meet just above the probe boss
+        _, _, _, bd, bl = H.PROBE
+        probe = H.box(-60.0, 3.4, -bd / 2 - 0.15, bd / 2 + 0.15, -bd / 2 - 0.15, bd / 2 + 0.15)
+        band = prism_y(cheat_front()) - K.inner_core(P, SKIN) - probe
+        return paint(P, [(WHITE, band)])
     if name == "cockpit":
         cush = mf.Manifold()
         for xs, rise in H.SEATS:

@@ -44,7 +44,7 @@ Open `kit/hawk_kit.3mf` in Bambu Studio. Its 6 plates have the filaments already
 
 Suggested settings: PLA, 0.16 mm layers for the inlay and gear plates and 0.2 mm elsewhere, 2 walls, 15% gyroid infill, no supports. Use a brim on the front fuselage section, which stands 159 mm tall.
 
-## Kit contents (92 parts)
+## Kit contents (90 parts)
 
 - **Airframe:**
   - radome with pitot probe
@@ -55,10 +55,10 @@ Suggested settings: PLA, 0.16 mm layers for the inlay and gear plates and 0.2 mm
   - smoke pod (2 halves)
   - 3 aerials
 - **Cockpit:**
-  - solid clear canopy with a black windscreen arch, an upright rear frame and a curved sill frame
+  - solid clear canopy with a thick red windscreen arch, a white hoop between the cockpits, an upright rear frame and a curved black sill frame. The red nose top domes up into the windscreen (painted), so from the front the glass base is an arch that comes down at the sides, as on the aircraft
   - tandem tub with the raised rear seat, side consoles, 2 seats (headboxes, firing handles, grey cushions), 2 instrument panels with coamings, and control columns
 - **White inlays:**
-  - cheat line, 4 pieces per side: thin at the nose, thickening to the lettering's height on the side pod, stopping at the lettering
+  - cheat line, 3 pieces per side: thickening to the lettering's height on the side pod, stopping at the lettering. On the radome it is painted into the skin instead, so it wraps round the tip and the two sides join across the front of the nose, just above the probe
   - tail swoosh, 2 pieces per side: from behind the roundel, sweeping up to the fin flag
   - 9 belly-stripe pieces
   - 26 letters ("ROYAL AIR FORCE" on each side)
@@ -127,7 +127,7 @@ The scheme is the current one, with the Union-flag fin. It combines two sheets:
 
 - **Fin flag:** traced from the HobbyBoss 81738 side views with `tools/trace_colours.py`, one trace per side (specs in `tools/fin_flag_*.json`). Each view is fitted to the model through its fin corners and the nose tip, so the flag lands exactly on our fin. It's clipped to the fin itself: above the fuselage top line and behind the straight leading edge, so the spine cap and dorsal fillet stay red.
 - **Cheat line and swoosh** (parametric, from the photos, the same on both sides):
-  - From the nose the line starts 1.3 mm wide and thickens gradually to the letter height (5.2 mm) on the side pod, then stops 2 mm short of "ROYAL AIR FORCE".
+  - It starts at the nose tip, 1.1 mm wide and crossing the front of the nose just above the probe boss (head-on photo), and thickens gradually to the letter height (5.2 mm) on the side pod, then stops 2 mm short of "ROYAL AIR FORCE".
   - It resumes behind the roundel at the same height and sweeps up in one curve (a cubic Bezier) to the fin root, widening to 8 mm, where it meets the flag's white.
 - **Lettering and roundels:** follow the Revell sheet and the photos.
   - The lettering is regenerated as text, so it reads correctly on both sides.
@@ -180,4 +180,5 @@ Checks: run `tools/interference.py` on the assembled STLs without the `key_*` fi
 - Add the older blue-fin scheme (HobbyBoss sheet I, Revell 2010) as an option.
 - Add the ventral strakes, the airbrake outline, the canopy detonating-cord (MDC) lines and the intake auxiliary doors.
 - Add gear doors for the gear-down display.
+- Add the two small ducts on top of the fuselage, one each side, just behind the canopy.
 - Print a fit coupon for the letter inlays and the nose end of the cheat line: both are about 1–1.3 mm wide, at the printable limit.

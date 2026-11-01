@@ -23,6 +23,7 @@ VIEWS = {
     "rear34": ((1.1, -0.9, 0.55), "Rear 3/4"),
     "front": ((-1.0, -0.25, 0.25), "Front"),
     "head": ((-1.0, 0.0, 0.03), "Head-on"),
+    "headhi": ((-1.0, 0.0, 0.18), "Head-on, slightly above"),
     "stbd": ((0.0, 1.0, 0.02), "Starboard side"),
     "low34": ((-0.7, -1.0, -0.55), "Port 3/4 from below"),
     "lowside": ((0.15, -1.0, -0.4), "Port side from below"),
