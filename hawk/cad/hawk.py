@@ -119,22 +119,23 @@ INTAKE_STATIONS = [            # x, y_outer, z_top, z_bottom: the side pods (int
     # boxy D-section pods (cross-sections checked against a reference Hawk model). Side views:
     # the top edge climbs quickly behind the inlet, then runs nearly level and sweeps back
     # into the fuselage side below the spine; the outer side tapers in over the same length.
-    (89.0, 20.0, 12.6, -3.6),      # rounded lip (head-on photo)
-    (89.6, 20.5, 13.1, -4.1),
-    (90.5, 20.9, 13.5, -4.5),
-    (92.5, 21.4, 14.4, -5.2),
-    (98.0, 21.7, 15.9, -6.0),
-    (104.0, 21.8, 16.8, -6.4),
-    (113.0, 21.7, 17.4, -6.4),     # behind the wing LE the pod sits on the wing:
-    (125.0, 21.2, 17.7, -6.2),     # keep its bottom above the wing underside (no slivers)
-    (137.0, 20.0, 17.6, -5.8),
-    (147.0, 18.2, 17.2, -5.4),
-    (156.0, 16.0, 16.4, -5.0),     # fades into the body by the wing trailing edge
-    (164.0, 13.9, 15.2, -4.6),
-    (172.0, 12.2, 13.6, -4.0),
-    (180.0, 11.0, 12.0, -3.4),
+    (89.0, 20.0, 12.0, -3.6),      # rounded lip (head-on photo)
+    (89.6, 20.5, 12.5, -4.1),
+    (90.5, 20.9, 12.9, -4.5),
+    (92.5, 21.4, 13.5, -5.2),
+    (98.0, 21.7, 14.2, -6.0),      # top climbs a little behind the inlet, staying well clear of
+    (104.0, 21.8, 14.6, -6.4),     # the canopy sill (head-on photo)
+    (113.0, 21.7, 15.0, -6.4),     # behind the wing LE the pod sits on the wing:
+    (125.0, 21.2, 15.2, -6.2),     # keep its bottom above the wing underside (no slivers)
+    (137.0, 20.0, 15.0, -5.8),
+    (147.0, 18.2, 14.6, -5.4),
+    (156.0, 16.0, 13.8, -3.6),     # fades into the body by the wing trailing edge: the bottom
+    (164.0, 13.9, 12.8, -0.6),     # rises up the fuselage side as the pod tapers in, so nothing
+    (172.0, 12.2, 11.6, 3.0),      # sticks out below
+    (180.0, 11.0, 10.4, 6.0),
 ]
-INTAKE_Y_IN = 10.0           # inner edge of the fairing (buried in the body)
+INTAKE_Y_IN = 10.8           # inner edge of the pods, just inside the body side: their rounded
+                             # inner top corner leaves a notch, so they read as separate at the inlet
 INTAKE_N = 3.0               # boxy pods (reference model cross-sections)
 INTAKE_MOUTH = (91.0, 18.0, 1.0)  # x of the lip, depth of the duct (deep: reads dark), lip wall
 SPLITTER_GAP = 0.6           # mm, boundary-layer gap between the lip and the fuselage
@@ -467,7 +468,8 @@ def splitter_gap(side):
     return box(x0 - 3.0, x0 + 6.0, y0, y1, zb + 1.0, zt - 1.0)
 
 
-BLEND_R = 6.0                # mm, fillet radius filling the creases (pod tops and canopy sill into the body)
+BLEND_R = ((80.0, 92.0, 118.0, 150.0), (6.0, 1.2, 1.5, 6.0))   # fillet radius vs x: soft at the canopy,
+                             # tight at the inlet (pods nearly separate), soft again where they fade
 BLEND_X = (34.0, 192.0)      # x range of the blend (from ahead of the windscreen to behind the pods)
 BLEND_ZC = 4.0               # z of the polar centre used to resample each section
 BLEND_N = 144                # points per section
@@ -506,8 +508,9 @@ def pod_blend():
                 BELLY_R, mf.JoinType.Round, circular_segments=48)
             low = mf.CrossSection.square([60.0, 80.0]).translate([-BELLY_Z, -40.0])
             sec = (sec - low) + (rounded ^ low)
-        sec = sec.offset(BLEND_R, mf.JoinType.Round, circular_segments=48).offset(
-            -BLEND_R, mf.JoinType.Round, circular_segments=48)
+        r = float(np.interp(x, BLEND_R[0], BLEND_R[1]))
+        sec = sec.offset(r, mf.JoinType.Round, circular_segments=48).offset(
+            -r, mf.JoinType.Round, circular_segments=48)
         polys = sec.to_polygons()
         P = max((sg.Polygon(np.asarray(p)) for p in polys), key=lambda q: q.area)
         pts = []
