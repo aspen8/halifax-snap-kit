@@ -193,6 +193,21 @@ def skins(P):
     }
 
 
+_DF = None
+
+
+def df_region():
+    """The D/F loop housing and mast, grown slightly, outside the fuselage (painted black)."""
+    global _DF
+    if _DF is None:
+        D_ = to_manifold(H.mesh(H.df_loop_fairing()))
+        lo, hi = map(np.array, (D_.bounding_box()[:3], D_.bounding_box()[3:]))
+        c0 = (lo + hi) / 2
+        grown = D_.translate(list(-c0)).scale([1.04, 1.25, 1.04]).translate(list(c0))
+        _DF = grown - to_manifold(H.mesh(H.fuselage_solid()))
+    return _DF
+
+
 def socket_region(name):
     """Everything inside a roundel socket: painted black so the gap round the inlay reads black."""
     if name.startswith("wing_outer"):
@@ -222,10 +237,7 @@ def colour_part(name, P, pat):
         return {BLACK: P}
     if name.startswith("spine_"):                          # one camo colour per piece
         base = GREEN if name.endswith("green") else EARTH
-        x0, L, w, d = H.DF_LOOP                            # ...except the D/F loop housing: black
-        f, mx, mw = H.DF_MAST
-        top = H.interp(H.FUSE_STATIONS, x0 + f * L)[2]
-        df = H_box(x0 - 1, x0 + L + 1, -w, w, top + 0.15, 60)
+        df = df_region()                                    # ...except the D/F loop housing: black
         if (P ^ df).volume() > 1.0:
             return paint(P, [(BLACK, df)], base=base)
         return {base: P}
