@@ -202,3 +202,10 @@ Checks: run `tools/interference.py` on the assembled STLs without the `key_*` fi
   - Splitting the side pods (intake trunks) off as separate parts, printed lying flat on the face that mates with the fuselage. The lettering is then on the upper surface, which prints well. Face down doesn't suit the pod's curved outer side.
   - The fuselage roundels sit behind the pods on the rear section (X 187), so they need a separate answer. Options: print the rear section on its side, add a separate side panel for each roundel, or bring back press-in roundel discs printed face down.
   - Things to work out: where the pod parts join the fuselage (seams along panel lines), how they're keyed, keeping the plate at 5 colours or fewer, and whether the cheat line, which runs across the pods, splits cleanly at the pod edges.
+- **Print-in-place moving control surfaces (check feasibility).** Could the ailerons, flaps, elevators and rudder print already hinged in place and move afterwards? Things to check:
+  - Hinge type: a pin-and-knuckle hinge along the existing hinge lines, or a thin flexing film hinge.
+  - Clearances that print without fusing on the X2D: a print-in-place test coupon first.
+  - Whether the thin surfaces (about 1–2 mm thick at the trailing edge, 1:32) leave room for a hinge.
+  - Painted markings that cross a hinge line: the wing roundels, the underside chevrons and the fin flag.
+  - Friction, so a surface holds its position once set.
+  - The rudder: the fin prints as two halves on their split face.
