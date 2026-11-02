@@ -198,3 +198,7 @@ Checks: run `tools/interference.py` on the assembled STLs without the `key_*` fi
 - Add the ventral strakes, the airbrake outline, the canopy detonating-cord (MDC) lines and the intake auxiliary doors.
 - Add gear doors for the gear-down display.
 - Check the painted lettering and the thin nose end of the cheat line in the first print: their strokes are about 1–1.4 mm wide.
+- **Sharper side markings (explore).** In the first test print, "ROYAL AIR FORCE" and the fuselage roundels came out a little fuzzy in places. They are painted on vertical walls of sections printed on end, so every letter edge is built from layer steps and wall-line colour changes. Explore:
+  - Splitting the side pods (intake trunks) off as separate parts, printed with their outer face down on the bed, so the lettering is laid down in the first layers at full XY resolution.
+  - The fuselage roundels sit behind the pods on the rear section (X 187), so they need a separate answer. Options: print the rear section on its side, add a separate side panel for each roundel, or bring back press-in roundel discs printed face down.
+  - Things to work out: where the pod parts join the fuselage (seams along panel lines), how they're keyed, keeping the plate at 5 colours or fewer, and whether the cheat line, which runs across the pods, splits cleanly at the pod edges.
