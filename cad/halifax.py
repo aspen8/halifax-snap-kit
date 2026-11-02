@@ -27,6 +27,7 @@ import cadquery as cq
 import numpy as np
 
 import kitlib as K
+import manifold3d as mf  # noqa: E402
 
 # ============================================================
 # PARAMETERS
@@ -49,7 +50,8 @@ NACELLE_TAIL_START = ((10.0, 8.0), (7.0, 7.0))   # its depth below the wing and 
 NACELLE_KEY_AT = (0.30, 0.06)   # chord fraction of the lock for each nacelle (deep wing and nacelle body)
 KEY_NAC_OUTER = (8.0, 6.0, 3.0)  # the outer nacelles are shallower: 3.5 mm up into the wing, 4.5 mm down
 NACELLE_KEY_UP = (4.0, 3.5)      # how far each lock goes up into the wing
-KEY_FIN = (4.0, 6.0, 1.6)    # tailplane tip into fin: length along y, width along x, thickness z
+FIN_TAB = (1.8, 6.0, 1.6)    # tab printed on the tailplane tip, flush with its flat underside:
+                             # protrusion into the fin (y), width (x), thickness (z)
 FIN_KEY_AT = (0.24,)         # one key at the thickest part of the tip (mid-chord broke through)
 
 AXLE_HOLE_TIGHT = 3.05       # mm, printed 2.5 mm pins grip here (fit-test clearance +0.55)
@@ -105,7 +107,8 @@ SPINE_CUTS = [(13.0, 52.3, "earth"), (72.8, 100.0, "green"),
 SPINE_SLANT = {100.0: 0.15, 150.2: 0.24, 204.5: 0.44, 230.0: 0.57, 288.0: 0.24}   # 204.5: just aft of the turret opening, under the dome
 SPINE_REF_Z = 6.5            # height at which the boundary x values are measured
 SPINE_GAP = 0.1              # mm, end clearance between neighbouring spine pieces
-KEY_CAP = (7.0, 6.0, 2.0)    # spine to body keys: length along z, width along x, thickness y
+KEY_CAP = (7.0, 6.0, 2.0)    # (old loose spine keys; sizes the peg spacing)
+SPINE_PEG = (3.5, 0.5, 3.0, 2.4)   # spine pegs on the body: base half-width, tip half-width, height, thickness
 JOINT_LIP = 7.0              # mm, length of the internal joining lip
 NOSE_SPIGOT = 5.0            # mm
 
@@ -435,7 +438,7 @@ def fuselage_parts(wing_tongues):
     body = body.cut(cyl((DORSAL_X, 0, top_d - 3.0), 2 * DORSAL_R, 20, "z"))  # dorsal turret
     for c in tailplane_slot_cuts():
         body = body.cut(c)
-    body = body.union(df_loop_fairing()).cut(astrodome_socket())
+    body = body.cut(df_plug(grow=KEY_FIT)).cut(astrodome_socket())   # D/F loop pops in here
     for pocket in wing_tongues:
         body = body.cut(pocket)
     _, _, _, bot_t, _ = interp(FUSE_STATIONS, TAIL_AXLE_X)
@@ -475,12 +478,26 @@ def fuselage_parts(wing_tongues):
     # front/rear keys on the joint face, below the spine line
     _, hw, top, bot, _ = interp(FUSE_STATIONS, FUSE_SPLIT_X)
     zs = float(spine_z(FUSE_SPLIT_X))
-    fr = [(0, y, z) for y in (-hw / 2, hw / 2) for z in (bot + 6, (bot + zs) / 2, zs - 6)]
-    fr_holes = M(key_slots(fr, "x", FUSE_SPLIT_X, KEY_FR, "z"))
-    KEY_COUNTS["key_fuselage_joint"] = (KEY_FR, len(fr))
+    # one tall key each side (it replaced three small ones a side: fewer fiddly parts)
+    key_fr = (KEY_FR[0], round(zs - bot - 6.0, 1), KEY_FR[2])
+    fr = [(0, y, (bot + zs) / 2) for y in (-hw / 2, hw / 2)]
+    fr_holes = M(key_slots(fr, "x", FUSE_SPLIT_X, key_fr, "z"))
+    KEY_COUNTS["key_fuselage_joint"] = (key_fr, len(fr))
     # spine-to-body keys: one or two per piece, clear of the tailplane tunnel
     cap_holes = K.box(0, 0.001, 0, 0.001, 0, 0.001)
+    pegs = K.box(0, 0.001, 0, 0.001, 0, 0.001)
     n_keys = 0
+
+    def spine_peg(x, z, grow=0.0):
+        """Tapered peg on the body (both sides 45 deg: prints on end), or its socket (grow)."""
+        hb, ht, h, t = SPINE_PEG
+        top = h + (KEY_END_GAP if grow else 0.0)
+        sec = K.cs([np.array([(x - hb - 1.0, z - 1.0), (x + hb + 1.0, z - 1.0),
+                              (x + ht, z + h), (x - ht, z + h)])])
+        if grow:
+            sec = sec.offset(grow, mf.JoinType.Miter)
+            sec = sec ^ K.cs([np.array([(x - 50, z - 5), (x + 50, z - 5), (x + 50, z + top), (x - 50, z + top)])])
+        return K.prism_y(sec) ^ mbox(x - 50, x + 50, -t / 2 - grow, t / 2 + grow, z - 5, z + 20)
     def thick(x):
         return interp(FUSE_STATIONS, x)[2] - float(spine_z(x))
     tail = (TAIL_ROOT[0] - 3 - KEY_CAP[1] / 2, TAIL_ROOT[0] + TAIL_ROOT[1] + 3 + KEY_CAP[1] / 2)
@@ -494,14 +511,14 @@ def fuselage_parts(wing_tongues):
                 continue
             x = max(cand, key=thick)
             z = float(spine_z(x))
-            cap_holes = cap_holes + M(key_slots([(x, 0, z)], "z", z, KEY_CAP, "x"))
+            pegs = pegs + spine_peg(x, z)
+            cap_holes = cap_holes + spine_peg(x, z, grow=KEY_FIT)
             n_keys += 1
-    KEY_COUNTS["key_spine"] = (KEY_CAP, n_keys)
 
     parts = {}
     for sec_name, (a, b) in (("front", (-5, FUSE_SPLIT_X)), ("rear", (FUSE_SPLIT_X, 400))):
-        parts[f"fuselage_{sec_name}"] = T(K.largest_piece((Bb ^ mbox(a, b, -50, 50, -60, 60))
-                                                          - fr_holes - cap_holes)[0])
+        parts[f"fuselage_{sec_name}"] = T(K.largest_piece(((Bb + pegs) ^ mbox(a, b, -50, 50, -60, 60))
+                                                          - fr_holes)[0])
     def behind(xb, gap):
         """Half-space aft of the slanted boundary plane x = xb + k (z - ref) (+ gap)."""
         k = SPINE_SLANT.get(xb, 0.0)
@@ -935,6 +952,25 @@ def df_loop_fairing():
     return tear.union(mast)
 
 
+DF_PLUG = (4.0, 3.0)         # plug under the D/F mast: length (x), depth; width = housing width
+
+
+def df_plug(grow=0.0):
+    """Plug under the D/F mast, flush with the roof (or its socket, grown)."""
+    x0, L, w, d = DF_LOOP
+    xm = x0 + DF_MAST[0] * L
+    pl, pd = DF_PLUG
+    _, _, top, _, _ = interp(FUSE_STATIONS, xm)
+    b = box(xm - pl / 2 - grow, xm + pl / 2 + grow, -w / 2 - grow, w / 2 + grow,
+            top - pd - (KEY_END_GAP if grow else 0.0), top + 3.0)
+    return b if grow else b.intersect(fuselage_solid())
+
+
+def df_loop_part():
+    """The D/F loop as its own black part: housing, mast and plug (pops into the roof)."""
+    return df_loop_fairing().union(df_plug())
+
+
 def propeller():
     """Prop on its own axis: X = thrust axis, backplate at x = 0 facing +x."""
     sp = revolve_profile([(-SPINNER_LEN, 0.6), (-SPINNER_LEN * 0.7, SPINNER_R * 0.62),
@@ -1006,17 +1042,20 @@ def fin(side):
     tp = tailplane()
     for dx, dz in ((0, 0), (FIT, 0), (-FIT, 0), (0, FIT), (0, -FIT)):
         f = f.cut(tp.translate((dx, 0, dz)))
-    # tailplane tip sits in a shallow recess, held by two printed keys
-    return f.cut(fin_key_slots(side))
+    # tailplane tip sits in a shallow recess; its printed-on tab locks into a slot
+    return f.cut(fin_tab(side, grow=KEY_FIT))
 
 
-def fin_key_slots(side):
-    """Key slots across the tailplane-tip / fin joint (cut into both parts)."""
+def fin_tab(side, grow=0.0):
+    """Tab on the tailplane tip, flush with the flat underside (prints on the bed, no loose key).
+    With grow: the matching slot in the fin."""
     y_tip = FIN_Y - FIN_T / 2 + FIN_POCKET
-    x0, c = TAIL_TIP
-    pts = [(x0 + f * c, 0, TAIL_FLOOR + 0.46 * TAIL_TC * c) for f in FIN_KEY_AT]   # mid-thickness
-    KEY_COUNTS["key_fin"] = (KEY_FIN, 2 * len(pts))
-    return key_slots(pts, "y", side * y_tip, KEY_FIN, "x")
+    p, w, t = FIN_TAB
+    x = TAIL_TIP[0] + FIN_KEY_AT[0] * TAIL_TIP[1]
+    y0, y1 = y_tip - 1.0, y_tip + p + (KEY_END_GAP if grow else 0.0)
+    if side < 0:
+        y0, y1 = -y1, -y0
+    return box(x - w / 2 - grow, x + w / 2 + grow, y0, y1, TAIL_FLOOR - grow, TAIL_FLOOR + t + grow)
 
 
 # ============================================================
@@ -1246,7 +1285,7 @@ def build():
     poses["stand_post"] = lambda w: rot(w.rotate(*sax, STAND_PITCH), "x", 90)
     poses["stand_base"] = lambda w: w.rotate(*sax, STAND_PITCH)
 
-    parts["tailplane"] = tailplane().cut(fin_key_slots(1)).cut(fin_key_slots(-1))
+    parts["tailplane"] = tailplane().union(fin_tab(1)).union(fin_tab(-1))
     poses["tailplane"] = lambda w: w
     # printed connector keys (one part per key, so the kit is complete)
     for kname, (key, n) in KEY_COUNTS.items():
@@ -1254,6 +1293,8 @@ def build():
             parts[f"{kname}_{i + 1}"] = connector_key(key)
             poses[f"{kname}_{i + 1}"] = lambda w: w
     parts["astrodome"] = astrodome()
+    parts["df_loop"] = df_loop_part()
+    poses["df_loop"] = lambda w: rot(w, "x", 90)          # on its side: plug and housing on the bed
     poses["astrodome"] = lambda w: w
     for i in range(len(NACELLES)):
         for side, tag in ((1, "stbd"), (-1, "port")):

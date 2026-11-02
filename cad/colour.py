@@ -193,21 +193,6 @@ def skins(P):
     }
 
 
-_DF = None
-
-
-def df_region():
-    """The D/F loop housing and mast, grown slightly, outside the fuselage (painted black)."""
-    global _DF
-    if _DF is None:
-        D_ = to_manifold(H.mesh(H.df_loop_fairing()))
-        lo, hi = map(np.array, (D_.bounding_box()[:3], D_.bounding_box()[3:]))
-        c0 = (lo + hi) / 2
-        grown = D_.translate(list(-c0)).scale([1.04, 1.25, 1.04]).translate(list(c0))
-        _DF = grown - to_manifold(H.mesh(H.fuselage_solid()))
-    return _DF
-
-
 def socket_region(name):
     """Everything inside a roundel socket: painted black so the gap round the inlay reads black."""
     if name.startswith("wing_outer"):
@@ -237,9 +222,6 @@ def colour_part(name, P, pat):
         return {BLACK: P}
     if name.startswith("spine_"):                          # one camo colour per piece
         base = GREEN if name.endswith("green") else EARTH
-        df = df_region()                                    # ...except the D/F loop housing: black
-        if (P ^ df).volume() > 1.0:
-            return paint(P, [(BLACK, df)], base=base)
         return {base: P}
     if name.startswith("fuselage_"):
         s = 1 if name.endswith("stbd") else -1
@@ -273,13 +255,14 @@ def colour_part(name, P, pat):
         side = S["+y"] if s > 0 else S["-y"]
         x0, z0, z1, w, ww = FIN_FLASH
         rect = lambda a, b: mf.CrossSection([np.array([[a, z0], [b, z0], [b, z1], [a, z1]])])
-        ops = [(RED, side ^ prism_y(rect(x0, x0 + w))),
-               (WHITE, side ^ prism_y(rect(x0 + w, x0 + w + ww))),
-               (BLUE, side ^ prism_y(rect(x0 + w + ww, x0 + 2 * w + ww)))]
+        # outer face only (the inner face stays black); the flash goes over the yellow stripes
+        ops = []
         if MK["fin_stripes"]:
-            both = S["+y"] + S["-y"]
             for quad in FIN_STRIPES:
-                ops.append((YELLOW, both ^ prism_y(cs([quad]))))
+                ops.append((YELLOW, side ^ prism_y(cs([quad]))))
+        ops += [(RED, side ^ prism_y(rect(x0, x0 + w))),
+                (WHITE, side ^ prism_y(rect(x0 + w, x0 + w + ww))),
+                (BLUE, side ^ prism_y(rect(x0 + w + ww, x0 + 2 * w + ww)))]
         return paint(P, ops)
     if name.startswith("prop") and not name.startswith("prop_shaft"):
         idx = int(name[4]) - 1
@@ -638,7 +621,7 @@ def add_object(objs, name, posed, out, whole):
 PLATE_GROUPS = [            # parts kept together by colour set (max 5 colours a plate)
     ("Fuselage", lambda n: n.startswith("fuselage")),
     ("Spine (Dark Green)", lambda n: n.startswith("spine_") and n.endswith("green")),
-    ("Spine (Dark Earth, black DF loop)", lambda n: n.startswith("spine_") and n.endswith("earth")),
+    ("Spine (Dark Earth)", lambda n: n.startswith("spine_") and n.endswith("earth")),
     ("Wings", lambda n: n.startswith(("wing_", "tailplane"))),
     ("Nacelles", lambda n: n.startswith("nacelle")),
     ("Fins, roundels and codes", lambda n: n.startswith(("fin_", "roundel_", "code_"))),
