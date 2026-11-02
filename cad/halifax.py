@@ -963,12 +963,17 @@ def df_plug(grow=0.0):
     _, _, top, _, _ = interp(FUSE_STATIONS, xm)
     b = box(xm - pl / 2 - grow, xm + pl / 2 + grow, -w / 2 - grow, w / 2 + grow,
             top - pd - (KEY_END_GAP if grow else 0.0), top + 3.0)
-    return b if grow else b.intersect(fuselage_solid())
+    return b
 
 
 def df_loop_part():
-    """The D/F loop as its own black part: housing, mast and plug (pops into the roof)."""
-    return df_loop_fairing().union(df_plug())
+    """The D/F loop as its own black part: housing, mast and plug (pops into the roof).
+    Mesh booleans: OCC returns nothing for the plug cut flush to the fuselage loft."""
+    import trimesh
+    M = lambda w: K.to_manifold(mesh(w))
+    man = M(df_loop_fairing()) + (M(df_plug()) ^ M(fuselage_solid()))
+    V, F = K.mesh_of(man)
+    return trimesh.Trimesh(V, F)
 
 
 def propeller():
