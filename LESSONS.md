@@ -57,6 +57,7 @@ Print `cad/fit_test.py` first on any new printer or filament.
 
 **3MF:**
 - **XML breaks** on "&" in plate names. Always use `quoteattr` and `escape`.
+- **Bambu Studio refuses to open** a file whose plate or object names contain `<>:/\|?*"` ("D/F loop" did it). `kitlib.write_3mf` now strips them with `safe_name`.
 
 **Process:**
 - **Don't trust one source.** Every shape complaint so far was a reference problem, not a CAD problem.
