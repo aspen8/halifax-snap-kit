@@ -49,12 +49,12 @@ The single-colour STLs are in `stl/`, in print orientation.
 - **Clear parts:** perspex nose, cockpit canopy, rear roof glazing, astrodome, dorsal and tail turrets, all with black frame lines. Plus 2 gun packs.
 - **Engines:** 4 props with yellow tips, 4 prop shafts with captive flanges (the props spin), 8 exhaust banks.
 - **Gear:** 2 main gear forks and wheels, tailwheel and printed 2.5 mm axle pins. For display on the stand there are 2 wheels-up inserts that show the retracted main wheels.
-- **Connector keys:**
-  - 10 spine to body.
-  - 6 at the front/rear joint.
+- **Connector keys** (6 loose, all flexing, after the PB94 Spitfire: spring slots at the ends and a narrow middle, so they push in easily and grip):
+  - 2 tall keys at the front/rear joint.
   - 2 at the inner/outer wing joints.
-  - 2 at the tailplane tips into the fins.
   - 4 nacelle locks (2 sizes): each joins the nacelle halves and pins the nacelle into a pocket in the wing underside.
+  - The spine pieces locate on pegs printed on the black body, and the fins on tabs printed on the tailplane tips: no loose keys there.
+- **D/F loop:** a separate black part that pops into a socket in the roof.
 - **Display stand:**
   - A swept "swan-neck" blade that prints flat on its side.
   - A plinth (190 × 120 mm, bevelled underside) with a Dark Earth/Dark Green camo top and a yellow pinstripe.
@@ -64,16 +64,17 @@ The single-colour STLs are in `stl/`, in print orientation.
 - 0.5 mm panel lines and deeper hinge lines.
 - Fuel filler caps, the dinghy hatch, the crew door, roof hatches and nose windows.
 - Paired rivet rows along the spars and the lower fuselage seam.
-- Radiator intakes with vanes and the D/F loop fairing.
+- Radiator intakes with vanes.
 
 ## Assembly
 
 1. **Fuselage.**
-   - Join the front and rear body sections on the 6 joint keys.
+   - Join the front and rear body sections on the 2 tall joint keys.
    - Drop the canopy and rear roof glazing over their locating bosses, and press in the astrodome and the nose spigot.
    - Slide both inner wing root tongues into their side pockets, port forward and starboard aft.
    - Lay the tailplane on its seat.
-   - Press the spine pieces on, nose to tail, on their keys. The piece over the tail holds the tailplane down, and the piece over the joint locks the two sections together.
+   - Press the spine pieces on, nose to tail, over the pegs on the body. The piece over the tail holds the tailplane down, and the piece over the joint locks the two sections together.
+   - Push the D/F loop into its socket in the roof.
    - Press in the red code letters and the roundels. Each roundel (wing and fuselage) has an off-centre peg, so it only fits one way round and grips, and an L or R engraved on its back.
 2. **Wings.** Join each outer panel to its inner panel with a wing key. The joint faces set the 5° dihedral. Press the wing roundels into their sockets.
 3. **Nacelles.**
@@ -82,7 +83,7 @@ The single-colour STLs are in `stl/`, in print orientation.
    - Push the nacelle lock key up into its pocket in the wing underside (the longer key is for the inner nacelles).
    - Close both halves around the wing and the key.
    - Press the prop onto the hex boss last.
-4. **Tail.** Push a key into each tailplane tip and press the fins on.
+4. **Tail.** Slide the fins onto the tailplane tips: the tab on each tip locks into the fin.
 5. **Turrets.** Fit the gun packs into the turrets. Pin the turrets on: the dorsal turret rotates.
 6. **Display.** Either fit the gear (wheels on the headed pins, forks into their sockets) or put the model on the stand. With the gear down it sits tail-down at 8.7°. For the stand, push the blade's tenon into the plinth, fit the wheels-up inserts, and lower the model onto the key at the blade tip: it sits 5° nose-up.
 
