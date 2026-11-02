@@ -59,12 +59,12 @@ WALL = 1.6                   # mm, nose spigot inset from the skin
 # --- Fuselage stations: (x, half_width, z_top, z_bottom, squareness)
 # squareness: 2 = ellipse, higher = flatter sides (Halifax is slab-sided)
 FUSE_STATIONS = [            # measured from the Revell Srs IA side and plan views
-    (0.0,   0.8, -20.0, -21.3, 2.0),   # perspex nose dome: rounded tip (no flat face, photos)
-    (0.3,   2.9, -18.3, -22.4, 2.0),
-    (0.7,   4.1, -16.6, -23.2, 2.0),
-    (1.2,   5.0, -15.1, -23.8, 2.1),
-    (2.5,   5.9, -12.6, -25.9, 2.2),
-    (4.9,   6.7,  -9.8, -28.0, 2.3),
+    (0.0,   0.6, -20.0, -21.3, 2.0),   # perspex nose dome: rounded tip, parabolic in plan (Revell plan view)
+    (0.3,   1.6, -18.3, -22.4, 2.0),
+    (0.7,   2.5, -16.6, -23.2, 2.0),
+    (1.2,   3.3, -15.1, -23.8, 2.1),
+    (2.5,   4.6, -12.6, -25.9, 2.2),
+    (4.9,   6.0,  -9.8, -28.0, 2.3),
     (8.6,   7.7,  -7.2, -30.7, 2.5),
     (12.3,  8.6,  -5.4, -32.8, 2.6),
     (18.4,  9.7,  -3.5, -34.9, 2.8),

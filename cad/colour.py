@@ -412,12 +412,14 @@ NOSE_XFRAMES = [(12.4, None)]                # rear rim (NP-G profile, Wikipedia
 NOSE_ZFRAMES = [-18.3]                       # upper edge of the gun slot (horizontal)
 # lower half: three oval windows (photos of the nose): a big one on the chin and a narrow
 # upright one either side. Each: ray origin inside, outward direction, length, width (mm).
-NOSE_OVALS = [((6.0, 0.0, -22.0), (-0.62, 0.0, -0.78), 6.5, 4.6),
-              ((6.0, 0.0, -21.5), (-0.50, 0.84, -0.22), 5.5, 2.4),
-              ((6.0, 0.0, -21.5), (-0.50, -0.84, -0.22), 5.5, 2.4)]
+NOSE_TIP = (0.0, 0.0, -20.6)
+NOSE_OVALS = [((6.0, 0.0, -21.0), (-0.75, 0.0, -0.65), 6.0, 4.0),     # chin oval
+              ((6.0, 0.0, -21.0), (-0.50, 0.80, -0.35), 5.0, 2.2),     # side ovals, long axis aimed at the tip
+              ((6.0, 0.0, -21.0), (-0.50, -0.80, -0.35), 5.0, 2.2)]
+NOSE_HOOP = ((0.3, -18.3), (12.4, -23.5))   # second line: from the tip, down and aft round both sides
 
 
-def oval_frame(P, origin, out, ln, wd, w):
+def oval_frame(P, origin, out, ln, wd, w, aim=None):
     """Oval frame ring where a ray from origin along out meets the part, projected along out."""
     import trimesh
     V, F = mesh_of(P)
@@ -426,7 +428,8 @@ def oval_frame(P, origin, out, ln, wd, w):
     d /= np.linalg.norm(d)
     loc, ray, _ = m.ray.intersects_location([o], [d])
     c = loc[np.argmax((loc - o) @ d)]
-    up = np.array([0.0, 0.0, 1.0]) - d[2] * d
+    up = np.array(aim, float) - c if aim is not None else np.array([0.0, 0.0, 1.0])
+    up = up - (up @ d) * d
     up /= np.linalg.norm(up)
     side = np.cross(up, d)
     core = mf.CrossSection.square([0.01, ln - wd], True).offset(wd / 2, mf.JoinType.Round, circular_segments=32)
@@ -482,7 +485,8 @@ def frames(name, P):
         for z in NOSE_ZFRAMES:
             f = f + slab("z", z)
         for o, d, ln, wd in NOSE_OVALS:
-            f = f + oval_frame(P, o, d, ln, wd, W)
+            f = f + oval_frame(P, o, d, ln, wd, W, aim=NOSE_TIP)
+        f = f + D.prism_y(D.band(*NOSE_HOOP, W))
         return sk ^ f
     if name == "turret_dorsal":
         x = H.DORSAL_X
