@@ -308,17 +308,19 @@ def key_slots(points, axis, split, key, width_axis, fit=0.1, end_gap=0.3):
     return out
 
 
-def connector_key(key, chamfer=0.4, flex=True, slot_w=1.2, prong=2.4, bulge=0.12, lead=0.8):
+def connector_key(key, chamfer=0.4, flex=True, slot_w=1.2, prong=2.4, waist=0.4, lead=0.8):
     """A printed key lying flat (length x width on the bed), ends chamfered.
     flex (after the PB94 Spitfire keys): U-slots in from each end turn the edges into springs, so
-    the key squeezes into a snug slot; angled corners lead it in, and a slight bulge at the
-    middle (the joint line) makes it click home. A narrow key gets one central slot each end;
+    the key squeezes into a snug slot; angled corners lead it in. Like the Spitfire's, the key is
+    narrower in the middle (`waist` each side, at the joint line): the springy ends do the
+    gripping, and the relieved middle clears the slot mouths, so it pushes in easily. A narrow key gets one central slot each end;
     a wide one gets a slot near each edge, leaving springy strips about `prong` wide."""
     length, width, thick = key
+    if not flex:
+        k = cq.Workplane().box(length, width, thick, centered=(True, True, False))
+        return k.edges("|Y").chamfer(chamfer)
     k = cq.Workplane().box(length, width, thick, centered=(True, True, False))
     k = k.edges("|Y").chamfer(chamfer)
-    if not flex:
-        return k
     for sx in (1, -1):                     # lead-in on the four end corners (in the bed plane)
         for sy in (1, -1):
             tri = (cq.Workplane().polyline([(sx * length / 2, sy * width / 2),
@@ -326,8 +328,12 @@ def connector_key(key, chamfer=0.4, flex=True, slot_w=1.2, prong=2.4, bulge=0.12
                                            (sx * length / 2, sy * (width / 2 - lead))]).close()
                    .extrude(thick + 1).translate((0, 0, -0.5)))
             k = k.cut(tri)
-    bump = cq.Workplane().box(length * 0.3, width + 2 * bulge, thick, centered=(True, True, False))
-    k = k.union(bump.edges("|Z").fillet(min(0.6, length * 0.1)))
+    span = length * 0.4                    # shallow arcs cut into both long sides at the middle
+    r = (span ** 2 / 4 + waist ** 2) / (2 * waist)
+    for sy in (1, -1):
+        arc = (cq.Workplane().circle(r).extrude(thick + 1)
+               .translate((0, sy * (width / 2 + r - waist), -0.5)))
+        k = k.cut(arc)
     depth = length / 2 - max(1.5, length * 0.12)          # slot reaches to just short of the middle
     if depth < 1.5:
         return k
