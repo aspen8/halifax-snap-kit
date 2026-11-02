@@ -97,11 +97,8 @@ NOSE_SPIGOT_BOX = (4.0, 4.5, -26.0, -16.0)   # length, half-width, z0, z1 of the
 FUSE_SPLIT_X = 196.0         # front / rear fuselage joint (just ahead of the codes and roundel)
 # Fuselage printed Lancaster-style: full-width black sections on end, with the camouflaged
 # spine as separate single-colour pieces sitting on the demarcation line.
-SPINE_LINE = [(0, -14.2), (52.3, 2.0), (52.4, 2.0), (75, 2.0), (85, 1.4), (290, 1.4),
+SPINE_LINE = [(0, -14.2), (52.3, 2.0), (75, 2.0), (85, 1.4), (290, 1.4),  # straight to the canopy's front-bottom corner (NP-G); nose piece ~5 mm, flat underside
               (299, 4.0), (360, 4.0)]   # x, z: body/spine split (tail: the tailplane floor)
-NOSE_CAMO_DEPTH = [(13.0, 4.5), (25.0, 4.3), (35.0, 3.5), (45.0, 2.2), (52.3, 1.2)]
-#   nose: the line follows the top edge this far below the roof (x, depth), so it runs along the
-#   nose shoulders and meets the windscreen high up (NP-G profile); replaces SPINE_LINE to x 52.3
 SPINE_WAVE = (0.7, 7.5, 85.0, 290.0)    # scallop amplitude, period, from x, to x
 SPINE_CUTS = [(13.0, 52.3, "earth"), (72.8, 100.0, "green"),
               (100.0, 150.2, "earth"), (150.2, 204.5, "green"), (204.5, 230.0, "earth"),
@@ -388,18 +385,7 @@ def spine_z(x):
     amp, period, w0, w1 = SPINE_WAVE
     x = np.asarray(x, float)
     wave = amp * np.sin(np.pi * x / period) ** 2 * ((x > w0) & (x < w1))
-    z = np.interp(x, xs, zs) + wave
-    nose = x <= NOSE_CAMO_DEPTH[-1][0]
-    if np.any(nose):
-        dx, dd = zip(*NOSE_CAMO_DEPTH)
-        xn = np.atleast_1d(x)[np.atleast_1d(nose)]
-        top = np.array([interp(FUSE_STATIONS, max(float(v), 0.0))[2] for v in xn])
-        zn = top - np.interp(xn, dx, dd)
-        if np.ndim(z) == 0:
-            return zn[0]
-        z = z.copy()
-        z[nose] = zn
-    return z
+    return np.interp(x, xs, zs) + wave
 
 
 def spine_upper():
@@ -1293,7 +1279,13 @@ def build():
         elif k == "fuselage_rear":
             poses[k] = lambda w: rot(w, "y", -90)
         elif k.startswith("spine_"):
-            poses[k] = spine_end_pose(v)      # stand on the bigger (slanted) end face
+            i = int(k.split("_")[1]) - 1
+            if SPINE_CUTS[i][1] <= 55:       # nose piece: lie on its flat, sloping underside
+                (x0, z0), (x1, z1) = SPINE_LINE[0], SPINE_LINE[1]
+                tilt = math.degrees(math.atan2(z1 - z0, x1 - x0))
+                poses[k] = lambda w, t=tilt: rot(w, "y", t)
+            else:                             # others stand on their bigger (slanted) end face
+                poses[k] = spine_end_pose(v)
         elif k == "nose_glazing":
             poses[k] = lambda w: rot(w, "y", 90)      # flat back face down, dome up
         else:

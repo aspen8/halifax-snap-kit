@@ -272,6 +272,9 @@ def colour_part(name, P, pat):
         core = (mf.Manifold.cylinder(200, r_in, r_in, 96).rotate([0, 90, 0])
                 .translate([-100, s * yc, zc]))
         return paint(P, [(YELLOW, P - core)])
+    if name == "canopy":
+        green, ring = canopy_side(P)
+        return paint(P, [(BLACK, frames(name, P)), (GREEN, green), (BLACK, ring)], base=CLEAR)
     if name in CLEAR_PARTS:
         return paint(P, [(BLACK, frames(name, P))], base=CLEAR)
     if name == "stand_base":
@@ -385,6 +388,10 @@ CANOPY_ROOF_BARS = [(2.8, 55.4)]            # (|y|, x0): roof bars, from the scr
 # Windscreen lower frame seen from above (x, |y|): from the cant rail's front end, in to the
 # roof bars, then the V notch to the apex. Every bar ends on another frame, as on the real thing.
 CANOPY_SCREEN_FRAME = [(57.6, 9.0), (55.4, 2.8), (52.6, 0.0)]   # starts where the cant rail meets the side frame
+# cockpit sides (NP-G profile): painted Dark Green below the cant rail and under the windscreen,
+# with two square side windows; the camo line then runs straight from the nose under them
+CANOPY_PANEL = [(51.0, -10.0), (51.0, 4.2), (54.0, 4.5), (57.6, 8.0), (80.0, 8.0), (80.0, -10.0)]   # (x, z)
+CANOPY_SIDE_WINDOWS = [(62.1, 65.7, 2.9, 7.0), (66.3, 69.9, 2.9, 7.0)]   # x0, x1, z0, z1
 CANOPY_SCREEN_DIAG = ((57.6, 8.0), (53.4, 2.6))         # side quarter-light frame (x, z)
 # Rear roof glazing (Revell plan, and the user's photo): centre panel with the astrodome,
 # side panels split by diagonals from the rear outer corner to the front inner corner
@@ -420,6 +427,19 @@ def oval_frame(P, origin, out, ln, wd, w, aim=None):
     pr = mf.Manifold.extrude(ring, 10.0).translate([0, 0, -5.0])
     R = np.column_stack([side, up, d, c])
     return pr.transform(R)
+
+
+def canopy_side(P):
+    """Green cockpit side panel (with the window openings) and the window frames."""
+    sk = ALL - K.inner_core(P, 0.6)
+    panel = cs([np.array(CANOPY_PANEL)])
+    win = mf.CrossSection()
+    ring = mf.CrossSection()
+    for x0, x1, z0, z1 in CANOPY_SIDE_WINDOWS:
+        r = cs([np.array([(x0, z0), (x1, z0), (x1, z1), (x0, z1)])])
+        win = win + r
+        ring = ring + (r.offset(FRAME_W, mf.JoinType.Round) - r)
+    return sk ^ prism_y(panel - win), sk ^ prism_y(ring)
 
 
 def frames(name, P):
