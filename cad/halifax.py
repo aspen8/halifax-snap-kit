@@ -849,7 +849,7 @@ def nacelle_halfwidth(index, x):
     return k * NACELLE_W / 2
 
 
-def exhaust_bank(index, side, face, slot=False):
+def exhaust_bank(index, side, face, slot=False, wing=None):
     """Bar of six stacks on one side of a nacelle (face=+1 is the +y side).
     slot=True returns the socket to cut instead (with FIT)."""
     yc, zc, x0, _ = NACELLES[index]
@@ -868,15 +868,23 @@ def exhaust_bank(index, side, face, slot=False):
         bar = bar.union(cyl((xx, lo, zm), h, hi - lo, "y"))
     if slot:
         return bar
-    # flame-damper shroud: a tube along the bar, rounded front, tapered tail
+    # flame-damper shroud: a tube along the bar, rounded front, tapered tail. Built and joined
+    # with mesh booleans (OCC's tessellation of it wasn't watertight); returns a mesh.
+    import manifold3d as mf
     r = EXH_SHROUD_D / 2
     yt = Y + face * (y_out + r - 0.6)
-    tube = cyl((xs + r, yt, zm), EXH_SHROUD_D, EXH_LEN - r - 5.0, "x")
-    tail = wp(cq.Solid.makeCone(r, 0.7, 5.0, V(xe - 5.0, yt, zm), V(1, 0, 0)))
-    nose = wp(cq.Solid.makeSphere(r, V(xs + r, yt, zm)))
-    shroud = tube.union(tail).union(nose)
-    shroud = shroud.intersect(box(xs - 1, xe + 1, min(lo, hi) - 10, max(lo, hi) + 10, zm - r - 1, zm + r + 1))
-    bar = bar.union(shroud)
+    L = EXH_LEN - r - 5.0
+    tube = mf.Manifold.cylinder(L, r, r, 48).rotate([0, 90, 0]).translate([xs + r, yt, zm])
+    tail = mf.Manifold.cylinder(5.0, r, 0.7, 48).rotate([0, 90, 0]).translate([xs + r + L, yt, zm])
+    nose = mf.Manifold.sphere(r, 48).translate([xs + r, yt, zm])
+    part = K.to_manifold(mesh(bar)) + tube + tail + nose
+    if wing is not None:                       # whole part stops where it meets the wing
+        for wpnl in wing:
+            W_ = K.to_manifold(mesh(wpnl))
+            part = part - W_ - W_.translate([-FIT, 0, 0])
+    import trimesh
+    V_, F_ = K.mesh_of(K.largest_piece(part)[0])
+    return trimesh.Trimesh(V_, F_)
     pitch = EXH_LEN / max(EXH_STUBS, 1)
     for k in range(EXH_STUBS):   # (none: kept for reference)
         xk = xs + (k + 0.5) * pitch
@@ -1248,9 +1256,7 @@ def build():
         for side, tag in ((1, "stbd"), (-1, "port")):
             for face, ftag in ((1, "a"), (-1, "b")):
                 n = f"exhaust{i + 1}_{tag}_{'outboard' if face == side else 'inboard'}"
-                wi, wo = wings[side]          # shroud stops where it meets the wing leading edge
-                parts[n] = (exhaust_bank(i, side, face).cut(wi).cut(wo)
-                            .cut(wi.translate((-FIT, 0, 0))).cut(wo.translate((-FIT, 0, 0))))
+                parts[n] = exhaust_bank(i, side, face, wing=wings[side])   # shroud stops at the wing
                 poses[n] = lambda w, fc=face: rot(w, "x", 90 * fc)   # flat back on the bed
     parts["turret_dorsal"] = dorsal_turret()
     poses["turret_dorsal"] = lambda w: w
