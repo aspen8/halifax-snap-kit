@@ -506,11 +506,13 @@ def fuselage_parts(wing_tongues):
         for i in range(n):           # in each share of the piece, the thickest spot clear of the tail
             a = x0 + (x1 - x0) * i / n + KEY_CAP[1] + 6 * SPINE_SLANT.get(x0, 0.0)
             b = x0 + (x1 - x0) * (i + 1) / n - KEY_CAP[1] - 6 * SPINE_SLANT.get(x1, 0.0)
-            cand = [x for x in np.linspace(a, b, 25) if not tail[0] < x < tail[1]]
+            cand = [x for x in np.linspace(a, b, 25)
+                    if not tail[0] < x < tail[1] and x < TT_X0 - SPINE_PEG[0] - 3.0]   # clear of the turret
             if not cand:
                 continue
             x = max(cand, key=thick)
             z = float(spine_z(x))
+            print(f"spine peg at x {x:.1f} (piece {x0:.0f}-{x1:.0f})", flush=True)
             pegs = pegs + spine_peg(x, z)
             cap_holes = cap_holes + spine_peg(x, z, grow=KEY_FIT)
             n_keys += 1
@@ -961,7 +963,7 @@ def df_plug(grow=0.0):
     xm = x0 + DF_MAST[0] * L
     pl, pd = DF_PLUG
     _, _, top, _, _ = interp(FUSE_STATIONS, xm)
-    b = box(xm - pl / 2 - grow, xm + pl / 2 + grow, -w / 2 - grow, w / 2 + grow,
+    b = box(xm - pl / 2 - grow, xm + pl / 2 + grow, -w / 2 - 0.1 - grow, w / 2 + 0.1 + grow,
             top - pd - (KEY_END_GAP if grow else 0.0), top + 3.0)
     return b
 
