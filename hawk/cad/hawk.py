@@ -187,8 +187,14 @@ WING_FLAT_FROM = 0.15
 WING_LE_ANGLE = 50.0         # degrees: the underside rises no shallower than this to the leading edge
 WING_TE_T = 0.6
 WING_ROOT_Y = 6.0            # panel starts here (inside the fuselage, trimmed by it)
-ROOT_TONGUE = {-1: (117.0, 131.0), 1: (137.0, 151.0)}   # port forward, starboard aft
+ROOT_TONGUE = {-1: (117.0, 131.0), 1: (132.5, 146.5)}   # wing key x ranges: port forward, starboard aft
+                             # (starboard ends at 146.5: further aft its slot broke the thinning root skin)
 ROOT_TONGUE_Z = (1.5, 4.9)   # above the floor
+# The wing root joint is a separate flat key in slots in the fuselage and the wing (where the
+# tongue used to be): an integral tongue floated 1.5 mm above the bed in the wing's print pose,
+# and the belly is too shallow there to lower it.
+KEY_WING = (14.8, 14.0, 3.4)   # length (y, from ROOT_KEY_Y0 outboard), width (x), thickness (z)
+ROOT_KEY_Y0 = 3.2              # inboard end: clear of the stand's socket on the centreline at X 134
 WALL = 1.6
 
 # --- Tailplane (10 deg anhedral)
@@ -200,7 +206,7 @@ TAIL_FLOOR = 15.2            # underside at the root
 TAIL_ANHEDRAL = 10.0
 TAIL_TC = 0.10
 TAIL_TONGUE = {-1: (231.0, 240.0), 1: (244.0, 253.0)}
-TAIL_TONGUE_Z = (0.8, 3.1)
+TAIL_TONGUE_Z = (0.0, 3.1)   # from the tailplane's underside, so the tongue prints on the bed
 
 # --- Fin (separate, two halves): straight LE/TE lines from the side view
 FIN_LE = ((206.3, 32.6), (245.9, 70.2))
@@ -655,18 +661,20 @@ def wing_assembled(side):
     return w if side > 0 else w.mirror([0, 1, 0])
 
 
-def wing_tongue(side, grow=0.0):
+def wing_key_slot(side):
+    """Slot for the wing root key, cut through the fuselage and the wing alike."""
     tx0, tx1 = ROOT_TONGUE[side]
-    reach = 5.5                 # stops short of the other wing's root (it shows under the rounded belly)
-    z0, z1 = Z_FLOOR + ROOT_TONGUE_Z[0], Z_FLOOR + ROOT_TONGUE_Z[1]
-    g = grow
-    b = box(tx0 - g, tx1 + g, -reach - (0.5 if g else 0), 18.0, z0 - g, z1 + g)
+    L, w, t = KEY_WING
+    xc, zc = (tx0 + tx1) / 2, Z_FLOOR + (ROOT_TONGUE_Z[0] + ROOT_TONGUE_Z[1]) / 2
+    g, e = KEY_FIT, KEY_END_GAP
+    b = box(xc - w / 2 - g, xc + w / 2 + g, ROOT_KEY_Y0 - e, ROOT_KEY_Y0 + L + e, zc - t / 2 - g, zc + t / 2 + g)
+    KEY_COUNTS["key_wing"] = (KEY_WING, 2)
     return b if side > 0 else b.mirror([0, 1, 0])
 
 
 @cached
 def wing(side):
-    return (wing_assembled(side) - body()) + wing_tongue(side)
+    return (wing_assembled(side) - body()) - wing_key_slot(side)
 
 
 def tail_plan(eta):
@@ -1091,7 +1099,7 @@ def fuselage_body():
     b = b - (canopy_region() ^ box(DOME_CUT_X, 400, -60, 60, -60, 100)) + canopy_tabs()   # dome stays
     for s in (1, -1):
         b = b - intake_mouth(s) - splitter_gap(s)
-        b = b - wing_tongue(s, FIT) - tail_tongue(s, FIT)
+        b = b - wing_key_slot(s) - tail_tongue(s, FIT)
     b = b - jet_pipe_cut()
     b = b - fin_seat()
     b = b - pod_sockets()

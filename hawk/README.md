@@ -61,7 +61,7 @@ Open `kit/hawk_kit.3mf` in Bambu Studio. Its 5 plates have the filaments already
 
 Suggested settings: PLA, 0.16 mm layers for the gear plate and 0.2 mm elsewhere, 2 walls, 15% gyroid infill, no supports. Use a brim on the fuselage sections (the middle one stands 117 mm tall). Painting the markings in costs purge filament on the fuselage plate (the side markings change colour on most layers); that was chosen over press-in inlays.
 
-## Kit contents (36 parts)
+## Kit contents (38 parts)
 
 - **Airframe:**
   - 3 fuselage sections: nose (with the radome and the pitot probe), middle (cockpit, intakes and wing roots) and rear. The probe is shorter and thicker than scale (30 × 3 mm printed, against 42 × 2 mm) so it survives handling.
@@ -82,6 +82,7 @@ Suggested settings: PLA, 0.16 mm layers for the gear plate and 0.2 mm elsewhere,
 - **Gear:** nose leg, 2 main legs, 3 wheels with grey hubs, headed axle pins.
 - **Keys** (fewer and bigger than before: 17.5 × 8.75 × 3.75 mm for the fuselage):
   - 2 at the nose/middle joint and 3 at the middle/rear joint
+  - 2 wing root keys, 18.5 × 17.5 × 4.25 mm, one per wing
   - 2 joining the fin halves, in the spine cap
   - 2 joining the pod halves
 - **Stand:** a swept blade on a 150 × 100 mm plinth. The model sits 6° nose-up on a key that passes through the smoke pod. The raised lettering runs in three lines across the strip in front of the blade, reading from the front: RED ARROWS, BAE SYSTEMS HAWK T.1A, ROYAL AIR FORCE AEROBATIC TEAM.
@@ -98,7 +99,7 @@ Suggested settings: PLA, 0.16 mm layers for the gear plate and 0.2 mm elsewhere,
 1. **Fuselage.** Join the nose to the middle section on 2 keys and the middle to the rear on 3. Push the nozzle's spigot into the tail.
 2. **Canopy.** Press it down onto the two tabs on top of the nose and middle sections; it bridges the joint.
 3. **Fin.** Join the halves on their 2 keys in the spine cap. Then push the fin's root tongue into the slot in the spine.
-4. **Wings and tailplanes.** Slide the root tongues into the side pockets. On both the wings and the tailplanes, the port tongue goes forward and the starboard tongue aft.
+4. **Wings and tailplanes.** Push a wing key into each wing root slot and slide the wing onto the fuselage, so the key goes into the slot in the side (port slot forward, starboard aft). Slide the tailplane root tongues into their side pockets: the port tongue goes forward and the starboard tongue aft.
 5. **Smoke pod.** Join the halves on 2 keys and push the pylon's pegs into the belly.
 6. **Display.** Either fit the gear (wheels on the headed pins, legs into their sockets) or use the stand: push the blade's tenon into the plinth and lower the model onto the key.
 
@@ -110,6 +111,7 @@ The shape is measured from the Revell 04284 Hawk T.1A (Red Arrows) instruction s
 - As cross-checks, the wing area comes out at 16.8 m² (real 16.69), the root chord at 2.66 m (real 2.65), and the length including the probe at 11.96 m.
 - The side views on the sheet are drawn about 12% larger than the plan views, so each view has its own calibration.
 - The plan view's wings sit about 20 px off the fuselage centreline, and its two halves differ by 5%. The model uses the average of the two halves.
+- The wings join the fuselage on separate flat keys, not root tongues. A tongue moulded on the wing floated 1.9 mm above the bed in the wing's print pose and stuck out 14 mm with nothing under it, and the belly is too shallow there to lower it. The tailplane tongues are moulded on, but sit flush with the tailplane's underside, so they print straight off the bed.
 - The undersides are flat from 15% chord, so the wings and tailplanes print without supports. Ahead of that the lower nose of the section is replaced by a 50° slope from the leading edge to the bed: the true curve rose off the bed at under 45° and would have sagged. It adds a little fullness under the leading edge (about 4 mm of chord printed).
 - Behind the cockpit the fuselage uses an "egg" cross-section. It's widest at the side pods and rounder on top, following the spine line, so the top is smooth with no separate spine ridge.
 - The fin's leading edge sweeps forward below 36 mm into a thin dorsal fillet that rises out of the spine at about X 192, as on the real aircraft.

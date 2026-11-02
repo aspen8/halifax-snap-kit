@@ -273,3 +273,7 @@ Bambu drops anything thinner than about one line width. When a whole layer of an
 ### Give a flat-bottomed aerofoil a steep lower nose
 
 A flat underside from 15% chord still leaves the lower nose rising off the bed at under 45°: about 1,050 mm² of overhang per wing on the Hawk. Replace the lower nose with a straight 50° slope from the leading edge down to the bed (`WING_LE_ANGLE`). That cut the overhang to about 300 mm², and the extra fullness under the leading edge is hardly visible.
+
+### Check every protrusion in the part's print pose, not just its surfaces
+
+The Hawk's wing and tailplane root tongues sat 1.5 mm and 0.8 mm above the panel's underside, so in the flat print pose they stuck out 13–14 mm from the root with nothing under them. The overhang check reported them only as a few hundred mm² mixed in with the leading edge, and they went unnoticed until slicing. Any tongue or peg on a part that prints flat must either start at the bed (flush with the underside) or be a separate key. Where the mating part has no room to lower the pocket (the Hawk's belly is under 1 mm below the wing floor), use a separate flat key. Before printing, look at each part in its print pose and ask what is under every protrusion.
