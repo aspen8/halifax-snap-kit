@@ -341,7 +341,21 @@ def fuselage_solid(offset=0.0, x0=None, x1=None):
         x1 = FUSE_END_X - 3.0 if x1 is None else x1
         st = ([interp(st, x0)] + [s for s in st if x0 < s[0] < x1] + [interp(st, x1)])
         st = [(x, hw - offset, t - offset, b + offset, n) for x, hw, t, b, n in st]
-    return wp(cq.Solid.makeLoft([superellipse_wire(*s) for s in st], ruled=False))
+    return wp(smooth_loft([superellipse_wire(*s) for s in st]))
+
+
+def smooth_loft(wires):
+    """Loft with centripetal parametrisation. The default (chord length) oscillated once the
+    nose had closely spaced tip stations: the roof dropped 10 mm at x 100-125."""
+    from OCP.BRepOffsetAPI import BRepOffsetAPI_ThruSections
+    from OCP.Approx import Approx_ParametrizationType
+    t = BRepOffsetAPI_ThruSections(True, False, 1e-6)
+    for w in wires:
+        t.AddWire(w.wrapped)
+    t.SetParType(Approx_ParametrizationType.Approx_Centripetal)
+    t.CheckCompatibility(False)
+    t.Build()
+    return cq.Solid(t.Shape())
 
 
 def key_slots(points, axis, split, key, width_axis):
