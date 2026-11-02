@@ -139,3 +139,9 @@ For a display model, quality beats purge cost.
 - Nacelle halves need a positive lock to the wing, not just a clamp. Use one upright key that straddles the halves and goes up into a pocket in the wing underside. It replaces several tiny, fiddly keys.
 - Colour nacelles with the full outer skin above the line (`inner_core`), not only up and side faces, or forward-facing cowlings stay black.
 
+
+## Lofts can go wrong far from the change
+
+Adding closely spaced stations at the nose tip made OCC's default loft (chord-length parametrisation) oscillate along the whole body. The roof dropped 10 mm at x 100-125, far from the edit, and nothing failed: the solid was valid and watertight. Only a missing D/F plug gave it away.
+- Use `smooth_loft` (centripetal parametrisation). It keeps the body within 0.4 mm of the station table.
+- After any station edit, section the loft at several stations and compare it with the table.
