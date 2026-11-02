@@ -393,6 +393,11 @@ def project_settings(template, filaments, overrides=None):
     return json.dumps(d, indent=4)
 
 
+def safe_name(s):
+    """Drop the characters Bambu Studio refuses in object and plate names."""
+    return "".join(ch for ch in s if ch not in '<>:/\\|?*"')
+
+
 def write_3mf(path, objects, plates, template, filaments, title, overrides=None):
     """Write a Bambu Studio project 3MF.
     objects: [dict(name, volumes=[(filament_slot, V, F)], placement=(plate, x, y))]
@@ -400,6 +405,7 @@ def write_3mf(path, objects, plates, template, filaments, title, overrides=None)
     overrides: print settings replacing the template's (e.g. {"layer_height": "0.16"});
     an object may carry "settings": {key: value} for per-object overrides (layer height, brim...);
     filaments: {slot: (name, hex)}; title: model title."""
+    plates = [safe_name(p) for p in plates]       # Bambu Studio rejects <>:/\|?*" in names
     ns = ('xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" '
           'xmlns:BambuStudio="http://schemas.bambulab.com/package/2021" '
           'xmlns:p="http://schemas.microsoft.com/3dmanufacturing/production/2015/06" '

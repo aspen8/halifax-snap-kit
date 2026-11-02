@@ -638,7 +638,7 @@ def add_object(objs, name, posed, out, whole):
 PLATE_GROUPS = [            # parts kept together by colour set (max 5 colours a plate)
     ("Fuselage", lambda n: n.startswith("fuselage")),
     ("Spine (Dark Green)", lambda n: n.startswith("spine_") and n.endswith("green")),
-    ("Spine (Dark Earth, black D/F loop)", lambda n: n.startswith("spine_") and n.endswith("earth")),
+    ("Spine (Dark Earth, black DF loop)", lambda n: n.startswith("spine_") and n.endswith("earth")),
     ("Wings", lambda n: n.startswith(("wing_", "tailplane"))),
     ("Nacelles", lambda n: n.startswith("nacelle")),
     ("Fins, roundels and codes", lambda n: n.startswith(("fin_", "roundel_", "code_"))),
