@@ -97,7 +97,7 @@ NOSE_SPIGOT_BOX = (4.0, 4.5, -26.0, -16.0)   # length, half-width, z0, z1 of the
 FUSE_SPLIT_X = 196.0         # front / rear fuselage joint (just ahead of the codes and roundel)
 # Fuselage printed Lancaster-style: full-width black sections on end, with the camouflaged
 # spine as separate single-colour pieces sitting on the demarcation line.
-SPINE_LINE = [(0, -14.2), (52.3, 2.0), (75, 2.0), (85, 1.4), (290, 1.4),  # straight to the canopy's front-bottom corner (NP-G); nose piece ~5 mm, flat underside
+SPINE_LINE = [(0, -14.2), (52.3, 2.6), (52.4, 2.0), (75, 2.0), (85, 1.4), (290, 1.4),  # straight to the canopy's front-bottom corner (NP-G); nose piece ~5 mm, flat underside
               (299, 4.0), (360, 4.0)]   # x, z: body/spine split (tail: the tailplane floor)
 SPINE_WAVE = (0.7, 7.5, 85.0, 290.0)    # scallop amplitude, period, from x, to x
 SPINE_CUTS = [(13.0, 52.3, "earth"), (72.8, 100.0, "green"),
