@@ -279,6 +279,34 @@ def key_slots(points, axis, split, key, width_axis, fit=0.1, end_gap=0.3):
     return out
 
 
+def spring_key(key, slit=0.28, slit_len=0.38, waist=0.06, lead=0.18):
+    """A printed key that is easy to push in and still grips (the idea of PB94's split clips):
+    each end is split down the middle, so its two prongs flex inward if the print or slot is a
+    little tight; the tips have 45 degree lead-in chamfers, and the middle is waisted so only
+    the prongs bear. Lies flat (length x width on the bed); returns a manifold.
+    key: (length, width, thickness) as for key_slots. slit: slit width / key width;
+    slit_len: slit length / key length (from each end); waist: depth per side / key width;
+    lead: chamfer / key width."""
+    L, W, T = key
+    c = max(0.3, lead * W)
+    hl, hw = L / 2, W / 2
+    outline = [(-hl, -hw + c), (-hl + c, -hw), (hl - c, -hw), (hl, -hw + c),
+               (hl, hw - c), (hl - c, hw), (-hl + c, hw), (-hl, hw - c)]
+    sec = cs([np.array(outline)])
+    sw = max(0.9, slit * W)
+    sl = min(slit_len * L, hl - sw / 2 - 0.15 * L)    # keep at least 0.3 L solid in the middle
+    for sgn in (1, -1):                           # slits from each end, round at the inner end
+        x_end = sgn * (hl - sl)
+        sec = sec - mf.CrossSection.square([sl + 1.0, sw]).translate([min(x_end, sgn * (hl + 1.0)), -sw / 2])
+        sec = sec - mf.CrossSection.circle(sw / 2, 32).translate([x_end, 0.0])
+    wd = waist * W                                # shallow waist at the middle, both sides
+    if wd > 0.05:
+        r = (0.2 * L) ** 2 / (2 * wd) + wd / 2     # arc through the waist depth over 0.4 L
+        for sgn in (1, -1):
+            sec = sec - mf.CrossSection.circle(r, 96).translate([0.0, sgn * (hw + r - wd)])
+    return sec.extrude(T)
+
+
 def connector_key(key, chamfer=0.4):
     """A printed key lying flat (length x width on the bed), ends chamfered."""
     length, width, thick = key

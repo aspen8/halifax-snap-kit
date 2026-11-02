@@ -277,3 +277,11 @@ A flat underside from 15% chord still leaves the lower nose rising off the bed a
 ### Check every protrusion in the part's print pose, not just its surfaces
 
 The Hawk's wing and tailplane root tongues sat 1.5 mm and 0.8 mm above the panel's underside, so in the flat print pose they stuck out 13–14 mm from the root with nothing under them. The overhang check reported them only as a few hundred mm² mixed in with the leading edge, and they went unnoticed until slicing. Any tongue or peg on a part that prints flat must either start at the bed (flush with the underside) or be a separate key. Where the mating part has no room to lower the pocket (the Hawk's belly is under 1 mm below the wing floor), use a separate flat key. Before printing, look at each part in its print pose and ask what is under every protrusion.
+
+### Let a tailplane's own root section be its plug
+
+A box tongue on a thin tail surface stands proud of the section near the leading and trailing edges, and shows as a lump. Instead, carry the panel's own aerofoil on into the fuselage (the Hawk's runs about 8 mm in, to 2 mm off the centreline) and cut a socket of that shape, grown by the fit clearance. `tail_socket` approximates the growth with 8 offsets in the section plane. You get no tongue, a flat underside, and grip along the whole root chord. PB94's Spitfire does the same.
+
+### Split the ends of printed keys
+
+PB94's Spitfire clips are flat H shapes. Each end is split, so the two prongs flex, the tips are chamfered, and the middle is waisted. They go in with a little play and still grip, and they forgive a print that comes out slightly oversize. `kitlib.spring_key` is our version, with the same outer size as `key_slots`, so it drops into existing slots. Keep at least 30% of the key's length solid between the slits: on a short, wide key, slits of the default length met and cut it in two.

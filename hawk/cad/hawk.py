@@ -205,8 +205,8 @@ TAIL_ROOT_Y = 8.5            # pivot line at the fuselage side
 TAIL_FLOOR = 15.2            # underside at the root
 TAIL_ANHEDRAL = 10.0
 TAIL_TC = 0.10
-TAIL_TONGUE = {-1: (231.0, 240.0), 1: (244.0, 253.0)}
-TAIL_TONGUE_Z = (0.0, 3.1)   # from the tailplane's underside, so the tongue prints on the bed
+TAIL_PLUG_Y0 = 2.0           # each tailplane's own section runs on into the fuselage to here (no
+                             # tongue): the fuselage has a socket the shape of the root section
 
 # --- Fin (separate, two halves): straight LE/TE lines from the side view
 FIN_LE = ((206.3, 32.6), (245.9, 70.2))
@@ -697,22 +697,25 @@ def tail_flat():
     return panel(st, TAIL_FLOOR, te_t=0.5)
 
 
-def tail_tongue(side, grow=0.0):
-    tx0, tx1 = TAIL_TONGUE[side]
-    z0, z1 = TAIL_FLOOR + TAIL_TONGUE_Z[0], TAIL_FLOOR + TAIL_TONGUE_Z[1]
-    g = grow
-    b = box(tx0 - g, tx1 + g, -5.0 - (0.5 if g else 0), TAIL_ROOT_Y + 4.0, z0 - g, z1 + g)
-    b = rot_about(b, TAIL_PT, "x", -TAIL_ANHEDRAL)           # follows the panel
-    return b if side > 0 else b.mirror([0, 1, 0])
-
-
 @cached
 def tailplane(side):
-    t = tail_flat() ^ box(0, 400, TAIL_ROOT_Y - 3.0, 100, -50, 100)
+    """The whole panel from TAIL_PLUG_Y0 outboard: the part inside the fuselage is the root
+    plug, the tailplane's own aerofoil, so nothing shows on the surface and the underside
+    stays flat for printing."""
+    t = tail_flat() ^ box(0, 400, TAIL_PLUG_Y0, 100, -50, 100)
     t = rot_about(t, TAIL_PT, "x", -TAIL_ANHEDRAL)
-    if side < 0:
-        t = t.mirror([0, 1, 0])
-    return (t - body()) + tail_tongue(side)
+    return t if side > 0 else t.mirror([0, 1, 0])
+
+
+def tail_socket(side):
+    """The tailplane grown by FIT all round its section and at its inboard end (a Minkowski sum
+    approximated by 8 offsets in the x-z plane), cut from the fuselage."""
+    t = tailplane(side)
+    g = FIT
+    d = g / math.sqrt(2)
+    offs = [(g, 0), (-g, 0), (0, g), (0, -g), (d, d), (d, -d), (-d, d), (-d, -d)]
+    u = union([t] + [t.translate([a, 0, c]) for a, c in offs] + [t.translate([0, -side * g, 0])])
+    return u
 
 
 # ============================================================
@@ -1099,7 +1102,7 @@ def fuselage_body():
     b = b - (canopy_region() ^ box(DOME_CUT_X, 400, -60, 60, -60, 100)) + canopy_tabs()   # dome stays
     for s in (1, -1):
         b = b - intake_mouth(s) - splitter_gap(s)
-        b = b - wing_key_slot(s) - tail_tongue(s, FIT)
+        b = b - wing_key_slot(s) - tail_socket(s)
     b = b - jet_pipe_cut()
     b = b - fin_seat()
     b = b - pod_sockets()
@@ -1226,7 +1229,7 @@ def build():
     poses["stand_base"] = lambda m: rot_about(m, piv, "y", STAND_PITCH)
     for kname, (key, n) in KEY_COUNTS.items():
         for i in range(n):
-            parts[f"{kname}_{i + 1}"] = to_m(K.connector_key(key))
+            parts[f"{kname}_{i + 1}"] = K.spring_key(key)      # split ends: easy in, still grips
             poses[f"{kname}_{i + 1}"] = R()
     return parts, poses
 
