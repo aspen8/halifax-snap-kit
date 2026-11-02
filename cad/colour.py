@@ -410,8 +410,30 @@ REAR_BARS = 5.1                             # |y| of the centre-panel bars
 REAR_EDGE = 10.4                            # |y| beyond this is frame (the sill of the panel)
 NOSE_XFRAMES = [(12.4, None)]                # rear rim (NP-G profile, Wikipedia: no frame across the nose)
 NOSE_ZFRAMES = [-18.3]                       # upper edge of the gun slot (horizontal)
-NOSE_SLOPE_FRAME = ((0.3, -19.2), (12.4, -22.8))   # lower edge: slopes down aft from the tip (x, z)
-NOSE_WINDOW = (7.4, -24.6, 5.6, 2.0, 26.0)   # lower oval window: centre x, z, length, height, tilt (deg)
+# lower half: three oval windows (photos of the nose): a big one on the chin and a narrow
+# upright one either side. Each: ray origin inside, outward direction, length, width (mm).
+NOSE_OVALS = [((6.0, 0.0, -22.0), (-0.62, 0.0, -0.78), 6.5, 4.6),
+              ((6.0, 0.0, -21.5), (-0.50, 0.84, -0.22), 5.5, 2.4),
+              ((6.0, 0.0, -21.5), (-0.50, -0.84, -0.22), 5.5, 2.4)]
+
+
+def oval_frame(P, origin, out, ln, wd, w):
+    """Oval frame ring where a ray from origin along out meets the part, projected along out."""
+    import trimesh
+    V, F = mesh_of(P)
+    m = trimesh.Trimesh(V, F)
+    o, d = np.array(origin, float), np.array(out, float)
+    d /= np.linalg.norm(d)
+    loc, ray, _ = m.ray.intersects_location([o], [d])
+    c = loc[np.argmax((loc - o) @ d)]
+    up = np.array([0.0, 0.0, 1.0]) - d[2] * d
+    up /= np.linalg.norm(up)
+    side = np.cross(up, d)
+    core = mf.CrossSection.square([0.01, ln - wd], True).offset(wd / 2, mf.JoinType.Round, circular_segments=32)
+    ring = core.offset(w / 2, mf.JoinType.Round) - core.offset(-w / 2, mf.JoinType.Round)
+    pr = mf.Manifold.extrude(ring, 10.0).translate([0, 0, -5.0])
+    R = np.column_stack([side, up, d, c])
+    return pr.transform(R)
 
 
 def frames(name, P):
@@ -459,24 +481,26 @@ def frames(name, P):
             f = f + (slab("x", x) if zmin is None else slab("x", x) ^ H_box(-100, 400, -100, 100, zmin, 100))
         for z in NOSE_ZFRAMES:
             f = f + slab("z", z)
-        f = f + D.prism_y(D.band(*NOSE_SLOPE_FRAME, W))
-        cx, cz, ln, ht, tilt = NOSE_WINDOW      # stadium outline, on both sides
-        core = mf.CrossSection.square([ln - ht, 0.01], True).offset(ht / 2, mf.JoinType.Round, circular_segments=32)
-        ring = core.offset(W / 2, mf.JoinType.Round) - core.offset(-W / 2, mf.JoinType.Round)
-        f = f + (D.prism_y(ring.rotate(tilt).translate([cx, cz]))
-                 ^ (H_box(-100, 400, 2.0, 100, -100, 100) + H_box(-100, 400, -100, -2.0, -100, 100)))
+        for o, d, ln, wd in NOSE_OVALS:
+            f = f + oval_frame(P, o, d, ln, wd, W)
         return sk ^ f
     if name == "turret_dorsal":
         x = H.DORSAL_X
         _, _, top, _, _ = H.interp(H.FUSE_STATIONS, x)
-        # base ring, upright frames round the sides, and a ring where the flat top starts (photo)
+        # Boulton Paul mid-upper (photo of LL505): deep black base band; on the gun side a big
+        # clear sighting panel between black gun slots; the other half in "orange segment"
+        # frames meeting at a hub on top. The guns point aft (+x), so +x is the gun side.
         base = top - 1.2
-        shoulder = base + H.DORSAL_HEIGHT - H.DORSAL_TOP_R
-        f = H_box(-100, 400, -100, 100, -100, base + 1.5) + slab("z", shoulder)
-        sides = H_box(-100, 400, -100, 100, -100, shoulder)
-        for ang in (0, 45, 90, 135):
-            bar = mf.Manifold.cube([W, 60, 60], True).rotate([0, 0, ang]).translate([x, 0, base + 10])
-            f = f + (bar ^ sides)
+        f = H_box(-100, 400, -100, 100, -100, base + 3.0)
+        for sg in (1, -1):                       # gun slots either side of the clear sighting panel
+            f = f + H_box(x + 2.0, 400, *sorted((sg * 2.4, sg * 4.4)), -100, 100)
+        rear = H_box(-100, x + 0.3, -100, 100, -100, 100)
+        for ang in (90, 120, 150, 180, 210, 240, 270):                     # meridian frames
+            bar = (mf.Manifold.cube([60, W, 60], True).translate([30, 0, 0]).rotate([0, 0, ang])
+                   .translate([x, 0, base + 10]))
+            f = f + (bar ^ rear)
+        f = f + mf.Manifold.cylinder(60, 2.2, 2.2, 32).translate([x, 0, base])   # hub on top
+        f = f - mf.Manifold.cylinder(60, 1.4, 1.4, 32).translate([x, 0, base])
         return sk ^ f
     if name == "turret_tail":
         # Type E frames (Revell side view): base ring, front post, waist rail, roof centre bar

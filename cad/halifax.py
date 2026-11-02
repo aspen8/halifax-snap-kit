@@ -59,7 +59,9 @@ WALL = 1.6                   # mm, nose spigot inset from the skin
 # --- Fuselage stations: (x, half_width, z_top, z_bottom, squareness)
 # squareness: 2 = ellipse, higher = flatter sides (Halifax is slab-sided)
 FUSE_STATIONS = [            # measured from the Revell Srs IA side and plan views
-    (0.0,   3.0, -19.3, -22.0, 2.0),   # perspex nose dome
+    (0.0,   0.8, -20.0, -21.3, 2.0),   # perspex nose dome: rounded tip (no flat face, photos)
+    (0.3,   2.9, -18.3, -22.4, 2.0),
+    (0.7,   4.1, -16.6, -23.2, 2.0),
     (1.2,   5.0, -15.1, -23.8, 2.1),
     (2.5,   5.9, -12.6, -25.9, 2.2),
     (4.9,   6.7,  -9.8, -28.0, 2.3),
@@ -135,7 +137,7 @@ DORSAL_R = 8.0               # mm, hole radius in the roof
 DORSAL_DOME_R = 9.0
 DORSAL_DOME_DROP = 0.3       # sphere centre below the base: ~7.5 mm tall above the roof
 DORSAL_HEIGHT = 10.5         # mm above its base: cylinder with a rounded top edge
-DORSAL_TOP_R = 3.5           # mm, rounding of the top edge
+DORSAL_TOP_R = 5.0           # mm, rounding of the top edge (more domed, photo of LL505)
 DORSAL_COLLAR = 2.5          # mm, cylindrical collar under the dome: taller turret (photos)
 DORSAL_GUN_Z = 3.0           # mm, gun pack height above the turret base
 TAIL_TURRET_R = 9.0          # (old hemisphere turret, unused)
