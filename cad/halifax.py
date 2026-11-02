@@ -93,12 +93,15 @@ FUSE_STATIONS = [            # measured from the Revell Srs IA side and plan vie
 FUSE_END_X = 352.0
 NOSE_SPLIT_X = 12.8          # perspex nose dome ends at this frame (Revell)
 NOSE_GLASS_TOP = 50.0        # mm, dome covers the full section
-NOSE_SPIGOT_BOX = (5.0, 6.0, -28.0, -16.0)   # length, half-width, z0, z1 of the dome's plug
+NOSE_SPIGOT_BOX = (4.0, 4.5, -26.0, -16.0)   # length, half-width, z0, z1 of the dome's plug
 FUSE_SPLIT_X = 196.0         # front / rear fuselage joint (just ahead of the codes and roundel)
 # Fuselage printed Lancaster-style: full-width black sections on end, with the camouflaged
 # spine as separate single-colour pieces sitting on the demarcation line.
-SPINE_LINE = [(0, -14.2), (52.3, 2.0), (75, 2.0), (85, 1.4), (290, 1.4),  # one straight line to the windscreen: the nose piece is ~5 mm thick with a flat underside
+SPINE_LINE = [(0, -14.2), (52.3, 2.0), (52.4, 2.0), (75, 2.0), (85, 1.4), (290, 1.4),
               (299, 4.0), (360, 4.0)]   # x, z: body/spine split (tail: the tailplane floor)
+NOSE_CAMO_DEPTH = [(13.0, 4.5), (25.0, 4.3), (35.0, 3.5), (45.0, 2.2), (52.3, 1.2)]
+#   nose: the line follows the top edge this far below the roof (x, depth), so it runs along the
+#   nose shoulders and meets the windscreen high up (NP-G profile); replaces SPINE_LINE to x 52.3
 SPINE_WAVE = (0.7, 7.5, 85.0, 290.0)    # scallop amplitude, period, from x, to x
 SPINE_CUTS = [(13.0, 52.3, "earth"), (72.8, 100.0, "green"),
               (100.0, 150.2, "earth"), (150.2, 204.5, "green"), (204.5, 230.0, "earth"),
@@ -149,9 +152,9 @@ TAIL_TURRET_Z = -2.2
 # floor, on top of the lower fuselage, which carries on underneath as a tapering cone
 TT_X0, TT_REAR, TT_FLOOR, TT_TOP, TT_HW = 345.0, 362.3, -3.0, 14.4, 8.4
 TT_PIVOT = TT_REAR - TT_HW              # centre of the rounded rear: pin position
-TT_TOP_R = 9.0                          # rounded rear-top edge (side view)
+TT_TOP_R = 11.0                         # rounded rear-top edge (side view)
 TT_GUN_Z = 3.8                          # gun pack height
-TT_TOP_FILLET = 4.5                     # rounding of the turret's top edges
+TT_TOP_FILLET = 6.0                     # rounding of the turret's top edges
 TT_BOSS = (9.0, 3.0)                    # diameter, height of the boss the turret presses over (no pin)
 TAIL_CONE = [(344.0, 9.5, 2.0, -14.0, 2.6), (352.0, 9.0, 1.0, -13.0, 2.5), (356.0, 8.4, 0.0, -10.5, 2.4),
              (359.0, 7.2, -1.0, -8.0, 2.3), (361.0, 5.2, -1.6, -5.4, 2.1), (362.0, 2.8, -2.2, -4.0, 2.0)]
@@ -385,7 +388,18 @@ def spine_z(x):
     amp, period, w0, w1 = SPINE_WAVE
     x = np.asarray(x, float)
     wave = amp * np.sin(np.pi * x / period) ** 2 * ((x > w0) & (x < w1))
-    return np.interp(x, xs, zs) + wave
+    z = np.interp(x, xs, zs) + wave
+    nose = x <= NOSE_CAMO_DEPTH[-1][0]
+    if np.any(nose):
+        dx, dd = zip(*NOSE_CAMO_DEPTH)
+        xn = np.atleast_1d(x)[np.atleast_1d(nose)]
+        top = np.array([interp(FUSE_STATIONS, max(float(v), 0.0))[2] for v in xn])
+        zn = top - np.interp(xn, dx, dd)
+        if np.ndim(z) == 0:
+            return zn[0]
+        z = z.copy()
+        z[nose] = zn
+    return z
 
 
 def spine_upper():
@@ -1279,13 +1293,7 @@ def build():
         elif k == "fuselage_rear":
             poses[k] = lambda w: rot(w, "y", -90)
         elif k.startswith("spine_"):
-            i = int(k.split("_")[1]) - 1
-            if SPINE_CUTS[i][1] <= 55:       # nose piece: lie on its flat, sloping underside
-                (x0, z0), (x1, z1) = SPINE_LINE[0], SPINE_LINE[1]
-                tilt = math.degrees(math.atan2(z1 - z0, x1 - x0))
-                poses[k] = lambda w, t=tilt: rot(w, "y", t)
-            else:                             # others stand on their bigger (slanted) end face
-                poses[k] = spine_end_pose(v)
+            poses[k] = spine_end_pose(v)      # stand on the bigger (slanted) end face
         elif k == "nose_glazing":
             poses[k] = lambda w: rot(w, "y", 90)      # flat back face down, dome up
         else:
