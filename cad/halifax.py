@@ -134,6 +134,8 @@ DORSAL_X = 195.0             # Boulton Paul Type A Mk VIII (Revell side view)
 DORSAL_R = 8.0               # mm, hole radius in the roof
 DORSAL_DOME_R = 9.0
 DORSAL_DOME_DROP = 0.3       # sphere centre below the base: ~7.5 mm tall above the roof
+DORSAL_HEIGHT = 10.5         # mm above its base: cylinder with a rounded top edge
+DORSAL_TOP_R = 3.5           # mm, rounding of the top edge
 DORSAL_COLLAR = 2.5          # mm, cylindrical collar under the dome: taller turret (photos)
 DORSAL_GUN_Z = 3.0           # mm, gun pack height above the turret base
 TAIL_TURRET_R = 9.0          # (old hemisphere turret, unused)
@@ -550,10 +552,9 @@ def gun_slot(at, direction):
 def dorsal_turret():
     _, _, top, _, _ = interp(FUSE_STATIONS, DORSAL_X)
     base_z = top - 1.2                       # sits on the roof edges
-    dome = (wp(cq.Solid.makeSphere(DORSAL_DOME_R, V(DORSAL_X, 0, base_z + DORSAL_COLLAR - DORSAL_DOME_DROP)))
-            .intersect(box(DORSAL_X - 20, DORSAL_X + 20, -20, 20, base_z + DORSAL_COLLAR, 40)))
-    r_c = (DORSAL_DOME_R ** 2 - DORSAL_DOME_DROP ** 2) ** 0.5
-    dome = dome.union(cyl((DORSAL_X, 0, base_z), 2 * r_c, DORSAL_COLLAR + 0.01, "z"))
+    # near-vertical sides and a flattish top with a rounded edge (photos), not a dome
+    dome = cyl((DORSAL_X, 0, base_z), 2 * DORSAL_DOME_R, DORSAL_HEIGHT, "z")
+    dome = dome.faces(">Z").edges().fillet(DORSAL_TOP_R)
     plug = cyl((DORSAL_X, 0, top - 3.0 + FIT), 2 * (DORSAL_R - FIT), base_z - top + 3.0, "z")
     t = dome.union(plug)
     # guns point aft out of a slot at the back of the dome
