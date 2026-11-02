@@ -408,8 +408,10 @@ CANOPY_SCREEN_DIAG = ((57.6, 8.0), (53.4, 2.6))         # side quarter-light fra
 REAR_GLASS_X = (73.6, 91.0)
 REAR_BARS = 5.1                             # |y| of the centre-panel bars
 REAR_EDGE = 10.4                            # |y| beyond this is frame (the sill of the panel)
-NOSE_XFRAMES = [(6.0, -18.1), (12.4, None)]  # (x, only above z): vertical frame, rear rim
-NOSE_ZFRAMES = [-18.1, -21.2]                # gun-slot band across the dome
+NOSE_XFRAMES = [(12.4, None)]                # rear rim (NP-G profile, Wikipedia: no frame across the nose)
+NOSE_ZFRAMES = [-18.3]                       # upper edge of the gun slot (horizontal)
+NOSE_SLOPE_FRAME = ((0.3, -19.2), (12.4, -22.8))   # lower edge: slopes down aft from the tip (x, z)
+NOSE_WINDOW = (7.4, -24.6, 5.6, 2.0, 26.0)   # lower oval window: centre x, z, length, height, tilt (deg)
 
 
 def frames(name, P):
@@ -457,11 +459,25 @@ def frames(name, P):
             f = f + (slab("x", x) if zmin is None else slab("x", x) ^ H_box(-100, 400, -100, 100, zmin, 100))
         for z in NOSE_ZFRAMES:
             f = f + slab("z", z)
+        f = f + D.prism_y(D.band(*NOSE_SLOPE_FRAME, W))
+        cx, cz, ln, ht, tilt = NOSE_WINDOW      # stadium outline, on both sides
+        core = mf.CrossSection.square([ln - ht, 0.01], True).offset(ht / 2, mf.JoinType.Round, circular_segments=32)
+        ring = core.offset(W / 2, mf.JoinType.Round) - core.offset(-W / 2, mf.JoinType.Round)
+        f = f + (D.prism_y(ring.rotate(tilt).translate([cx, cz]))
+                 ^ (H_box(-100, 400, 2.0, 100, -100, 100) + H_box(-100, 400, -100, -2.0, -100, 100)))
         return sk ^ f
     if name == "turret_dorsal":
         x = H.DORSAL_X
         _, _, top, _, _ = H.interp(H.FUSE_STATIONS, x)
-        return sk ^ (slab("x", x) + slab("y", 0.0) + slab("z", top + 2.0))
+        # base ring, upright frames round the sides, and a ring where the flat top starts (photo)
+        base = top - 1.2
+        shoulder = base + H.DORSAL_HEIGHT - H.DORSAL_TOP_R
+        f = H_box(-100, 400, -100, 100, -100, base + 1.5) + slab("z", shoulder)
+        sides = H_box(-100, 400, -100, 100, -100, shoulder)
+        for ang in (0, 45, 90, 135):
+            bar = mf.Manifold.cube([W, 60, 60], True).rotate([0, 0, ang]).translate([x, 0, base + 10])
+            f = f + (bar ^ sides)
+        return sk ^ f
     if name == "turret_tail":
         # Type E frames (Revell side view): base ring, front post, waist rail, roof centre bar
         f = (H_box(-100, 400, -100, 100, -100, H.TT_FLOOR + 1.2) + slab("x", H.TT_X0 + 4.0)
