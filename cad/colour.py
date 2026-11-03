@@ -386,16 +386,15 @@ CANOPY_XFRAMES = [60.7]                     # windscreen rear frame (full hoop)
 CANOPY_ROOF_BARS = [(2.8, 53.0)]            # (|y|, x0): roof bars, from the screen's lower frame to the rear
 # Windscreen lower frame seen from above (x, |y|): from the cant rail's front end, in to the
 # roof bars, then the V notch to the apex. Every bar ends on another frame, as on the real thing.
-# cockpit glazing as one house (photos): glass down to a sill; a horizontal frame at the side-window
+# cockpit glazing as one house (photos): glass down to the camo line; a horizontal frame at the side-window
 # top runs right round the front; below it the windscreen panes wrap round to meet the side windows
-CANOPY_SILL = 2.6                            # glass starts here; the camo line runs into it
 CANOPY_HOOP = 8.0                            # z of the horizontal frame (runs the canopy's full length)
-CANOPY_LOWER_XFRAMES = [66.4]                # upright between the side windows; 60.7 is a full hoop
+CANOPY_LOWER_XFRAMES = [66.4, 70.4]          # uprights between the 3 side windows; 60.7 is a full hoop
 # windscreen: the upright band below the hoop, 5 panes wrapping round the front (photos): a centre V,
 # two wide panes, two small ones reaching back to the first side window. Dividers are given as
 # angles round a vertical axis at x = WS_AXIS_X (0 = straight ahead), at the band's bottom and top.
 WS_AXIS_X = 60.0
-WS_BOTTOM = 5.3                              # band's lower edge: half way up the side windows
+WS_BOTTOM = 3.0                              # windscreen's lower edge (the glass below it ahead of the side windows is camo)
 WS_DIVIDERS = [(6.0, 18.0), (50.0, 58.0)]    # (bottom, top) deg each side: V edges; wide/small panes
 # Rear roof glazing (Revell plan, and the user's photo): centre panel with the astrodome,
 # side panels split by diagonals from the rear outer corner to the front inner corner
@@ -475,7 +474,6 @@ def frames(name, P):
         g0, g1 = CANOPY_GLASS_X
         hz = CANOPY_HOOP
         f = H_box(-100, g0, -100, 100, -100, 100) + H_box(g1, 400, -100, 100, -100, 100)
-        f = f + H_box(-100, 400, -100, 100, -100, CANOPY_SILL)                 # sill
         f = f + slab("z", hz)                                                 # horizontal frame, round the front
         for x in CANOPY_XFRAMES:
             f = f + slab("x", x)
