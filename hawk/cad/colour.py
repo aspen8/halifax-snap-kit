@@ -36,6 +36,9 @@ ROOT = Path(__file__).resolve().parents[2]
 # PARAMETERS
 # ============================================================
 SKIN = 0.8                   # mm at 1:40 (1.0 printed), coloured skin depth
+UNDER_SKIN = 0.36            # wing underside paint (0.45 printed, ~2 layers): the wing is
+                             # under 1 mm thick near the trailing edge, so a full SKIN came through
+TOP_CLEAR = 0.4              # ...and it never comes within this of the top surface (2 red layers)
 FIN_SKIN = 0.6               # the fin halves are thin
 SKIN_OUT = 0.05              # skins reach just past the surface (no zero-thickness slivers)
 LETTER_BOLD = 0.15           # mm, letters grown (thicker strokes print better)
@@ -297,11 +300,17 @@ CANOPY_SILL = 0.9                                 # mm of black along the canopy
 
 def colour_part(name, P):
     if name.startswith("wing_"):
-        S = skins(P)
+        side = 1 if name.endswith("stbd") else -1
+        # skins from the part with its gear socket and key slot filled back in (panel lines kept):
+        # measured from the part itself, the socket ceilings counted as undersides and their
+        # white showed through on top
+        whole = P + (H.wing_outer(side) ^ (H.main_socket(side) + H.wing_key_slot(side)))
+        S = skins(whole)
+        down = skins(whole, UNDER_SKIN)["down"] - skins(whole, TOP_CLEAR)["up"]
         x, y, d = WING_ROUNDEL
-        y *= 1 if name.endswith("stbd") else -1
-        return paint(P, [(WHITE, S["down"] ^ prism_z(under_white()))]
-                     + roundel_ops(x, y, d, "z", S["up"]) + roundel_ops(x, y, d, "z", S["down"]))
+        y *= side
+        return paint(P, [(WHITE, down ^ prism_z(under_white()))]
+                     + roundel_ops(x, y, d, "z", S["up"]) + roundel_ops(x, y, d, "z", down))
     if name.startswith("fin_"):
         S = skins(P, FIN_SKIN)
         side = S["+y"] if name.endswith("stbd") else S["-y"]
@@ -432,8 +441,8 @@ def add_object(objs, name, posed, out, whole):
 
 
 PLATE_GROUPS = [            # parts kept together by colour set (max 5 colours a plate)
-    ("Fuselage and red parts", lambda n: n.startswith(("fuselage", "tailplane", "smoke_pod",
-                                                        "aerial", "key_"))),
+    ("Fuselage", lambda n: n.startswith(("fuselage", "smoke_pod"))),
+    ("Tailplanes and small parts", lambda n: n.startswith(("tailplane", "aerial", "probe", "key_"))),   # red only
     ("Wings", lambda n: n.startswith("wing_")),
     ("Fins and canopy", lambda n: n.startswith("fin_") or n == "canopy"),
     ("Display stand", lambda n: n.startswith("stand")),

@@ -113,10 +113,17 @@ SPINE_STATIONS = [            # canopy and the fairing just behind it (aft of x 
     (142.0,  9.0, 34.4),
 ]
 SPINE_N = 2.3
+FRONT_SPLIT_X = 46.0         # nose/front joint, on the dome's vertical cut (DOME_CUT_X): the dome face
+                             # was an overhang ledge part way up the nose section, now it is the bed face
+FRONT_KEYS = [(5.0, 2.0), (-5.0, 2.0)]   # (y, z): beside the nose gear socket (x 38-42, y +-2.4)
 NOSE_SPLIT_X = 86.0          # nose/middle section joint (the radome is part of the nose section)
 NOSE_KEYS = [(0.0, -1.5), (0.0, 9.5)]   # (y, z) of the KEY_FR keys on that joint
-PROBE = (24.0, 2.4, 1.6, 3.6, 3.0)    # length, base d, tip d, boss d, boss length: shorter and
+PROBE = (24.0, 2.4, 1.6, 4.2, 3.0)    # length, base d, tip d, boss d, boss length: shorter and
                                       # thicker than scale (34 x 1.6) so it survives handling
+PROBE_CUT_X = 0.9            # the probe is its own part from here forward (the nose tip is
+                             # inside the boss), so a broken one is a quick reprint
+PROBE_PLUG = (2.4, 4.0)      # d, length of its plug into the nose (3.0 x 5.0 printed)
+PROBE_FIT = 0.1 * _P         # per side: a firm push fit
 FUSE_SPLIT_X = 179.5         # middle/rear section joint: between the lettering and the roundel
 FR_KEYS = [(-5.5, 5.0), (5.5, 5.0), (0.0, 19.0)]   # (y, z) on the joint face (below the fin cap at z 24)
 
@@ -243,7 +250,9 @@ GEAR_DROP = 22.0
 # --- Display stand
 STAND_X = 134.0              # between the port and starboard wing tongues
 STAND_KEY = 5.0
-STAND_KEY_DEPTH = 8.0
+STAND_KEY_DEPTH = 8.0         # (old: through the pod into the belly)
+STAND_SOCKET_TOP = 2.0        # the stand's socket is blind, in the smoke pod only: it stops this far
+                              # above the pod's axis (7 mm into the pod; no hole through to the belly)
 STAND_PITCH = 6.0
 STAND_HEIGHT = 85.0
 STAND_BASE = (120.0, 80.0, 10.0)   # length, width, thickness at 1:40 (150 x 100 mm printed)
@@ -672,9 +681,44 @@ def wing_key_slot(side):
     return b if side > 0 else b.mirror([0, 1, 0])
 
 
+WING_GLOVE_Y = 24.0           # the glove runs out to here (past the intake pods, which sit on the wing)
+
+
+@cached
+def wing_glove_flat():
+    """Filler ahead of the wing root's leading edge, inside the pods: the floor runs forward
+    flat and a 45 degree roof meets the top surface on its tangent. The pod section above
+    the wing prints on end (forward up), and over the round leading edge its socket was a
+    flat ceiling. Now it is a 45 degree roof: the wing part takes the filler, so nothing
+    shows but a pointed seam ahead of the leading edge. The floor runs back to where the
+    wing's own underside reaches it, so no feather of fuselage is left under the nose."""
+    pts = []
+    for y in (WING_ROOT_Y, WING_GLOVE_Y):
+        le, c, tc = wing_plan(y)
+        sec = np.array(flat_bottom_section(tc, c)[0])
+        x0 = float(np.min(sec[:, 0] - sec[:, 1]))          # the 45 degree line z = x - x0 touches the top
+        k = int(np.argmin(sec[:, 0] - sec[:, 1]))
+        xt = float(sec[k, 0])
+        xf = float(min(px for px, pz in sec if pz < 1e-6 and px > xt - 5)) + 0.3   # lower nose reaches the floor
+        for px, pz in ((x0, 0.0), (max(xt, xf), 0.0), (xt, xt - x0)):
+            pts.append((le + px, y, Z_FLOOR + pz))
+    return M.hull_points(pts)
+
+
+def wing_glove(side):
+    g = rot_about(wing_glove_flat(), DIHEDRAL_PT, "x", DIHEDRAL)
+    return g if side > 0 else g.mirror([0, 1, 0])
+
+
+@cached
+def wing_outer(side):
+    """The wing part's outside shape (no sockets or slots): what the paint is measured from."""
+    return (wing_assembled(side) + (wing_glove(side) ^ outer())) - body()
+
+
 @cached
 def wing(side):
-    return (wing_assembled(side) - body()) - wing_key_slot(side)
+    return wing_outer(side) - wing_key_slot(side)
 
 
 def tail_plan(eta):
@@ -906,7 +950,7 @@ def smoke_pod():
     pylon = box(POD_X0 + i0, POD_X0 + POD_LEN - i0, -hw, hw, zc, zb + 4.0)
     p = (pod + pylon) - body()
     k = STAND_KEY / 2 + FIT
-    p = (p + pod_pegs()) - box(STAND_X - k, STAND_X + k, -k, k, zc - 20, zb + 1)
+    p = (p + pod_pegs()) - box(STAND_X - k, STAND_X + k, -k, k, zc - 20, zc + STAND_SOCKET_TOP)
     pts = [(POD_X0 + f * POD_LEN, 0.0, zc) for f in POD_HALF_KEYS]
     slots = to_m(K.key_slots(pts, "y", 0.0, KEY_POD_HALF, "x", KEY_FIT, KEY_END_GAP))
     KEY_COUNTS["key_pod"] = (KEY_POD_HALF, len(pts))
@@ -1097,7 +1141,7 @@ def fuselage_body():
     """The whole fuselage (all sections) with every socket, pocket and cut."""
     b = outer() + spine_ducts()
     for s in (1, -1):                                   # intakes sit on the wing
-        w = wing_assembled(s)
+        w = wing_assembled(s) + wing_glove(s)
         b = b - w - w.translate([0, 0, FIT]) - w.translate([0, 0, -FIT])
     b = b - (canopy_region() ^ box(DOME_CUT_X, 400, -60, 60, -60, 100)) + canopy_tabs()   # dome stays
     for s in (1, -1):
@@ -1106,9 +1150,6 @@ def fuselage_body():
     b = b - jet_pipe_cut()
     b = b - fin_seat()
     b = b - pod_sockets()
-    zb = fuse_at(STAND_X)[3]
-    k = STAND_KEY / 2 + FIT
-    b = b - box(STAND_X - k, STAND_X + k, -k, k, zb - 1, zb + STAND_KEY_DEPTH + 0.3)
     b = b - gear_socket_nose()
     for a in AERIALS:
         b = b - aerial(a, slot=True)
@@ -1118,17 +1159,33 @@ def fuselage_body():
 @cached
 def fuselage_sections():
     b = fuselage_body()
-    nk = to_m(K.key_slots([(NOSE_SPLIT_X, y, z) for y, z in NOSE_KEYS], "x", NOSE_SPLIT_X, KEY_FR, "z",
-                          KEY_FIT, KEY_END_GAP))
-    L, d0, d1, bd, bl = PROBE
-    probe = cyl((-bl + 0.4, 0, 0), bd, bl + 2.6, "x", 24) + cone_x(-bl - L + 0.4, d1, -bl + 1.4, d0)
-    pts = [(FUSE_SPLIT_X, y, z) for y, z in FR_KEYS]
-    keys = to_m(K.key_slots(pts, "x", FUSE_SPLIT_X, KEY_FR, "z", KEY_FIT, KEY_END_GAP))
-    KEY_COUNTS["key_fuselage"] = (KEY_FR, len(pts) + len(NOSE_KEYS))
-    nose = ((b ^ box(-5, NOSE_SPLIT_X, -60, 60, -60, 100)) + probe) - nk
+    def slots(x, yz):
+        return to_m(K.key_slots([(x, y, z) for y, z in yz], "x", x, KEY_FR, "z", KEY_FIT, KEY_END_GAP))
+    fk = slots(FRONT_SPLIT_X, FRONT_KEYS)
+    nk = slots(NOSE_SPLIT_X, NOSE_KEYS)
+    keys = slots(FUSE_SPLIT_X, FR_KEYS)
+    KEY_COUNTS["key_fuselage"] = (KEY_FR, len(FRONT_KEYS) + len(NOSE_KEYS) + len(FR_KEYS))
+    _, _, _, bd, bl = PROBE
+    pd, pl = PROBE_PLUG
+    boss_aft = cyl((PROBE_CUT_X, 0, 0), bd, bl + 2.6 - (PROBE_CUT_X + bl - 0.4), "x", 32)   # to x 3.0
+    recess = (cyl((PROBE_CUT_X - 0.1, 0, 0), pd + 2 * PROBE_FIT, pl + 0.4, "x", 24)
+              + cone_x(PROBE_CUT_X - 0.1, pd + 2 * PROBE_FIT + 0.6, PROBE_CUT_X + 0.3, pd + 2 * PROBE_FIT, seg=24))   # lead-in
+    nose = ((b ^ box(PROBE_CUT_X, FRONT_SPLIT_X, -60, 60, -60, 100)) + boss_aft) - recess - fk
+    front = (b ^ box(FRONT_SPLIT_X, NOSE_SPLIT_X, -60, 60, -60, 100)) - fk - nk
     mid = (b ^ box(NOSE_SPLIT_X, FUSE_SPLIT_X, -60, 60, -60, 100)) - nk - keys
     rear = (b ^ box(FUSE_SPLIT_X, 400, -60, 60, -60, 100)) - keys
-    return nose, mid, rear
+    return nose, front, mid, rear
+
+
+def probe():
+    """Pitot probe: cone, boss and a plug that pushes into the nose tip. Prints standing on
+    the plug (tip up: use a brim); the boss's step over the plug is 1 mm."""
+    L, d0, d1, bd, bl = PROBE
+    pd, pl = PROBE_PLUG
+    p = (cyl((-bl + 0.4, 0, 0), bd, PROBE_CUT_X + bl - 0.4, "x", 32)
+         + cone_x(-bl - L + 0.4, d1, -bl + 1.4, d0)
+         + cyl((PROBE_CUT_X - 0.05, 0, 0), pd, pl + 0.05, "x", 24))   # full-width end: it is the bed face
+    return p
 
 
 # ============================================================
@@ -1148,7 +1205,7 @@ def stand_parts():
     base_top = Sz - STAND_HEIGHT
     bcx = STAND_X + STAND_BASE_DX
     k = STAND_KEY / 2
-    key = box(STAND_X - k, STAND_X + k, -k, k, Sz - 3.0, zb + STAND_KEY_DEPTH)   # vertical in the model frame
+    key = box(STAND_X - k, STAND_X + k, -k, k, Sz - 3.0, zc + STAND_SOCKET_TOP - 0.3)   # vertical in the model frame
     foot = (STAND_X + STAND_FOOT_DX, base_top + STAND_BOSS[2])
     top = (STAND_X, Sz - 2.0)
     w0, w1, t = STAND_BLADE
@@ -1185,8 +1242,10 @@ def R(rx=0, ry=0, rz=0):
 def build():
     """Returns {name: Manifold (assembled frame)}, {name: pose function -> print pose}."""
     parts, poses = {}, {}
-    nose, mid, rear = fuselage_sections()
-    parts["fuselage_nose"], poses["fuselage_nose"] = nose, R(ry=90)    # joint face down, probe up
+    nose, front, mid, rear = fuselage_sections()
+    parts["fuselage_nose"], poses["fuselage_nose"] = nose, R(ry=90)    # dome face down, tip up
+    parts["fuselage_front"], poses["fuselage_front"] = front, R(ry=90)  # aft joint face down
+    parts["probe"], poses["probe"] = probe(), R(ry=90)                  # on its plug, tip up
     parts["fuselage_mid"], poses["fuselage_mid"] = mid, R(ry=90)       # aft joint face down
     parts["fuselage_rear"], poses["fuselage_rear"] = rear, R(ry=-90)   # joint face down, tail up
     parts["nozzle"], poses["nozzle"] = nozzle(), R(ry=-90)             # spigot down

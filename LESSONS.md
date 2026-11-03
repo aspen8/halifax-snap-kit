@@ -285,3 +285,19 @@ A box tongue on a thin tail surface stands proud of the section near the leading
 ### Split the ends of printed keys
 
 PB94's Spitfire clips are flat H shapes. Each end is split, so the two prongs flex, the tips are chamfered, and the middle is waisted. They go in with a little play and still grip, and they forgive a print that comes out slightly oversize. `kitlib.spring_key` is our version, with the same outer size as `key_slots`, so it drops into existing slots. Keep at least 30% of the key's length solid between the slits: on a short, wide key, slits of the default length met and cut it in two.
+
+### Paint a thin surface layer, and measure it from the outside shape
+
+On the Hawk's wings the underside white was painted 1 mm deep, measured from every downward-facing surface of the finished part. Near the trailing edge the wing is under 1 mm thick, so the white went right through and showed on top. The gear-socket ceilings also counted as undersides, so a white square showed through the thin skin above each socket. Now the white is 2 layers deep, it never comes within 2 layers of the top surface, and it is measured from the part's outside shape before any socket or slot is cut. Check every painted part in the slicer's top view for colour coming through.
+
+### Look at what a socket's ceiling becomes in the print pose
+
+A fuselage section printed on end turns every forward-facing wall of a socket into a ceiling. Around the Hawk's round wing leading edge, the intake pod's socket printed as a flat overhang and came out rough. A small filler moulded on the wing root, ahead of the leading edge and hidden inside the pod, gives the socket a 45° roof instead. The visible change is only a pointed seam. Likewise, cut a section where a vertical face would otherwise be a ledge part way up the print: the Hawk's nose is now cut on the dome face at the canopy front, so that face sits on the bed.
+
+### Make fragile tips separate push-in parts
+
+A pitot probe or aerial moulded on a big section means reprinting the section if it snaps. Give it a plug into a hole in the parent part, and put the plug on the cheap part (the probe), so a break costs a 10-minute reprint. Keep the plug's end full-width, because it is the bed face, and put the lead-in chamfer in the hole instead.
+
+### Keep a stand's key out of decorative parts
+
+The Hawk's stand key first ran right through the smoke pod and into the belly, which left a square hole through the pod when the model sat on its gear. It is now a blind socket in the pod only. Before you route a load path through a part, check how that part looks when the stand is not fitted.
