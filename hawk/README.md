@@ -253,6 +253,7 @@ Checks: run `tools/interference.py` on the assembled STLs without the `key_*` fi
   - Smoke pod: no gap to the fuselage anywhere. At the rear the pod tapers in an aerodynamic shape, and the pylon (connector) tapers with it (see the reference photos).
   - A small radome/bulge on the belly between the ventral strakes.
   - Rear fuselage top corners actually square (not the bottom ones): raise the upper squareness n_up to about 10 from X 226 back, keep n_lo as it is, and use more points per section (about 160) so the square corners loft cleanly.
+- **Nonplanar top surfaces (try).** [orcaslicer-nonplanar](https://github.com/fich-l/orcaslicer-nonplanar) (OrcaSlicer fork, v0.1, Apple Silicon Mac only) makes the top shells of gently sloped surfaces follow the shape (up to 12° slope and 5 mm height span), so there are no contour stair steps. The wing halves (outer skin up) and the tailplanes fit those limits behind the leading edge. Unknowns: painted multi-colour regions, the X2D's two nozzles and AMS (not mentioned in its docs), and opening our Bambu 3MF in it. Test: an outboard wing top-half section, once in plain red and once with the roundel painted in. If the colours fail, use separate press-in roundel discs.
 
 - Add the older blue-fin scheme (HobbyBoss sheet I, Revell 2010) as an option.
 - Add the airbrake outline, the canopy detonating-cord (MDC) lines and the intake auxiliary doors.
