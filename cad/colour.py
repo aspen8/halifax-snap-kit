@@ -272,11 +272,12 @@ def colour_part(name, P, pat):
         core = (mf.Manifold.cylinder(200, r_in, r_in, 96).rotate([0, 90, 0])
                 .translate([-100, s * yc, zc]))
         return paint(P, [(YELLOW, P - core)])
-    if name == "canopy":       # below the glass: camo, earth ahead (nose colour), green aft (spine colour)
+    if name == "canopy":       # below the front glazing: fuselage (earth above the camo line, black below)
         sk = ALL - K.inner_core(P, 0.6)
-        below = sk ^ prism_y(cs([np.array(GLASS_BOTTOM + [(80.0, -10.0), (52.0, -10.0)])]))
-        fwd = H_box(-100, GLASS_CAMO_SPLIT, -100, 100, -100, 100)
-        return paint(P, [(EARTH, below ^ fwd), (GREEN, below - fwd), (BLACK, frames(name, P))], base=CLEAR)
+        fwd = H_box(-100, CANOPY_STEP_X, -100, 100, -100, FRONT_GLASS_BOTTOM)
+        under = prism_y(cs([np.array([(x, float(H.spine_z(x))) for x in np.arange(50.0, 64.1, 0.5)]
+                                     + [(64.0, -20.0), (50.0, -20.0)])]))
+        return paint(P, [(EARTH, sk ^ fwd), (BLACK, sk ^ fwd ^ under), (BLACK, frames(name, P))], base=CLEAR)
     if name in CLEAR_PARTS:
         return paint(P, [(BLACK, frames(name, P))], base=CLEAR)
     if name == "stand_base":
@@ -383,23 +384,22 @@ CLEAR_PARTS = ("canopy", "canopy_rear", "nose_glazing", "turret_dorsal", "turret
 FRAME_W = 0.6                # mm
 # Pilot's canopy, measured from the Revell side and plan views (mm, assembled frame)
 CANOPY_GLASS_X = (52.9, 72.1)               # glazing between these; the rims outside are frame
-CANOPY_XFRAMES = [62.0]                     # hoop at the side pane's front edge (over the roof too)
+CANOPY_XFRAMES = [61.6]                     # hoop at the step (over the roof too)
 CANOPY_ROOF_BARS = [(2.8, 53.0)]            # (|y|, x0): roof bars, from the screen's lower frame to the rear
 # Windscreen lower frame seen from above (x, |y|): from the cant rail's front end, in to the
 # roof bars, then the V notch to the apex. Every bar ends on another frame, as on the real thing.
-# cockpit glazing, measured off the Revell side view (calibrated): glass down to the camo line;
-# cant rail at z 7.1 runs right round the front; the windscreen's side edge is a D-shaped curve
-# with a big quarter-light behind it; two side windows over a lower glazed strip
-CANOPY_HOOP = 7.1                            # cant rail (top of the side windows), round the front too
-CANOPY_LOWER_XFRAMES = [67.0]                # upright between the two side panes
-WS_D_CURVE = [(57.1, 7.1), (55.2, 5.8), (53.6, 4.4), (52.9, 3.0)]
-GLASS_BOTTOM = [(52.0, 3.0), (52.9, 3.0), (62.0, 1.45), (80.0, 1.45)]   # diagonal under the quarter-light   # (x, z): below it the canopy is camo
-GLASS_CAMO_SPLIT = 60.7                      # earth ahead of this (nose colour), green aft (spine colour)
-# windscreen front: 5 panes wrapping round (centre V, two wide, two small out to the D curve);
-# dividers as angles round a vertical axis at x = WS_AXIS_X (0 = ahead), at the band's bottom and top
+# cockpit glazing (Revell side view, reference photos and the user's sketch): the front glazing has
+# a level bottom edge; at the step it drops square to the two side windows, which come down below
+# the camo line; cant rail at z 7.1 runs right round the front
+CANOPY_HOOP = 7.1                            # cant rail
+CANOPY_STEP_X = 61.6                         # front glazing / side windows: the square step
+FRONT_GLASS_BOTTOM = 3.0                     # front glazing's bottom edge (level)
+CANOPY_LOWER_XFRAMES = [67.0]                # upright between the two side windows
+# windscreen: 5 panes wrapping round the front (a centre V, then two each side, the outer one back
+# to the step). Dividers as angles round a vertical axis at x = WS_AXIS_X (0 = ahead), (bottom, top)
 WS_AXIS_X = 60.0
-WS_BOTTOM = 3.0                              # windscreen's lower edge at the front
-WS_DIVIDERS = [(6.0, 15.0), (42.0, 44.0)]    # (bottom, top) deg each side: near upright
+WS_BOTTOM = FRONT_GLASS_BOTTOM
+WS_DIVIDERS = [(5.0, 14.0), (45.0, 47.0)]
 # Rear roof glazing (Revell plan, and the user's photo): centre panel with the astrodome,
 # side panels split by diagonals from the rear outer corner to the front inner corner
 REAR_GLASS_X = (73.6, 91.0)
@@ -477,23 +477,16 @@ def frames(name, P):
     if name == "canopy":
         g0, g1 = CANOPY_GLASS_X
         hz = CANOPY_HOOP
+        sx = CANOPY_STEP_X
         f = H_box(-100, g0, -100, 100, -100, 100) + H_box(g1, 400, -100, 100, -100, 100)
-        f = f + slab("z", hz)                                                 # horizontal frame, round the front
+        f = f + slab("z", hz)                                                 # cant rail, round the front
         for x in CANOPY_XFRAMES:
             f = f + slab("x", x)
         for x in CANOPY_LOWER_XFRAMES:
             f = f + (slab("x", x) ^ H_box(-100, 400, -100, 100, -100, hz))
-        # windscreen: D-curve side edge, lower edge at the front, and dividers leaning in at the top
-        sides = H_box(-100, 400, 5.0, 100, -100, 100) + H_box(-100, 400, -100, -5.0, -100, 100)
-        dcur = mf.CrossSection()
-        for p, q in zip(WS_D_CURVE, WS_D_CURVE[1:]):
-            dcur = dcur + D.band(p, q, W)
-        f = f + (D.prism_y(dcur) ^ sides)
+        f = f + (slab("z", FRONT_GLASS_BOTTOM) ^ H_box(-100, sx, -100, 100, -100, 100))   # front glazing bottom
+        f = f + H_box(sx, 400, -100, 100, -100, H.CANOPY_FLOOR + 0.6)        # side windows' sill
         f = f + windscreen_dividers(P, hz, W)
-        gb = mf.CrossSection()                                               # glass bottom edge
-        for p, q in zip(GLASS_BOTTOM, GLASS_BOTTOM[1:]):
-            gb = gb + D.band(p, q, W)
-        f = f + D.prism_y(gb)
         # roof bars, from the horizontal frame to the rear
         roof = mf.CrossSection()
         for yb, x0 in CANOPY_ROOF_BARS:

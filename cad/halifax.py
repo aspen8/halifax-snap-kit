@@ -104,7 +104,7 @@ SPINE_LINE = [(0, -10.05), (60.7, 1.4), (290, 1.4),  # NP-G: level at the side-w
               # side pane's corner (x 60.7), then straight to the nose (2.4 mm below the top at the glazing)
               (299, 4.0), (360, 4.0)]   # x, z: body/spine split (tail: the tailplane floor)
 NOSE_KEEL = (13.5, 51.8, 5.0, 1.5)   # nose spine piece's hidden keel: x0, x1, depth below the line, skin inset
-CANOPY_FLOOR = 1.4           # flat canopy floor = side-window bottom = camo line aft of x 60.7
+CANOPY_FLOOR = 0.2           # flat canopy floor: the side windows come down to here, below the camo line
 SPINE_WAVE = (0.7, 7.5, 85.0, 290.0)    # scallop amplitude, period, from x, to x
 SPINE_CUTS = [(13.0, 60.7, "earth"), (72.8, 100.0, "green"),
               (100.0, 150.2, "earth"), (150.2, 204.5, "green"), (204.5, 230.0, "earth"),
