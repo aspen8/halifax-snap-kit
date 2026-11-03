@@ -100,10 +100,9 @@ NOSE_SPIGOT_BOX = (4.0, 4.5, -26.0, -16.0)   # length, half-width, z0, z1 of the
 FUSE_SPLIT_X = 196.0         # front / rear fuselage joint (just ahead of the codes and roundel)
 # Fuselage printed Lancaster-style: full-width black sections on end, with the camouflaged
 # spine as separate single-colour pieces sitting on the demarcation line.
-SPINE_LINE = [(0, -9.1), (52.3, -1.3), (72.8, 0.4), (90, 1.4), (290, 1.4),  # straight down the nose, under the
+SPINE_LINE = [(0, -15.6), (52.3, -1.3), (72.8, 0.4), (90, 1.4), (290, 1.4),  # straight down the nose, under the
               # cockpit side windows (the canopy glass comes down to it), then the old line aft
               (299, 4.0), (360, 4.0)]   # x, z: body/spine split (tail: the tailplane floor)
-NOSE_KEEL = (13.5, 51.8, 5.0, 1.5)   # nose spine piece's hidden keel: x0, x1, depth below the line, skin inset
 SPINE_WAVE = (0.7, 7.5, 85.0, 290.0)    # scallop amplitude, period, from x, to x
 SPINE_CUTS = [(13.0, 52.3, "earth"), (72.8, 100.0, "green"),
               (100.0, 150.2, "earth"), (150.2, 204.5, "green"), (204.5, 230.0, "earth"),
@@ -415,13 +414,6 @@ def canopy_boss_z():
     return min(za, zb) - 0.5, max(za, zb) + kh
 
 
-def split_floor(x):
-    """Underside of the spine at x: the camo line, or the nose piece's keel bottom."""
-    k0, k1, depth, _ = NOSE_KEEL
-    z = float(spine_z(x))
-    return z - depth if k0 <= x <= k1 else z
-
-
 def spine_upper():
     """Solid region above the split line (a smooth spline, extruded across the whole width)."""
     pts = [(float(x), float(spine_z(x))) for x in np.arange(-6.0, 401.0, 1.0)]
@@ -525,15 +517,6 @@ def fuselage_parts(wing_tongues):
     # (the canopy fills that gap), so it stays on the body
     k0, k1, khw, kh = CANOPY_KEY
     Bb = Bb + mbox(k0, k1, -khw, khw, *canopy_boss_z())
-    # nose spine piece: a hidden keel (inset from the skin, so the visible join stays on the camo line)
-    # gives the thin nose strip some depth; front end at 45 deg so the pocket prints on end
-    q0, q1, qd, qi = NOSE_KEEL
-    sz = lambda x: float(spine_z(x))
-    keel_sec = K.cs([np.array([(q0, sz(q0) + 0.5), (q0 + qd, sz(q0 + qd) - qd), (q1, sz(q1) - qd), (q1, sz(q1) + 0.5)])])
-    keel = K.prism_y(keel_sec) ^ M(fuselage_solid(offset=qi, x0=q0 - 1.0, x1=q1 + 1.0))
-    keel_hole = K.prism_y(keel_sec.offset(FIT, mf.JoinType.Miter)) ^ M(fuselage_solid(offset=qi - FIT, x0=q0 - 1.0, x1=q1 + 1.0))
-    cap = cap + keel
-    Bb = Bb - keel_hole
     # front/rear keys on the joint face, below the spine line
     _, hw, top, bot, _ = interp(FUSE_STATIONS, FUSE_SPLIT_X)
     zs = float(spine_z(FUSE_SPLIT_X))
@@ -558,7 +541,7 @@ def fuselage_parts(wing_tongues):
             sec = sec ^ K.cs([np.array([(x - 50, z - 5), (x + 50, z - 5), (x + 50, z + top), (x - 50, z + top)])])
         return K.prism_y(sec) ^ mbox(x - 50, x + 50, -t / 2 - grow, t / 2 + grow, z - 5, z + 20)
     def thick(x):
-        return interp(FUSE_STATIONS, x)[2] - split_floor(x)
+        return interp(FUSE_STATIONS, x)[2] - float(spine_z(x))
     tail = (TAIL_ROOT[0] - 3 - KEY_CAP[1] / 2, TAIL_ROOT[0] + TAIL_ROOT[1] + 3 + KEY_CAP[1] / 2)
     for x0, x1, _ in SPINE_CUTS:
         n = 2 if x1 - x0 >= 45 else 1
@@ -570,7 +553,7 @@ def fuselage_parts(wing_tongues):
             if not cand:
                 continue
             x = max(cand, key=thick)
-            z = split_floor(x)
+            z = float(spine_z(x))
             print(f"spine peg at x {x:.1f} (piece {x0:.0f}-{x1:.0f})", flush=True)
             pegs = pegs + spine_peg(x, z)
             cap_holes = cap_holes + spine_peg(x, z, grow=KEY_FIT)
@@ -1326,7 +1309,13 @@ def build():
         elif k == "fuselage_rear":
             poses[k] = lambda w: rot(w, "y", -90)
         elif k.startswith("spine_"):
-            poses[k] = spine_end_pose(v)      # stand on the bigger (slanted) end face
+            i = int(k.split("_")[1]) - 1
+            if SPINE_CUTS[i][1] <= 55:       # nose piece: lie on its flat, sloping underside
+                (x0, z0), (x1, z1) = SPINE_LINE[0], SPINE_LINE[1]
+                tilt = math.degrees(math.atan2(z1 - z0, x1 - x0))
+                poses[k] = lambda w, t=tilt: rot(w, "y", t)
+            else:                             # others stand on their bigger (slanted) end face
+                poses[k] = spine_end_pose(v)
         elif k == "canopy":                   # flat on its sloped floor
             cx0, cx1, _ = CANOPY_CUT
             tilt = math.degrees(math.atan2(float(spine_z(cx1)) - float(spine_z(cx0)), cx1 - cx0))
