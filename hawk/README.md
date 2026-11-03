@@ -234,6 +234,14 @@ Checks: run `tools/interference.py` on the assembled STLs without the `key_*` fi
 
 ## Known gaps and next steps
 
+- **v6 to-do (feedback on v5 renders):**
+  - Smoke pod tail: keep the top on the line and sweep the underside up so it tapers into the belly.
+  - Wings: root underside level with the fuselage's lowest point (about Z -8.4; lower the chord plane by 0.8 and the root key slot with it).
+  - Small fins under the wings: three fences behind the leading edge, two flap-track fairings at the trailing edge.
+  - Side pods: fade into the fuselage side and the wing's rear root with no visible end (longer, lower taper to about X 190, larger blend radius).
+  - Belly stripes: narrowest at the tail, widening forward into one continuous band with the wing trailing-edge white.
+  - Rear fuselage top: near-square (about 90°) upper corners, as in the photos.
+
 - Add the older blue-fin scheme (HobbyBoss sheet I, Revell 2010) as an option.
 - Add the airbrake outline, the canopy detonating-cord (MDC) lines and the intake auxiliary doors.
 - Add gear doors for the gear-down display.
