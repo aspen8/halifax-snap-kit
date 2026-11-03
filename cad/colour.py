@@ -709,6 +709,8 @@ if __name__ == "__main__":
         jobs += [(n, iv, lambda v, r=r: v.rotate(r), plug) for n, iv, r, plug in extra]
         for jname, jvols, pose, whole in jobs:
             for c, v in jvols.items():             # assembled-frame colour preview
+                if jname.startswith("key_"):         # loose keys have no assembled place (they sat at the nose)
+                    continue
                 V, F = mesh_of(v)
                 preview.append((c, V, F))
             add_object(objs, jname, {c: pose(v) for c, v in jvols.items()}, out, pose(whole))

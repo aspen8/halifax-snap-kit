@@ -314,14 +314,16 @@ def interp(table, x):
     return table[-1]
 
 
-def superellipse_wire(x, hw, z_top, z_bot, n, pts=48):
+def superellipse_wire(x, hw, z_top, z_bot, n, pts=48, n_bot=None):
+    """Superellipse section; n_bot (if given) shapes the lower half separately."""
     zc, hh = (z_top + z_bot) / 2, (z_top - z_bot) / 2
     p = []
     for i in range(pts):
         t = 2 * math.pi * i / pts
         c, s = math.cos(t), math.sin(t)
-        p.append(V(x, hw * math.copysign(abs(c) ** (2 / n), c),
-                   zc + hh * math.copysign(abs(s) ** (2 / n), s)))
+        k = n if s >= 0 or n_bot is None else n_bot
+        p.append(V(x, hw * math.copysign(abs(c) ** (2 / k), c),
+                   zc + hh * math.copysign(abs(s) ** (2 / k), s)))
     return cq.Wire.assembleEdges([cq.Edge.makeSpline(p, periodic=True)])
 
 
@@ -344,6 +346,18 @@ def cyl(p, d, length, axis):
 # ============================================================
 # FUSELAGE
 # ============================================================
+# lower half of the nose sections keeps its rounder shape (boxing it in too made the chin bulbous)
+FUSE_LOWER_N = [(18.4, 2.8), (25.7, 3.0), (32.9, 3.2), (42.1, 3.4), (46.7, 3.5), (49.3, 3.55),
+                (51.3, 3.6), (54.3, 3.7), (57.4, 3.8)]
+
+
+def fuse_wire(s):
+    x = s[0]
+    lo = FUSE_LOWER_N
+    nb = interp(lo, x)[1] if lo[0][0] <= x <= lo[-1][0] else None
+    return superellipse_wire(*s, n_bot=nb)
+
+
 def fuselage_solid(offset=0.0, x0=None, x1=None):
     """Outer fuselage loft, or an inward offset of it (for shells and lips)."""
     st = FUSE_STATIONS
@@ -357,10 +371,10 @@ def fuselage_solid(offset=0.0, x0=None, x1=None):
     nose = [s for s in st if s[0] <= WINDSCREEN_KINK_X]
     rest = [s for s in st if s[0] >= WINDSCREEN_KINK_X]
     if len(nose) >= 2 and len(rest) >= 2 and nose[-1][0] == WINDSCREEN_KINK_X:
-        a = wp(smooth_loft([superellipse_wire(*s) for s in nose]))
-        b = wp(smooth_loft([superellipse_wire(*s) for s in rest]))
+        a = wp(smooth_loft([fuse_wire(s) for s in nose]))
+        b = wp(smooth_loft([fuse_wire(s) for s in rest]))
         return a.union(b).clean()
-    return wp(smooth_loft([superellipse_wire(*s) for s in st]))
+    return wp(smooth_loft([fuse_wire(s) for s in st]))
 
 
 def smooth_loft(wires):
