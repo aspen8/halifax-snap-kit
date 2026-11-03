@@ -156,6 +156,34 @@ def side_camo(g, side):
     return green, band
 
 
+def spine_plan(g, plan_green, inset=2.0):
+    """Plan section of green for the spine pieces: the plan pattern across the roof, and outboard
+    of the roof edge the colour at that edge, so each colour runs straight down the side to the
+    black (mixing the plan roof with the side trace gave a harlequin look)."""
+    ox, oy = CAMO_ORIGIN
+    xs = np.arange(-2, 365, 0.25)
+    hw = np.array([max(H.interp(H.FUSE_STATIONS, x)[1] - inset, 0.2) for x in xs])
+    out = plan_green ^ roof_section(inset)
+    for s in (1, -1):
+        Y = s * (hw - 0.3)
+        col = np.round(CAMO_CL_PX - Y / CAMO_SCALE - ox).astype(int)
+        row = np.round(CAMO_NOSE_PY - xs / CAMO_SCALE - oy).astype(int)
+        ok = (row >= 0) & (row < g.shape[0]) & (col >= 0) & (col < g.shape[1])
+        v = np.zeros(len(xs), bool)
+        v[ok] = g[row[ok], col[ok]]
+        start = None
+        for i, on in enumerate(list(v) + [False]):
+            if on and start is None:
+                start = i
+            elif not on and start is not None:
+                a, b = start, i - 1
+                pts = [(xs[j], s * hw[j]) for j in range(a, b + 1)]
+                pts += [(xs[b], s * 100.0), (xs[a], s * 100.0)]
+                out = out + cs([np.array(pts if s > 0 else pts[::-1])])
+                start = None
+    return out
+
+
 def roof_camo():
     """Plan section of green across the fuselage roof: the side trace's colour along the top
     edge, carried straight over the spine (None when the scheme has no side trace)."""
@@ -221,16 +249,11 @@ def colour_part(name, P, pat):
     if name in ("fuselage_front", "fuselage_rear"):     # black body; codes are inlays
         return {BLACK: P}
     if name.startswith("spine_"):
-        # camo painted on (the purge is worth it): sides from the NP-G side trace, the roof from the
-        # plan pattern, so from above the colours cross the fuselage at an angle and run on into
-        # the wings (single-colour pieces gave straight bands across the top)
-        ops = []
-        for s in (1, -1):
-            green_s, _ = pat["side"][s]
-            ops.append((GREEN, (S["+y"] if s > 0 else S["-y"]) ^ prism_y(green_s)))
-        roof = up ^ prism_z(roof_section())
-        ops += [(EARTH, roof), (GREEN, roof ^ plan)]
-        return paint(P, ops, base=EARTH)
+        # camo painted on (the purge is worth it): the plan pattern across the roof, each colour
+        # carried straight down the sides to the black, so from above the colours cross the
+        # fuselage at an angle and run on into the wings
+        skin = up + S["+y"] + S["-y"]
+        return paint(P, [(GREEN, skin ^ prism_z(pat["spine_plan"]))], base=EARTH)
     if name.startswith("fuselage_"):
         s = 1 if name.endswith("stbd") else -1
         side = S["+y"] if s > 0 else S["-y"]
@@ -681,7 +704,7 @@ if __name__ == "__main__":
     out.mkdir(parents=True, exist_ok=True)
     g, plan_green = plan_camo()
     pat = {"plan_green": plan_green, "side": {s: side_camo(g, s) for s in (1, -1)},
-           "roof_green": roof_camo()}
+           "roof_green": roof_camo(), "spine_plan": spine_plan(g, plan_green)}
     parts, poses = H.build()
     objs = {}
     preview = []
