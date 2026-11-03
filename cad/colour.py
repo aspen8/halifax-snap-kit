@@ -393,7 +393,7 @@ CANOPY_ROOF_BARS = [(2.8, 53.0)]            # (|y|, x0): roof bars, from the scr
 CANOPY_HOOP = 7.1                            # cant rail (top of the side windows), round the front too
 CANOPY_LOWER_XFRAMES = [66.7]                # upright between the two side windows (60.7 is a full hoop)
 WS_D_CURVE = [(57.1, 7.1), (55.2, 5.8), (53.6, 4.3), (52.9, 2.4)]
-GLASS_BOTTOM = [(52.0, 2.4), (52.9, 2.4), (60.7, 1.4), (80.0, 1.4)]   # (x, z): below it the canopy is camo
+GLASS_BOTTOM = [(52.0, 2.4), (52.9, 2.4), (60.7, 1.45), (80.0, 1.45)]   # (x, z): below it the canopy is camo
 GLASS_CAMO_SPLIT = 60.7                      # earth ahead of this (nose colour), green aft (spine colour)
 # windscreen front: 5 panes wrapping round (centre V, two wide, two small out to the D curve);
 # dividers as angles round a vertical axis at x = WS_AXIS_X (0 = ahead), at the band's bottom and top
