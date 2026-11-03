@@ -88,17 +88,17 @@ FUSE_STATIONS = [
     (140.0, 11.7, 35.5,  -7.9, 2.6, 13.0, 2.7),     # widest higher up and squarer above, so
     (152.6, 11.6, 33.6,  -7.4, 2.5, 12.5, 2.6),     # the side runs up flat and only rounds
     (166.7, 11.6, 32.4,  -6.7, 2.6, 12.0, 2.5),     # over near the top
-    (180.9, 11.6, 31.2,  -5.2, 2.8, 11.0, 2.35),
-    (195.0, 11.6, 29.2,  -3.9, 3.1, 9.5, 2.15),
-    (208.0, 11.5, 27.6,  -3.0, 3.4, 8.0, 2.0),
-    (226.0, 11.2, 25.9,  -2.0, 3.6, 8.0, 2.0),
-    (240.0, 10.8, 24.6,  -1.3, 3.8, 8.0, 2.5),
-    (252.0, 10.0, 23.0,  -0.6, 4.0, 8.0, 3.2),     # nearly level to the end (Revell side view),
-    (264.2,  8.8, 20.2,   1.0, 4.2, 7.8, 3.8),     # squared off: flat top edge at the end (photos)
+    (180.9, 11.6, 31.2,  -5.2, 2.8, 11.0, 2.8),
+    (195.0, 11.6, 29.2,  -3.9, 3.1, 9.5, 3.3),
+    (208.0, 11.5, 27.6,  -3.0, 3.4, 8.0, 3.7),
+    (226.0, 11.2, 25.9,  -2.0, 3.6, 8.0, 4.0),
+    (240.0, 10.8, 24.6,  -1.3, 3.8, 8.0, 4.2),
+    (252.0, 10.0, 23.0,  -0.6, 4.0, 8.0, 4.3),     # nearly level to the end (Revell side view),
+    (264.2,  8.8, 20.2,   1.0, 4.2, 7.8, 4.4),     # squared off: flat top edge at the end (photos)
 ]
 FUSE_END_X = 264.2
-# (v5: the lower squareness, n_lo, rises from 2.6 to 4.2 towards the tail: photos show the rear
-# fuselage nearly square-cornered underneath, with the belly stripes on the corners)
+# (v5/v6: both squarenesses rise towards the tail, n_lo to 4.2 and n_up to 4.4: photos show the
+# rear fuselage nearly square-cornered top and bottom, with the belly stripes on the lower corners)
 # Canopy and dorsal spine: (x, half_width, z_top); bottom is buried 6 mm in the body
 SPINE_STATIONS = [            # canopy and the fairing just behind it (aft of x 140 the body takes over)
     (37.0,  8.6, 13.0),
@@ -145,10 +145,14 @@ INTAKE_STATIONS = [            # x, y_outer, z_top, z_bottom: the side pods (int
     (126.0, 18.4, 15.1, -6.0),     # keep its bottom above the wing underside (no slivers)
     (134.0, 16.8, 14.8, -5.4),     # ...and taper almost straight back...
     (142.0, 15.2, 14.2, -4.4),
-    (150.0, 13.8, 13.4, -2.6),     # ...easing into the body side (concave): the bottom rises up
-    (158.0, 12.6, 12.4, 0.0),      # the fuselage side as the pod tapers in, so nothing sticks
-    (166.0, 11.9, 11.2, 3.0),      # out below
-    (174.0, 11.4, 10.0, 6.0),
+    # rear (v6): a long fade into the fuselage side, the underside staying down on the wing to
+    # its trailing edge, so there is no visible end to the pod behind the wing root
+    (150.0, 13.8, 13.4, -4.6),
+    (158.0, 12.9, 12.6, -4.4),
+    (166.0, 12.2, 11.6, -3.8),
+    (174.0, 11.8, 10.4, -2.8),
+    (182.0, 11.5,  9.0, -1.6),
+    (190.0, 11.2,  7.6, -0.6),
 ]
 INTAKE_Y_IN = 10.8           # inner edge of the pods, just inside the body side: their rounded
                              # inner top corner leaves a notch, so they read as separate at the inlet
@@ -192,8 +196,10 @@ WING_TIP_ROUND = 3.0
 TC_ROOT, TC_TIP = 0.109, 0.090
 WING_CAMBER = 0.012
 WING_SPLIT_TE_T = 1.2        # trailing edge thickness of the split wing (0.75 mm printed per half)
-WING_CHORD_DZ = 2.7          # chord plane above Z_FLOOR: the root's lowest point stays on the old floor
-WING_PINS = [(0.15, 0.30), (0.15, 0.55), (0.25, 0.30), (0.25, 0.55), (0.40, 0.30)]   # eta, chord fraction:
+WING_CHORD_DZ = 3.7          # chord plane above Z_FLOOR: the root's underside sits about 1.8 mm
+                             # (2.25 printed) above the fuselage's lowest point, so some fuselage
+                             # shows below the wing (photos)
+WING_PINS = [(0.15, 0.30), (0.15, 0.55), (0.25, 0.30), (0.25, 0.45), (0.40, 0.30)]   # eta, chord fraction:
                              # where each half is 2 mm or more thick (the outer wing is too thin)
 WING_PIN = (2.0, 1.0)        # pin d, depth into each half: alignment pins (2.5 x 2 mm printed); glue the halves
 WING_PIN_FIT = 0.05 * _P
@@ -205,7 +211,7 @@ WING_TE_T = 0.6
 WING_ROOT_Y = 6.0            # panel starts here (inside the fuselage, trimmed by it)
 ROOT_TONGUE = {-1: (117.0, 131.0), 1: (132.5, 146.5)}   # wing key x ranges: port forward, starboard aft
                              # (starboard ends at 146.5: further aft its slot broke the thinning root skin)
-ROOT_TONGUE_Z = (1.5, 4.9)   # above the floor
+ROOT_TONGUE_Z = (2.5, 5.9)   # above the floor (the wing sits 1.0 higher than the v4 flat-bottom wing)
 # The wing root joint is a separate flat key in slots in the fuselage and the wing (where the
 # tongue used to be): an integral tongue floated 1.5 mm above the bed in the wing's print pose,
 # and the belly is too shallow there to lower it.
@@ -251,7 +257,11 @@ POD_R = 5.6                  # photos: a fat tube, round blunt nose, long tail c
 POD_PROFILE = ([(0.10 * (1 - math.cos(t)), POD_R * math.sin(t)) for t in np.linspace(0.08, math.pi / 2, 9)]
                + [(0.80, POD_R), (0.86, POD_R * 0.95), (0.92, POD_R * 0.78), (0.97, POD_R * 0.50),
                   (0.993, POD_R * 0.28), (1.0, 0.6)])
-POD_PYLON = (8.0, 2.6, 1.5)   # fore/aft inset, half-width, height
+POD_PYLON = (8.0, 2.6, 1.5)
+POD_TAIL = [(0.80, 1.0, 1.0, 0.0), (0.87, 0.93, 0.88, 0.0), (0.93, 0.80, 0.68, 0.3),
+            (0.98, 0.62, 0.48, 0.8), (1.03, 0.46, 0.32, 1.5), (1.08, 0.34, 0.22, 2.4)]
+            # tail stations: fraction of length, half-width and height (of the pod's), top raised.
+            # The top rises into the belly, so the pod tapers into the fuselage   # fore/aft inset, half-width, height
 POD_KEYS = [0.116, 0.72]     # pylon pegs: the front one sits ahead of the port wing tongue (X 117-124)
 POD_KEY = 4.0
 
@@ -526,9 +536,9 @@ def splitter_gap(side):
     return box(x0 - 3.0, x0 + 6.0, y0, y1, zb + 1.0, zt - 1.0)
 
 
-BLEND_R = ((80.0, 92.0, 118.0, 145.0, 165.0), (6.0, 1.2, 1.5, 2.5, 6.0))   # fillet radius vs x: soft at the canopy,
+BLEND_R = ((80.0, 92.0, 118.0, 145.0, 165.0, 185.0), (6.0, 1.2, 1.5, 2.5, 7.0, 9.0))   # fillet radius vs x: soft at the canopy,
                              # tight at the inlet (pods nearly separate), soft again where they fade
-BLEND_X = (34.0, 192.0)      # x range of the blend (from ahead of the windscreen to behind the pods)
+BLEND_X = (34.0, 200.0)      # x range of the blend (from ahead of the windscreen to behind the pods)
 BLEND_ZC = 4.0               # z of the polar centre used to resample each section
 BLEND_N = 144                # points per section
 BELLY_Z = 2.0                # below this z each section is filled to its hull (flush pod undersides)
@@ -758,10 +768,39 @@ def wing_glove(side):
     return g if side > 0 else g.mirror([0, 1, 0])
 
 
+WING_FINS = [(0.30, 0.02, 0.20, 1.5), (0.55, 0.02, 0.19, 1.4), (0.78, 0.03, 0.19, 1.2),
+             (0.24, 0.66, 1.00, 1.2), (0.46, 0.68, 1.00, 1.1)]
+             # under the wing (photos): three fences behind the leading edge and two flap-track
+             # fairings at the trailing edge. eta, chord fraction from, to, depth below the skin
+WING_FIN_T = 0.7
+
+
+@cached
+def wing_fins_flat():
+    out = []
+    for eta, f0, f1, h in WING_FINS:
+        y = eta * SPAN / 2
+        le, c, tc = wing_plan(y)
+        sec = np.array(cambered_section(tc, c))
+        k = int(np.argmin(sec[:, 0]))
+        lo = sec[k:]
+        xs = np.linspace(f0 * c, min(f1, 0.995) * c, 12)
+        u = (xs - xs[0]) / (xs[-1] - xs[0])
+        d = h * np.clip(np.sin(np.pi * np.clip(u * 1.3, 0, 1)) ** 0.6, 0.15, 1.0)   # deepest a third along
+        bottom = [(le + x, float(np.interp(x, lo[:, 0], lo[:, 1])) - dd) for x, dd in zip(xs, d)]
+        prof = np.array(bottom + [(le + xs[-1], 0.0), (le + xs[0], 0.0)])
+        if K.cs([prof]).area() < 0:
+            prof = prof[::-1]
+        plate = K.cs([prof]).extrude(WING_FIN_T).translate([0, 0, -WING_FIN_T / 2]).rotate([90, 0, 0])
+        out.append(plate.translate([0, y, WING_CHORD_Z]))
+    return union(out)
+
+
 @cached
 def wing_outer(side):
     """The wing part's outside shape (no sockets or slots): what the paint is measured from."""
-    return (wing_assembled(side) + (wing_glove(side) ^ outer())) - body()
+    fins = wing_flat_to_assembled(wing_fins_flat(), side)
+    return (wing_assembled(side) + fins + (wing_glove(side) ^ outer())) - body()
 
 
 @cached
@@ -792,9 +831,29 @@ def wing_pins(side, grow=0.0):
     return wing_flat_to_assembled(union(ps), side)
 
 
+GEAR_BAY = (152.0, 27.0, 16.0, 5.0, 0.5)   # main wheel bay in the underside (the wheels retract
+                             # inwards): wheel well centre x, |y|, diameter, leg channel width, depth
+
+
+def gear_bay(side):
+    """Shallow recess for the main wheel well and the leg's channel out to the leg socket."""
+    xc, yc, d, cw, depth = GEAR_BAY
+    gx, gy = MAIN_GEAR
+    well = mf.CrossSection.circle(d / 2, 48).translate([xc, yc])
+    ang = math.atan2(gy - yc, gx - xc)
+    L = math.hypot(gx - xc, gy - yc) + cw / 2
+    ch = mf.CrossSection.square([L, cw]).translate([0, -cw / 2]).rotate(math.degrees(ang)).translate([xc, yc])
+    plan = well + ch
+    if side < 0:
+        plan = plan.mirror([0.0, 1.0])
+    w = wing_assembled(side)
+    under = w - w.translate([0, 0, depth])            # within depth above the underside
+    return under ^ K.prism_z(plan)
+
+
 def wing_halves(side):
-    """(top, bottom) halves of the finished wing (gear socket, key slot and pin holes cut)."""
-    w = wing(side) - main_socket(side) - wing_pins(side, WING_PIN_FIT)
+    """(top, bottom) halves of the finished wing (gear socket, key slot, pin holes, wheel bay cut)."""
+    w = wing(side) - main_socket(side) - wing_pins(side, WING_PIN_FIT) - gear_bay(side)
     return w ^ wing_half_region(side, True), w ^ wing_half_region(side, False)
 
 
@@ -1052,7 +1111,13 @@ def pod_key_slots():
 def smoke_pod():
     """Pod (body of revolution) on a short pylon; two halves split on the centreline."""
     zb, zc = pod_geom()
-    pod = _revolve_x([(POD_X0 + f * POD_LEN, rr) for f, rr in POD_PROFILE]).translate([0, 0, zc])
+    front = [(f, rr) for f, rr in POD_PROFILE if f <= POD_TAIL[0][0] + 1e-9]
+    pod = _revolve_x([(POD_X0 + f * POD_LEN, rr) for f, rr in front]).translate([0, 0, zc])
+    # tail: the top stays on the line and the underside sweeps up, into the belly (photos)
+    top = zc + POD_R
+    ws = [superellipse_wire(POD_X0 + f * POD_LEN, POD_R * w, top + dt, top - POD_R * 2 * hgt + dt, 2.0)
+          for f, w, hgt, dt in POD_TAIL]
+    pod = pod + to_m(loft(ws))
     i0, hw, _ = POD_PYLON
     pylon = box(POD_X0 + i0, POD_X0 + POD_LEN - i0, -hw, hw, zc, zb + 4.0)
     p = (pod + pylon) - body()

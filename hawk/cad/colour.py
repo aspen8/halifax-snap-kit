@@ -156,9 +156,11 @@ def letters_section(side):
 CHEVRON_OUT = ((110.0, 16.9), 0.825)     # outer edge: point (x, |y|), slope d|y|/dx
 CHEVRON_IN = ((118.0, 16.1), 0.547)      # inner edge of the band
 CHEVRON_TE_X = 161.5                     # inner edge of the trailing-edge strip
-BELLY_STRIPE = (161.5, 256.0, 2.8, 1.0)  # belly stripes on the rear fuselage's lower corners (photos:
-                                         # seen from the side as a thin white line): x from, to,
-                                         # width inboard of the side line, overlap outboard
+BELLY_STRIPE = (161.5, 256.0, 7.0, 3.0, 1.0)   # belly stripes on the rear fuselage's lower corners
+                                         # (photos: seen from the side as a thin white line): x from,
+                                         # to, width inboard of the side line at the front (where it
+                                         # runs on into the wing's trailing-edge white) and at the
+                                         # tail (narrowest), overlap outboard
 BELLY_CORNER_UP = 1.6                    # they wrap this far up the corner
 BELLY_END = (253.4, 256.9)               # x range of the bar joining the two stripes
 BELLY_V_W = 6.3                          # the wing chevrons meet across the belly in a V at the
@@ -182,11 +184,13 @@ def under_white():
             ^ (_halfplane(*CHEVRON_IN, False) + _rect(CHEVRON_TE_X, -300.0, 300.0, 300.0))
             ^ _rect(95.0, 4.0, 200.0, 200.0)
             ^ H.wing(1).project())                                    # on the wing only
-    x0, x1, w_in, w_out = BELLY_STRIPE
+    x0, x1, w0, w1, w_out = BELLY_STRIPE
     xs = np.linspace(x0, x1, 60)
     hw = np.array([H.fuse_at(x)[1] for x in xs])
+    t = (xs - x0) / (x1 - x0)
+    w_in = w0 + (w1 - w0) * (1 - (1 - t) ** 2)          # narrows quickly behind the wing, then gently
     belly = cs([np.r_[np.c_[xs, hw - w_in], np.c_[xs[::-1], (hw + w_out)[::-1]]]])
-    belly = belly + _rect(CHEVRON_TE_X, hw[0] - w_in, 171.5, hw[0] + w_out)   # joins the trailing-edge strip
+    belly = belly + _rect(CHEVRON_TE_X, hw[0] - w0, 171.5, 40.0)   # one band with the trailing-edge strip
     half = band + belly
     sec = half + half.mirror([0.0, 1.0])
     e0, e1 = BELLY_END
@@ -506,7 +510,8 @@ if __name__ == "__main__":
         if name.startswith(("wingtop_", "wingbot_")):     # panel lines from the whole wing, then split
             side = 1 if name.endswith("stbd") else -1
             P = (wing_detailed(side) ^ H.wing_half_region(side, name.startswith("wingtop_"))) \
-                - H.wing_key_slot(side) - H.main_socket(side) - H.wing_pins(side, H.WING_PIN_FIT)
+                - H.wing_key_slot(side) - H.main_socket(side) - H.wing_pins(side, H.WING_PIN_FIT) \
+                - H.gear_bay(side)
             P, _ = K.largest_piece(P)
         else:
             P = D.apply(name, P)

@@ -49,7 +49,21 @@ Against photos (top: real aircraft, bottom: model):
 
 ![photo comparison](docs/photo_comparison.png)
 
-> **Status: v5, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+> **Status: v6, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+
+### v6 changes (from the v5 renders)
+
+- **Smoke pod tail:** the top stays on the line and the underside sweeps up, so the pod tapers into the belly instead of ending in a free cone.
+- **Wings:** raised 1 mm, so the root underside sits about 2 mm (printed) above the fuselage's lowest point and some fuselage shows below the wing.
+- **Under-wing fins:** three small fences behind the leading edge and two flap-track fairings at the trailing edge, on each wing.
+- **Wheel bays:** a shallow recess in each wing underside for the retracted main wheel, with a channel out to the leg socket.
+- **Side pods:** a longer, lower fade into the fuselage side and down onto the wing's rear root (to X 190, with a larger blend radius), so there is no visible end.
+- **Belly stripes:** widest where they leave the wing trailing-edge white (one continuous band), narrowing to the tail.
+- **Rear fuselage:** near-square top corners as well as bottom ones.
+
+![v6 side](docs/v6_side.png)
+
+![v6 underside](docs/v6_under.png)
 
 ### v5 changes (from photos)
 
@@ -233,14 +247,6 @@ Checks: run `tools/interference.py` on the assembled STLs without the `key_*` fi
 | `hawk/grwtr_3mf/grwtr-BAEHawkT1_72.3mf` | Greenwater's 1:72 BAE Hawk T1 (Standard Digital File License) | Cross-section check of fuselage, pods and canopy only; no geometry copied |
 
 ## Known gaps and next steps
-
-- **v6 to-do (feedback on v5 renders):**
-  - Smoke pod tail: keep the top on the line and sweep the underside up so it tapers into the belly.
-  - Wings: root underside level with the fuselage's lowest point (about Z -8.4; lower the chord plane by 0.8 and the root key slot with it).
-  - Small fins under the wings: three fences behind the leading edge, two flap-track fairings at the trailing edge.
-  - Side pods: fade into the fuselage side and the wing's rear root with no visible end (longer, lower taper to about X 190, larger blend radius).
-  - Belly stripes: narrowest at the tail, widening forward into one continuous band with the wing trailing-edge white.
-  - Rear fuselage top: near-square (about 90°) upper corners, as in the photos.
 
 - Add the older blue-fin scheme (HobbyBoss sheet I, Revell 2010) as an option.
 - Add the airbrake outline, the canopy detonating-cord (MDC) lines and the intake auxiliary doors.
