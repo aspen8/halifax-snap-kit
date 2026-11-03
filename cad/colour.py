@@ -220,9 +220,17 @@ def colour_part(name, P, pat):
         return paint(P, list(camo_up) + sock_op)
     if name in ("fuselage_front", "fuselage_rear"):     # black body; codes are inlays
         return {BLACK: P}
-    if name.startswith("spine_"):                          # one camo colour per piece
-        base = GREEN if name.endswith("green") else EARTH
-        return {base: P}
+    if name.startswith("spine_"):
+        # camo painted on (the purge is worth it): sides from the NP-G side trace, the roof from the
+        # plan pattern, so from above the colours cross the fuselage at an angle and run on into
+        # the wings (single-colour pieces gave straight bands across the top)
+        ops = []
+        for s in (1, -1):
+            green_s, _ = pat["side"][s]
+            ops.append((GREEN, (S["+y"] if s > 0 else S["-y"]) ^ prism_y(green_s)))
+        roof = up ^ prism_z(roof_section())
+        ops += [(EARTH, roof), (GREEN, roof ^ plan)]
+        return paint(P, ops, base=EARTH)
     if name.startswith("fuselage_"):
         s = 1 if name.endswith("stbd") else -1
         side = S["+y"] if s > 0 else S["-y"]
@@ -657,8 +665,7 @@ def add_object(objs, name, posed, out, whole):
 
 PLATE_GROUPS = [            # parts kept together by colour set (max 5 colours a plate)
     ("Fuselage", lambda n: n.startswith("fuselage")),
-    ("Spine (Dark Green)", lambda n: n.startswith("spine_") and n.endswith("green")),
-    ("Spine (Dark Earth)", lambda n: n.startswith("spine_") and n.endswith("earth")),
+    ("Spine", lambda n: n.startswith("spine_")),
     ("Wings", lambda n: n.startswith(("wing_", "tailplane"))),
     ("Nacelles", lambda n: n.startswith("nacelle")),
     ("Fins, roundels and codes", lambda n: n.startswith(("fin_", "roundel_", "code_"))),
