@@ -1338,7 +1338,10 @@ def build():
         elif k == "fuselage_rear":
             poses[k] = lambda w: rot(w, "y", -90)
         elif k.startswith("spine_"):
-            poses[k] = spine_end_pose(v)      # stand on the bigger (slanted) end face
+            if k.startswith("spine_01"):      # nose piece: on its front end (2x the bed contact of the rear)
+                poses[k] = lambda w: rot(w, "y", 90)
+            else:                             # others stand on their bigger (slanted) end face
+                poses[k] = spine_end_pose(v)
         elif k == "nose_glazing":
             poses[k] = lambda w: rot(w, "y", 90)      # flat back face down, dome up
         else:

@@ -624,7 +624,7 @@ def object_settings(name):
         s["layer_height"] = "0.12"
     if name in ("fuselage_front", "fuselage_rear"):
         s.update(TALL_BRIM, wall_loops="3")
-    if name.startswith("spine_") and not name.startswith("spine_01"):
+    if name.startswith("spine_"):
         s.update(TALL_BRIM)                         # standing on an end face
     if name.startswith("wing_") and H.WING_POSE == "end":
         s.update(TALL_BRIM)
