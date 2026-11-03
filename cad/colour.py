@@ -272,12 +272,6 @@ def colour_part(name, P, pat):
         core = (mf.Manifold.cylinder(200, r_in, r_in, 96).rotate([0, 90, 0])
                 .translate([-100, s * yc, zc]))
         return paint(P, [(YELLOW, P - core)])
-    if name == "canopy":       # below the front glazing: fuselage (earth above the camo line, black below)
-        sk = ALL - K.inner_core(P, 0.6)
-        fwd = H_box(-100, CANOPY_STEP_X, -100, 100, -100, FRONT_GLASS_BOTTOM)
-        under = prism_y(cs([np.array([(x, float(H.spine_z(x))) for x in np.arange(50.0, 64.1, 0.5)]
-                                     + [(64.0, -20.0), (50.0, -20.0)])]))
-        return paint(P, [(EARTH, sk ^ fwd), (BLACK, sk ^ fwd ^ under), (BLACK, frames(name, P))], base=CLEAR)
     if name in CLEAR_PARTS:
         return paint(P, [(BLACK, frames(name, P))], base=CLEAR)
     if name == "stand_base":
@@ -380,7 +374,7 @@ def stand_paint(P, pat):
 # ============================================================
 # GLAZING FRAMES (black frame lines through a clear skin)
 # ============================================================
-CLEAR_PARTS = ("canopy", "canopy_rear", "nose_glazing", "turret_dorsal", "turret_tail", "astrodome")
+CLEAR_PARTS = ("canopy", "canopy_side", "canopy_rear", "nose_glazing", "turret_dorsal", "turret_tail", "astrodome")
 FRAME_W = 0.6                # mm
 # Pilot's canopy, measured from the Revell side and plan views (mm, assembled frame)
 CANOPY_GLASS_X = (52.9, 72.1)               # glazing between these; the rims outside are frame
@@ -454,7 +448,7 @@ def windscreen_dividers(P, top_z, w):
     band = H_box(-100, 400, -100, 100, WS_BOTTOM - w / 2, top_z + w / 2)
     for b_deg, t_deg in WS_DIVIDERS:
         for sg in (1, -1):
-            B, T = surf(sg * b_deg, WS_BOTTOM), surf(sg * t_deg, top_z)
+            B, T = surf(sg * b_deg, WS_BOTTOM + 0.7), surf(sg * t_deg, top_z)   # just above the bottom rail
             mid = (B + T) / 2
             radial = np.array([mid[0] - WS_AXIS_X, mid[1], 0.0])
             n = np.cross(T - B, radial)
@@ -474,7 +468,7 @@ def windscreen_dividers(P, top_z, w):
 def frames(name, P):
     sk = ALL - K.inner_core(P, 0.6)        # reaches past the surface: no clear slivers
     W = FRAME_W
-    if name == "canopy":
+    if name in ("canopy", "canopy_side"):
         g0, g1 = CANOPY_GLASS_X
         hz = CANOPY_HOOP
         sx = CANOPY_STEP_X
@@ -484,9 +478,10 @@ def frames(name, P):
             f = f + slab("x", x)
         for x in CANOPY_LOWER_XFRAMES:
             f = f + (slab("x", x) ^ H_box(-100, 400, -100, 100, -100, hz))
-        f = f + (slab("z", FRONT_GLASS_BOTTOM) ^ H_box(-100, sx, -100, 100, -100, 100))   # front glazing bottom
+        f = f + (H_box(-100, sx, -100, 100, -100, FRONT_GLASS_BOTTOM + 0.6))   # front glazing's bottom rail
         f = f + H_box(sx, 400, -100, 100, -100, H.CANOPY_FLOOR + 0.6)        # side windows' sill
-        f = f + windscreen_dividers(P, hz, W)
+        if name == "canopy":
+            f = f + windscreen_dividers(P, hz, W)
         # roof bars, from the horizontal frame to the rear
         roof = mf.CrossSection()
         for yb, x0 in CANOPY_ROOF_BARS:

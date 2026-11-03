@@ -104,9 +104,11 @@ SPINE_LINE = [(0, -10.05), (60.7, 1.4), (290, 1.4),  # NP-G: level at the side-w
               # side pane's corner (x 60.7), then straight to the nose (2.4 mm below the top at the glazing)
               (299, 4.0), (360, 4.0)]   # x, z: body/spine split (tail: the tailplane floor)
 NOSE_KEEL = (13.5, 51.8, 5.0, 1.5)   # nose spine piece's hidden keel: x0, x1, depth below the line, skin inset
-CANOPY_FLOOR = 0.2           # flat canopy floor: the side windows come down to here, below the camo line
+CANOPY_FLOOR = 0.2           # side-window piece's flat floor: below the camo line (user's sketch)
+CANOPY_STEP = (61.6, 3.0)     # front glazing piece: x 52.3 to here, on a level floor at this z
+CANOPY_FRONT_KEY = (54.5, 60.0, 2.5, 2.0)   # boss on the nose spine piece under the front glazing
 SPINE_WAVE = (0.7, 7.5, 85.0, 290.0)    # scallop amplitude, period, from x, to x
-SPINE_CUTS = [(13.0, 60.7, "earth"), (72.8, 100.0, "green"),
+SPINE_CUTS = [(13.0, 61.6, "earth"), (72.8, 100.0, "green"),
               (100.0, 150.2, "earth"), (150.2, 204.5, "green"), (204.5, 230.0, "earth"),
               (230.0, 288.0, "green"), (288.0, 360.0, "earth")]   # x at SPINE_REF_Z
 # camo edges lean aft going up (NP-G profile): slope dx/dz of each boundary plane, by its x
@@ -127,7 +129,7 @@ FUSE_BOSSES = [              # connector key positions between port/starboard ha
 
 # --- Cockpit canopy hump: (x, half_width, z_top)
 CANOPY_CUT = (52.3, 72.8, 2.0)          # x0, x1, (unused: the floor follows the spine line)
-CANOPY_KEY = (55.0, 68.0, 3.0, 2.5)      # boss on the fuselage floor: x0, x1, half-width, height above the (sloped) floor
+CANOPY_KEY = (63.0, 71.0, 3.0, 2.5)      # boss under the side-window piece: x0, x1, half-width, height
 CANOPY_REAR = (72.8, 91.8, 7.0)          # rear roof glazing (Revell plan): x0, x1, z floor
 CANOPY_REAR_KEY = (76.0, 82.0, 3.0, 2.0)  # its locating boss
 H2S_RADOME = False           # ventral H2S blister (Revell GR.II only; not on the B.II Srs IA)
@@ -403,8 +405,11 @@ def spine_z(x):
 
 
 def canopy_zone(x0, x1, lift=0.0):
-    """The canopy's footprint: everything above its flat floor between x0 and x1."""
-    return box(x0, x1, -30, 30, CANOPY_FLOOR + lift, 40.0)
+    """The canopy's footprint, in two flat-floored pieces split at the step: the front glazing
+    on a level floor, the side windows lower down (both silver and black only)."""
+    sx, sz = CANOPY_STEP
+    return (box(x0, sx, -30, 30, sz + lift, 40.0)
+            .union(box(sx, x1, -30, 30, CANOPY_FLOOR + lift, 40.0)))
 
 
 def canopy_boss_z():
@@ -522,7 +527,9 @@ def fuselage_parts(wing_tongues):
     # (the canopy fills that gap), so it stays on the body
     k0, k1, khw, kh = CANOPY_KEY
     Bb = Bb + mbox(k0, k1, -khw, khw, *canopy_boss_z())
-    cap = cap - mbox(k0 - FIT, k1 + FIT, -khw - FIT, khw + FIT, -50, 50)   # boss passes the nose piece's tail
+    # front glazing's boss stands on the nose spine piece
+    f0, f1, fhw, fh = CANOPY_FRONT_KEY
+    cap = cap + mbox(f0, f1, -fhw, fhw, CANOPY_STEP[1] - 0.5, CANOPY_STEP[1] + fh)
     # nose spine piece: a hidden keel (inset from the skin, so the visible join stays on the camo line)
     # gives the thin nose strip some depth; front end at 45 deg so the pocket prints on end
     q0, q1, qd, qi = NOSE_KEEL
@@ -600,8 +607,12 @@ def fuselage_parts(wing_tongues):
         return box(k0 - FIT, k1 + FIT, -khw - FIT, khw + FIT, z - 1, z + kh + 0.3)
     cb0, cb1 = canopy_boss_z()
     k0, k1, khw, _ = CANOPY_KEY
-    parts["canopy"] = (outer.intersect(canopy_zone(cx0 + FIT, cx1 - FIT, lift=FIT))
-                       .cut(box(k0 - FIT, k1 + FIT, -khw - FIT, khw + FIT, cb0 - 1, cb1 + 0.3)))
+    sx, sz = CANOPY_STEP
+    f0, f1, fhw, fh = CANOPY_FRONT_KEY
+    parts["canopy"] = (outer.intersect(box(cx0 + FIT, sx - FIT / 2, -30, 30, sz + FIT, 40.0))
+                       .cut(box(f0 - FIT, f1 + FIT, -fhw - FIT, fhw + FIT, sz - 1, sz + fh + 0.3)))
+    parts["canopy_side"] = (outer.intersect(box(sx + FIT / 2, cx1 - FIT, -30, 30, CANOPY_FLOOR + FIT, 40.0))
+                            .cut(box(k0 - FIT, k1 + FIT, -khw - FIT, khw + FIT, cb0 - 1, cb1 + 0.3)))
     parts["canopy_rear"] = (outer.intersect(box(rx0 + FIT, rx1 - FIT, -30, 30, rz + FIT, 30))
                             .cut(recess(CANOPY_REAR_KEY, rz)).cut(astrodome_socket()))
     return parts
