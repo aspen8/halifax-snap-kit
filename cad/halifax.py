@@ -588,7 +588,8 @@ def fuselage_parts(wing_tongues):
             a = x0 + (x1 - x0) * i / n + KEY_CAP[1] + 6 * SPINE_SLANT.get(x0, 0.0)
             b = x0 + (x1 - x0) * (i + 1) / n - KEY_CAP[1] - 6 * SPINE_SLANT.get(x1, 0.0)
             cand = [x for x in np.linspace(a, b, 25)
-                    if not tail[0] < x < tail[1] and x < TT_X0 - SPINE_PEG[0] - 3.0]   # clear of the turret
+                    if not tail[0] < x < tail[1] and x < TT_X0 - SPINE_PEG[0] - 3.0   # clear of the turret
+                    and all(abs(x - e) > SPINE_PEG[0] + 2.5 for e in NOSE_KEEL[:2])]   # and the keel's ends
             if not cand:
                 continue
             x = max(cand, key=thick)
