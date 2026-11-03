@@ -73,6 +73,8 @@ FUSE_STATIONS = [            # measured from the Revell Srs IA side and plan vie
     (25.7, 11.0,  -1.5, -36.0, 3.0),
     (32.9, 12.0,  -0.2, -36.5, 3.2),
     (42.1, 12.65,  1.5, -36.6, 3.4),
+    (46.7, 12.83,  2.5, -36.6, 3.5),   # straight nose deck into the windscreen's angle
+    (49.3, 12.92,  3.0, -36.6, 3.55),
     (51.3, 13.0,   3.5, -36.6, 3.6),   # windscreen base
     (54.3, 13.1,   6.7, -36.6, 3.7),
     (57.4, 13.2,   9.5, -36.6, 3.8),
@@ -91,6 +93,7 @@ FUSE_STATIONS = [            # measured from the Revell Srs IA side and plan vie
     (352.0,  9.0,  9.6, -13.0, 2.5),
 ]
 FUSE_END_X = 352.0
+WINDSCREEN_KINK_X = 51.3     # station where the windscreen meets the nose deck at an angle
 NOSE_SPLIT_X = 12.8          # perspex nose dome ends at this frame (Revell)
 NOSE_GLASS_TOP = 50.0        # mm, dome covers the full section
 NOSE_SPIGOT_BOX = (4.0, 4.5, -26.0, -16.0)   # length, half-width, z0, z1 of the dome's plug
@@ -343,6 +346,14 @@ def fuselage_solid(offset=0.0, x0=None, x1=None):
         x1 = FUSE_END_X - 3.0 if x1 is None else x1
         st = ([interp(st, x0)] + [s for s in st if x0 < s[0] < x1] + [interp(st, x1)])
         st = [(x, hw - offset, t - offset, b + offset, n) for x, hw, t, b, n in st]
+    # windscreen: a sharp angle where it meets the nose deck (Revell), not a radius, so the nose
+    # and the rest are lofted separately and joined at that station
+    nose = [s for s in st if s[0] <= WINDSCREEN_KINK_X]
+    rest = [s for s in st if s[0] >= WINDSCREEN_KINK_X]
+    if len(nose) >= 2 and len(rest) >= 2 and nose[-1][0] == WINDSCREEN_KINK_X:
+        a = wp(smooth_loft([superellipse_wire(*s) for s in nose]))
+        b = wp(smooth_loft([superellipse_wire(*s) for s in rest]))
+        return a.union(b).clean()
     return wp(smooth_loft([superellipse_wire(*s) for s in st]))
 
 
