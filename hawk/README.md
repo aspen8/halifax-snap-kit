@@ -49,7 +49,23 @@ Against photos (top: real aircraft, bottom: model):
 
 ![photo comparison](docs/photo_comparison.png)
 
-> **Status: v4, after the first test print of the fuselage plate.** v4 fixes what that print showed (see "Test print 1" below). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+> **Status: v5, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+
+### v5 changes (from photos)
+
+- **Markings:** "ROYAL AIR FORCE" moved down to half way up the side pod, so the cheat line from the nose runs nearly level instead of climbing. The roundel is level with the lettering and just behind the last letter (X 185, was 187).
+- **Wings in two halves:** the underside now has a true cambered aerofoil, not a flat bottom. Each wing splits on its chord plane into a top and a bottom half; each half prints flat on the split face with its outer skin up, so the roundels and chevrons print sharp in the top layers on both sides. Five pins line the halves up; glue them. The trailing edge is 1.5 mm thick (printed) so each half keeps 0.75 mm there.
+- **Smoke pod:** a fatter tube (14 mm printed) with a round blunt nose and a long tail cone, hung close under the belly.
+- **Ventral strakes:** two small canted blades under the rear fuselage.
+- **Rear fuselage:** nearly square-cornered underneath towards the tail; the belly stripes run along those corners, so from the side they show as a thin white line.
+- **Belly:** the wing chevrons now meet across the belly in a V at the smoke pod's nose.
+- **All-moving tailplanes:** each turns on a round spigot in a teardrop hole (snug, so it holds its setting), with about 12° of travel each way clear of the fuselage.
+- **Aerials:** press fit line-for-line in thickness (two of the three fell out of the v4 slots).
+- **Spine scoops:** bigger (6 × 3.25 mm printed) so they read at this scale.
+
+![v5 side](docs/v5_side.png)
+
+![v5 underside](docs/v5_under.png)
 
 ### Test print 1 (fuselage plate, v3)
 
@@ -63,7 +79,7 @@ Against photos (top: real aircraft, bottom: model):
 | Wings, as sliced: underside white showing on the top surface near the trailing edge and as squares over the gear sockets | The white is 2 layers thin, never within 2 layers of the top, and measured with the sockets filled in, so socket ceilings get none |
 | Wings did not slide into the fuselage (seen on the older tongue version) | v3 already replaced the tongues: the wing root sits flush on the fuselage side and pushes straight in on one big key. Not yet test-printed |
 
-The fuselage plate now slices at about 15 hours (it was 11.5 with the tailplanes and keys on it). The number of nozzle swaps per layer is unchanged; with less to print per layer, the slicer estimates more waiting for the idle nozzle to reheat. Separate lettering panels (see "Known gaps") would remove most of the swaps.
+In v4 the fuselage plate sliced at about 15 hours (the slicer's reheat waits for the idle nozzle grew with less to print per layer). In v5 it is about 11 hours, mainly because the lower lettering shares its layers with the cheat line. Separate lettering panels (see "Known gaps") would remove most of the nozzle swaps.
 
 ![probe and nose](docs/probe_nose.png)
 
@@ -73,38 +89,40 @@ The stand now plugs into a blind socket in the smoke pod:
 
 ## Print it
 
-Open `kit/hawk_kit.3mf` in Bambu Studio. Its 6 plates have the filaments already assigned. Slot 5 is the canopy colour: the canopy is opaque, so load any colour you like for it (smoke grey or dark blue look right).
+Open `kit/hawk_kit.3mf` in Bambu Studio. Its 7 plates have the filaments already assigned. Slot 5 is the canopy colour: the canopy is opaque, so load any colour you like for it (smoke grey or dark blue look right).
 
 | Plate | Parts | Filaments |
 |---|---|---|
 | Fuselage | Nose, front, middle and rear fuselage sections on end (brim), smoke pod halves. The cheat line, swoosh, "ROYAL AIR FORCE", roundels and belly stripes are painted in | Red, White, Blue |
-| Tailplanes and small parts | Tailplanes, aerials, probe (standing on its plug: use a brim), all keys | Red |
-| Wings | Both wings flat; white underside chevrons and lower roundels in the first 2 layers, upper roundels in the last | Red, White, Blue |
+| Tailplanes and small parts | Tailplanes, aerials, probe (standing on its plug: use a brim), wing pins, all keys | Red |
+| Wing tops | Top halves, split face down; upper roundels in the top layers | Red, White, Blue |
+| Wing undersides | Bottom halves, split face down (underside up); chevrons and lower roundels in the top layers | Red, White, Blue |
 | Fins and canopy | Fin halves (Union flag in the skin), canopy | Red, White, Blue, Black, Canopy |
 | Display stand | Plinth with red/white/blue pinstripe and raised lettering, swept blade | Black, Red, White, Blue |
 | Gear | Nose and main legs, wheels, axle pins, jet nozzle (spigot down) | Grey, Black |
 
 Suggested settings: PLA, 0.16 mm layers for the gear plate and 0.2 mm elsewhere, 2 walls, 15% gyroid infill, no supports. Use a brim on the fuselage sections (the middle one stands 117 mm tall). Painting the markings in costs purge filament on the fuselage plate (the side markings change colour on most layers); that was chosen over press-in inlays.
 
-## Kit contents (42 parts)
+## Kit contents (54 parts)
 
 - **Airframe:**
   - 4 fuselage sections: nose (radome and the red dome under the windscreen, X 0.9–46), front (front cockpit, X 46–86), middle (rear cockpit, intakes and wing roots) and rear
   - pitot probe, a separate part with a 3 × 5 mm plug that pushes into the nose tip. It is shorter and thicker than scale (30 × 3 mm printed, against 42 × 2 mm).
   - 2 fin halves, which carry the spine cap and the dorsal fillet
-  - 2 wings. Each root carries a small filler ahead of the leading edge, hidden inside the intake pod, so the pod's socket for it prints without a flat overhang.
-  - 2 tailplanes with 10° anhedral
-  - smoke pod (2 halves), with pegs moulded on its pylon that push into the belly
+  - 2 wings, each a top and a bottom half on 5 alignment pins (glue them). Each root carries a small filler ahead of the leading edge, hidden inside the intake pod, so the pod's socket for it prints without a flat overhang.
+  - 2 all-moving tailplanes with 10° anhedral, each on a spigot
+  - smoke pod (2 halves), a fat tube with a round nose and a long tail cone, with pegs moulded on its pylon that push into the belly
+  - 2 ventral strakes, moulded under the rear fuselage
   - jet nozzle: a separate grey ring standing 3.75 mm out of the tail, black inside, with a 12 mm deep void, a step ring, an exhaust cone and 6 struts at the bottom. A spigot plugs it into a countersunk socket in the tail.
   - 3 aerials
-  - 2 small ram-air scoops on the spine shoulders just behind the canopy (X 130–144), teardrop-shaped with a forward-facing opening (side photos)
+  - 2 ram-air scoops on the spine shoulders just behind the canopy (X 129–145, enlarged), teardrop-shaped with a forward-facing opening (side photos)
 - **Canopy:** solid and opaque, so there is no cockpit inside. It has a thick red windscreen arch (X 59.5 at the sill, leaning 23° forward at the top), a white hoop between the cockpits (X 84, leaning 19° back), an upright rear frame and a black sill frame. It is cut on a flat plane through the two ends of the drawn bottom edge, so the part is canopy only, with no fuselage red, and its underside is flat apart from two pockets. That straight cut is the canopy's visible bottom edge, with the black sill frame along it; the drawn edge dips up to 2.5 mm lower under the front cockpit, but on the aircraft it reads as nearly straight. Two tabs moulded on the fuselage (one on the front section, one on the middle) drop into the pockets, so there are no loose canopy keys. The red nose top domes up into the windscreen, so from the front the glass base is an arch, as on the aircraft. The dome stays on the nose section, which ends on the same plane: the canopy's front is cut off on a vertical plane at X 46, exactly where its glass first reaches outside the dome, and ahead of that the canopy's whole cross-section is dome. Behind the cut the dome is left out, so the canopy keeps its shape with no recess underneath.
 - **Painted markings** (no inlays):
   - cheat line: from the nose tip, where the two sides join across the front just above the probe, thickening to the lettering's height on the side pod and stopping at the lettering
   - tail swoosh: from behind the roundel, sweeping up to the fin flag
   - "ROYAL AIR FORCE" on each side
   - fuselage roundels, and wing roundels on the top and the bottom of each wing
-  - underside chevrons and belly stripes
+  - underside chevrons meeting in a V across the belly at the pod's nose, and belly stripes along the rear fuselage's lower corners
 - **Gear:** nose leg, 2 main legs, 3 wheels with grey hubs, headed axle pins.
 - **Keys** (fewer and bigger than before: 17.5 × 8.75 × 3.75 mm for the fuselage). Each is a split clip, like PB94's: both ends are split down the middle, so the prongs flex in and the key pushes in easily but still grips; the tips have 45° lead-ins and the middle is waisted. They print flat.
   - 2 at the nose/front joint, 2 at the front/middle joint and 3 at the middle/rear joint
@@ -125,7 +143,7 @@ Suggested settings: PLA, 0.16 mm layers for the gear plate and 0.2 mm elsewhere,
 1. **Fuselage.** Join the nose to the front section on 2 keys, the front to the middle on 2 and the middle to the rear on 3. Push the probe's plug into the nose tip and the nozzle's spigot into the tail.
 2. **Canopy.** Press it down onto the two tabs on top of the front and middle sections; it bridges the joint.
 3. **Fin.** Join the halves on their 2 keys in the spine cap. Then push the fin's root tongue into the slot in the spine.
-4. **Wings and tailplanes.** Push a wing key into each wing root slot and slide the wing onto the fuselage, so the key goes into the slot in the side (port slot forward, starboard aft). Slide each tailplane into its socket in the side of the tail: the tailplane's own root section carries on about 10 mm (printed) into the fuselage, and the socket is that shape.
+4. **Wings and tailplanes.** Push a wing key into each wing root slot and slide the wing onto the fuselage, so the key goes into the slot in the side (port slot forward, starboard aft). Glue each wing's halves together on their pins first. Push each tailplane's spigot into its hole in the side of the tail; it turns to set the angle.
 5. **Smoke pod.** Join the halves on 2 keys and push the pylon's pegs into the belly.
 6. **Display.** Either fit the gear (wheels on the headed pins, legs into their sockets) or use the stand: push the blade's tenon into the plinth and lower the model so the key goes into the socket under the smoke pod.
 
@@ -217,7 +235,7 @@ Checks: run `tools/interference.py` on the assembled STLs without the `key_*` fi
 ## Known gaps and next steps
 
 - Add the older blue-fin scheme (HobbyBoss sheet I, Revell 2010) as an option.
-- Add the ventral strakes, the airbrake outline, the canopy detonating-cord (MDC) lines and the intake auxiliary doors.
+- Add the airbrake outline, the canopy detonating-cord (MDC) lines and the intake auxiliary doors.
 - Add gear doors for the gear-down display.
 - Check the painted lettering and the thin nose end of the cheat line in the first print: their strokes are about 1–1.4 mm wide.
 - **Sharper side markings (explore).** In the first test print, "ROYAL AIR FORCE" and the fuselage roundels came out a little fuzzy in places. They are painted on vertical walls of sections printed on end, so every letter edge is built from layer steps and wall-line colour changes. Explore:

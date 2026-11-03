@@ -87,16 +87,18 @@ FUSE_STATIONS = [
     (134.0, 11.8, 33.6,  -8.0, 2.6, 13.0, 2.7),     # upright sides behind the canopy (photos):
     (140.0, 11.7, 35.5,  -7.9, 2.6, 13.0, 2.7),     # widest higher up and squarer above, so
     (152.6, 11.6, 33.6,  -7.4, 2.5, 12.5, 2.6),     # the side runs up flat and only rounds
-    (166.7, 11.6, 32.4,  -6.7, 2.5, 12.0, 2.5),     # over near the top
-    (180.9, 11.6, 31.2,  -5.2, 2.4, 11.0, 2.35),
-    (195.0, 11.6, 29.2,  -3.9, 2.4, 9.5, 2.15),
-    (208.0, 11.5, 27.6,  -3.0, 2.3, 8.0, 2.0),
-    (226.0, 11.2, 25.9,  -2.0, 2.2, 8.0, 2.0),
-    (240.0, 10.8, 24.6,  -1.3, 2.3, 8.0, 2.5),
-    (252.0, 10.0, 23.0,  -0.6, 2.5, 8.0, 3.2),     # nearly level to the end (Revell side view),
-    (264.2,  8.8, 20.2,   1.0, 2.7, 7.8, 3.8),     # squared off: flat top edge at the end (photos)
+    (166.7, 11.6, 32.4,  -6.7, 2.6, 12.0, 2.5),     # over near the top
+    (180.9, 11.6, 31.2,  -5.2, 2.8, 11.0, 2.35),
+    (195.0, 11.6, 29.2,  -3.9, 3.1, 9.5, 2.15),
+    (208.0, 11.5, 27.6,  -3.0, 3.4, 8.0, 2.0),
+    (226.0, 11.2, 25.9,  -2.0, 3.6, 8.0, 2.0),
+    (240.0, 10.8, 24.6,  -1.3, 3.8, 8.0, 2.5),
+    (252.0, 10.0, 23.0,  -0.6, 4.0, 8.0, 3.2),     # nearly level to the end (Revell side view),
+    (264.2,  8.8, 20.2,   1.0, 4.2, 7.8, 3.8),     # squared off: flat top edge at the end (photos)
 ]
 FUSE_END_X = 264.2
+# (v5: the lower squareness, n_lo, rises from 2.6 to 4.2 towards the tail: photos show the rear
+# fuselage nearly square-cornered underneath, with the belly stripes on the corners)
 # Canopy and dorsal spine: (x, half_width, z_top); bottom is buried 6 mm in the body
 SPINE_STATIONS = [            # canopy and the fairing just behind it (aft of x 140 the body takes over)
     (37.0,  8.6, 13.0),
@@ -188,6 +190,13 @@ WING_LE = (102.8, 55.8)
 WING_TE = (169.3, 12.3)
 WING_TIP_ROUND = 3.0
 TC_ROOT, TC_TIP = 0.109, 0.090
+WING_CAMBER = 0.012
+WING_SPLIT_TE_T = 1.2        # trailing edge thickness of the split wing (0.75 mm printed per half)
+WING_CHORD_DZ = 2.7          # chord plane above Z_FLOOR: the root's lowest point stays on the old floor
+WING_PINS = [(0.15, 0.30), (0.15, 0.55), (0.25, 0.30), (0.25, 0.55), (0.40, 0.30)]   # eta, chord fraction:
+                             # where each half is 2 mm or more thick (the outer wing is too thin)
+WING_PIN = (2.0, 1.0)        # pin d, depth into each half: alignment pins (2.5 x 2 mm printed); glue the halves
+WING_PIN_FIT = 0.05 * _P
 Z_FLOOR = -7.6               # wing underside at the centreline
 DIHEDRAL = 2.0               # deg
 WING_FLAT_FROM = 0.15
@@ -212,6 +221,11 @@ TAIL_ROOT_Y = 8.5            # pivot line at the fuselage side
 TAIL_FLOOR = 15.2            # underside at the root
 TAIL_ANHEDRAL = 10.0
 TAIL_TC = 0.10
+TAIL_PIVOT = (0.32, 2.6, 2.5, 0.05 * _P)   # all-moving tailplanes: pivot at this root chord
+                             # fraction; spigot d, how far it reaches inboard of the fuselage-side
+                             # line (y 8.5 -> 2.5 below); fit per side (snug: holds its setting)
+TAIL_SWING = 12.0            # deg each way the tailplane can turn without touching the fuselage
+TAIL_GAP = 0.25              # mm between the root and the fuselage side
 TAIL_PLUG_Y0 = 2.0           # each tailplane's own section runs on into the fuselage to here (no
                              # tongue): the fuselage has a socket the shape of the root section
 
@@ -233,8 +247,11 @@ NOZZLE = dict(r=5.0, out=3.0, wall=1.0, spig_r=4.0, spig_len=8.0, void=10.0)   #
 
 # --- Smoke pod (centreline): (fraction of length, radius) profile
 POD_X0, POD_LEN = 92.0, 95.0
-POD_PROFILE = [(0.0, 0.8), (0.03, 2.6), (0.10, 4.2), (0.22, 5.0), (0.75, 5.0), (0.92, 4.4), (1.0, 3.0)]
-POD_PYLON = (8.0, 2.6, 3.0)   # fore/aft inset, half-width, height
+POD_R = 5.6                  # photos: a fat tube, round blunt nose, long tail cone, hung close under the belly
+POD_PROFILE = ([(0.10 * (1 - math.cos(t)), POD_R * math.sin(t)) for t in np.linspace(0.08, math.pi / 2, 9)]
+               + [(0.80, POD_R), (0.86, POD_R * 0.95), (0.92, POD_R * 0.78), (0.97, POD_R * 0.50),
+                  (0.993, POD_R * 0.28), (1.0, 0.6)])
+POD_PYLON = (8.0, 2.6, 1.5)   # fore/aft inset, half-width, height
 POD_KEYS = [0.116, 0.72]     # pylon pegs: the front one sits ahead of the port wing tongue (X 117-124)
 POD_KEY = 4.0
 
@@ -647,9 +664,38 @@ def wing_plan(y):
     return le, te - le, TC_ROOT + (TC_TIP - TC_ROOT) * eta
 
 
+def cambered_section(tc, chord, te_t=WING_SPLIT_TE_T, n=48, camber=WING_CAMBER):
+    """Cambered NACA 4-digit section, chord line on z=0, LE at x=0: [(x, z)] from the upper TE
+    round the LE to the lower TE (both skins curved: the wing prints as two halves split on
+    the chord plane, each lying on its split face)."""
+    m, p = camber, 0.4
+    up, lo = [], []
+    for i in range(n + 1):
+        x = (1 - math.cos(math.pi * i / n)) / 2
+        yt = 5 * tc * (0.2969 * math.sqrt(x) - 0.1260 * x - 0.3516 * x**2
+                       + 0.2843 * x**3 - 0.1036 * x**4) + x * (te_t / 2) / chord
+        yc = m / p**2 * (2 * p * x - x * x) if x < p else m / (1 - p)**2 * ((1 - 2 * p) + 2 * p * x - x * x)
+        dyc = 2 * m / p**2 * (p - x) if x < p else 2 * m / (1 - p)**2 * (p - x)
+        th = math.atan(dyc)
+        up.append(((x - yt * math.sin(th)) * chord, (yc + yt * math.cos(th)) * chord))
+        lo.append(((x + yt * math.sin(th)) * chord, (yc - yt * math.cos(th)) * chord))
+    return list(reversed(up)) + lo[1:]
+
+
+def cambered_panel(stations, zc):
+    wires = []
+    for y, x, c, tc in stations:
+        pts = [V(x + px, y, zc + pz) for px, pz in cambered_section(tc, c)]
+        wires.append(cq.Wire.assembleEdges([cq.Edge.makeSpline(pts), cq.Edge.makeLine(pts[-1], pts[0])]))
+    return to_m(loft(wires, ruled=True))
+
+
+WING_CHORD_Z = Z_FLOOR + WING_CHORD_DZ
+
+
 @cached
 def wing_flat():
-    """Flat (no dihedral) starboard panel, floor at Z_FLOOR."""
+    """Flat (no dihedral) starboard panel, chord plane at WING_CHORD_Z."""
     st = []
     tip = SPAN / 2
     for y in (WING_ROOT_Y, 40.0, 80.0, tip - WING_TIP_ROUND, tip - 1.2, tip):
@@ -659,7 +705,7 @@ def wing_flat():
             cut = WING_TIP_ROUND * (1 - math.sqrt(max(0.0, 1 - t * t))) * 1.8
             le, c = le + cut, c - cut
         st.append((y, le, c, tc))
-    return panel(st, Z_FLOOR)
+    return cambered_panel(st, WING_CHORD_Z)
 
 
 DIHEDRAL_PT = (0.0, 0.0, Z_FLOOR)
@@ -686,22 +732,24 @@ WING_GLOVE_Y = 24.0           # the glove runs out to here (past the intake pods
 
 @cached
 def wing_glove_flat():
-    """Filler ahead of the wing root's leading edge, inside the pods: the floor runs forward
-    flat and a 45 degree roof meets the top surface on its tangent. The pod section above
-    the wing prints on end (forward up), and over the round leading edge its socket was a
-    flat ceiling. Now it is a 45 degree roof: the wing part takes the filler, so nothing
-    shows but a pointed seam ahead of the leading edge. The floor runs back to where the
-    wing's own underside reaches it, so no feather of fuselage is left under the nose."""
+    """Filler ahead of the wing root's leading edge, inside the pods: a wedge whose two faces
+    touch the top and bottom skins at 45 degrees. The pod section above the wing prints on
+    end (forward up), and over the round leading edge its socket was a flat ceiling. Now it
+    is a pointed 45 degree arch: the wing part takes the filler, so nothing shows but a
+    pointed seam ahead of the leading edge."""
     pts = []
     for y in (WING_ROOT_Y, WING_GLOVE_Y):
         le, c, tc = wing_plan(y)
-        sec = np.array(flat_bottom_section(tc, c)[0])
-        x0 = float(np.min(sec[:, 0] - sec[:, 1]))          # the 45 degree line z = x - x0 touches the top
-        k = int(np.argmin(sec[:, 0] - sec[:, 1]))
-        xt = float(sec[k, 0])
-        xf = float(min(px for px, pz in sec if pz < 1e-6 and px > xt - 5)) + 0.3   # lower nose reaches the floor
-        for px, pz in ((x0, 0.0), (max(xt, xf), 0.0), (xt, xt - x0)):
-            pts.append((le + px, y, Z_FLOOR + pz))
+        sec = np.array(cambered_section(tc, c))
+        k = int(np.argmin(sec[:, 0]))
+        up, lo = sec[:k + 1], sec[k:]
+        x0u = float(np.min(up[:, 0] - up[:, 1]))          # top line z = x - x0u
+        x0l = float(np.min(lo[:, 0] + lo[:, 1]))          # bottom line z = x0l - x
+        tu = up[int(np.argmin(up[:, 0] - up[:, 1]))]
+        tl = lo[int(np.argmin(lo[:, 0] + lo[:, 1]))]
+        apex = ((x0u + x0l) / 2, (x0l - x0u) / 2)
+        for px, pz in (apex, tuple(tu), tuple(tl), (max(tu[0], tl[0]), 0.0)):
+            pts.append((le + px, y, WING_CHORD_Z + pz))
     return M.hull_points(pts)
 
 
@@ -719,6 +767,35 @@ def wing_outer(side):
 @cached
 def wing(side):
     return wing_outer(side) - wing_key_slot(side)
+
+
+def wing_flat_to_assembled(m, side):
+    m = rot_about(m, DIHEDRAL_PT, "x", DIHEDRAL)
+    return m if side > 0 else m.mirror([0, 1, 0])
+
+
+def wing_half_region(side, top):
+    z0, z1 = (WING_CHORD_Z, 60.0) if top else (-60.0, WING_CHORD_Z)
+    return wing_flat_to_assembled(box(0, 400, -5, 200, z0, z1), side)
+
+
+def wing_pins(side, grow=0.0):
+    """Pins across the split, in thick parts of the wing (grow > 0: their holes)."""
+    d, h = WING_PIN
+    ps = []
+    for eta, f in WING_PINS:
+        y = eta * SPAN / 2
+        le, c, _ = wing_plan(y)
+        ps.append(cyl((le + f * c, y, WING_CHORD_Z - h - (0.2 if grow else 0)), d + 2 * grow,
+                      2 * h + (0.4 if grow else 0) - (0.4 if not grow else 0), "z", 24)
+                  .translate([0, 0, 0 if grow else 0.2]))
+    return wing_flat_to_assembled(union(ps), side)
+
+
+def wing_halves(side):
+    """(top, bottom) halves of the finished wing (gear socket, key slot and pin holes cut)."""
+    w = wing(side) - main_socket(side) - wing_pins(side, WING_PIN_FIT)
+    return w ^ wing_half_region(side, True), w ^ wing_half_region(side, False)
 
 
 def tail_plan(eta):
@@ -741,25 +818,55 @@ def tail_flat():
     return panel(st, TAIL_FLOOR, te_t=0.5)
 
 
+def tail_pivot_axis():
+    """(x, z) of the spigot axis in the flat frame (before anhedral)."""
+    f, d, _, _ = TAIL_PIVOT
+    le, c = tail_plan(TAIL_ROOT_Y / TAIL_SEMISPAN)
+    return le + f * c, TAIL_FLOOR + d / 2 - 0.2
+
+
+def _tail_to_assembled(m, side):
+    m = rot_about(m, TAIL_PT, "x", -TAIL_ANHEDRAL)
+    return m if side > 0 else m.mirror([0, 1, 0])
+
+
 @cached
 def tailplane(side):
-    """The whole panel from TAIL_PLUG_Y0 outboard: the part inside the fuselage is the root
-    plug, the tailplane's own aerofoil, so nothing shows on the surface and the underside
-    stays flat for printing."""
+    """All-moving tailplane: the panel trimmed clear of the fuselage through +-TAIL_SWING about
+    the pivot, plus a round spigot (flat on the bed side) into a hole in the fuselage."""
+    f, d, reach, _ = TAIL_PIVOT
+    ax, az = tail_pivot_axis()
     t = tail_flat() ^ box(0, 400, TAIL_PLUG_Y0, 100, -50, 100)
-    t = rot_about(t, TAIL_PT, "x", -TAIL_ANHEDRAL)
+    t = _tail_to_assembled(t, 1)
+    o = outer()
+    g = TAIL_GAP
+    # the fuselage as seen from the tailplane turned through its range (turned the other way)
+    piv = np.array([ax, TAIL_PT[1], az])
+    def turn(m, a):
+        # rotate about the spigot axis (parallel to the span, tipped by the anhedral)
+        m = rot_about(m, TAIL_PT, "x", TAIL_ANHEDRAL)                 # back to the flat frame
+        m = rot_about(m, tuple(piv), "y", a)
+        return rot_about(m, TAIL_PT, "x", -TAIL_ANHEDRAL)
+    keep_out = union([turn(o, a) for a in np.linspace(-TAIL_SWING, TAIL_SWING, 7)])
+    keep_out = union([keep_out] + [keep_out.translate([0, 0, dz]) for dz in (g, -g)] + [keep_out.translate([0, -g, 0])])
+    t = t - keep_out
+    t = K.largest_piece(t)[0]
+    sp = cyl((ax, TAIL_ROOT_Y - reach, az), d, reach + 3.0, "y", 32) ^ box(0, 400, -50, 100, TAIL_FLOOR, 100)
+    t = t + _tail_to_assembled(sp, 1)
     return t if side > 0 else t.mirror([0, 1, 0])
 
 
 def tail_socket(side):
-    """The tailplane grown by FIT all round its section and at its inboard end (a Minkowski sum
-    approximated by 8 offsets in the x-z plane), cut from the fuselage."""
-    t = tailplane(side)
-    g = FIT
-    d = g / math.sqrt(2)
-    offs = [(g, 0), (-g, 0), (0, g), (0, -g), (d, d), (d, -d), (-d, d), (-d, -d)]
-    u = union([t] + [t.translate([a, 0, c]) for a, c in offs] + [t.translate([0, -side * g, 0])])
-    return u
+    """Teardrop hole for the spigot (point aft: the rear section prints tail up)."""
+    f, d, reach, fit = TAIL_PIVOT
+    ax, az = tail_pivot_axis()
+    r = d / 2 + fit
+    y0, L = TAIL_ROOT_Y - reach - 0.3, reach + 4.0
+    c = cyl((ax, y0, az), 2 * r, L, "y", 32)
+    tip = box(ax + r * 1.41 - 0.01, ax + r * 1.41, y0, y0 + L, az - 0.005, az + 0.005)
+    h = M.hull_points(np.vstack([np.asarray(c.to_mesh().vert_properties)[:, :3],
+                                 np.asarray(tip.to_mesh().vert_properties)[:, :3]]))
+    return _tail_to_assembled(h, side)
 
 
 # ============================================================
@@ -967,6 +1074,24 @@ AERIALS = [  # x, top|bottom, height, chord, sweep
     (205.0, "bottom", 4.0, 5.0, 2.0),  # under the rear fuselage
 ]
 AERIAL_T = 1.0
+AERIAL_FIT = 0.05 * _P        # along the chord only; the thickness is line-for-line (holes print small)
+STRAKES = (226.0, 16.0, 10.0, 5.0, 3.2, 0.8, 6.0, 35.0)   # ventral strakes: x of root LE, root length,
+                             # tip length, tip LE set back, height, thickness, |y|, cant from vertical
+
+
+def strakes():
+    """Two small blades under the rear fuselage, canted outwards (photos from below)."""
+    x0, lr, lt, back, h, t, yy, cant = STRAKES
+    out = mf.Manifold()
+    for side in (1, -1):
+        za, zb_ = fuse_at(x0)[3], fuse_at(x0 + lr)[3]
+        prof = np.array([(x0, za + 1.5), (x0 + lr, zb_ + 1.5), (x0 + lr, zb_), (x0 + back + lt, -h),
+                         (x0 + back, -h), (x0, za)])
+        prof[3:5, 1] += za                                   # tip edge h below the root's bottom
+        blade = K.cs([prof]).extrude(t).translate([0, 0, -t / 2]).rotate([90, 0, 0])
+        blade = rot_about(blade, (x0, 0, za), "x", side * cant)
+        out = out + blade.translate([0, side * yy, 0])
+    return out
 
 
 def aerial_base(a):
@@ -979,9 +1104,9 @@ def aerial(a, slot=False):
     zs = aerial_base(a)
     sg = 1 if where == "top" else -1
     if slot:
-        g = FIT
+        g = AERIAL_FIT                 # press fit: with FIT all round two of the three fell out
         z0, z1 = sorted((zs - sg * 3.3, zs + sg * 0.5))
-        return box(x - g, x + c + g, -AERIAL_T / 2 - g, AERIAL_T / 2 + g, z0, z1)
+        return box(x - g, x + c + g, -AERIAL_T / 2, AERIAL_T / 2, z0, z1)
     pts = np.array([(x, zs - sg * 3.0), (x + c, zs - sg * 3.0), (x + c, zs + sg * 0.3),
                     (x + c * 0.5 + sweep, zs + sg * h), (x + c * 0.15 + sweep, zs + sg * h), (x, zs + sg * 0.3)])
     if sg < 0:
@@ -1019,8 +1144,17 @@ def nose_gear():
     return f, (x, z_axle, yo + 1.2)
 
 
-def wing_underside_z(y):
-    return Z_FLOOR + abs(y) * math.tan(math.radians(DIHEDRAL))
+def wing_underside_z(y, x=None):
+    """Underside of the assembled wing at (x, y): probed, as both skins are curved."""
+    if x is None:
+        x = MAIN_GEAR[0]
+    w = wing_assembled(1 if y >= 0 else -1)
+    return (w ^ box(x - 0.3, x + 0.3, y - 0.3, y + 0.3, -60, 60)).bounding_box()[2]
+
+
+def wing_top_z(y, x):
+    w = wing_assembled(1 if y >= 0 else -1)
+    return (w ^ box(x - 0.3, x + 0.3, y - 0.3, y + 0.3, -60, 60)).bounding_box()[5]
 
 
 def main_gear(side):
@@ -1097,8 +1231,8 @@ def nozzle():
 
 
 # --- Small ram-air scoops on the spine shoulders, just behind the canopy (side photos)
-SPINE_DUCT = (130.0, 144.0, 32.5, 3.6, 1.8)   # x front, x rear, z where it sits, width, height proud
-SPINE_DUCT_MOUTH = (2.2, 1.0, 3.0)            # opening width, height, depth
+SPINE_DUCT = (129.0, 145.0, 32.5, 4.8, 2.6)   # x front, x rear, z where it sits, width, height proud
+SPINE_DUCT_MOUTH = (3.2, 1.6, 3.5)            # opening width, height, depth
 
 
 def _surface_point(m, x, z):
@@ -1139,7 +1273,7 @@ def spine_ducts():
 @cached
 def fuselage_body():
     """The whole fuselage (all sections) with every socket, pocket and cut."""
-    b = outer() + spine_ducts()
+    b = outer() + spine_ducts() + strakes()
     for s in (1, -1):                                   # intakes sit on the wing
         w = wing_assembled(s) + wing_glove(s)
         b = b - w - w.translate([0, 0, FIT]) - w.translate([0, 0, -FIT])
@@ -1253,8 +1387,13 @@ def build():
     parts["fin_stbd"], poses["fin_stbd"] = fs - fslots, R(rx=90)       # split face down
     parts["fin_port"], poses["fin_port"] = fp - fslots, R(rx=-90)
     for side, tag in ((1, "stbd"), (-1, "port")):
-        parts[f"wing_{tag}"] = wing(side) - main_socket(side)
-        poses[f"wing_{tag}"] = lambda m, s=side: rot_about(m, DIHEDRAL_PT, "x", -DIHEDRAL * s)
+        top, bot = wing_halves(side)
+        flat = lambda m, s=side: rot_about(m, DIHEDRAL_PT, "x", -DIHEDRAL * s)
+        parts[f"wingtop_{tag}"], poses[f"wingtop_{tag}"] = top, flat                       # split face down
+        parts[f"wingbot_{tag}"] = bot
+        poses[f"wingbot_{tag}"] = lambda m, f=flat: f(m).rotate([180, 0, 0])              # underside up
+        for i, pin in enumerate(wing_pins(side).decompose()):
+            parts[f"wingpin_{tag}_{i + 1}"], poses[f"wingpin_{tag}_{i + 1}"] = pin, flat
         parts[f"tailplane_{tag}"] = tailplane(side)
         poses[f"tailplane_{tag}"] = (lambda m, s=side: rot_about(m, (0, s * TAIL_ROOT_Y, TAIL_FLOOR), "x",
                                                                  TAIL_ANHEDRAL * s))

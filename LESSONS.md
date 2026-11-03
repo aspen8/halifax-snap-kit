@@ -301,3 +301,15 @@ A pitot probe or aerial moulded on a big section means reprinting the section if
 ### Keep a stand's key out of decorative parts
 
 The Hawk's stand key first ran right through the smoke pod and into the belly, which left a square hole through the pod when the model sat on its gear. It is now a blind socket in the pod only. Before you route a load path through a part, check how that part looks when the stand is not fitted.
+
+### Split a thin painted wing on its chord plane
+
+A flat-bottomed wing prints well, but it looks wrong from below and its underside markings end up in the first layers, on the bed. Splitting the wing on the chord plane gives two halves that each lie flat on the split face with their outer skin facing up. Both skins keep the true aerofoil, and the markings on both print as top layers, which is where lettering and roundels come out sharpest. Thicken the trailing edge so each half keeps at least 2 lines there, and put the alignment pins only where each half is at least 2 mm thick.
+
+### Bound a "near the bottom" paint region by height as well
+
+Painting "everything within d of a downward-facing surface" also catches every other downward face: on the Hawk that meant the pods' tapering undersides, high on the fuselage side, which turned white and covered the lettering and the roundel. Also clip such a region to a band just above the fuselage's bottom line.
+
+### Trim a moving part against the swept shape of its neighbour
+
+An all-moving tailplane must clear the fuselage side through its whole travel. Turn the fuselage through the travel range about the pivot axis, union the copies, grow the result by a small gap, and subtract it from the tailplane. That gives the root shape directly, with no fiddling.

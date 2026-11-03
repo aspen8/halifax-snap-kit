@@ -55,10 +55,12 @@ FILAMENTS = {
 RED, WHITE, BLUE, BLACK, CANOPY, GREY = range(1, 7)
 ROUNDEL = lambda d: [(BLUE, d), (WHITE, d * 2 / 3), (RED, d / 3)]
 
-FUSE_ROUNDEL = (187.3, 9.0, 10.6)        # x, z, diameter (Revell side view)
+FUSE_ROUNDEL = (185.0, 4.6, 10.6)        # x, z, diameter: level with the lettering and just behind
+                                         # its last letter (side photos)
 WING_ROUNDEL = (162.2, 94.8, 15.0)       # x, |y|, diameter (Revell top view)
-LETTERS = ("ROYAL AIR FORCE", 143.0, 8.2, 60.0, 5.2)   # letters sit on the cheat line   # text, x centre, z centre, length, height:
-                                                         # kept below the side pod's top edge (HobbyBoss)
+LETTERS = ("ROYAL AIR FORCE", 143.8, 4.6, 61.0, 5.2)   # text, x centre, z centre, length, height:
+                                                         # half way up the side pod (photos), so the cheat
+                                                         # line runs nearly level from the nose
 # Cheat line (photos): thin at the nose, thickening to the lettering's height on the side pod,
 # broken for "ROYAL AIR FORCE", resumed behind the roundel and swept up onto the fin in one curve.
 CHEAT_NOSE = (1.8, 1.75, 1.1)      # x, lower edge z, width at the nose tip: the band starts right
@@ -154,9 +156,13 @@ def letters_section(side):
 CHEVRON_OUT = ((110.0, 16.9), 0.825)     # outer edge: point (x, |y|), slope d|y|/dx
 CHEVRON_IN = ((118.0, 16.1), 0.547)      # inner edge of the band
 CHEVRON_TE_X = 161.5                     # inner edge of the trailing-edge strip
-BELLY_LO = ((161.5, 9.6), (256.0, 1.0))  # belly stripe inner edge (x, |y|)
-BELLY_HI = ((161.5, 12.4), (256.0, 3.4)) # ...outer edge
+BELLY_STRIPE = (161.5, 256.0, 2.8, 1.0)  # belly stripes on the rear fuselage's lower corners (photos:
+                                         # seen from the side as a thin white line): x from, to,
+                                         # width inboard of the side line, overlap outboard
+BELLY_CORNER_UP = 1.6                    # they wrap this far up the corner
 BELLY_END = (253.4, 256.9)               # x range of the bar joining the two stripes
+BELLY_V_W = 6.3                          # the wing chevrons meet across the belly in a V at the
+                                         # smoke pod's nose (photo from below), this wide in x
 
 
 def _rect(a0, b0, a1, b1):
@@ -176,14 +182,32 @@ def under_white():
             ^ (_halfplane(*CHEVRON_IN, False) + _rect(CHEVRON_TE_X, -300.0, 300.0, 300.0))
             ^ _rect(95.0, 4.0, 200.0, 200.0)
             ^ H.wing(1).project())                                    # on the wing only
-    (a0, l0), (a1, l1) = BELLY_LO
-    (_, h0), (_, h1) = BELLY_HI
-    belly = cs([np.array([(a0, l0), (a1, l1), (a1, h1), (a0, h0)])])
-    belly = belly + _rect(CHEVRON_TE_X, l0, 171.5, h0 + 1.0)       # joins the trailing-edge strip
+    x0, x1, w_in, w_out = BELLY_STRIPE
+    xs = np.linspace(x0, x1, 60)
+    hw = np.array([H.fuse_at(x)[1] for x in xs])
+    belly = cs([np.r_[np.c_[xs, hw - w_in], np.c_[xs[::-1], (hw + w_out)[::-1]]]])
+    belly = belly + _rect(CHEVRON_TE_X, hw[0] - w_in, 171.5, hw[0] + w_out)   # joins the trailing-edge strip
     half = band + belly
     sec = half + half.mirror([0.0, 1.0])
     e0, e1 = BELLY_END
+    h1 = float(H.fuse_at(e1)[1]) + w_out
     return sec + _rect(e0, -h1, e1, h1)
+
+
+def belly_v():
+    """Across the belly between the wing roots: the chevrons' outer edge carried to the centreline."""
+    (px, py), k = CHEVRON_OUT
+    ys = np.linspace(0.0, 12.5, 20)
+    xo = px + (ys - py) / k
+    half = cs([np.r_[np.c_[xo, ys], np.c_[xo[::-1] + BELLY_V_W, ys[::-1]]]])
+    return half + half.mirror([0.0, 1.0])
+
+
+def near_bottom(x0, x1, dz, n=120):
+    """Everything below the fuselage's bottom line raised by dz, (x, z) prism through y."""
+    xs = np.linspace(x0 - 1.0, x1 + 1.0, n)
+    zb = np.array([H.fuse_at(min(max(x, 0.8), H.FUSE_END_X))[3] + dz for x in xs])
+    return prism_y(cs([np.r_[[(xs[0], -100.0), (xs[-1], -100.0)], np.c_[xs[::-1], zb[::-1]]]]))
 
 
 def fuselage_plan(x0, x1, inset=0.0, n=160):
@@ -216,9 +240,13 @@ def fuselage_markings(P):
         ops.append((WHITE, sk ^ prism_y(letters_section(side))))
         x, z, d = FUSE_ROUNDEL
         ops += roundel_ops(x, z, d, "y", sk)
+    # the bottom and its corners only: near any downward face, but no higher than just above the
+    # fuselage's bottom line (the pods' tapering undersides face down too)
+    low = ((P - P.translate([0, 0, BELLY_CORNER_UP])) - core) ^ near_bottom(x0, x1, BELLY_CORNER_UP + 0.4)
     if x1 > 150.0:
-        below = K.box(-50.0, 400.0, -100.0, 100.0, -100.0, 0.0)
-        ops.append((WHITE, (below - core) ^ prism_z(under_white() ^ fuselage_plan(max(x0, 150.0), x1))))
+        ops.append((WHITE, low ^ prism_z(under_white() ^ fuselage_plan(max(x0, 150.0), x1, inset=-2.0))))
+    if x0 < 112.0 and x1 > 88.0:
+        ops.append((WHITE, low ^ prism_z(belly_v())))
     return ops
 
 
@@ -298,19 +326,26 @@ CANOPY_SILL = 0.9                                 # mm of black along the canopy
                                                   # (the red nose dome is hawk.nose_dome, on the fuselage)
 
 
+_WING_DET = {}
+
+
+def wing_detailed(side):
+    """The whole wing with its panel lines (gear socket, key slot and pin holes filled)."""
+    if side not in _WING_DET:
+        _WING_DET[side] = D.apply("wing_stbd" if side > 0 else "wing_port", H.wing_outer(side))
+    return _WING_DET[side]
+
+
 def colour_part(name, P):
-    if name.startswith("wing_"):
+    if name.startswith(("wingtop_", "wingbot_")):
         side = 1 if name.endswith("stbd") else -1
-        # skins from the part with its gear socket and key slot filled back in (panel lines kept):
-        # measured from the part itself, the socket ceilings counted as undersides and their
-        # white showed through on top
-        whole = P + (H.wing_outer(side) ^ (H.main_socket(side) + H.wing_key_slot(side)))
+        whole = wing_detailed(side)          # skins from the whole wing (no split face, no sockets)
         S = skins(whole)
-        down = skins(whole, UNDER_SKIN)["down"] - skins(whole, TOP_CLEAR)["up"]
         x, y, d = WING_ROUNDEL
         y *= side
-        return paint(P, [(WHITE, down ^ prism_z(under_white()))]
-                     + roundel_ops(x, y, d, "z", S["up"]) + roundel_ops(x, y, d, "z", down))
+        if name.startswith("wingtop_"):
+            return paint(P, roundel_ops(x, y, d, "z", S["up"]))
+        return paint(P, [(WHITE, S["down"] ^ prism_z(under_white()))] + roundel_ops(x, y, d, "z", S["down"]))
     if name.startswith("fin_"):
         S = skins(P, FIN_SKIN)
         side = S["+y"] if name.endswith("stbd") else S["-y"]
@@ -442,8 +477,9 @@ def add_object(objs, name, posed, out, whole):
 
 PLATE_GROUPS = [            # parts kept together by colour set (max 5 colours a plate)
     ("Fuselage", lambda n: n.startswith(("fuselage", "smoke_pod"))),
-    ("Tailplanes and small parts", lambda n: n.startswith(("tailplane", "aerial", "probe", "key_"))),   # red only
-    ("Wings", lambda n: n.startswith("wing_")),
+    ("Tailplanes and small parts", lambda n: n.startswith(("tailplane", "aerial", "probe", "key_", "wingpin"))),
+    ("Wing tops", lambda n: n.startswith("wingtop_")),
+    ("Wing undersides", lambda n: n.startswith("wingbot_")),
     ("Fins and canopy", lambda n: n.startswith("fin_") or n == "canopy"),
     ("Display stand", lambda n: n.startswith("stand")),
     ("Gear", lambda n: True),
@@ -467,7 +503,13 @@ if __name__ == "__main__":
         P, dropped = K.largest_piece(P)
         if any(v > 1.0 for v in dropped):
             print(f"!! {name}: dropped loose pieces {[round(v, 1) for v in dropped if v > 1.0]} mm3")
-        P = D.apply(name, P)
+        if name.startswith(("wingtop_", "wingbot_")):     # panel lines from the whole wing, then split
+            side = 1 if name.endswith("stbd") else -1
+            P = (wing_detailed(side) ^ H.wing_half_region(side, name.startswith("wingtop_"))) \
+                - H.wing_key_slot(side) - H.main_socket(side) - H.wing_pins(side, H.WING_PIN_FIT)
+            P, _ = K.largest_piece(P)
+        else:
+            P = D.apply(name, P)
         if name == "stand_base":
             P, _ = stand_decorate(P)
         vols = colour_part(name, P)
