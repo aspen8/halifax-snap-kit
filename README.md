@@ -22,7 +22,7 @@ The wings print standing on end, like the fuselage. Layer lines then run along t
 | Wings | Inner and outer panels, tailplane | Black, Dark Earth, Dark Green |
 | Nacelles | 8 nacelle halves | Black, Dark Earth, Dark Green |
 | Fins, roundels and codes | Fins, roundel inlays, NP-G code letters | Black, Red, Blue, Yellow, White |
-| Canopies and turrets | Canopy, rear roof glazing, nose, turrets, astrodome, gun packs | Black, Silk Silver |
+| Canopies and turrets | Cockpit canopy (2 pieces), rear roof glazing, nose, turrets, astrodome, gun packs | Black, Silk Silver |
 | Display stand | Camo plinth with badge and name, swept blade | Black, Dark Earth, Dark Green, Yellow, White |
 | Props and gear | Props, prop shafts, exhausts, gear, wheels, pins, keys | Black, Yellow |
 
@@ -46,7 +46,7 @@ The single-colour STLs are in `stl/`, in print orientation.
   - Type B wing roundels and C1 fuselage roundels.
   - The NP-G code letters in red.
   - All press into black-lined sockets.
-- **Clear parts:** perspex nose, cockpit canopy, rear roof glazing, astrodome, dorsal and tail turrets, all with black frame lines. Plus 2 gun packs.
+- **Clear parts:** perspex nose, cockpit canopy in two pieces (the 5-pane front glazing, and the side windows, which step down below the camo line), rear roof glazing, astrodome, dorsal and tail turrets, all with black frame lines. Plus 2 gun packs.
 - **Engines:** 4 props with yellow tips, 4 prop shafts with captive flanges (the props spin), 8 exhaust banks.
 - **Gear:** 2 main gear forks and wheels, tailwheel and printed 2.5 mm axle pins. For display on the stand there are 2 wheels-up inserts that show the retracted main wheels.
 - **Connector keys** (6 loose, all flexing, after the PB94 Spitfire: spring slots at the ends and a narrow middle, so they push in easily and grip):
@@ -70,7 +70,7 @@ The single-colour STLs are in `stl/`, in print orientation.
 
 1. **Fuselage.**
    - Join the front and rear body sections on the 2 tall joint keys.
-   - Drop the canopy and rear roof glazing over their locating bosses, and press in the astrodome and the nose spigot.
+   - Drop the canopy and rear roof glazing over their locating bosses, and press in the astrodome and the nose spigot. The canopy is two pieces: the side-window piece first (boss on the body), then the front glazing (boss on the nose spine piece).
    - Slide both inner wing root tongues into their side pockets, port forward and starboard aft.
    - Lay the tailplane on its seat.
    - Press the spine pieces on, nose to tail, over the pegs on the body. The piece over the tail holds the tailplane down, and the piece over the joint locks the two sections together.
