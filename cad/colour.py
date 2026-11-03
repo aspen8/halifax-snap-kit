@@ -377,7 +377,7 @@ def stand_paint(P, pat):
 CLEAR_PARTS = ("canopy", "canopy_side", "canopy_rear", "nose_glazing", "turret_dorsal", "turret_tail", "astrodome")
 FRAME_W = 0.6                # mm
 # Pilot's canopy, measured from the Revell side and plan views (mm, assembled frame)
-CANOPY_GLASS_X = (52.9, 72.1)               # glazing between these; the rims outside are frame
+CANOPY_GLASS_X = (40.0, 72.1)               # rear rim at x1 (the front edge is the level bottom rail)
 CANOPY_XFRAMES = [61.6]                     # hoop at the step (over the roof too)
 CANOPY_ROOF_BARS = [(2.8, 53.0)]            # (|y|, x0): roof bars, from the screen's lower frame to the rear
 # Windscreen lower frame seen from above (x, |y|): from the cant rail's front end, in to the
@@ -387,7 +387,7 @@ CANOPY_ROOF_BARS = [(2.8, 53.0)]            # (|y|, x0): roof bars, from the scr
 # the camo line; cant rail at z 7.1 runs right round the front
 CANOPY_HOOP = 7.1                            # cant rail
 CANOPY_STEP_X = 61.6                         # front glazing / side windows: the square step
-FRONT_GLASS_BOTTOM = 3.0                     # front glazing's bottom edge (level)
+FRONT_GLASS_BOTTOM = 3.5                     # front glazing's bottom edge (level, = H.CANOPY_STEP z)
 CANOPY_LOWER_XFRAMES = [67.0]                # upright between the two side windows
 # windscreen: 5 panes wrapping round the front (a centre V, then two each side, the outer one back
 # to the step). Dividers as angles round a vertical axis at x = WS_AXIS_X (0 = ahead), (bottom, top)

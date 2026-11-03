@@ -105,7 +105,9 @@ SPINE_LINE = [(0, -10.05), (60.7, 1.4), (290, 1.4),  # NP-G: level at the side-w
               (299, 4.0), (360, 4.0)]   # x, z: body/spine split (tail: the tailplane floor)
 NOSE_KEEL = (13.5, 51.8, 5.0, 1.5)   # nose spine piece's hidden keel: x0, x1, depth below the line, skin inset
 CANOPY_FLOOR = 0.2           # side-window piece's flat floor: below the camo line (user's sketch)
-CANOPY_STEP = (61.6, 3.0)     # front glazing piece: x 52.3 to here, on a level floor at this z
+CANOPY_STEP = (61.6, 3.5)     # front glazing piece: back to here, on a level floor at this z; its bottom
+                             # edge is where the surface crosses that level (seen from ahead: level),
+                             # meeting the windscreen's angle on the centreline
 CANOPY_FRONT_KEY = (54.5, 60.0, 2.5, 2.0)   # boss on the nose spine piece under the front glazing
 SPINE_WAVE = (0.7, 7.5, 85.0, 290.0)    # scallop amplitude, period, from x, to x
 SPINE_CUTS = [(13.0, 61.6, "earth"), (72.8, 100.0, "green"),
@@ -128,7 +130,7 @@ FUSE_BOSSES = [              # connector key positions between port/starboard ha
 ]
 
 # --- Cockpit canopy hump: (x, half_width, z_top)
-CANOPY_CUT = (52.3, 72.8, 2.0)          # x0, x1, (unused: the floor follows the spine line)
+CANOPY_CUT = (47.0, 72.8, 2.0)          # x0 (ahead of where the deck rises through the level), x1, (unused)
 CANOPY_KEY = (63.0, 71.0, 3.0, 2.5)      # boss under the side-window piece: x0, x1, half-width, height
 CANOPY_REAR = (72.8, 91.8, 7.0)          # rear roof glazing (Revell plan): x0, x1, z floor
 CANOPY_REAR_KEY = (76.0, 82.0, 3.0, 2.0)  # its locating boss
