@@ -303,8 +303,8 @@ def colour_part(name, P, pat):
         core = (mf.Manifold.cylinder(200, r_in, r_in, 96).rotate([0, 90, 0])
                 .translate([-100, s * yc, zc]))
         return paint(P, [(YELLOW, P - core)])
-    if name == "df_loop":      # camo, like the spine under it (not black)
-        return paint(P, [(GREEN, P ^ prism_z(pat["spine_plan"]))], base=EARTH)
+    if name == "df_loop":      # one camo colour (Dark Earth), not black
+        return {EARTH: P}
     if name in ("canopy", "canopy_side", "canopy_rear"):   # cockpit glazing: frames in the camo
         f = frames(name, P)
         return paint(P, [(EARTH, f), (GREEN, f ^ prism_z(pat["spine_plan"]))], base=CLEAR)

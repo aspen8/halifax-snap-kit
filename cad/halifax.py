@@ -111,11 +111,14 @@ CANOPY_STEP = (61.6, 3.5)     # front glazing piece: back to here, on a level fl
                              # meeting the windscreen's angle on the centreline
 CANOPY_FRONT_KEY = (54.5, 60.0, 2.5, 2.0)   # boss on the nose spine piece under the front glazing
 SPINE_WAVE = (0.7, 7.5, 85.0, 290.0)    # scallop amplitude, period, from x, to x
-SPINE_CUTS = [(13.0, 61.6, "earth"), (72.8, 100.0, "green"),
-              (100.0, 150.2, "earth"), (150.2, 204.5, "green"), (204.5, 230.0, "earth"),
-              (230.0, 288.0, "green"), (288.0, 360.0, "earth")]   # x at SPINE_REF_Z
-# camo edges lean aft going up (NP-G profile): slope dx/dz of each boundary plane, by its x
-SPINE_SLANT = {100.0: 0.15, 150.2: 0.24, 204.5: 0.44, 230.0: 0.57, 288.0: 0.24}   # 204.5: just aft of the turret opening, under the dome
+# spine pieces (painted camo, printed on end). Cut where the colours start mixing and stood with
+# that end down, so the mixed-colour layers of all the pieces stack low on the plate: 48.5 mm of
+# mixed height against 66 mm before, so fewer purges. Cuts keep clear of the canopy, rear glazing,
+# D/F socket, turret ring and fuselage joint (one piece spans it) and the tailplane slot.
+SPINE_CUTS = [(13.0, 61.6, "camo"), (72.8, 102.5, "camo"), (102.5, 133.0, "camo"), (133.0, 176.0, "camo"),
+              (176.0, 219.5, "camo"), (219.5, 268.0, "camo"), (268.0, 296.0, "camo"), (296.0, 360.0, "camo")]
+SPINE_FRONT_DOWN = [False, True, True, True, True, True, True, True]   # which end stands on the bed
+SPINE_SLANT = {}             # square cuts (the colour is painted, so the joins needn't follow it)
 SPINE_REF_Z = 6.5            # height at which the boundary x values are measured
 SPINE_GAP = 0.1              # mm, end clearance between neighbouring spine pieces
 KEY_CAP = (7.0, 6.0, 2.0)    # (old loose spine keys; sizes the peg spacing)
@@ -1353,10 +1356,8 @@ def build():
         elif k == "fuselage_rear":
             poses[k] = lambda w: rot(w, "y", -90)
         elif k.startswith("spine_"):
-            if k.startswith("spine_01"):      # nose piece: on its front end (2x the bed contact of the rear)
-                poses[k] = lambda w: rot(w, "y", 90)
-            else:                             # others stand on their bigger (slanted) end face
-                poses[k] = spine_end_pose(v)
+            i = int(k.split("_")[1]) - 1     # on the end chosen for fewest purges (see SPINE_FRONT_DOWN)
+            poses[k] = (lambda w: rot(w, "y", -90)) if SPINE_FRONT_DOWN[i] else (lambda w: rot(w, "y", 90))
         elif k == "nose_glazing":
             poses[k] = lambda w: rot(w, "y", 90)      # flat back face down, dome up
         else:
