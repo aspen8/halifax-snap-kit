@@ -248,6 +248,11 @@ Checks: run `tools/interference.py` on the assembled STLs without the `key_*` fi
 
 ## Known gaps and next steps
 
+- **v7 to-do (feedback on v6; aim for display-model detail):**
+  - Belly stripes: straight lines running inboard of the ventral strakes, furthest apart where they leave the wings and closest together at the rear of the fuselage.
+  - Smoke pod: no gap to the fuselage anywhere. At the rear the pod tapers in an aerodynamic shape, and the pylon (connector) tapers with it (see the reference photos).
+  - A small radome/bulge on the belly between the ventral strakes.
+
 - Add the older blue-fin scheme (HobbyBoss sheet I, Revell 2010) as an option.
 - Add the airbrake outline, the canopy detonating-cord (MDC) lines and the intake auxiliary doors.
 - Add gear doors for the gear-down display.
