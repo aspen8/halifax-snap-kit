@@ -383,7 +383,7 @@ CLEAR_PARTS = ("canopy", "canopy_rear", "nose_glazing", "turret_dorsal", "turret
 FRAME_W = 0.6                # mm
 # Pilot's canopy, measured from the Revell side and plan views (mm, assembled frame)
 CANOPY_GLASS_X = (52.9, 72.1)               # glazing between these; the rims outside are frame
-CANOPY_XFRAMES = [60.7]                     # windscreen rear frame (full hoop)
+CANOPY_XFRAMES = [62.0]                     # hoop at the side pane's front edge (over the roof too)
 CANOPY_ROOF_BARS = [(2.8, 53.0)]            # (|y|, x0): roof bars, from the screen's lower frame to the rear
 # Windscreen lower frame seen from above (x, |y|): from the cant rail's front end, in to the
 # roof bars, then the V notch to the apex. Every bar ends on another frame, as on the real thing.
@@ -391,14 +391,14 @@ CANOPY_ROOF_BARS = [(2.8, 53.0)]            # (|y|, x0): roof bars, from the scr
 # cant rail at z 7.1 runs right round the front; the windscreen's side edge is a D-shaped curve
 # with a big quarter-light behind it; two side windows over a lower glazed strip
 CANOPY_HOOP = 7.1                            # cant rail (top of the side windows), round the front too
-CANOPY_LOWER_XFRAMES = [66.7]                # upright between the two side windows (60.7 is a full hoop)
-WS_D_CURVE = [(57.1, 7.1), (55.2, 5.8), (53.6, 4.3), (52.9, 2.4)]
-GLASS_BOTTOM = [(52.0, 2.4), (52.9, 2.4), (60.7, 1.45), (80.0, 1.45)]   # (x, z): below it the canopy is camo
+CANOPY_LOWER_XFRAMES = [67.0]                # upright between the two side panes
+WS_D_CURVE = [(57.1, 7.1), (55.2, 5.8), (53.6, 4.4), (52.9, 3.0)]
+GLASS_BOTTOM = [(52.0, 3.0), (52.9, 3.0), (62.0, 1.45), (80.0, 1.45)]   # diagonal under the quarter-light   # (x, z): below it the canopy is camo
 GLASS_CAMO_SPLIT = 60.7                      # earth ahead of this (nose colour), green aft (spine colour)
 # windscreen front: 5 panes wrapping round (centre V, two wide, two small out to the D curve);
 # dividers as angles round a vertical axis at x = WS_AXIS_X (0 = ahead), at the band's bottom and top
 WS_AXIS_X = 60.0
-WS_BOTTOM = 2.4                              # windscreen's lower edge at the front
+WS_BOTTOM = 3.0                              # windscreen's lower edge at the front
 WS_DIVIDERS = [(6.0, 15.0), (42.0, 44.0)]    # (bottom, top) deg each side: near upright
 # Rear roof glazing (Revell plan, and the user's photo): centre panel with the astrodome,
 # side panels split by diagonals from the rear outer corner to the front inner corner
