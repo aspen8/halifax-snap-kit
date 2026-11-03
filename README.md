@@ -17,7 +17,7 @@ The wings print standing on end, like the fuselage. Layer lines then run along t
 | Plate | Parts | Filaments |
 |---|---|---|
 | Fuselage | Front and rear body sections, standing on end (use a brim) | Black |
-| Spine | 8 camo spine pieces on end (cut and oriented for fewest purges), painted from the plan pattern, and the D/F loop (Dark Earth) | Dark Earth, Dark Green |
+| Spine | 6 camo spine pieces on end (cut and oriented for fewest purges), painted from the plan pattern, and the D/F loop (Dark Earth) | Dark Earth, Dark Green |
 | Wings | Inner and outer panels, tailplane | Black, Dark Earth, Dark Green |
 | Nacelles | 8 nacelle halves | Black, Dark Earth, Dark Green |
 | Fins, roundels and codes | Fins, roundel inlays, NP-G code letters | Black, Red, Blue, Yellow, White |
