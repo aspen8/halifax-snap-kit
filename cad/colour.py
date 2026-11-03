@@ -303,6 +303,9 @@ def colour_part(name, P, pat):
         core = (mf.Manifold.cylinder(200, r_in, r_in, 96).rotate([0, 90, 0])
                 .translate([-100, s * yc, zc]))
         return paint(P, [(YELLOW, P - core)])
+    if name in ("canopy", "canopy_side", "canopy_rear"):   # cockpit glazing: frames in the camo
+        f = frames(name, P)
+        return paint(P, [(EARTH, f), (GREEN, f ^ prism_z(pat["spine_plan"]))], base=CLEAR)
     if name in CLEAR_PARTS:
         return paint(P, [(BLACK, frames(name, P))], base=CLEAR)
     if name == "stand_base":
