@@ -303,6 +303,8 @@ def colour_part(name, P, pat):
         core = (mf.Manifold.cylinder(200, r_in, r_in, 96).rotate([0, 90, 0])
                 .translate([-100, s * yc, zc]))
         return paint(P, [(YELLOW, P - core)])
+    if name == "df_loop":      # camo, like the spine under it (not black)
+        return paint(P, [(GREEN, P ^ prism_z(pat["spine_plan"]))], base=EARTH)
     if name in ("canopy", "canopy_side", "canopy_rear"):   # cockpit glazing: frames in the camo
         f = frames(name, P)
         return paint(P, [(EARTH, f), (GREEN, f ^ prism_z(pat["spine_plan"]))], base=CLEAR)
@@ -691,7 +693,7 @@ def add_object(objs, name, posed, out, whole):
 
 PLATE_GROUPS = [            # parts kept together by colour set (max 5 colours a plate)
     ("Fuselage", lambda n: n.startswith("fuselage")),
-    ("Spine", lambda n: n.startswith("spine_")),
+    ("Spine", lambda n: n.startswith("spine_") or n == "df_loop"),
     ("Wings", lambda n: n.startswith(("wing_", "tailplane"))),
     ("Nacelles", lambda n: n.startswith("nacelle")),
     ("Fins, roundels and codes", lambda n: n.startswith(("fin_", "roundel_", "code_"))),

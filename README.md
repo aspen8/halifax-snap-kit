@@ -22,7 +22,7 @@ The wings print standing on end, like the fuselage. Layer lines then run along t
 | Wings | Inner and outer panels, tailplane | Black, Dark Earth, Dark Green |
 | Nacelles | 8 nacelle halves | Black, Dark Earth, Dark Green |
 | Fins, roundels and codes | Fins, roundel inlays, NP-G code letters | Black, Red, Blue, Yellow, White |
-| Canopies and turrets | Cockpit canopy (2 pieces), rear roof glazing, nose, turrets, astrodome, gun packs | Black, Silk Silver |
+| Canopies and turrets | Cockpit canopy (2 pieces) and rear roof glazing with camo frames, nose, turrets, astrodome, gun packs | Black, Silk Silver, Dark Earth, Dark Green |
 | Display stand | Camo plinth with badge and name, swept blade | Black, Dark Earth, Dark Green, Yellow, White |
 | Props and gear | Props, prop shafts, exhausts, gear, wheels, pins, keys | Black, Yellow |
 
@@ -54,7 +54,7 @@ The single-colour STLs are in `stl/`, in print orientation.
   - 2 at the inner/outer wing joints.
   - 4 nacelle locks (2 sizes): each joins the nacelle halves and pins the nacelle into a pocket in the wing underside.
   - The spine pieces locate on pegs printed on the black body, and the fins on tabs printed on the tailplane tips: no loose keys there.
-- **D/F loop:** a separate black part that pops into a socket in the roof.
+- **D/F loop:** a separate camo-painted part that pops into a socket in the roof.
 - **Display stand:**
   - A swept "swan-neck" blade that prints flat on its side.
   - A plinth (190 × 120 mm, bevelled underside) with a Dark Earth/Dark Green camo top and a yellow pinstripe.
