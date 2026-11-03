@@ -274,7 +274,7 @@ def colour_part(name, P, pat):
         return paint(P, [(YELLOW, P - core)])
     if name == "canopy":       # under the windscreen, ahead of the side windows: fuselage, nose camo
         sk = ALL - K.inner_core(P, 0.6)
-        below = sk ^ H_box(-100, CANOPY_XFRAMES[0], -100, 100, -100, WS_BOTTOM)
+        below = sk ^ prism_y(cs([np.array(WS_FRONT_CAMO)]))
         return paint(P, [(EARTH, below), (BLACK, frames(name, P))], base=CLEAR)
     if name in CLEAR_PARTS:
         return paint(P, [(BLACK, frames(name, P))], base=CLEAR)
@@ -386,16 +386,19 @@ CANOPY_XFRAMES = [60.7]                     # windscreen rear frame (full hoop)
 CANOPY_ROOF_BARS = [(2.8, 53.0)]            # (|y|, x0): roof bars, from the screen's lower frame to the rear
 # Windscreen lower frame seen from above (x, |y|): from the cant rail's front end, in to the
 # roof bars, then the V notch to the apex. Every bar ends on another frame, as on the real thing.
-# cockpit glazing as one house (photos): glass down to the camo line; a horizontal frame at the side-window
-# top runs right round the front; below it the windscreen panes wrap round to meet the side windows
-CANOPY_HOOP = 8.0                            # z of the horizontal frame (runs the canopy's full length)
-CANOPY_LOWER_XFRAMES = [66.4, 70.4]          # uprights between the 3 side windows; 60.7 is a full hoop
-# windscreen: the upright band below the hoop, 5 panes wrapping round the front (photos): a centre V,
-# two wide panes, two small ones reaching back to the first side window. Dividers are given as
-# angles round a vertical axis at x = WS_AXIS_X (0 = straight ahead), at the band's bottom and top.
+# cockpit glazing, measured off the Revell side view (calibrated): glass down to the camo line;
+# cant rail at z 7.1 runs right round the front; the windscreen's side edge is a D-shaped curve
+# with a big quarter-light behind it; two side windows over a lower glazed strip
+CANOPY_HOOP = 7.1                            # cant rail (top of the side windows), round the front too
+CANOPY_LOWER_XFRAMES = [66.7]                # upright between the two side windows (60.7 is a full hoop)
+CANOPY_WINDOW_RAIL = (1.4, 60.7)             # z of the rail under the side windows, from x
+WS_D_CURVE = [(57.1, 7.1), (55.2, 5.8), (53.6, 4.3), (52.9, 3.0), (53.4, 1.2), (54.6, -0.2), (56.2, -1.6)]
+WS_FRONT_CAMO = [(51.5, 3.0), (52.9, 3.0), (53.4, 1.2), (54.6, -0.2), (56.2, -1.6), (56.2, -5.0), (51.5, -5.0)]
+# windscreen front: 5 panes wrapping round (centre V, two wide, two small out to the D curve);
+# dividers as angles round a vertical axis at x = WS_AXIS_X (0 = ahead), at the band's bottom and top
 WS_AXIS_X = 60.0
-WS_BOTTOM = 3.0                              # windscreen's lower edge (the glass below it ahead of the side windows is camo)
-WS_DIVIDERS = [(6.0, 18.0), (50.0, 58.0)]    # (bottom, top) deg each side: V edges; wide/small panes
+WS_BOTTOM = 3.0                              # windscreen's lower edge at the front (Revell)
+WS_DIVIDERS = [(6.0, 18.0), (40.0, 46.0)]    # (bottom, top) deg each side
 # Rear roof glazing (Revell plan, and the user's photo): centre panel with the astrodome,
 # side panels split by diagonals from the rear outer corner to the front inner corner
 REAR_GLASS_X = (73.6, 91.0)
@@ -479,9 +482,16 @@ def frames(name, P):
             f = f + slab("x", x)
         for x in CANOPY_LOWER_XFRAMES:
             f = f + (slab("x", x) ^ H_box(-100, 400, -100, 100, -100, hz))
-        # windscreen: lower edge, and dividers that lean in towards the top
-        f = f + (slab("z", WS_BOTTOM) ^ H_box(-100, CANOPY_XFRAMES[0], -100, 100, -100, 100))
+        # windscreen: D-curve side edge, lower edge at the front, and dividers leaning in at the top
+        sides = H_box(-100, 400, 5.0, 100, -100, 100) + H_box(-100, 400, -100, -5.0, -100, 100)
+        dcur = mf.CrossSection()
+        for p, q in zip(WS_D_CURVE, WS_D_CURVE[1:]):
+            dcur = dcur + D.band(p, q, W)
+        f = f + (D.prism_y(dcur) ^ sides)
+        f = f + (slab("z", WS_BOTTOM) ^ H_box(-100, WS_D_CURVE[3][0] + 0.2, -100, 100, -100, 100))
         f = f + windscreen_dividers(P, hz, W)
+        rz, rx = CANOPY_WINDOW_RAIL
+        f = f + (slab("z", rz) ^ H_box(rx, 400, -100, 100, -100, 100))
         # roof bars, from the horizontal frame to the rear
         roof = mf.CrossSection()
         for yb, x0 in CANOPY_ROOF_BARS:
