@@ -145,3 +145,11 @@ For a display model, quality beats purge cost.
 Adding closely spaced stations at the nose tip made OCC's default loft (chord-length parametrisation) oscillate along the whole body. The roof dropped 10 mm at x 100-125, far from the edit, and nothing failed: the solid was valid and watertight. Only a missing D/F plug gave it away.
 - Use `smooth_loft` (centripetal parametrisation). It keeps the body within 0.4 mm of the station table.
 - After any station edit, section the loft at several stations and compare it with the table.
+
+## Wheel axles: stubs, not loose pins
+
+Loose printed 2.5 mm axle pins snapped. Each fork is now two halves split at the wheel's mid-plane, after the PB94 Spitfire tail wheel. One half carries a thick stub axle (5 mm main, 3.5 mm tail) that passes through the wheel and grips in a hole in the other half, and the gear socket holds the pair together. The legs are chunkier than scale so there's at least 1.2 mm of wall round the hole: function before scale here.
+
+## Tall pieces on end need a real base
+
+The nose spine piece stood on a 2.1 mm-thick end and leaned 12°. A lean of that size prints fine, but a base that thin wobbles. Running its hidden keel to the end it stands on gave it a 7 mm base. Check the base section, not just the bed area, for every piece printed on end.

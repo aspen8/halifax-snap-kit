@@ -104,7 +104,7 @@ FUSE_SPLIT_X = 196.0         # front / rear fuselage joint (just ahead of the co
 SPINE_LINE = [(0, -10.05), (60.7, 1.4), (290, 1.4),  # NP-G: level at the side-window bottom back from the front
               # side pane's corner (x 60.7), then straight to the nose (2.4 mm below the top at the glazing)
               (299, 4.0), (360, 4.0)]   # x, z: body/spine split (tail: the tailplane floor)
-NOSE_KEEL = (13.5, 51.8, 5.0, 1.5)   # nose spine piece's hidden keel: x0, x1, depth below the line, skin inset
+NOSE_KEEL = (13.5, 61.6, 5.0, 1.5)   # (to the rear end: the piece stands on it)
 CANOPY_FLOOR = 0.2           # side-window piece's flat floor: below the camo line (user's sketch)
 CANOPY_STEP = (61.6, 3.5)     # front glazing piece: back to here, on a level floor at this z; its bottom
                              # edge is where the surface crosses that level (seen from ahead: level),
@@ -268,14 +268,18 @@ MAIN_AXLE_X = 120.0          # mm, just aft of the radiator (Revell side view)
 MAIN_AXLE_Z = -51.0          # mm
 MAIN_WHEEL_D = 26.0          # mm (~1.57 m)
 MAIN_WHEEL_W = 9.0
-MAIN_LEG = (6.0, 3.0)        # leg section: x (fore-aft), y; ~1.5 mm walls round the axle hole
+MAIN_LEG = (8.0, 3.5)        # leg section: x (fore-aft), y; chunkier than scale for the 5 mm stub axle
 MAIN_PLUG = (8.0, 6.0)       # plug y-width, depth into the nacelle socket
 TAIL_AXLE_X = 334.0
 TAIL_LEG_DROP = 9.0          # mm, axle below the fuselage bottom
 TAIL_WHEEL_D = 9.0
 TAIL_WHEEL_W = 4.5
-TAIL_LEG = (5.5, 2.5)        # leg section; ~1.2 mm walls round the axle hole
+TAIL_LEG = (6.5, 3.0)        # leg section; room round the 3.5 mm stub axle
 TAIL_PLUG = (5.0, 5.0)
+# axles: a stub printed on one fork half (2-piece forks, after the PB94 Spitfire tail wheel) instead
+# of loose 2.5 mm pins, which were brittle: main, tail diameters
+AXLE_STUB = {"main": 5.0, "tail": 3.5}
+STUB_GRIP, STUB_SPIN = 0.55, 0.85   # fit-test clearances: hole in the other half grips, wheel bore spins
 
 # --- Display stand (in-flight pose, gear removed)
 STAND_X = 165.0              # mm, socket under the fuselage, at the printed model's CG
@@ -1191,7 +1195,7 @@ def wheel_up_insert(side):
     return seg.union(plug)
 
 
-def gear_fork(x, yc, z_axle, z_top, wheel_w, leg, plug):
+def gear_fork(x, yc, z_axle, z_top, wheel_w, leg, plug, hole=True):
     """Two legs either side of the wheel, a cross-bar and a plug (prints flat)."""
     lx, ly = leg
     py, depth = plug
@@ -1202,16 +1206,32 @@ def gear_fork(x, yc, z_axle, z_top, wheel_w, leg, plug):
         f = f.union(box(x0, x1, yc + s * yo - ly / 2, yc + s * yo + ly / 2,
                         z_axle - lx / 2, z_top - 0.1))
     f = f.union(box(x0, x1, yc - py / 2, yc + py / 2, z_top - 0.2, z_top + depth))
-    return f.cut(cyl((x, yc - 20, z_axle), AXLE_HOLE_TIGHT, 40, "y"))
+    return f.cut(cyl((x, yc - 20, z_axle), AXLE_HOLE_TIGHT, 40, "y")) if hole else f
 
 
-def wheel(x, yc, z_axle, d, w):
+def gear_fork_halves(x, yc, z_axle, z_top, wheel_w, leg, plug, stub_d):
+    """The fork split down the wheel's mid-plane: half A (y < yc) carries the axle stub, which runs
+    through the wheel into a gripping hole in half B. Each half prints flat on its outer face; the
+    gear socket holds the two together."""
+    lx, ly = leg
+    f = gear_fork(x, yc, z_axle, z_top, wheel_w, leg, plug, hole=False)
+    yo = wheel_w / 2 + 0.6 + ly / 2
+    a = f.intersect(box(x - 50, x + 50, yc - 50, yc - FIT / 2, z_axle - 50, z_top + 50))
+    b = f.intersect(box(x - 50, x + 50, yc + FIT / 2, yc + 50, z_axle - 50, z_top + 50))
+    y0, y1 = yc - yo, yc + yo + ly / 2 - 0.4
+    stub = cyl((x, y0, z_axle), stub_d, y1 - y0, "y").faces(">Y").edges().chamfer(0.4)
+    a = a.union(stub)
+    b = b.cut(cyl((x, yc, z_axle), stub_d + STUB_GRIP, 40, "y"))
+    return a, b
+
+
+def wheel(x, yc, z_axle, d, w, bore=None):
     t = W("XZ").circle(d / 2).extrude(w / 2, both=True)
     t = t.edges().fillet(min(2.5, w / 3))
     for s in (-1, 1):   # hub recess on both faces
         t = t.cut(cyl((0, s * (w / 2 + 0.1), 0), d * 0.55, -s * 0.9, "y"))
-        t = t.union(cyl((0, s * (w / 2 - 0.8), 0), d * 0.22, s * 0.5, "y"))
-    t = t.cut(cyl((0, -w, 0), AXLE_HOLE_LOOSE, 2 * w, "y"))
+        t = t.union(cyl((0, s * (w / 2 - 0.8), 0), max(d * 0.22, (bore or AXLE_HOLE_LOOSE) + 2.4), s * 0.5, "y"))
+    t = t.cut(cyl((0, -w, 0), bore or AXLE_HOLE_LOOSE, 2 * w, "y"))
     return t.translate((x, yc, z_axle))
 
 
@@ -1334,16 +1354,14 @@ def build():
             parts[f"prop_shaft{i + 1}_{tag}"] = prop_shaft(x0, yc * side, zc)
             poses[f"prop_shaft{i + 1}_{tag}"] = lambda w: rot(w, "y", 90)   # flange on the bed
         yc0 = NACELLES[0][0] * side
-        parts[f"main_gear_{tag}"] = gear_fork(MAIN_AXLE_X, yc0, MAIN_AXLE_Z,
-                                              nacelle_bottom(0, MAIN_AXLE_X), MAIN_WHEEL_W,
-                                              MAIN_LEG, MAIN_PLUG)
-        poses[f"main_gear_{tag}"] = lambda w: rot(w, "y", 90)
-        parts[f"main_wheel_{tag}"] = wheel(MAIN_AXLE_X, yc0, MAIN_AXLE_Z, MAIN_WHEEL_D, MAIN_WHEEL_W)
+        ga, gb = gear_fork_halves(MAIN_AXLE_X, yc0, MAIN_AXLE_Z, nacelle_bottom(0, MAIN_AXLE_X),
+                                  MAIN_WHEEL_W, MAIN_LEG, MAIN_PLUG, AXLE_STUB["main"])
+        parts[f"main_gear_{tag}_a"], parts[f"main_gear_{tag}_b"] = ga, gb
+        poses[f"main_gear_{tag}_a"] = lambda w: rot(w, "x", 90)     # outer face down, stub up
+        poses[f"main_gear_{tag}_b"] = lambda w: rot(w, "x", -90)
+        parts[f"main_wheel_{tag}"] = wheel(MAIN_AXLE_X, yc0, MAIN_AXLE_Z, MAIN_WHEEL_D, MAIN_WHEEL_W,
+                                           bore=AXLE_STUB["main"] + STUB_SPIN)
         poses[f"main_wheel_{tag}"] = lambda w: rot(w, "x", 90)
-        span = MAIN_WHEEL_W + 1.2 + 2 * MAIN_LEG[1]
-        parts[f"pin_main_wheel_{tag}"] = axle_pin((MAIN_AXLE_X, yc0 + side * span / 2, MAIN_AXLE_Z),
-                                                  "y", -side, span)
-        poses[f"pin_main_wheel_{tag}"] = lambda w, s=side: rot(w, "x", -90 * s)   # head down
         parts[f"wheel_up_{tag}"] = wheel_up_insert(side)
         poses[f"wheel_up_{tag}"] = lambda w: rot(w, "x", 90)               # flat side down
         parts[f"fin_{tag}"] = fin(side)
@@ -1365,14 +1383,14 @@ def build():
             poses[k] = lambda w: w
 
     _, _, _, bot_t, _ = interp(FUSE_STATIONS, TAIL_AXLE_X)
-    parts["tail_gear"] = gear_fork(TAIL_AXLE_X, 0, bot_t - TAIL_LEG_DROP, bot_t,
-                                   TAIL_WHEEL_W, TAIL_LEG, TAIL_PLUG)
-    poses["tail_gear"] = lambda w: rot(w, "y", 90)
-    parts["tail_wheel"] = wheel(TAIL_AXLE_X, 0, bot_t - TAIL_LEG_DROP, TAIL_WHEEL_D, TAIL_WHEEL_W)
+    ta, tb = gear_fork_halves(TAIL_AXLE_X, 0, bot_t - TAIL_LEG_DROP, bot_t,
+                              TAIL_WHEEL_W, TAIL_LEG, TAIL_PLUG, AXLE_STUB["tail"])
+    parts["tail_gear_a"], parts["tail_gear_b"] = ta, tb
+    poses["tail_gear_a"] = lambda w: rot(w, "x", 90)
+    poses["tail_gear_b"] = lambda w: rot(w, "x", -90)
+    parts["tail_wheel"] = wheel(TAIL_AXLE_X, 0, bot_t - TAIL_LEG_DROP, TAIL_WHEEL_D, TAIL_WHEEL_W,
+                                bore=AXLE_STUB["tail"] + STUB_SPIN)
     poses["tail_wheel"] = lambda w: rot(w, "x", 90)
-    tspan = TAIL_WHEEL_W + 1.2 + 2 * TAIL_LEG[1]
-    parts["pin_tail_wheel"] = axle_pin((TAIL_AXLE_X, tspan / 2, bot_t - TAIL_LEG_DROP), "y", -1, tspan)
-    poses["pin_tail_wheel"] = lambda w: rot(w, "x", -90)
     _, _, top_d, _, _ = interp(FUSE_STATIONS, DORSAL_X)
     post, base, sax = stand_parts()
     parts["stand_post"], parts["stand_base"] = post, base
