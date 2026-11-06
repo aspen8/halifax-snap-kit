@@ -77,6 +77,8 @@ WING_ROUNDEL = (154.3, 166.0, 37.0)     # x, |y|, diameter (84 in Type B)
 FIN_FLASH = (309.0, 15.0, 33.0, 7.0, 1.5)  # x start, z0, z1, red/blue width, white width
 PROP_TIP = 3.0               # mm of yellow at the prop tips
 INLAY_DEPTH = 1.2            # mm, roundel inlay depth at its shallowest point
+FLASH_DEPTH = 1.2            # mm, fin flash inlay
+FLASH_PEG = (2.5, 1.0)       # peg on its back: diameter, length (grips in AXLE_HOLE_TIGHT)
 INLAY_FIT = 0.15             # mm, radial clearance (press fit, as KEY_FIT from the fit test)
 FUSE_INLAY_DEPTH = 2.4       # fuselage roundels sit deeper, to take the locating peg
 ROUNDEL_PEG = (4.0, 3.0, 3.0, 3.5, 1.4)   # off-centre peg (x, z offset), peg dia, hole dia (grip), length
@@ -284,16 +286,11 @@ def colour_part(name, P, pat):
     if name.startswith("fin_"):
         s = 1 if name.endswith("stbd") else -1
         side = S["+y"] if s > 0 else S["-y"]
-        x0, z0, z1, w, ww = FIN_FLASH
-        rect = lambda a, b: mf.CrossSection([np.array([[a, z0], [b, z0], [b, z1], [a, z1]])])
-        # outer face only (the inner face stays black); the flash goes over the yellow stripes
+        # outer face only (the inner face stays black); the fin flash is a separate inlay
         ops = []
         if MK["fin_stripes"]:
             for quad in FIN_STRIPES:
                 ops.append((YELLOW, side ^ prism_y(cs([quad]))))
-        ops += [(RED, side ^ prism_y(rect(x0, x0 + w))),
-                (WHITE, side ^ prism_y(rect(x0 + w, x0 + w + ww))),
-                (BLUE, side ^ prism_y(rect(x0 + w + ww, x0 + 2 * w + ww)))]
         return paint(P, ops)
     if name.startswith("prop") and not name.startswith("prop_shaft"):
         idx = int(name[4]) - 1
@@ -585,6 +582,23 @@ def inlays_for(name, P):
         P, vols, plug = K.make_inlay(P, (x, s * y), d, B_RINGS(d), "z", 1, WING_INLAY_DEPTH,
                                      INLAY_FIT, WING_ROUNDEL_PEG, (hand, 6.0, 6.0, -4.0, BACK_MIRROR["z"]))
         out.append((f"roundel_wing_{name.split('_')[-1]}", vols, [0, 0, 0], plug))
+    if name.startswith("fin_"):
+        # fin flash (red/white/blue) as one snap-in inlay: press fit plus a gripping peg on its back
+        s = 1 if name.endswith("stbd") else -1
+        x0, z0, z1, w, ww = FIN_FLASH
+        rect = lambda a, b: mf.CrossSection([np.array([[a, z0], [b, z0], [b, z1], [a, z1]])])
+        P, plug = K.make_section_inlay(P, rect(x0, x0 + 2 * w + ww), s, FLASH_DEPTH, INLAY_FIT)
+        xc, zc = x0 + w + ww / 2, (z0 + z1) / 2
+        back = s * (H.FIN_Y + H.FIN_T / 2) - s * FLASH_DEPTH     # the socket floor
+        pd, pl = FLASH_PEG
+        peg = mf.Manifold.cylinder(pl + 0.5, pd / 2, pd / 2, 32).rotate([90 * s, 0, 0]).translate([xc, back + s * 0.5, zc])
+        hole = mf.Manifold.cylinder(pl + 0.3 + 0.5, H.AXLE_HOLE_TIGHT / 2, H.AXLE_HOLE_TIGHT / 2, 32).rotate(
+            [90 * s, 0, 0]).translate([xc, back + s * 0.5, zc])
+        plug = plug + peg
+        P = P - hole
+        vols = K.paint(plug, [(WHITE, prism_y(rect(x0 + w, x0 + w + ww))),
+                              (BLUE, prism_y(rect(x0 + w + ww, x0 + 2 * w + ww)))], RED)
+        out.append((f"flash_fin_{name.split('_')[-1]}", vols, [90 * s, 0, 0], plug))
     if name == "fuselage_rear":
         for s, tag in ((-1, "port"), (1, "stbd")):
             x, z, d = FUSE_ROUNDEL
@@ -654,7 +668,7 @@ TALL_BRIM = {"brim_type": "outer_only", "brim_width": "6"}
 def object_settings(name):
     """Per-object overrides, written into the 3MF next to each object."""
     s = {}
-    if name in CLEAR_PARTS or name.startswith(("guns_", "prop", "exhaust", "main_gear", "main_wheel",
+    if name in CLEAR_PARTS or name.startswith(("guns_", "prop", "exhaust", "main_gear", "main_wheel", "fin_",
                                               "tail_gear", "tail_wheel", "pin_", "wheel_up", "key_")):
         # fine detail and silk sheen; whole plates share one height (the prime tower needs that)
         s["layer_height"] = "0.12"
@@ -696,7 +710,7 @@ PLATE_GROUPS = [            # parts kept together by colour set (max 5 colours a
     ("Spine", lambda n: n.startswith("spine_") or n == "df_loop"),
     ("Wings", lambda n: n.startswith(("wing_", "tailplane"))),
     ("Nacelles", lambda n: n.startswith("nacelle")),
-    ("Fins, roundels and codes", lambda n: n.startswith(("fin_", "roundel_", "code_"))),
+    ("Fin flashes, roundels and codes", lambda n: n.startswith(("flash_", "roundel_", "code_"))),
     ("Canopies and turrets (silk silver)", lambda n: n in CLEAR_PARTS or n.startswith("guns")),
     ("Display stand", lambda n: n.startswith("stand")),
     ("Props and gear", lambda n: True),

@@ -20,10 +20,10 @@ The wings print standing on end, like the fuselage. Layer lines then run along t
 | Spine | 6 camo spine pieces on end (cut and oriented for fewest purges), painted from the plan pattern, and the D/F loop (Dark Earth) | Dark Earth, Dark Green |
 | Wings | Inner and outer panels, tailplane | Black, Dark Earth, Dark Green |
 | Nacelles | 8 nacelle halves | Black, Dark Earth, Dark Green |
-| Fins, roundels and codes | Fins, roundel inlays, NP-G code letters | Black, Red, Blue, Yellow, White |
+| Fin flashes, roundels and codes | Fin flash inlays, roundel inlays, NP-G code letters | Black, Red, Blue, Yellow, White |
 | Canopies and turrets | Cockpit canopy (2 pieces) and rear roof glazing with camo frames, nose, turrets, astrodome, gun packs | Black, Silk Silver, Dark Earth, Dark Green |
 | Display stand | Camo plinth with badge and name, swept blade | Black, Dark Earth, Dark Green, Yellow, White |
-| Props and gear | Props, exhausts, 2-piece gear forks, wheels, keys | Black, Yellow |
+| Props and gear | Fins, props, exhausts, 2-piece gear forks, wheels, keys | Black, Yellow |
 
 Print settings are already in the files, set up for the X2D 0.4 mm nozzle:
 
@@ -81,7 +81,7 @@ The single-colour STLs are in `stl/`, in print orientation.
    - Push the nacelle lock key up into its pocket in the wing underside (the longer key is for the inner nacelles).
    - Close both halves around the wing and the key.
    - Push the prop onto the nose boss last: the slotted boss squeezes, then springs out behind the prop's lip, and the prop spins.
-4. **Tail.** Slide the fins onto the tailplane tips: the tab on each tip locks into the fin.
+4. **Tail.** Snap the red/white/blue fin flashes into the fins (the peg on the back grips). Slide the fins onto the tailplane tips: the tab on each tip locks into the fin.
 5. **Turrets.** Fit the gun packs into the turrets. Pin the turrets on: the dorsal turret rotates.
 6. **Display.** Either fit the gear (wheel onto the stub on one fork half, close the other half over it, then push the pair into its socket) or put the model on the stand. With the gear down it sits tail-down at 8.7°. For the stand, push the blade's tenon into the plinth, fit the wheels-up inserts, and lower the model onto the key at the blade tip: it sits 5° nose-up.
 
