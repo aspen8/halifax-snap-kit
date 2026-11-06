@@ -519,7 +519,7 @@ def fuselage_parts(wing_tongues):
     for pocket in wing_tongues:
         body = body.cut(pocket)
     _, _, _, bot_t, _ = interp(FUSE_STATIONS, TAIL_AXLE_X)
-    body = body.cut(gear_socket(TAIL_AXLE_X, 0, bot_t, TAIL_LEG, TAIL_PLUG))
+    body = body.cut(gear_socket(TAIL_AXLE_X, 0, bot_t, TAIL_LEG, TAIL_PLUG, TAIL_WHEEL_W))
     _, _, _, bot_s, _ = interp(FUSE_STATIONS, STAND_X)
     k = STAND_KEY / 2 + FIT
     body = body.cut(box(STAND_X - k, STAND_X + k, -k, k, bot_s - 1, bot_s + STAND_KEY_DEPTH + 0.3))
@@ -934,7 +934,7 @@ def nacelle_parts(index, side, wing_panel):
                             yc * side - py / 2 - FIT, yc * side + py / 2 + FIT, zb - 1, zb + pd + 0.3))
     if index == 0:   # main undercarriage socket
         body = body.cut(gear_socket(MAIN_AXLE_X, yc * side, nacelle_bottom(0, MAIN_AXLE_X),
-                                    MAIN_LEG, MAIN_PLUG))
+                                    MAIN_LEG, MAIN_PLUG, MAIN_WHEEL_W))
     # exhaust slots on both sides, and the radiator intake
     for face in (1, -1):
         body = body.cut(exhaust_bank(index, side, face, slot=True))
@@ -1173,11 +1173,29 @@ def nacelle_bottom(index, x):
     return z
 
 
-def gear_socket(x, yc, z_top, leg, plug):
+def plug_gussets(x, yc, z_top, leg, plug, wheel_w, grow=0.0):
+    """45 deg ramps from the fork's outer faces up to the plug: the fork halves print on their outer
+    faces, and without these the plug (narrower than the fork) hung 4.6 mm over nothing."""
+    lx, ly = leg
+    py, depth = plug
+    y_out = wheel_w / 2 + 0.6 + ly
+    h = min(y_out - py / 2, depth)
+    out = None
+    for s in (1, -1):
+        a = py / 2
+        pts = [(s * (a - 0.01), -0.2), (s * (y_out + grow), -0.2), (s * (a - 0.01), h + grow * 1.42)]
+        g = (W("YZ").polyline(pts).close().extrude(lx + 2 * grow)
+             .translate((x - lx / 2 - grow, yc, z_top)))
+        out = g if out is None else out.union(g)
+    return out
+
+
+def gear_socket(x, yc, z_top, leg, plug, wheel_w=None):
     lx, _ = leg
     py, depth = plug
-    return box(x - lx / 2 - FIT, x + lx / 2 + FIT, yc - py / 2 - FIT, yc + py / 2 + FIT,
-               z_top - 1, z_top + depth + 0.3)
+    s = box(x - lx / 2 - FIT, x + lx / 2 + FIT, yc - py / 2 - FIT, yc + py / 2 + FIT,
+            z_top - 1, z_top + depth + 0.3)
+    return s.union(plug_gussets(x, yc, z_top, leg, plug, wheel_w, grow=FIT)) if wheel_w else s
 
 
 def wheel_up_insert(side):
@@ -1215,6 +1233,7 @@ def gear_fork_halves(x, yc, z_axle, z_top, wheel_w, leg, plug, stub_d):
     gear socket holds the two together."""
     lx, ly = leg
     f = gear_fork(x, yc, z_axle, z_top, wheel_w, leg, plug, hole=False)
+    f = f.union(plug_gussets(x, yc, z_top, leg, plug, wheel_w))
     yo = wheel_w / 2 + 0.6 + ly / 2
     a = f.intersect(box(x - 50, x + 50, yc - 50, yc - FIT / 2, z_axle - 50, z_top + 50))
     b = f.intersect(box(x - 50, x + 50, yc + FIT / 2, yc + 50, z_axle - 50, z_top + 50))
