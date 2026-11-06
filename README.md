@@ -74,7 +74,7 @@ The single-colour STLs are in `stl/`, in print orientation.
    - Lay the tailplane on its seat.
    - Press the spine pieces on, nose to tail, over the pegs on the body. The piece over the tail holds the tailplane down, and the piece over the joint locks the two sections together.
    - Push the D/F loop into its socket in the roof.
-   - Press in the red code letters (each has a gripping peg on its back) and the roundels. Each roundel (wing and fuselage) has an off-centre peg, so it only fits one way round and grips, and an L or R engraved on its back.
+   - Press in the red code letters and the roundels: each letter and fin flash has a hole in its back that grips a peg on the socket floor. Each roundel (wing and fuselage) has an off-centre peg, so it only fits one way round and grips, and an L or R engraved on its back.
 2. **Wings.** Join each outer panel to its inner panel with a wing key. The joint faces set the 5° dihedral. Press the wing roundels into their sockets.
 3. **Nacelles.**
    - Push the exhaust banks into their side slots.

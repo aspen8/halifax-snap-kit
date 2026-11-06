@@ -77,8 +77,9 @@ WING_ROUNDEL = (154.3, 166.0, 37.0)     # x, |y|, diameter (84 in Type B)
 FIN_FLASH = (309.0, 15.0, 33.0, 7.0, 1.5)  # x start, z0, z1, red/blue width, white width
 PROP_TIP = 3.0               # mm of yellow at the prop tips
 INLAY_DEPTH = 1.2            # mm, roundel inlay depth at its shallowest point
-FLASH_DEPTH = 1.2            # mm, fin flash inlay
+FLASH_DEPTH = 1.8            # mm, fin flash inlay (room for the peg's hole behind the face)
 FLASH_PEG = (2.5, 1.0)       # peg on its back: diameter, length (grips in AXLE_HOLE_TIGHT)
+CODE_DEPTH = 1.8             # mm, code letter inlays (deeper than 1.2 for the peg's hole)
 INLAY_FIT = 0.15             # mm, radial clearance (press fit, as KEY_FIT from the fit test)
 FUSE_INLAY_DEPTH = 2.4       # fuselage roundels sit deeper, to take the locating peg
 ROUNDEL_PEG = (4.0, 3.0, 3.0, 3.5, 1.4)   # off-centre peg (x, z offset), peg dia, hole dia (grip), length
@@ -587,14 +588,16 @@ def thickest_point(sec):
 
 
 def add_peg(P, plug, s, x, z):
-    """Gripping peg on the back of a side (y) inlay, and its hole in the part: snaps it in."""
+    """Gripping peg standing on the socket floor and a hole in the back of a side (y) inlay, as on
+    the roundels: the inlay's back stays flat for the bed (its face follows the curved skin)."""
     bb = plug.bounding_box()
-    back = bb[1] if s > 0 else bb[4]                # inner face of the inlay
+    back = bb[1] if s > 0 else bb[4]                # inner face of the inlay = the socket floor
     pd, pl = FLASH_PEG
-    def cylin(d, length):
-        return (mf.Manifold.cylinder(length + 0.5, d / 2, d / 2, 32).rotate([90 * s, 0, 0])
-                .translate([x, back + s * 0.5, z]))
-    return P - cylin(H.AXLE_HOLE_TIGHT, pl + 0.3), plug + cylin(pd, pl)
+    peg = (mf.Manifold.cylinder(pl + 0.5, pd / 2, pd / 2, 32).rotate([-90 * s, 0, 0])
+           .translate([x, back - s * 0.5, z]))      # from inside the floor out into the socket
+    hole = (mf.Manifold.cylinder(pl + 0.15 + 0.5, H.AXLE_HOLE_TIGHT / 2, H.AXLE_HOLE_TIGHT / 2, 32)
+            .rotate([-90 * s, 0, 0]).translate([x, back - s * 0.5, z]))
+    return P + peg, plug - hole
 
 
 def inlays_for(name, P):
@@ -633,7 +636,7 @@ def inlays_for(name, P):
                 for letter in sorted(text_section(txt, CODE_HEIGHT, cx, CODE_Z, s > 0).decompose(),
                                      key=lambda q: q.bounds()[0]):
                     n += 1
-                    P, plug = K.make_section_inlay(P, letter, s, INLAY_DEPTH, INLAY_FIT)
+                    P, plug = K.make_section_inlay(P, letter, s, CODE_DEPTH, INLAY_FIT)
                     (px, pz), r = thickest_point(letter)
                     if r >= H.AXLE_HOLE_TIGHT / 2 + 0.6:            # peg where the stroke is thickest
                         P, plug = add_peg(P, plug, s, px, pz)
