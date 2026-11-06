@@ -317,11 +317,11 @@ def colour_part(name, P, pat):
 # ============================================================
 STAND_TITLE = "HANDLEY PAGE HALIFAX"
 STAND_SUBTITLE = "B MK II  SERIES IA"
-STAND_TEXT_H = (9.0, 6.0, 4.2)          # mm, the three lines
-STAND_TEXT_Y = (-25.0, -37.5, -47.5)    # line centres (y, viewer side is -y)
+STAND_TEXT_H = (6.2, 4.6, 3.4)          # mm, the three lines (scaled with the smaller plinth)
+STAND_TEXT_Y = (-19.8, -29.6, -37.6)    # line centres (y, viewer side is -y)
 STAND_RELIEF = 0.6                      # mm, raised lettering and badge
 STAND_STRIPE = (5.0, 1.2)               # pinstripe inset from the edge, width
-STAND_BADGE = (-48.0, 20.0, 0.16, 25.0)   # x from base centre, y, scale, heading (deg)
+STAND_BADGE = (-38.0, 16.0, 0.13, 25.0)   # x from base centre, y, scale, heading (deg)
 
 
 def stand_lines():
@@ -395,11 +395,8 @@ def stand_paint(P, pat):
     raised, stripe = stand_regions()
     above = mf.Manifold.cube([1000, 1000, 50]).translate([-500, -500, top + 0.01])
     deck = (L.translate([0, 0, SKIN_OUT]) - L.translate([0, 0, -SKIN])) - above          # flat top skin of the plinth
-    foot = H.STAND_X + H.STAND_FOOT_DX
-    sl, sw, _ = H.STAND_BOSS
-    boss = prism_z(mf.CrossSection.square([sl + 2, sw + 2], True).translate([foot, 0]))
     ops = [(GREEN, deck ^ prism_z(pat["plan_green"])),
-           (YELLOW, deck ^ prism_z(stripe)), (EARTH, boss),
+           (YELLOW, deck ^ prism_z(stripe)),
            (WHITE, above ^ prism_z(raised.offset(0.05, mf.JoinType.Round)))]
     # no black on the plinth (sides and underside Dark Earth): it shares the props/gear plate
     return {c: stand_level(v, -1) for c, v in paint(L, ops, base=EARTH).items()}
@@ -692,7 +689,7 @@ TALL_BRIM = {"brim_type": "outer_only", "brim_width": "6"}
 def object_settings(name):
     """Per-object overrides, written into the 3MF next to each object."""
     s = {}
-    if name in CLEAR_PARTS or name.startswith(("guns_", "prop", "exhaust", "main_gear", "main_wheel", "fin_", "stand",
+    if name in CLEAR_PARTS or name.startswith(("guns_", "prop", "exhaust", "main_gear", "main_wheel", "fin_", "stand_post",
                                               "tail_gear", "tail_wheel", "pin_", "wheel_up", "key_")):
         # fine detail and silk sheen; whole plates share one height (the prime tower needs that)
         s["layer_height"] = "0.12"
@@ -736,7 +733,8 @@ PLATE_GROUPS = [            # parts kept together by colour set (max 5 colours a
     ("Nacelles", lambda n: n.startswith("nacelle")),
     ("Fin flashes, roundels and codes", lambda n: n.startswith(("flash_", "roundel_", "code_"))),
     ("Canopies and turrets (silk silver)", lambda n: n in CLEAR_PARTS),
-    ("Props, gear, fins, guns and stand", lambda n: True),   # Black, Yellow + the plinth's Earth, Green, White
+    ("Display plinth", lambda n: n == "stand_base"),
+    ("Props, gear, fins, guns and stand blade", lambda n: True),
 ]
 MAX_COLOURS = 5
 

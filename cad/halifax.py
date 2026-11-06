@@ -285,6 +285,7 @@ TAIL_PLUG = (5.0, 5.0)
 # axles: a stub printed on one fork half (2-piece forks, after the PB94 Spitfire tail wheel) instead
 # of loose 2.5 mm pins, which were brittle: main, tail diameters
 AXLE_STUB = {"main": 5.0, "tail": 3.5}
+GEAR_TOP_W = {8.0: 14.0, 6.5: 9.0}   # leg width where it meets the nacelle / fuselage (by leg x size)
 STUB_GRIP, STUB_SPIN = 0.55, 0.85   # fit-test clearances: hole in the other half grips, wheel bore spins
 
 # --- Display stand (in-flight pose, gear removed)
@@ -293,9 +294,9 @@ STAND_KEY = 6.0              # mm, square key into the fuselage socket
 STAND_KEY_DEPTH = 9.0
 STAND_PITCH = 5.0            # deg, nose-up display attitude
 STAND_HEIGHT = 95.0          # mm, fuselage bottom to base top
-STAND_BASE = (190.0, 120.0, 12.0)   # mm: length (x), width (y), thickness; display plinth
+STAND_BASE = (150.0, 95.0, 10.0)    # mm: length (x), width (y), thickness; display plinth (was 190 x 120)
 STAND_BASE_DX = 20.0         # base centre is this far aft of STAND_X (balances the blade)
-STAND_BASE_R = 14.0          # plan corner radius
+STAND_BASE_R = 12.0          # plan corner radius
 STAND_BASE_BEVEL = 3.5       # underside chamfer (the base looks like it floats)
 STAND_FOOT_DX = 60.0         # blade foot this far aft of STAND_X: a swept "swan neck"
 STAND_BLADE = (18.0, 9.0, 7.0)    # blade width at the foot, at the top; thickness (y)
@@ -1248,16 +1249,33 @@ def wheel_up_insert(side):
     return seg.union(plug)
 
 
-def gear_fork(x, yc, z_axle, z_top, wheel_w, leg, plug, hole=True):
-    """Two legs either side of the wheel, a cross-bar and a plug (prints flat)."""
+def leg_profile(x, z_axle, z_top, lx, top_w):
+    """Side outline of a gear leg (x, z): a broad taper from the top down to a rounded foot round
+    the axle, like the Halifax's oleo leg fairings (photos), not a plain block."""
+    from shapely.geometry import Point, box as sbox
+    from shapely.ops import unary_union
+    top = sbox(x - top_w / 2, z_top - 3.0, x + top_w / 2, z_top - 0.1)
+    foot = Point(x, z_axle).buffer(lx / 2, 48)
+    return list(unary_union([top, foot]).convex_hull.exterior.coords)[:-1]
+
+
+def extrude_y(pts, y0, y1):
+    return W("XZ").polyline(pts).close().extrude(-(y1 - y0)).translate((0, y0, 0))
+
+
+def gear_fork(x, yc, z_axle, z_top, wheel_w, leg, plug, hole=True, top_w=None):
+    """Two tapered legs either side of the wheel, a cross-bar and a plug (prints flat)."""
     lx, ly = leg
     py, depth = plug
+    top_w = top_w or GEAR_TOP_W.get(lx, lx)
     yo = wheel_w / 2 + 0.6 + ly / 2
     x0, x1 = x - lx / 2, x + lx / 2
-    f = box(x0, x1, yc - yo - ly / 2, yc + yo + ly / 2, z_top - 3.0, z_top - 0.1)
+    bar = (box(x - top_w / 2, x + top_w / 2, yc - yo - ly / 2, yc + yo + ly / 2, z_top - 3.0, z_top - 0.1)
+           .edges("|Z").fillet(1.2))
+    f = bar
+    prof = leg_profile(x, z_axle, z_top, lx, top_w)
     for s in (-1, 1):
-        f = f.union(box(x0, x1, yc + s * yo - ly / 2, yc + s * yo + ly / 2,
-                        z_axle - lx / 2, z_top - 0.1))
+        f = f.union(extrude_y(prof, yc + s * yo - ly / 2, yc + s * yo + ly / 2))
     f = f.union(box(x0, x1, yc - py / 2, yc + py / 2, z_top - 0.2, z_top + depth))
     return f.cut(cyl((x, yc - 20, z_axle), AXLE_HOLE_TIGHT, 40, "y")) if hole else f
 

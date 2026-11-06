@@ -22,7 +22,8 @@ The wings print standing on end, like the fuselage. Layer lines then run along t
 | Nacelles | 8 nacelle halves | Black, Dark Earth, Dark Green |
 | Fin flashes, roundels and codes | Fin flash inlays, roundel inlays, NP-G code letters | Black, Red, Blue, Yellow, White |
 | Canopies and turrets | Cockpit canopy (2 pieces) and rear roof glazing with camo frames, nose, turrets, astrodome | Black, Silk Silver, Dark Earth, Dark Green |
-| Props, gear, fins, guns and stand (may pack onto 2 plates) | Fins, props, exhausts, 2-piece gear forks, wheels, gun packs, keys, the stand blade and the camo plinth (no black on it) | Black, Yellow, Dark Earth, Dark Green, White |
+| Display plinth | Camo plinth (150 × 95 mm, no black) with raised white badge and name | Dark Earth, Dark Green, Yellow, White |
+| Props, gear, fins, guns and stand blade | Fins, props, exhausts, 2-piece gear forks, wheels, gun packs, keys, stand blade | Black, Yellow |
 
 Print settings are already in the files, set up for the X2D 0.4 mm nozzle:
 
@@ -55,7 +56,7 @@ The single-colour STLs are in `stl/`, in print orientation.
 - **D/F loop:** a separate camo-painted part that pops into a socket in the roof.
 - **Display stand:**
   - A swept "swan-neck" blade that prints flat on its side.
-  - A plinth (190 × 120 mm, bevelled underside) with a Dark Earth/Dark Green camo top and a yellow pinstripe.
+  - A plinth (150 × 95 mm, bevelled underside) with a Dark Earth/Dark Green camo top and a yellow pinstripe.
   - A raised white Halifax silhouette, and the name in raised white: HANDLEY PAGE HALIFAX / B MK II SERIES IA / 158 SQN RAF · NP-G · LV917.
 
 **Surface detail** (sized like PB94's):
