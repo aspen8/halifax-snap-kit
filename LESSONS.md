@@ -153,3 +153,7 @@ Loose printed 2.5 mm axle pins snapped. Each fork is now two halves split at the
 ## Tall pieces on end need a real base
 
 The nose spine piece stood on a 2.1 mm-thick end and leaned 12°. A lean of that size prints fine, but a base that thin wobbles. Running its hidden keel to the end it stands on gave it a 7 mm base. Check the base section, not just the bed area, for every piece printed on end.
+
+## Spinning props without a spindle
+
+After the A6M Zero kit card: mould a mushroom boss on the nose, split with the nacelle halves (4.8 mm neck, 6.4 mm head). Give the prop a rear lip that's narrower than the head, with a cavity behind it. Fit the prop over one half-boss, then close the other half: the head forms inside the spinner, so the prop is trapped and spins on a thick neck. Nothing needs to flex. A closed PLA ring can't stretch over 0.5 mm, so don't design it to snap on. It also replaces the old printed shaft, captive flange and hex.

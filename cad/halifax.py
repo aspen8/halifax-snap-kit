@@ -246,6 +246,10 @@ DF_TOP = 7.9                 # mm, fairing top above the roof (stalk + housing)
 PIN_HEAD = (5.5, 1.0)        # head diameter, thickness
 SPINNER_LEN = 7.5
 SPINNER_R = 4.8
+# prop retention (after the A6M Zero kit card): a mushroom boss on the nacelle nose, split with the
+# nacelle halves; the prop's rear lip is trapped behind the head when the halves close, and the prop
+# spins on the thick neck. No thin spindle, no loose shaft.
+PROP_BOSS = dict(neck_r=2.4, head_r=3.2, lip_r=2.75, cav_r=3.5, lip_t=1.2, head_l=1.5, gap=0.3)
 BLADE_T = 1.2                # mm
 BLADE_ROOT_W, BLADE_MAX_W, BLADE_TIP_W = 3.6, 5.2, 3.4
 
@@ -948,9 +952,8 @@ def nacelle_parts(index, side, wing_panel):
             body = body.union(box(xr + 1.2, xr + d + 0.1, Y + sg * vy - RAD_VANE_T / 2,
                                   Y + sg * vy + RAD_VANE_T / 2, zr - zlo, zr + zhi)
                               .intersect(nacelle_body(zc, x0, length).translate((0, Y, 0))))
-    # prop shaft bearing: bore through the nose, cavity for the captive flange
-    body = body.cut(cyl((x0 - 1, yc * side, zc), BORE_D, 6.2, "x"))
-    body = body.cut(cyl((x0 + 5.2, yc * side, zc), CAVITY_D, 1.6, "x"))
+    # prop boss: neck and head on the nose (split with the halves; the prop is trapped on it)
+    body = body.union(prop_boss(x0, yc * side, zc))
     # one upright lock: joins the two halves and pins the nacelle into a pocket in the wing
     y = yc * side
     holes = nacelle_lock_slot(index, side, wing_panel)
@@ -1091,10 +1094,28 @@ def propeller():
     prop = hub
     for i in range(3):
         prop = prop.union(blade.rotate((0, 0, 0), (1, 0, 0), 120 * i))
-    # hex socket in the back of the hub: presses onto the shaft's hex boss
-    hexs = (W("YZ").polygon(6, HEX_SOCKET_AF / math.cos(math.pi / 6))
-            .extrude(HEX_LEN + 0.1).translate((1.0 - HEX_LEN - 0.1, 0, 0)))
-    return prop.cut(hexs)
+    # back of the hub: a lip (opening round the boss's neck) and a cavity for its head, with a 45 deg
+    # roof so it prints back-down without support
+    b = PROP_BOSS
+    lip0 = 1.0 - b["lip_t"]
+    cav_len = 2 * b["gap"] + b["head_l"]
+    prop = prop.cut(cyl((1.1, 0, 0), 2 * b["lip_r"], -(1.1 - lip0 + 0.05), "x"))
+    cav = cyl((lip0, 0, 0), 2 * b["cav_r"], -cav_len, "x")
+    roof = (W("YZ").circle(b["cav_r"]).workplane(offset=-b["cav_r"]).circle(0.05).loft()
+            .translate((lip0 - cav_len, 0, 0)))
+    return prop.cut(cav).cut(roof)
+
+
+def prop_boss(x0, y, zc):
+    """Mushroom boss on the nacelle nose: neck from the nose to the prop's lip, head inside the
+    spinner. Global x: the prop's back face is at x0 - PROP_GAP."""
+    b = PROP_BOSS
+    x_lip = x0 - PROP_GAP - b["lip_t"]                 # front face of the prop's lip
+    x_neck = x_lip - b["gap"]
+    neck = cyl((x0 + 1.0, y, zc), 2 * b["neck_r"], -(x0 + 1.0 - x_neck), "x")
+    head = (cyl((x_neck, y, zc), 2 * b["head_r"], -b["head_l"], "x")
+            .faces("<X").edges().chamfer(0.5))
+    return neck.union(head)
 
 
 def prop_shaft(x0, y, zc):
@@ -1370,8 +1391,6 @@ def build():
             parts[f"prop{i + 1}_{tag}"] = (propeller()
                                           .translate((x0 - PROP_GAP - 1.0, yc * side, zc)))
             poses[f"prop{i + 1}_{tag}"] = lambda w: rot(w, "y", 90)
-            parts[f"prop_shaft{i + 1}_{tag}"] = prop_shaft(x0, yc * side, zc)
-            poses[f"prop_shaft{i + 1}_{tag}"] = lambda w: rot(w, "y", 90)   # flange on the bed
         yc0 = NACELLES[0][0] * side
         ga, gb = gear_fork_halves(MAIN_AXLE_X, yc0, MAIN_AXLE_Z, nacelle_bottom(0, MAIN_AXLE_X),
                                   MAIN_WHEEL_W, MAIN_LEG, MAIN_PLUG, AXLE_STUB["main"])
