@@ -365,7 +365,7 @@ WIPE_TOWER = (200.0, 12.0)   # prime tower corner on every plate. It is 35 mm wi
                              # at x 214 it ran off the X2D bed. Keep x > 190 free of parts.
 
 
-def project_settings(template, filaments, n_plates=1):
+def project_settings(template, filaments, n_plates=1, filament_map=None):
     d = json.load(open(template))
     d["wipe_tower_x"] = [f"{WIPE_TOWER[0]:g}"] * n_plates
     d["wipe_tower_y"] = [f"{WIPE_TOWER[1]:g}"] * n_plates
@@ -395,17 +395,28 @@ def project_settings(template, filaments, n_plates=1):
         d["different_settings_to_system"] = [v[0]] + [""] * n + [v[-1]]
     if "filament_map" in d:
         d["filament_map"] = ["1"] * n
+        if filament_map:
+            # fixed nozzle per filament ("Auto For Flush" once put the base red on the X2D's
+            # second nozzle, whose outer-wall speed is 50 mm/s: +4 h on the fuselage plate)
+            d["filament_map"] = [str(filament_map.get(i, 1)) for i in range(1, n + 1)]
+            d["filament_map_mode"] = "Manual"
     for k in ("filament_nozzle_map", "filament_volume_map"):
         if k in d:
             d[k] = ["0"] * n
     return json.dumps(d, indent=4)
 
 
-def write_3mf(path, objects, plates, template, filaments, title):
+def write_3mf(path, objects, plates, template, filaments, title, filament_map=None):
     """Write a Bambu Studio project 3MF.
     objects: [dict(name, volumes=[(filament_slot, V, F)], placement=(plate, x, y))]
     plates: plate names; template: Bambu project_settings JSON (None: DEFAULT_TEMPLATE);
     filaments: {slot: (name, hex)}; title: model title."""
+    # filament_map: {slot: nozzle} for every plate, or a list with one per plate ({...} or None);
+    # None leaves that plate on Bambu Studio's "Auto For Flush"
+    def pmap(pi):
+        if isinstance(filament_map, (list, tuple)):
+            return filament_map[pi] if pi < len(filament_map) else None
+        return filament_map
     ns = ('xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" '
           'xmlns:BambuStudio="http://schemas.bambulab.com/package/2021" '
           'xmlns:p="http://schemas.microsoft.com/3dmanufacturing/production/2015/06" '
@@ -479,12 +490,13 @@ def write_3mf(path, objects, plates, template, filaments, title):
         plate_xml.append(f'  <plate>\n    <metadata key="plater_id" value="{pi + 1}"/>\n'
                          f'    <metadata key="plater_name" value={quoteattr(items)}/>\n'
                          '    <metadata key="locked" value="false"/>\n'
-                         '    <metadata key="filament_map_mode" value="Auto For Flush"/>\n'
-                         f'    <metadata key="filament_maps" value="{" ".join(["1"] * nfil)}"/>\n'
+                         f'    <metadata key="filament_map_mode" value="{"Manual" if pmap(pi) else "Auto For Flush"}"/>\n'
+                         f'    <metadata key="filament_maps" value="{" ".join(str((pmap(pi) or {}).get(i + 1, 1)) for i in range(nfil))}"/>\n'
                          f'{inst}  </plate>\n')
     z.writestr("Metadata/model_settings.config", '<?xml version="1.0" encoding="UTF-8"?>\n<config>\n'
                + "".join(settings) + "".join(plate_xml) + '</config>\n')
-    z.writestr("Metadata/project_settings.config", project_settings(template or DEFAULT_TEMPLATE, filaments, len(plates)))
+    z.writestr("Metadata/project_settings.config", project_settings(template or DEFAULT_TEMPLATE, filaments, len(plates),
+                                                                    pmap(0)))
     z.writestr("Metadata/slice_info.config", '<?xml version="1.0" encoding="UTF-8"?>\n<config>\n  <header>\n'
                '    <header_item key="X-BBL-Client-Type" value="slicer"/>\n'
                '    <header_item key="X-BBL-Client-Version" value="02.08.02.61"/>\n  </header>\n</config>\n')

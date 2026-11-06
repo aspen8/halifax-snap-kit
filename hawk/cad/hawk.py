@@ -89,16 +89,16 @@ FUSE_STATIONS = [
     (152.6, 11.6, 33.6,  -7.4, 2.5, 12.5, 2.6),     # the side runs up flat and only rounds
     (166.7, 11.6, 32.4,  -6.7, 2.6, 12.0, 2.5),     # over near the top
     (180.9, 11.6, 31.2,  -5.2, 2.8, 11.0, 2.8),
-    (195.0, 11.6, 29.2,  -3.9, 3.1, 9.5, 3.3),
-    (208.0, 11.5, 27.6,  -3.0, 3.4, 8.0, 3.7),
-    (226.0, 11.2, 25.9,  -2.0, 3.6, 8.0, 4.0),
-    (240.0, 10.8, 24.6,  -1.3, 3.8, 8.0, 4.2),
-    (252.0, 10.0, 23.0,  -0.6, 4.0, 8.0, 4.3),     # nearly level to the end (Revell side view),
-    (264.2,  8.8, 20.2,   1.0, 4.2, 7.8, 4.4),     # squared off: flat top edge at the end (photos)
+    (195.0, 11.6, 29.2,  -3.9, 3.1, 9.5, 4.5),
+    (208.0, 11.5, 27.6,  -3.0, 3.4, 8.0, 7.0),
+    (226.0, 11.2, 25.9,  -2.0, 3.6, 8.0, 10.0),
+    (240.0, 10.8, 24.6,  -1.3, 3.8, 8.0, 10.0),
+    (252.0, 10.0, 23.0,  -0.6, 4.0, 8.0, 10.0),     # nearly level to the end (Revell side view),
+    (264.2,  8.8, 20.2,   1.0, 4.2, 7.8, 10.0),     # squared off: flat top edge at the end (photos)
 ]
 FUSE_END_X = 264.2
-# (v5/v6: both squarenesses rise towards the tail, n_lo to 4.2 and n_up to 4.4: photos show the
-# rear fuselage nearly square-cornered top and bottom, with the belly stripes on the lower corners)
+# (v7: the upper squareness n_up rises to 10 from X 226 back: the rear fuselage's top corners are
+# square (photos). The lower corners stay rounder (n_lo 3.1 to 4.2))
 # Canopy and dorsal spine: (x, half_width, z_top); bottom is buried 6 mm in the body
 SPINE_STATIONS = [            # canopy and the fairing just behind it (aft of x 140 the body takes over)
     (37.0,  8.6, 13.0),
@@ -248,6 +248,8 @@ FIN_KEYS = [(189.0, 26.5), (201.0, 26.5)]   # keys in the thick spine cap: (x, z
 JET_PIPE = (7.0, 5.4, 6.8)   # (old blind pipe) depth, radius, z centre: the nozzle part replaces it
 # Jet nozzle (separate part, plugs into the tail): radius of the visible ring, how far it stands
 # out of the tail, wall, spigot radius and length into the fuselage, depth of the void.
+NOZZLE_FIT = 0.04 * _P       # spigot to socket, per side (FIT let it fall out)
+NOZZLE_RIB = 0.15 * _P       # 4 crush ribs along the spigot stand this proud: they grip
 NOZZLE = dict(r=5.0, out=3.0, wall=1.0, spig_r=4.0, spig_len=8.0, void=10.0)   # r 5.0 keeps 0.7 mm
                                                                                  # of tail below the socket
 
@@ -257,7 +259,7 @@ POD_R = 5.6                  # photos: a fat tube, round blunt nose, long tail c
 POD_PROFILE = ([(0.10 * (1 - math.cos(t)), POD_R * math.sin(t)) for t in np.linspace(0.08, math.pi / 2, 9)]
                + [(0.80, POD_R), (0.86, POD_R * 0.95), (0.92, POD_R * 0.78), (0.97, POD_R * 0.50),
                   (0.993, POD_R * 0.28), (1.0, 0.6)])
-POD_PYLON = (8.0, 2.6, 1.5)
+POD_PYLON = (8.0, 2.6, 0.6)   # (inset unused since v7), half-width, gap pod top to belly
 POD_TAIL = [(0.80, 1.0, 1.0, 0.0), (0.87, 0.93, 0.88, 0.0), (0.93, 0.80, 0.68, 0.3),
             (0.98, 0.62, 0.48, 0.8), (1.03, 0.46, 0.32, 1.5), (1.08, 0.34, 0.22, 2.4)]
             # tail stations: fraction of length, half-width and height (of the pod's), top raised.
@@ -273,6 +275,9 @@ MAIN_PLUG_DEPTH = 2.6        # the wing is 4.1 mm thick here: keep >= 0.8 mm abo
 MAIN_WHEEL = (15.0, 5.0)     # diameter, width
 NOSE_WHEEL = (11.0, 4.0)
 GEAR_DROP = 22.0
+STUB_D = 2.4                 # stub axles moulded on the legs (3.0 mm printed: the 1.8 mm pins broke)
+STUB_CLEAR = 0.35 * _P       # wheel bore over the stub, diametral: the wheel spins
+STUB_GRIP = 0.0              # retainer bore: line-for-line (holes print small, so it grips)
 
 # --- Display stand
 STAND_X = 134.0              # between the port and starboard wing tongues
@@ -379,11 +384,12 @@ def superellipse_wire(x, hw, z_top, z_bot, n, yc=0.0):
     return cq.Wire.assembleEdges([cq.Edge.makeSpline(p, periodic=True)])
 
 
-def egg_wire(x, hw, z_top, z_bot, n_lo, z_w=None, n_up=None, pts=64):
+def egg_wire(x, hw, z_top, z_bot, n_lo, z_w=None, n_up=None, pts=None):
     """Section widest at z_w: upper half a superellipse of exponent n_up up to z_top,
     lower half exponent n_lo down to z_bot (z_w=None: the symmetric superellipse)."""
     if z_w is None:
         return superellipse_wire(x, hw, z_top, z_bot, n_lo)
+    pts = pts or (160 if max(n_lo, n_up) > 5 else 64)    # square corners need more points
     out = []
     for i in range(pts):
         t = 2 * math.pi * i / pts
@@ -1053,17 +1059,21 @@ def nose_dome(grow=0.0):
     return to_m(loft(ws, ruled=True))
 
 
-def canopy_tabs(grow=0.0):
+CANOPY_TAB_FIT_Y = 0.03 * _P   # pockets snug across the tabs (FIT all round let the canopy lift)
+
+
+def canopy_tabs(grow=0.0, grow_y=None):
     """Tabs standing on the sill plane, made level and tipped onto the plane. grow > 0: the
     canopy's pockets for them (clearance all round and 0.3 mm over the top)."""
     (xa, za), _ = CANOPY_PLANE
     w, h = CANOPY_TAB
     g = grow
+    gy = g if grow_y is None else grow_y
     tabs = []
     for x0, x1 in CANOPY_TABS:
         prof = np.array([(x0 - g, za - 1.0), (x1 + g, za - 1.0), (x1 + g, za + 0.2),
                          (x1 - 0.9 * h + g, za + h + (0.3 if g else 0.0)), (x0 - g, za + h + (0.3 if g else 0.0))])
-        tabs.append(K.cs([prof]).extrude(w + 2 * g).translate([0, 0, -(w / 2 + g)]).rotate([90, 0, 0]))
+        tabs.append(K.cs([prof]).extrude(w + 2 * gy).translate([0, 0, -(w / 2 + gy)]).rotate([90, 0, 0]))
     return rot_about(union(tabs), (xa, 0, za), "y", -canopy_angle())
 
 
@@ -1072,7 +1082,7 @@ def canopy():
     """Solid and opaque, flat underneath, with pockets for the fuselage's tabs; its front is a
     vertical face at DOME_CUT_X, against the red nose dome."""
     c = outer() ^ canopy_region(-FIT) ^ box(DOME_CUT_X + FIT, 400, -60, 60, -60, 100)
-    c = c - canopy_tabs(FIT)
+    c = c - canopy_tabs(FIT, CANOPY_TAB_FIT_Y)
     return K.largest_piece(c)[0]
 
 
@@ -1118,8 +1128,16 @@ def smoke_pod():
     ws = [superellipse_wire(POD_X0 + f * POD_LEN, POD_R * w, top + dt, top - POD_R * 2 * hgt + dt, 2.0)
           for f, w, hgt, dt in POD_TAIL]
     pod = pod + to_m(loft(ws))
-    i0, hw, _ = POD_PYLON
-    pylon = box(POD_X0 + i0, POD_X0 + POD_LEN - i0, -hw, hw, zc, zb + 4.0)
+    # pylon: the whole length, so there is no gap to the belly anywhere; it narrows with the pod
+    # at the nose and along the tail cone (photos)
+    _, hw, _ = POD_PYLON
+    pw = []
+    for f, rr in front:
+        if f >= 0.03:
+            pw.append((f, min(hw, 0.55 * rr), zc))
+    for f, w, hgt, dt in POD_TAIL[1:]:
+        pw.append((f, min(hw, 0.55 * POD_R * w), top + dt - POD_R * hgt))
+    pylon = to_m(loft([superellipse_wire(POD_X0 + f * POD_LEN, h, zb + 4.0, z0, 6.0) for f, h, z0 in pw], ruled=True))
     p = (pod + pylon) - body()
     k = STAND_KEY / 2 + FIT
     p = (p + pod_pegs()) - box(STAND_X - k, STAND_X + k, -k, k, zc - 20, zc + STAND_SOCKET_TOP)
@@ -1142,6 +1160,16 @@ AERIAL_T = 1.0
 AERIAL_FIT = 0.05 * _P        # along the chord only; the thickness is line-for-line (holes print small)
 STRAKES = (226.0, 16.0, 10.0, 5.0, 3.2, 0.8, 6.0, 35.0)   # ventral strakes: x of root LE, root length,
                              # tip length, tip LE set back, height, thickness, |y|, cant from vertical
+
+
+VENTRAL_BULGE = (234.0, 15.0, 2.4, 1.4)   # small radome between the strakes: x centre, length,
+                                          # half-width, depth below the belly
+
+
+def ventral_bulge():
+    xc, L, hw, d = VENTRAL_BULGE
+    zb = fuse_at(xc)[3]
+    return M.sphere(1.0, 48).scale([L / 2, hw, d + 0.6]).translate([xc, 0, zb + 0.6])
 
 
 def strakes():
@@ -1190,23 +1218,32 @@ def wheel_m(x, yc, z_axle, d, w):
     for s in (-1, 1):
         t = t - cyl((0, s * (w / 2 + 0.1), 0), d * 0.58, -s * 0.7, "y")
         t = t + cyl((0, s * (w / 2 - 0.6), 0), d * 0.26, s * 0.45, "y")
-    t = t - cyl((0, -w, 0), AXLE_HOLE_LOOSE, 2 * w, "y")
+    t = t - cyl((0, -w, 0), STUB_D + STUB_CLEAR, 2 * w, "y")
     return t.translate([x, yc, z_axle])
 
 
 def nose_gear():
+    """Nose leg in two parts (like PB94's Spitfire gear): the main part (plug, oleo, fork top and
+    left arm) carries a stub axle through the wheel; the right arm presses onto the stub's end and
+    tongues into the fork top. Returns (main, right arm, (x, z_axle))."""
     zb = fuse_at(NOSE_GEAR_X)[3]
     d, w = NOSE_WHEEL
     x = NOSE_GEAR_X + 3.0
     z_axle = zb - GEAR_DROP + 1.0 + d / 2
     yo = w / 2 + 0.5 + 1.2
-    f = union([box(NOSE_GEAR_X - 2.0, NOSE_GEAR_X + 2.0, -2.0, 2.0, z_axle + d / 2 + 1.0, zb - 0.1),   # oleo
-               box(NOSE_GEAR_X - 2.2, NOSE_GEAR_X + 2.2, -2.2, 2.2, zb - 0.2, zb + 6.0),                # plug
-               box(NOSE_GEAR_X - 2.0, x + 2.0, -yo - 1.2, yo + 1.2, z_axle + d / 2 + 0.3, z_axle + d / 2 + 2.6)]
-              + [box(x - 2.0, x + 2.0, s * yo - 1.2, s * yo + 1.2, z_axle - 2.0, z_axle + d / 2 + 2.6)
-                 for s in (1, -1)])
-    f = f - cyl((x, -20, z_axle), AXLE_HOLE_TIGHT, 40, "y", 24)
-    return f, (x, z_axle, yo + 1.2)
+    zc0 = z_axle + d / 2 + 0.3                                         # underside of the fork top
+    main = union([box(NOSE_GEAR_X - 2.0, NOSE_GEAR_X + 2.0, -2.0, 2.0, z_axle + d / 2 + 1.0, zb - 0.1),   # oleo
+                  box(NOSE_GEAR_X - 2.2, NOSE_GEAR_X + 2.2, -2.2, 2.2, zb - 0.2, zb + 6.0),                # plug
+                  box(NOSE_GEAR_X - 2.0, x + 2.0, -yo - 1.2, yo + 1.2, zc0, z_axle + d / 2 + 2.6),         # fork top
+                  box(x - 2.0, x + 2.0, -yo - 1.2, -yo + 1.2, z_axle - 2.0, zc0 + 0.01),                   # left arm
+                  cyl((x, -yo + 1.2 - 0.01, z_axle), STUB_D, 2 * yo - 1.2 + 0.01, "y", 32)])              # stub,
+                                                                                          # into the right arm
+    tongue = box(x - 1.0, x + 1.0, yo - 0.6, yo + 0.6, zc0 - 0.01, zc0 + 1.6)
+    arm = box(x - 2.0, x + 2.0, yo - 1.2, yo + 1.2, z_axle - 2.0, zc0) + tongue
+    arm = arm - cyl((x, 0, z_axle), STUB_D + STUB_GRIP, 20, "y", 32)
+    g = FIT
+    main = main - box(x - 1.0 - g, x + 1.0 + g, yo - 0.6 - g, yo + 0.6 + g, zc0 - 0.1, zc0 + 1.6 + 0.3)
+    return main, arm, (x, z_axle)
 
 
 def wing_underside_z(y, x=None):
@@ -1223,6 +1260,8 @@ def wing_top_z(y, x):
 
 
 def main_gear(side):
+    """Main leg with a stub axle moulded on its boss, through the wheel into a press-on retainer
+    (the outer half). Returns (leg, retainer, (x, wheel y, z_axle))."""
     x, y = MAIN_GEAR
     y *= side
     zb = wing_underside_z(y)
@@ -1231,14 +1270,18 @@ def main_gear(side):
     xa = x + MAIN_TRAIL
     L = math.hypot(xa - x, zb - z_axle)
     ang = math.degrees(math.atan2(xa - x, zb - z_axle))                     # leg raked aft
-    leg = rot_about(box(x - 2.0, x + 2.0, y - 2.0, y + 2.0, zb - L - 2.0, zb - 0.1), (x, y, zb), "y", -ang)
+    t = 2.2                                                                 # half-thickness: one flat
+                                                                            # face for printing on its side
+    leg = rot_about(box(x - 2.0, x + 2.0, y - t, y + t, zb - L - 2.0, zb - 0.1), (x, y, zb), "y", -ang)
     leg = leg - box(x - 20, x + 40, y - 10, y + 10, zb - 0.1, zb + 20)   # trimmed flush under the wing
+    y0 = y + side * t                                                       # boss face, towards the wheel
+    y_out = y0 + side * (0.5 + w + 0.3)                                     # retainer's inner face
     f = union([leg,
-               box(x - 2.2, x + 2.2, y - 2.2, y + 2.2, zb - 0.2, zb + MAIN_PLUG_DEPTH),   # plug
-               box(xa - 2.6, xa + 2.6, y - 2.0, y + 2.0, z_axle - 2.6, z_axle + 2.6)])  # axle boss
-    f = f - cyl((xa, y - 20, z_axle), AXLE_HOLE_TIGHT, 40, "y", 24)
-    axle_y = y + side * (2.0 + 0.5 + w / 2)
-    return f, (xa, axle_y, z_axle)
+               box(x - 2.2, x + 2.2, y - t, y + t, zb - 0.2, zb + MAIN_PLUG_DEPTH),   # plug
+               box(xa - 2.6, xa + 2.6, y - t, y + t, z_axle - 2.6, z_axle + 2.6),     # axle boss
+               cyl((xa, y0 - side * 0.01, z_axle), STUB_D, side * (0.5 + w + 0.3 + 1.0 + 0.01), "y", 32)])
+    cap = cyl((xa, y_out, z_axle), 4.6, side * 1.2, "y", 48) - cyl((xa, y_out - side, z_axle), STUB_D + STUB_GRIP, side * 4, "y", 32)
+    return f, cap, (xa, y0 + side * (0.5 + w / 2), z_axle)
 
 
 def main_socket(side):
@@ -1263,7 +1306,7 @@ def axle_pin(start, axis, sign, length, head=True):
 def jet_pipe_cut():
     """Socket in the tail for the nozzle's spigot, countersunk for its chamfered flange."""
     n, zc = NOZZLE, JET_PIPE[2]
-    r = n["spig_r"] + FIT
+    r = n["spig_r"] + NOZZLE_FIT
     sock = cyl((FUSE_END_X - n["spig_len"] - 0.4, 0, zc), 2 * r, n["spig_len"] + 1.4, "x", 64)
     cham = n["r"] - n["spig_r"]
     return sock + cone_x(FUSE_END_X - cham - 0.01, 2 * r, FUSE_END_X + 0.01, 2 * (n["r"] + FIT), 0, zc)
@@ -1277,7 +1320,7 @@ def nozzle():
     n, zc = NOZZLE, JET_PIPE[2]
     X = FUSE_END_X
     r, out, wall = n["r"], n["out"], n["wall"]
-    sr, sl = n["spig_r"] - FIT, n["spig_len"]
+    sr, sl = n["spig_r"], n["spig_len"]
     cham = r - sr                                                   # 45 degrees
     body = (cyl((X - sl, 0, zc), 2 * sr, sl + 0.01, "x", 64)
             + cone_x(X - cham, 2 * sr, X + 0.01, 2 * r, 0, zc)
@@ -1285,14 +1328,17 @@ def nozzle():
     lip = cone_x(X + out - 0.6, 2 * (r - wall), X + out + 0.01, 2 * (r - wall * 0.45), 0, zc)  # thin exit lip
     void = (cyl((X, 0, zc), 2 * (r - wall), out + 0.01, "x", 96)                # wide exit (not into
                                                                                  # the flange: too thin)
-            + cyl((X + out - n["void"], 0, zc), 2 * (sr - 0.9), n["void"] - 3.9, "x", 64))   # deeper pipe
+            + cyl((X + out - n["void"], 0, zc), 2 * (sr - 0.9), n["void"] - out + 0.1, "x", 64))   # deeper pipe,
+                                                                                 # open into the exit
     floor = X + out - n["void"]
     cone = cone_x(floor - 0.01, 2 * (sr - 1.4), floor + 6.5, 0.6, 0, zc)        # exhaust cone
     struts = union([rot_about(box(floor - 0.01, floor + 1.6, -0.35, 0.35, zc, zc + sr), (0, 0, zc), "x", a)
                     for a in range(0, 360, 60)])
     ring = (cyl((X - 0.01, 0, zc), 2 * (r - wall), 0.6, "x", 96)                      # step ring at the
             - cyl((X - 5, 0, zc), 2 * (r - wall - 0.9), 20, "x", 96))                 # bottom of the exit
-    return (body - void - lip) + cone + (struts ^ cyl((floor - 1, 0, zc), 2 * (sr - 0.6), 4, "x", 64)) + ring
+    ribs = union([rot_about(box(X - sl + 0.6, X - cham - 0.2, -0.3, 0.3, zc + sr - 0.3, zc + sr + NOZZLE_RIB),
+                            (0, 0, zc), "x", a) for a in range(0, 360, 90)])
+    return (body - void - lip) + ribs + cone + (struts ^ cyl((floor - 1, 0, zc), 2 * (sr - 0.6), 4, "x", 64)) + ring
 
 
 # --- Small ram-air scoops on the spine shoulders, just behind the canopy (side photos)
@@ -1338,7 +1384,7 @@ def spine_ducts():
 @cached
 def fuselage_body():
     """The whole fuselage (all sections) with every socket, pocket and cut."""
-    b = outer() + spine_ducts() + strakes()
+    b = outer() + spine_ducts() + strakes() + ventral_bulge()
     for s in (1, -1):                                   # intakes sit on the wing
         w = wing_assembled(s) + wing_glove(s)
         b = b - w - w.translate([0, 0, FIT]) - w.translate([0, 0, -FIT])
@@ -1463,28 +1509,27 @@ def build():
         poses[f"tailplane_{tag}"] = (lambda m, s=side: rot_about(m, (0, s * TAIL_ROOT_Y, TAIL_FLOOR), "x",
                                                                  TAIL_ANHEDRAL * s))
     parts["canopy"] = canopy()
-    (xa, za), _ = CANOPY_PLANE
-    poses["canopy"] = lambda m: rot_about(m, (xa, 0, za), "y", canopy_angle())
+    (ra, rza), (rb, rzb) = CANOPY_REAR
+    n = np.array([rza - rzb, rb - ra], float)        # outward normal of the rear face (x, z)
+    n /= np.linalg.norm(n)
+    poses["canopy"] = R(ry=math.degrees(math.atan2(n[0], -n[1])))   # on its rear face (test print 2:
+                                                                    # smooth top, fewer colour changes)
     ps, pp = smoke_pod()
     parts["smoke_pod_stbd"], poses["smoke_pod_stbd"] = ps, R(rx=90)
     parts["smoke_pod_port"], poses["smoke_pod_port"] = pp, R(rx=-90)
     for i, a in enumerate(AERIALS):
         parts[f"aerial_{i + 1}"], poses[f"aerial_{i + 1}"] = aerial(a), R(rx=90)
-    ng, (nx, nz, nyo) = nose_gear()
-    parts["gear_nose"], poses["gear_nose"] = ng, R(rx=90)
+    ng, narm, (nx, nz) = nose_gear()
+    parts["gear_nose"], poses["gear_nose"] = ng, R(rx=90)               # on its side, stub up
+    parts["gear_nose_arm"], poses["gear_nose_arm"] = narm, R(rx=-90)     # on its outer face
     d, w = NOSE_WHEEL
     parts["wheel_nose"], poses["wheel_nose"] = wheel_m(nx, 0, nz, d, w), R(rx=90)
-    parts["pin_nose_wheel"] = axle_pin((nx, nyo + 0.1, nz), "y", -1, 2 * nyo + 0.2)
-    poses["pin_nose_wheel"] = R(rx=-90)
     for side, tag in ((1, "stbd"), (-1, "port")):
-        g, (gx, gy, gz) = main_gear(side)
-        parts[f"gear_main_{tag}"], poses[f"gear_main_{tag}"] = g, R(ry=90)
+        g, cap, (gx, gy, gz) = main_gear(side)
+        parts[f"gear_main_{tag}"], poses[f"gear_main_{tag}"] = g, R(rx=90 * side)    # on its side, stub up
+        parts[f"gear_cap_{tag}"], poses[f"gear_cap_{tag}"] = cap, R(rx=90 * side)
         d, w = MAIN_WHEEL
         parts[f"wheel_main_{tag}"], poses[f"wheel_main_{tag}"] = wheel_m(gx, gy, gz, d, w), R(rx=90)
-        y0 = gy + side * (w / 2 + 0.9)
-        L = w + 0.9 + 0.5 + 4.0 + 1.5
-        parts[f"pin_main_wheel_{tag}"] = axle_pin((gx, y0, gz), "y", -side, L)
-        poses[f"pin_main_wheel_{tag}"] = R(rx=-90 * side)
     post, base, piv = stand_parts()
     parts["stand_post"] = post
     poses["stand_post"] = lambda m: rot_about(m, piv, "y", STAND_PITCH).rotate([90, 0, 0])

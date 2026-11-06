@@ -313,3 +313,11 @@ Painting "everything within d of a downward-facing surface" also catches every o
 ### Trim a moving part against the swept shape of its neighbour
 
 An all-moving tailplane must clear the fuselage side through its whole travel. Turn the fuselage through the travel range about the pivot axis, union the copies, grow the result by a small gap, and subtract it from the tailplane. That gives the root shape directly, with no fiddling.
+
+### Fix the X2D's filament-to-nozzle map
+
+Bambu Studio's "Auto For Flush" picks a nozzle for each filament per project. On one Hawk build it moved the base red onto the second nozzle, whose process preset runs outer walls at 50 mm/s instead of 200, and the fuselage plate's estimate rose from 11 to 15 hours with identical geometry. `kitlib.write_3mf(..., filament_map={slot: nozzle})` now writes a fixed map ("Manual"). When a plate's time jumps, compare `filament_map` in the G-code headers before suspecting the model.
+
+### Check for sealed hollows
+
+A void that doesn't reach the outside is a separate, negative-volume shell. `largest_piece` drops it, which silently fills the hollow. The Hawk nozzle's deep pipe stopped 0.9 mm short of the exit and printed solid for several versions. Make each void open into the next, and check `decompose()` for negative volumes.

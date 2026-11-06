@@ -49,7 +49,23 @@ Against photos (top: real aircraft, bottom: model):
 
 ![photo comparison](docs/photo_comparison.png)
 
-> **Status: v6, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+> **Status: v7, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+
+### v7 changes (v6 feedback and test print 2)
+
+- **Belly stripes:** straight lines, furthest apart where they leave the wing trailing-edge white and closest at the tail, running inboard of the ventral strakes.
+- **Smoke pod:** sits closer under the belly, on a pylon that runs its whole length, so there is no gap anywhere. The pylon narrows with the pod at the nose and along the tail cone, which rises into the belly.
+- **Ventral bulge:** a small radome on the belly between the strakes.
+- **Rear fuselage:** square top corners from X 226 back; the lower corners stay rounder.
+- **Canopy:** prints standing on its rear face (as in test print 2: smooth top). The tab pockets are snug across (0.03 mm) so the canopy can't rock on the tabs.
+- **Nozzle:** snug spigot (0.04 mm) with 4 crush ribs that grip. The deep pipe inside was a sealed hollow that the build had been filling solid; it now opens into the exit.
+- **Undercarriage (like PB94's Spitfire):** no loose pins. Each main leg has a 3 mm stub axle moulded on its boss; the wheel slides on and a press-on retainer cap holds it. The nose leg is two parts: the main part carries the stub through the wheel, and the right fork arm presses onto the stub's end and tongues into the fork top. All gear parts print on their sides, stub up.
+- **Nozzle per filament fixed on the red plates:** red on the X2D's main nozzle, white on the second, on the fuselage, small-parts and wing plates. Left on "Auto", the slicer once put red on the second nozzle, whose outer walls run at 50 mm/s, and the fuselage plate went from 11 to 15 hours. The canopy, stand and gear plates stay on Auto (one fixed map made the canopy plate 18 hours).
+- **Print times (Bambu Studio estimate):** fuselage 11.4 h, small parts 0.7 h, wing tops 1.7 h, wing undersides 1.7 h, fins and canopy 9.9 h, stand 2.2 h, gear 1.1 h. The canopy standing on its rear face costs about 4 hours over lying flat (6 h): 492 layers instead of 85, most with a swap between the canopy colour and the black sill frame.
+
+![v7 side](docs/v7_side.png)
+
+![v7 underside](docs/v7_under.png)
 
 ### v6 changes (from the v5 renders)
 
@@ -248,17 +264,8 @@ Checks: run `tools/interference.py` on the assembled STLs without the `key_*` fi
 
 ## Known gaps and next steps
 
-- **v7 to-do (feedback on v6; aim for display-model detail):**
-  - Belly stripes: straight lines running inboard of the ventral strakes, furthest apart where they leave the wings and closest together at the rear of the fuselage.
-  - Smoke pod: no gap to the fuselage anywhere. At the rear the pod tapers in an aerodynamic shape, and the pylon (connector) tapers with it (see the reference photos).
-  - A small radome/bulge on the belly between the ventral strakes.
-  - Rear fuselage top corners actually square (not the bottom ones): raise the upper squareness n_up to about 10 from X 226 back, keep n_lo as it is, and use more points per section (about 160) so the square corners loft cleanly.
 - **Test print 2 feedback (canopy, gear and nozzle plates, from the v3/v4 files):**
-  - Canopy printed on its rear end (user's choice in Bambu Studio): good finish, smooth top, fewer colour changes. Make that its print pose in the kit. Loaded in silver.
-  - Canopy fit was poor because of the overhang at the front of the old nose section; the v4 cut at X 46 should fix that, so check it on the next fuselage print.
-  - Canopy hold-down: the two fuselage tabs may not hold the canopy firmly. Consider a firmer fit (a snap lip or wedge on the tabs, or tighter pockets).
-  - Nozzle falls out: tighten the spigot fit or add a snap ridge or crush ribs.
-  - Gear: print the legs on their sides (user's choice, no overhangs) and make that the kit pose. The axle pins are too thin and break. Replace them with a two-half leg like the Spitfire's: the wheel's hub sits between two leg halves that press together, with a stub axle moulded on each half, so there are no loose pins.
+  - Canopy fit was poor because of the overhang at the front of the old nose section; the v4 cut at X 46 should fix that, so check it on the next fuselage print. (The canopy pose, tabs, nozzle and gear points are done in v7.)
 - **Nonplanar top surfaces (try).** [orcaslicer-nonplanar](https://github.com/fich-l/orcaslicer-nonplanar) (OrcaSlicer fork, v0.1, Apple Silicon Mac only) makes the top shells of gently sloped surfaces follow the shape (up to 12° slope and 5 mm height span), so there are no contour stair steps. The wing halves (outer skin up) and the tailplanes fit those limits behind the leading edge. Unknowns: painted multi-colour regions, the X2D's two nozzles and AMS (not mentioned in its docs), and opening our Bambu 3MF in it. Test: an outboard wing top-half section, once in plain red and once with the roundel painted in. If the colours fail, use separate press-in roundel discs.
 
 - Add the older blue-fin scheme (HobbyBoss sheet I, Revell 2010) as an option.
