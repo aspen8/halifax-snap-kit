@@ -364,21 +364,13 @@ def colour_part(name, P):
             ops.append((colour, side ^ prism_y(sec)))
         return paint(P, ops)
     if name == "canopy":
-        # Opaque canopy colour; black sill frame and rear frame, the red windscreen arch and the
-        # white hoop. The part is cut above the sill, so it carries no fuselage red.
+        # Opaque canopy colour with the red windscreen arch and the white hoop. No black frame
+        # (v7: the sill line and rear frame cost a colour swap on most layers with the canopy
+        # printed standing on its rear face). The part is cut above the sill: no fuselage red.
         shell = P - K.inner_core(P, 0.7)
-        xs = np.linspace(30.0, 140.0, 111)
-        # the canopy's bottom edge is its flat cut (the fuselage stays red below it): the sill
-        # frame runs along that edge
-        sill = [(x, H.canopy_plane_z(x) + H.FIT) for x in xs]
-        band = cs([np.array([(x, z + CANOPY_SILL) for x, z in sill] + [(x, z - 1.0) for x, z in sill[::-1]])])
         hoops = [(c, shell ^ H.rot_about(K.slab("x", x, w), (x, 0.0, H.canopy_sill_z(x)), "y", a))
                  for x, w, a, c in CANOPY_FRAMES_X]
-        (ra, rza), (rb, rzb) = H.CANOPY_REAR
-        ang = math.degrees(math.atan2(rb - ra, rza - rzb))
-        keep = H.rot_about(K.box(ra - 200, ra - CANOPY_REAR_FRAME, -50, 50, rzb - 30, rza + 30), (ra, 0, rza), "y", -ang)
-        rear = P - (P ^ keep)
-        return paint(P, [(BLACK, (shell ^ prism_y(band)) + (shell ^ rear))] + hoops, base=CANOPY)
+        return paint(P, hoops, base=CANOPY)
     if name.startswith("fuselage_"):
         return paint(P, fuselage_markings(P))
     if name == "nozzle":
