@@ -162,13 +162,13 @@ def letters_section(side):
 CHEVRON_OUT = ((110.0, 16.9), 0.825)     # outer edge: point (x, |y|), slope d|y|/dx
 CHEVRON_IN = ((118.0, 16.1), 0.547)      # inner edge of the band
 CHEVRON_TE_X = 161.5                     # inner edge of the trailing-edge strip
-BELLY_STRIPE = (((161.5, 9.4), (256.0, 1.2)), ((161.5, 12.6), (256.0, 3.4)))
+BELLY_STRIPE = (((161.5, 9.4), (250.0, 0.0)), ((161.5, 12.6), (256.0, 0.0)))   # v8: they meet in a
+                                         # V at the tail (photo from below), no cross bar
                                          # belly stripes: straight lines, (x, |y|) of the inner and
                                          # outer edges. Furthest apart where they leave the wing's
                                          # trailing-edge white, closest at the tail, and inboard of
                                          # the ventral strakes (|y| 6) where they pass them
 BELLY_CORNER_UP = 1.6                    # they wrap this far up the corner
-BELLY_END = (253.4, 256.9)               # x range of the bar joining the two stripes
 BELLY_V_W = 6.3                          # the wing chevrons meet across the belly in a V at the
                                          # smoke pod's nose (photo from below), this wide in x
 
@@ -190,14 +190,11 @@ def under_white():
             ^ (_halfplane(*CHEVRON_IN, False) + _rect(CHEVRON_TE_X, -300.0, 300.0, 300.0))
             ^ _rect(95.0, 4.0, 200.0, 200.0)
             ^ H.wing(1).project())                                    # on the wing only
-    ((a0, l0), (a1, l1)), ((_, h0), (_, h1)) = BELLY_STRIPE
-    belly = cs([np.array([(a0, l0), (a1, l1), (a1, h1), (a0, h0)])])
+    ((a0, l0), (a1, l1)), ((b0, h0), (b1, h1)) = BELLY_STRIPE
+    belly = cs([np.array([(a0, l0), (a1, l1), (b1, h1), (b0, h0)])])
     belly = belly + _rect(CHEVRON_TE_X, l0, 171.5, 40.0)    # one band with the trailing-edge strip
     half = band + belly
-    sec = half + half.mirror([0.0, 1.0])
-    e0, e1 = BELLY_END
-    h1 = BELLY_STRIPE[1][1][1]
-    return sec + _rect(e0, -h1, e1, h1)
+    return half + half.mirror([0.0, 1.0])
 
 
 def belly_v():

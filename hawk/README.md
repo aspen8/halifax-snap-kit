@@ -49,7 +49,25 @@ Against photos (top: real aircraft, bottom: model):
 
 ![photo comparison](docs/photo_comparison.png)
 
-> **Status: v7, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+> **Status: v8, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+
+### v8 changes (checked against the Revell side view and an underside photo)
+
+- **Canopy:** its rear frame moves forward from X 122–125 to X 111–117 and leans back at the top, as on the Revell side view; the earlier HobbyBoss-based position put the whole canopy too far aft. The windscreen stays at X 37–38. The rear canopy tab moves to X 92–106 to stay under it.
+- **Front fuselage:** ahead of the intakes each section is filled out to straight sides, which removes the waist below the canopy sill. The sides are also squarer (superellipse 3.2–3.8), so they run straight down to the curve of the underside.
+- **Fin:** the leading edge now curves into the spine on a true circular-arc fillet instead of the angled kink. Below Z 27 the trailing edge kinks and sweeps back onto the tail cone (X 263, Z 20). The part of that sweep below the fin root is moulded on the rear fuselage.
+- **Ventral strakes:** as big as on the drawing, 22 × 6.5 mm (27 × 8 mm printed).
+- **Smoke pod:** a tangent-ogive nose (pointier). The underside runs flat to about X 170, then curves up and narrows into the belly at X 192, with no step.
+- **Under-wing fairings:** deeper (up to 3.5 mm printed), and the flap-track fairings run past the trailing edge.
+- **Belly stripes:** they meet in a V at the tail, as in the underside photo (no cross bar).
+
+![v8 side](docs/v8_side.png)
+
+![v8 underside](docs/v8_under.png)
+
+The model's outline over the Revell side view:
+
+![overlay](docs/overlay_revell_side.png)
 
 ### v7 changes (v6 feedback and test print 2)
 

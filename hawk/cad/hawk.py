@@ -76,12 +76,12 @@ FUSE_STATIONS = [
     (17.3, 10.0,   8.2,  -6.2, 2.3),
     (23.3, 10.9,   9.9,  -7.0, 2.4),
     (29.2, 11.4,  11.4,  -7.4, 2.5),
-    (38.5, 11.3,  13.6,  -7.7, 2.7),
-    (53.0, 11.4,  15.4,  -7.9, 3.0),
-    (70.0, 11.4,  17.5,  -8.2, 3.0),
-    (90.0, 11.5,  20.0,  -8.4, 3.0),
-    (110.0, 11.7, 22.0,  -8.5, 3.0),
-    (124.0, 11.8, 23.0,  -8.3, 2.9),
+    (38.5, 11.3,  13.6,  -7.7, 3.2),
+    (53.0, 11.4,  15.4,  -7.9, 3.6),
+    (70.0, 11.4,  17.5,  -8.2, 3.8),
+    (90.0, 11.5,  20.0,  -8.4, 3.8),
+    (110.0, 11.7, 22.0,  -8.5, 3.6),
+    (124.0, 11.8, 23.0,  -8.3, 3.3),
     # behind the cockpit the body takes the whole top line (no separate spine): an "egg"
     # section, widest at z_w, rounder above (n_up) than below. x, hw, top, bottom, n_lo, z_w, n_up
     (134.0, 11.8, 33.6,  -8.0, 2.6, 13.0, 2.7),     # upright sides behind the canopy (photos):
@@ -169,7 +169,9 @@ CANOPY_X = (36.0, 140.0)
 CANOPY_PLANE = ((36.0, 13.3), (126.0, 27.6))     # through the ends of the sill line, so the whole
                                                  # sill lies on or below it: the canopy part has no
                                                  # red, and its bottom edge is straight
-CANOPY_REAR = ((122.0, 40.0), (125.0, 21.0))     # rear frame of the glazing, nearly upright (HobbyBoss)
+CANOPY_REAR = ((116.5, 41.0), (111.0, 22.0))     # rear frame of the glazing, leaning back at the top
+                                                  # (Revell side view, v8; was X 122-125 from HobbyBoss,
+                                                  # which put the canopy too far aft)
 # Visible lower edge of the glazing (x, z): level under the front cockpit, curving up under the
 # rear seat (HobbyBoss side view, shifted to our windscreen base). The part is cut on the flat
 # CANOPY_PLANE just above it (it prints on it), and that cut is the visible bottom edge: the
@@ -183,7 +185,7 @@ DOME_CUT_X = 46.0            # the canopy's front is cut off on this vertical pl
                              # - nose_dome() starts at X 46.0). Ahead of it the canopy region is all
                              # dome and stays red on the nose section; behind it is all canopy, so
                              # the canopy needs no recess and its underside stays flat.
-CANOPY_TABS = [(64.0, 78.0), (96.0, 112.0)]   # x ranges of the tabs moulded on the fuselage
+CANOPY_TABS = [(64.0, 78.0), (92.0, 106.0)]   # x ranges of the tabs moulded on the fuselage
                                               # (one per section), which the canopy drops onto
 CANOPY_TAB = (5.0, 4.0)      # width (y), height above the sill plane; the aft end is chamfered
                              # (the sections print nose up, so it would overhang)
@@ -255,15 +257,25 @@ NOZZLE = dict(r=5.0, out=3.0, wall=1.0, spig_r=4.0, spig_len=8.0, void=10.0)   #
 
 # --- Smoke pod (centreline): (fraction of length, radius) profile
 POD_X0, POD_LEN = 92.0, 95.0
+POD_NOSE = 0.14              # v8: a tangent-ogive nose this fraction of the length (was a blunt
+                             # half-ellipse of 0.10)
+POD_TAIL_END = 192.0         # the tail sweeps up into the belly here (Revell side view): the underside
+                             # runs flat to about X 170, then curves up
 POD_R = 5.6                  # photos: a fat tube, round blunt nose, long tail cone, hung close under the belly
-POD_PROFILE = ([(0.10 * (1 - math.cos(t)), POD_R * math.sin(t)) for t in np.linspace(0.08, math.pi / 2, 9)]
-               + [(0.80, POD_R), (0.86, POD_R * 0.95), (0.92, POD_R * 0.78), (0.97, POD_R * 0.50),
-                  (0.993, POD_R * 0.28), (1.0, 0.6)])
+def _ogive(n=14):
+    L, R = POD_NOSE * 95.0, POD_R
+    rho = (R * R + L * L) / (2 * R)
+    out = []
+    for t in np.linspace(0.0, 1.0, n):
+        x = L * t
+        r = math.sqrt(max(rho * rho - (L - x) ** 2, 0.0)) + R - rho
+        out.append((x / 95.0, max(r, 0.6)))
+    return out
+
+
+POD_PROFILE = _ogive() + [(0.80, POD_R)]
 POD_PYLON = (8.0, 2.6, 0.6)   # (inset unused since v7), half-width, gap pod top to belly
-POD_TAIL = [(0.80, 1.0, 1.0, 0.0), (0.87, 0.93, 0.88, 0.0), (0.93, 0.80, 0.68, 0.3),
-            (0.98, 0.62, 0.48, 0.8), (1.03, 0.46, 0.32, 1.5), (1.08, 0.34, 0.22, 2.4)]
-            # tail stations: fraction of length, half-width and height (of the pod's), top raised.
-            # The top rises into the belly, so the pod tapers into the fuselage   # fore/aft inset, half-width, height
+POD_TAIL_N = 9   # fore/aft inset, half-width, height
 POD_KEYS = [0.116, 0.72]     # pylon pegs: the front one sits ahead of the port wing tongue (X 117-124)
 POD_KEY = 4.0
 
@@ -586,7 +598,11 @@ def pod_blend():
                 BELLY_R, mf.JoinType.Round, circular_segments=48)
             low = mf.CrossSection.square([60.0, 80.0]).translate([-BELLY_Z, -40.0])
             sec = (sec - low) + (rounded ^ low)
-        if x >= HULL_X0:
+        if x < INTAKE_MOUTH[0]:
+            # ahead of the intakes (v8): the whole section filled to its hull, so the sides run
+            # straight down from the canopy sill to the curve of the underside (no waist)
+            sec = sec.hull()
+        elif x >= HULL_X0:
             # convex upper fuselage (photos): above the pod tops each section is filled to its
             # hull, so canopy, spine and body meet with flat, upright sides and no waist or groove;
             # the pods and the notch beside them (below) are left alone
@@ -774,11 +790,12 @@ def wing_glove(side):
     return g if side > 0 else g.mirror([0, 1, 0])
 
 
-WING_FINS = [(0.30, 0.02, 0.20, 1.5), (0.55, 0.02, 0.19, 1.4), (0.78, 0.03, 0.19, 1.2),
-             (0.24, 0.66, 1.00, 1.2), (0.46, 0.68, 1.00, 1.1)]
+WING_FINS = [(0.30, 0.02, 0.20, 2.4), (0.55, 0.02, 0.19, 2.2), (0.78, 0.03, 0.19, 1.9),
+             (0.24, 0.62, 1.04, 2.8), (0.46, 0.64, 1.04, 2.6)]   # v8: deeper, and the flap-track
+             # fairings run past the trailing edge (photos)
              # under the wing (photos): three fences behind the leading edge and two flap-track
              # fairings at the trailing edge. eta, chord fraction from, to, depth below the skin
-WING_FIN_T = 0.7
+WING_FIN_T = 0.9
 
 
 @cached
@@ -937,20 +954,37 @@ def tail_socket(side):
 # ============================================================
 # FIN (two halves)
 # ============================================================
-FIN_FILLET_Z = 36.0          # below this the leading edge sweeps forward into the dorsal fillet
-FIN_FILLET_K = (1.05, 1.3)    # LE offset forward = k * (FIN_FILLET_Z - z) ** p
+FIN_FILLET_Z = 37.0          # below this the leading edge curves into the spine (Revell side view)
+FIN_SPINE_Z = 29.6           # ...meeting the spine top tangentially at this height
+FIN_TE_KINK = ((251.3, 27.0), (263.5, 20.0))   # below the kink the trailing edge sweeps back at a
+                             # shallower angle onto the top of the tail cone (Revell side view)
+
+
+def _fin_le_line(z):
+    (lx0, lz0), (lx1, lz1) = FIN_LE
+    return lx0 + (z - lz0) * (lx1 - lx0) / (lz1 - lz0)
 
 
 def fin_le(z):
+    """Straight leading edge; below FIN_FILLET_Z a circular arc tangent to it and to the spine
+    (a concave dorsal fillet, not an angled kink)."""
+    if z >= FIN_FILLET_Z:
+        return _fin_le_line(z)
     (lx0, lz0), (lx1, lz1) = FIN_LE
-    le = lx0 + (z - lz0) * (lx1 - lx0) / (lz1 - lz0)
-    if z < FIN_FILLET_Z:
-        k, pw = FIN_FILLET_K
-        le -= k * (FIN_FILLET_Z - z) ** pw
-    return le
+    th = math.atan2(lz1 - lz0, lx1 - lx0)                      # LE angle above horizontal
+    xi = _fin_le_line(FIN_SPINE_Z)                             # where the LE line meets the spine
+    t = (FIN_FILLET_Z - FIN_SPINE_Z) / math.sin(th)            # tangent length
+    R = t * math.tan((math.pi - th) / 2)
+    cx, cz = xi - t, FIN_SPINE_Z + R
+    if z >= FIN_SPINE_Z:
+        return cx + math.sqrt(max(R * R - (cz - z) ** 2, 0.0))
+    return cx - 3.0 * (FIN_SPINE_Z - z)                        # inside the spine: runs on forward
 
 
 def fin_te(z):
+    (kx, kz), (ex, ez) = FIN_TE_KINK
+    if z < kz:
+        return kx + (kz - z) * (ex - kx) / (kz - ez)
     (tx0, tz0), (tx1, tz1) = FIN_TE
     return tx0 + (z - tz0) * (tx1 - tx0) / (tz1 - tz0)
 
@@ -989,10 +1023,19 @@ def fin_tongue(grow=0.0):
 
 @cached
 def fin_whole():
-    zs = list(np.arange(FIN_ROOT_Z - 1.0, FIN_FILLET_Z, 1.0)) + [FIN_FILLET_Z, FIN_TOP]
+    zs = list(np.arange(FIN_TE_KINK[1][1] - 0.5, FIN_FILLET_Z, 0.75)) + [FIN_FILLET_Z, FIN_TOP]
     f = to_m(loft([fin_section(z) for z in zs], ruled=True))     # dense ruled loft: smooth fillet
     whole = (f + fin_cap()) ^ box(FIN_X0, 300, -30, 30, FIN_ROOT_Z, 100)
     return whole + fin_tongue()
+
+
+@cached
+def fin_tail_fairing():
+    """The swept lower trailing edge below the fin root plane, where the tail top drops under
+    it: part of the rear fuselage, so the fin's trailing edge runs down onto the tail cone."""
+    zs = list(np.arange(FIN_TE_KINK[1][1] - 0.5, FIN_ROOT_Z + 0.6, 0.75))
+    f = to_m(loft([fin_section(z) for z in zs], ruled=True))
+    return f ^ box(240.0, 300.0, -30, 30, -50, FIN_ROOT_Z)
 
 
 def fin_seat():
@@ -1121,23 +1164,26 @@ def pod_key_slots():
 def smoke_pod():
     """Pod (body of revolution) on a short pylon; two halves split on the centreline."""
     zb, zc = pod_geom()
-    front = [(f, rr) for f, rr in POD_PROFILE if f <= POD_TAIL[0][0] + 1e-9]
+    front = POD_PROFILE
     pod = _revolve_x([(POD_X0 + f * POD_LEN, rr) for f, rr in front]).translate([0, 0, zc])
-    # tail: the top stays on the line and the underside sweeps up, into the belly (photos)
-    top = zc + POD_R
-    ws = [superellipse_wire(POD_X0 + f * POD_LEN, POD_R * w, top + dt, top - POD_R * 2 * hgt + dt, 2.0)
-          for f, w, hgt, dt in POD_TAIL]
-    pod = pod + to_m(loft(ws))
+    # tail: from the end of the tube to POD_TAIL_END the underside curves up and the top rises
+    # with the belly line, narrowing to a point buried in the belly (no step, no gap)
+    top0, bot0 = zc + POD_R, zc - POD_R
+    x0, x1 = POD_X0 + 0.80 * POD_LEN, POD_TAIL_END
+    zbel = fuse_at(x1)[3]
+    tail = []
+    for t in np.linspace(0.0, 1.0, POD_TAIL_N):
+        x = x0 + t * (x1 - x0)
+        top = top0 + (zbel + 1.2 - top0) * t * t
+        bot = bot0 + (zbel + 0.4 - bot0) * t ** 1.8
+        hw_ = max(0.35, POD_R * (1 - t ** 1.5))
+        tail.append((x, hw_, top, bot))
+    pod = pod + to_m(loft([superellipse_wire(x, h, tp, bt, 2.0) for x, h, tp, bt in tail], ruled=True))
     # pylon: the whole length, so there is no gap to the belly anywhere; it narrows with the pod
-    # at the nose and along the tail cone (photos)
     _, hw, _ = POD_PYLON
-    pw = []
-    for f, rr in front:
-        if f >= 0.03:
-            pw.append((f, min(hw, 0.55 * rr), zc))
-    for f, w, hgt, dt in POD_TAIL[1:]:
-        pw.append((f, min(hw, 0.55 * POD_R * w), top + dt - POD_R * hgt))
-    pylon = to_m(loft([superellipse_wire(POD_X0 + f * POD_LEN, h, zb + 4.0, z0, 6.0) for f, h, z0 in pw], ruled=True))
+    pw = [(POD_X0 + f * POD_LEN, min(hw, 0.55 * rr), zc) for f, rr in POD_PROFILE if f >= 0.03]
+    pw += [(x, min(hw, 0.55 * h), (tp + bt) / 2) for x, h, tp, bt in tail[1:]]
+    pylon = to_m(loft([superellipse_wire(x, h, zb + 4.0, z0, 6.0) for x, h, z0 in pw], ruled=True))
     p = (pod + pylon) - body()
     k = STAND_KEY / 2 + FIT
     p = (p + pod_pegs()) - box(STAND_X - k, STAND_X + k, -k, k, zc - 20, zc + STAND_SOCKET_TOP)
@@ -1158,7 +1204,7 @@ AERIALS = [  # x, top|bottom, height, chord, sweep
 ]
 AERIAL_T = 1.0
 AERIAL_FIT = 0.05 * _P        # along the chord only; the thickness is line-for-line (holes print small)
-STRAKES = (226.0, 16.0, 10.0, 5.0, 3.2, 0.8, 6.0, 35.0)   # ventral strakes: x of root LE, root length,
+STRAKES = (219.0, 22.0, 14.0, 6.0, 6.5, 0.8, 6.0, 30.0)   # v8: as big as the Revell side view   # ventral strakes: x of root LE, root length,
                              # tip length, tip LE set back, height, thickness, |y|, cant from vertical
 
 
@@ -1384,7 +1430,7 @@ def spine_ducts():
 @cached
 def fuselage_body():
     """The whole fuselage (all sections) with every socket, pocket and cut."""
-    b = outer() + spine_ducts() + strakes() + ventral_bulge()
+    b = outer() + spine_ducts() + strakes() + ventral_bulge() + fin_tail_fairing()
     for s in (1, -1):                                   # intakes sit on the wing
         w = wing_assembled(s) + wing_glove(s)
         b = b - w - w.translate([0, 0, FIT]) - w.translate([0, 0, -FIT])
