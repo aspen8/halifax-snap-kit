@@ -21,9 +21,8 @@ The wings print standing on end, like the fuselage. Layer lines then run along t
 | Wings | Inner and outer panels, tailplane | Black, Dark Earth, Dark Green |
 | Nacelles | 8 nacelle halves | Black, Dark Earth, Dark Green |
 | Fin flashes, roundels and codes | Fin flash inlays, roundel inlays, NP-G code letters | Black, Red, Blue, Yellow, White |
-| Canopies and turrets | Cockpit canopy (2 pieces) and rear roof glazing with camo frames, nose, turrets, astrodome, gun packs | Black, Silk Silver, Dark Earth, Dark Green |
-| Display stand | Camo plinth with badge and name, swept blade | Black, Dark Earth, Dark Green, Yellow, White |
-| Props and gear | Fins, props, exhausts, 2-piece gear forks, wheels, keys | Black, Yellow |
+| Canopies and turrets | Cockpit canopy (2 pieces) and rear roof glazing with camo frames, nose, turrets, astrodome | Black, Silk Silver, Dark Earth, Dark Green |
+| Props, gear, fins, guns and stand (may pack onto 2 plates) | Fins, props, exhausts, 2-piece gear forks, wheels, gun packs, keys, the stand blade and the camo plinth (no black on it) | Black, Yellow, Dark Earth, Dark Green, White |
 
 Print settings are already in the files, set up for the X2D 0.4 mm nozzle:
 
@@ -74,7 +73,7 @@ The single-colour STLs are in `stl/`, in print orientation.
    - Lay the tailplane on its seat.
    - Press the spine pieces on, nose to tail, over the pegs on the body. The piece over the tail holds the tailplane down, and the piece over the joint locks the two sections together.
    - Push the D/F loop into its socket in the roof.
-   - Press in the red code letters and the roundels. Each roundel (wing and fuselage) has an off-centre peg, so it only fits one way round and grips, and an L or R engraved on its back.
+   - Press in the red code letters (each has a gripping peg on its back) and the roundels. Each roundel (wing and fuselage) has an off-centre peg, so it only fits one way round and grips, and an L or R engraved on its back.
 2. **Wings.** Join each outer panel to its inner panel with a wing key. The joint faces set the 5° dihedral. Press the wing roundels into their sockets.
 3. **Nacelles.**
    - Push the exhaust banks into their side slots.

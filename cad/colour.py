@@ -398,10 +398,11 @@ def stand_paint(P, pat):
     foot = H.STAND_X + H.STAND_FOOT_DX
     sl, sw, _ = H.STAND_BOSS
     boss = prism_z(mf.CrossSection.square([sl + 2, sw + 2], True).translate([foot, 0]))
-    ops = [(EARTH, deck), (GREEN, deck ^ prism_z(pat["plan_green"])),
-           (YELLOW, deck ^ prism_z(stripe)), (BLACK, boss),
+    ops = [(GREEN, deck ^ prism_z(pat["plan_green"])),
+           (YELLOW, deck ^ prism_z(stripe)), (EARTH, boss),
            (WHITE, above ^ prism_z(raised.offset(0.05, mf.JoinType.Round)))]
-    return {c: stand_level(v, -1) for c, v in paint(L, ops).items()}
+    # no black on the plinth (sides and underside Dark Earth): it shares the props/gear plate
+    return {c: stand_level(v, -1) for c, v in paint(L, ops, base=EARTH).items()}
 
 
 # ============================================================
@@ -572,6 +573,33 @@ def frames(name, P):
 # ============================================================
 # ROUNDEL INLAYS (separate multi-colour discs, as PB94 does)
 # ============================================================
+def thickest_point(sec):
+    """Centre of the largest circle inside a flat section (where a peg fits best), and its radius."""
+    from matplotlib.path import Path as MPath
+    from scipy import ndimage as ndi
+    x0, z0, x1, z1 = sec.bounds()
+    h = 0.05
+    X, Z = np.meshgrid(np.arange(x0 - 1, x1 + 1, h), np.arange(z0 - 1, z1 + 1, h))
+    pts = np.c_[X.ravel(), Z.ravel()]
+    inside = np.zeros(len(pts), bool)
+    for poly in sec.to_polygons():
+        inside ^= MPath(np.array(poly)).contains_points(pts)
+    d = ndi.distance_transform_edt(inside.reshape(X.shape)) * h
+    i = np.unravel_index(d.argmax(), d.shape)
+    return (float(X[i]), float(Z[i])), float(d.max())
+
+
+def add_peg(P, plug, s, x, z):
+    """Gripping peg on the back of a side (y) inlay, and its hole in the part: snaps it in."""
+    bb = plug.bounding_box()
+    back = bb[1] if s > 0 else bb[4]                # inner face of the inlay
+    pd, pl = FLASH_PEG
+    def cylin(d, length):
+        return (mf.Manifold.cylinder(length + 0.5, d / 2, d / 2, 32).rotate([90 * s, 0, 0])
+                .translate([x, back + s * 0.5, z]))
+    return P - cylin(H.AXLE_HOLE_TIGHT, pl + 0.3), plug + cylin(pd, pl)
+
+
 def inlays_for(name, P):
     """Returns (P, [(inlay_name, vols, rotation_to_print_pose)])."""
     out = []
@@ -588,14 +616,7 @@ def inlays_for(name, P):
         x0, z0, z1, w, ww = FIN_FLASH
         rect = lambda a, b: mf.CrossSection([np.array([[a, z0], [b, z0], [b, z1], [a, z1]])])
         P, plug = K.make_section_inlay(P, rect(x0, x0 + 2 * w + ww), s, FLASH_DEPTH, INLAY_FIT)
-        xc, zc = x0 + w + ww / 2, (z0 + z1) / 2
-        back = s * (H.FIN_Y + H.FIN_T / 2) - s * FLASH_DEPTH     # the socket floor
-        pd, pl = FLASH_PEG
-        peg = mf.Manifold.cylinder(pl + 0.5, pd / 2, pd / 2, 32).rotate([90 * s, 0, 0]).translate([xc, back + s * 0.5, zc])
-        hole = mf.Manifold.cylinder(pl + 0.3 + 0.5, H.AXLE_HOLE_TIGHT / 2, H.AXLE_HOLE_TIGHT / 2, 32).rotate(
-            [90 * s, 0, 0]).translate([xc, back + s * 0.5, zc])
-        plug = plug + peg
-        P = P - hole
+        P, plug = add_peg(P, plug, s, x0 + w + ww / 2, (z0 + z1) / 2)
         vols = K.paint(plug, [(WHITE, prism_y(rect(x0 + w, x0 + w + ww))),
                               (BLUE, prism_y(rect(x0 + w + ww, x0 + 2 * w + ww)))], RED)
         out.append((f"flash_fin_{name.split('_')[-1]}", vols, [90 * s, 0, 0], plug))
@@ -616,6 +637,9 @@ def inlays_for(name, P):
                                      key=lambda q: q.bounds()[0]):
                     n += 1
                     P, plug = K.make_section_inlay(P, letter, s, INLAY_DEPTH, INLAY_FIT)
+                    (px, pz), r = thickest_point(letter)
+                    if r >= H.AXLE_HOLE_TIGHT / 2 + 0.6:            # peg where the stroke is thickest
+                        P, plug = add_peg(P, plug, s, px, pz)
                     out.append((f"code_{tag}_{n}", {RED: plug}, [90 * s, 0, 0], plug))
     return P, out
 
@@ -668,7 +692,7 @@ TALL_BRIM = {"brim_type": "outer_only", "brim_width": "6"}
 def object_settings(name):
     """Per-object overrides, written into the 3MF next to each object."""
     s = {}
-    if name in CLEAR_PARTS or name.startswith(("guns_", "prop", "exhaust", "main_gear", "main_wheel", "fin_",
+    if name in CLEAR_PARTS or name.startswith(("guns_", "prop", "exhaust", "main_gear", "main_wheel", "fin_", "stand",
                                               "tail_gear", "tail_wheel", "pin_", "wheel_up", "key_")):
         # fine detail and silk sheen; whole plates share one height (the prime tower needs that)
         s["layer_height"] = "0.12"
@@ -711,9 +735,8 @@ PLATE_GROUPS = [            # parts kept together by colour set (max 5 colours a
     ("Wings", lambda n: n.startswith(("wing_", "tailplane"))),
     ("Nacelles", lambda n: n.startswith("nacelle")),
     ("Fin flashes, roundels and codes", lambda n: n.startswith(("flash_", "roundel_", "code_"))),
-    ("Canopies and turrets (silk silver)", lambda n: n in CLEAR_PARTS or n.startswith("guns")),
-    ("Display stand", lambda n: n.startswith("stand")),
-    ("Props and gear", lambda n: True),
+    ("Canopies and turrets (silk silver)", lambda n: n in CLEAR_PARTS),
+    ("Props, gear, fins, guns and stand", lambda n: True),   # Black, Yellow + the plinth's Earth, Green, White
 ]
 MAX_COLOURS = 5
 
