@@ -280,12 +280,12 @@ TAIL_AXLE_X = 334.0
 TAIL_LEG_DROP = 9.0          # mm, axle below the fuselage bottom
 TAIL_WHEEL_D = 9.0
 TAIL_WHEEL_W = 4.5
-TAIL_LEG = (6.5, 3.0)        # leg section; room round the 3.5 mm stub axle
+TAIL_LEG = (5.8, 2.2)        # leg section at the foot; slimmer (3 mm stub, as the Spitfire tail wheel)
 TAIL_PLUG = (5.0, 5.0)
 # axles: a stub printed on one fork half (2-piece forks, after the PB94 Spitfire tail wheel) instead
 # of loose 2.5 mm pins, which were brittle: main, tail diameters
-AXLE_STUB = {"main": 5.0, "tail": 3.5}
-GEAR_TOP_W = {8.0: 14.0, 6.5: 9.0}   # leg width where it meets the nacelle / fuselage (by leg x size)
+AXLE_STUB = {"main": 5.0, "tail": 3.0}
+GEAR_TOP_W = {8.0: 14.0, 5.8: 7.5}   # leg width where it meets the nacelle / fuselage (by leg x size)
 STUB_GRIP, STUB_SPIN = 0.55, 0.85   # fit-test clearances: hole in the other half grips, wheel bore spins
 
 # --- Display stand (in-flight pose, gear removed)

@@ -47,7 +47,7 @@ The single-colour STLs are in `stl/`, in print orientation.
   - All press into black-lined sockets.
 - **Clear parts:** perspex nose, cockpit canopy in two pieces (the 5-pane front glazing, and the side windows, which step down below the camo line), rear roof glazing, astrodome, dorsal and tail turrets, all with black frame lines. Plus 2 gun packs.
 - **Engines:** 4 props with yellow tips that snap onto a slotted, sprung mushroom boss moulded on each nacelle nose and spin on it (after the A6M Zero kit card: no shaft or spindle), 8 exhaust banks.
-- **Gear:** 2 main gear forks and wheels and a tailwheel. Each fork is two halves: one has a printed stub axle (5 mm main, 3.5 mm tail) that runs through the wheel into the other half, so there are no loose pins. For display on the stand there are 2 wheels-up inserts that show the retracted main wheels.
+- **Gear:** 2 main gear forks and wheels and a tailwheel. Each fork is two halves: one has a printed stub axle (5 mm main, 3 mm tail) that runs through the wheel into the other half, so there are no loose pins. For display on the stand there are 2 wheels-up inserts that show the retracted main wheels.
 - **Connector keys** (6 loose, all flexing, after the PB94 Spitfire: spring slots at the ends and a narrow middle, so they push in easily and grip):
   - 2 tall keys at the front/rear joint.
   - 2 at the inner/outer wing joints.
