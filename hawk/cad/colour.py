@@ -162,12 +162,12 @@ def letters_section(side):
 CHEVRON_OUT = ((110.0, 16.9), 0.825)     # outer edge: point (x, |y|), slope d|y|/dx
 CHEVRON_IN = ((118.0, 16.1), 0.547)      # inner edge of the band
 CHEVRON_TE_X = 161.5                     # inner edge of the trailing-edge strip
-BELLY_STRIPE = (((161.5, 9.4), (250.0, 0.0)), ((161.5, 12.6), (256.0, 0.0)))   # v8: they meet in a
-                                         # V at the tail (photo from below), no cross bar
-                                         # belly stripes: straight lines, (x, |y|) of the inner and
-                                         # outer edges. Furthest apart where they leave the wing's
-                                         # trailing-edge white, closest at the tail, and inboard of
-                                         # the ventral strakes (|y| 6) where they pass them
+BELLY_STRIPE = ((88.0, 92.0), (161.5, 9.4, 12.6), (256.0, 1.2, 3.4))
+                                         # belly stripes (photo from below): from a point at the
+                                         # smoke pod's nose (x of the outer and inner edge on the
+                                         # centreline), out to the wing trailing edge (x, inner and
+                                         # outer |y|), then straight back to the tail, where they end
+                                         # apart (x, inner, outer |y|)
 BELLY_CORNER_UP = 1.6                    # they wrap this far up the corner
 BELLY_V_W = 6.3                          # the wing chevrons meet across the belly in a V at the
                                          # smoke pod's nose (photo from below), this wide in x
@@ -190,8 +190,8 @@ def under_white():
             ^ (_halfplane(*CHEVRON_IN, False) + _rect(CHEVRON_TE_X, -300.0, 300.0, 300.0))
             ^ _rect(95.0, 4.0, 200.0, 200.0)
             ^ H.wing(1).project())                                    # on the wing only
-    ((a0, l0), (a1, l1)), ((b0, h0), (b1, h1)) = BELLY_STRIPE
-    belly = cs([np.array([(a0, l0), (a1, l1), (b1, h1), (b0, h0)])])
+    (fo, fi), (xm, lm, hm), (xt, lt, ht) = BELLY_STRIPE
+    belly = cs([np.array([(fi, 0.0), (xm, lm), (xt, lt), (xt, ht), (xm, hm), (fo, 0.0)])[::-1]])
     belly = belly + _rect(CHEVRON_TE_X, l0, 171.5, 40.0)    # one band with the trailing-edge strip
     half = band + belly
     return half + half.mirror([0.0, 1.0])
@@ -248,8 +248,8 @@ def fuselage_markings(P):
     low = ((P - P.translate([0, 0, BELLY_CORNER_UP])) - core) ^ near_bottom(x0, x1, BELLY_CORNER_UP + 0.4)
     if x1 > 150.0:
         ops.append((WHITE, low ^ prism_z(under_white() ^ fuselage_plan(max(x0, 150.0), x1, inset=-2.0))))
-    if x0 < 112.0 and x1 > 88.0:
-        ops.append((WHITE, low ^ prism_z(belly_v())))
+    if x0 < 162.0 and x1 > 86.0:                       # the stripes' forward run to the pod's nose
+        ops.append((WHITE, low ^ prism_z(under_white() ^ fuselage_plan(max(x0, 86.0), min(x1, 162.0), inset=-2.0))))
     return ops
 
 

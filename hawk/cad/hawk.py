@@ -599,9 +599,13 @@ def pod_blend():
             low = mf.CrossSection.square([60.0, 80.0]).translate([-BELLY_Z, -40.0])
             sec = (sec - low) + (rounded ^ low)
         if x < INTAKE_MOUTH[0]:
-            # ahead of the intakes (v8): the whole section filled to its hull, so the sides run
-            # straight down from the canopy sill to the curve of the underside (no waist)
-            sec = sec.hull()
+            # ahead of the intakes: below the canopy's cut plane the section is filled to its
+            # hull, so the sides run straight down from the sill to the curve of the underside
+            # (no waist). Above the plane it is left alone: filling there put fuselage red up the
+            # canopy's sides and bent its straight lower edge
+            zp = canopy_plane_z(x) if x >= CANOPY_X[0] else 100.0
+            low = mf.CrossSection.square([80.0, 80.0]).translate([-zp, -40.0])
+            sec = (sec - low) + (sec ^ low).hull()
         elif x >= HULL_X0:
             # convex upper fuselage (photos): above the pod tops each section is filled to its
             # hull, so canopy, spine and body meet with flat, upright sides and no waist or groove;
@@ -790,9 +794,9 @@ def wing_glove(side):
     return g if side > 0 else g.mirror([0, 1, 0])
 
 
-WING_FINS = [(0.30, 0.02, 0.20, 2.4), (0.55, 0.02, 0.19, 2.2), (0.78, 0.03, 0.19, 1.9),
-             (0.24, 0.62, 1.04, 2.8), (0.46, 0.64, 1.04, 2.6)]   # v8: deeper, and the flap-track
-             # fairings run past the trailing edge (photos)
+WING_FINS = [(0.30, 0.40, 0.76, 2.4), (0.55, 0.42, 0.76, 2.2), (0.78, 0.44, 0.78, 1.9),
+             (0.24, 0.62, 1.04, 2.8), (0.46, 0.64, 1.04, 2.6)]   # v9: all towards the rear of
+             # the chord; the flap-track fairings run past the trailing edge (photos)
              # under the wing (photos): three fences behind the leading edge and two flap-track
              # fairings at the trailing edge. eta, chord fraction from, to, depth below the skin
 WING_FIN_T = 0.9
@@ -1204,8 +1208,9 @@ AERIALS = [  # x, top|bottom, height, chord, sweep
 ]
 AERIAL_T = 1.0
 AERIAL_FIT = 0.05 * _P        # along the chord only; the thickness is line-for-line (holes print small)
-STRAKES = (219.0, 22.0, 14.0, 6.0, 6.5, 0.8, 6.0, 30.0)   # v8: as big as the Revell side view   # ventral strakes: x of root LE, root length,
-                             # tip length, tip LE set back, height, thickness, |y|, cant from vertical
+STRAKES = (218.0, 236.0, 6.5, 3.5, 8.6, 0.8, 30.0)   # ventral strakes (Revell side view): x front,
+                             # x rear, depth at the front and rear (seen from the side), |y| on the
+                             # fuselage's lower curve, thickness, cant from vertical
 
 
 VENTRAL_BULGE = (234.0, 15.0, 2.4, 1.4)   # small radome between the strakes: x centre, length,
@@ -1219,17 +1224,21 @@ def ventral_bulge():
 
 
 def strakes():
-    """Two small blades under the rear fuselage, canted outwards (photos from below)."""
-    x0, lr, lt, back, h, t, yy, cant = STRAKES
+    """Two blades on the rear fuselage's lower curve, canted out: deepest at the front, with a
+    steep rounded front edge and an upright rear edge (Revell side view)."""
+    x0, x1, d0, d1, yy, t, cant = STRAKES
+    o = outer()
     out = mf.Manifold()
+    k = 1.0 / math.cos(math.radians(cant))                  # blade length for the side-view depth
     for side in (1, -1):
-        za, zb_ = fuse_at(x0)[3], fuse_at(x0 + lr)[3]
-        prof = np.array([(x0, za + 1.5), (x0 + lr, zb_ + 1.5), (x0 + lr, zb_), (x0 + back + lt, -h),
-                         (x0 + back, -h), (x0, za)])
-        prof[3:5, 1] += za                                   # tip edge h below the root's bottom
+        def zs(x):                                          # surface height at (x, |y|=yy)
+            return (o ^ box(x - 0.3, x + 0.3, side * yy - 0.3, side * yy + 0.3, -50, 50)).bounding_box()[2]
+        za, zb_ = zs(x0 + 1.0), zs(x1 - 1.0)
+        prof = np.array([(x1, zb_ + 1.5), (x0 + 1.0, za + 1.5), (x0, za - 0.5), (x0 + 0.6, za - 0.5 - d0 * k * 0.55),
+                         (x0 + 2.2, za - d0 * k), (x1, zb_ - d1 * k)])
         blade = K.cs([prof]).extrude(t).translate([0, 0, -t / 2]).rotate([90, 0, 0])
-        blade = rot_about(blade, (x0, 0, za), "x", side * cant)
-        out = out + blade.translate([0, side * yy, 0])
+        blade = rot_about(blade.translate([0, side * yy, 0]), (0, side * yy, (za + zb_) / 2), "x", side * cant)
+        out = out + blade
     return out
 
 
