@@ -46,7 +46,7 @@ The single-colour STLs are in `stl/`, in print orientation.
   - The NP-G code letters in red.
   - All press into black-lined sockets.
 - **Clear parts:** perspex nose, cockpit canopy in two pieces (the 5-pane front glazing, and the side windows, which step down below the camo line), rear roof glazing, astrodome, dorsal and tail turrets, all with black frame lines. Plus 2 gun packs.
-- **Engines:** 4 props with yellow tips that spin on a mushroom boss moulded on each nacelle nose (after the A6M Zero kit card: no shaft or spindle), 8 exhaust banks.
+- **Engines:** 4 props with yellow tips that snap onto a slotted, sprung mushroom boss moulded on each nacelle nose and spin on it (after the A6M Zero kit card: no shaft or spindle), 8 exhaust banks.
 - **Gear:** 2 main gear forks and wheels and a tailwheel. Each fork is two halves: one has a printed stub axle (5 mm main, 3.5 mm tail) that runs through the wheel into the other half, so there are no loose pins. For display on the stand there are 2 wheels-up inserts that show the retracted main wheels.
 - **Connector keys** (6 loose, all flexing, after the PB94 Spitfire: spring slots at the ends and a narrow middle, so they push in easily and grip):
   - 2 tall keys at the front/rear joint.
@@ -78,9 +78,9 @@ The single-colour STLs are in `stl/`, in print orientation.
 2. **Wings.** Join each outer panel to its inner panel with a wing key. The joint faces set the 5° dihedral. Press the wing roundels into their sockets.
 3. **Nacelles.**
    - Push the exhaust banks into their side slots.
-   - Hold the prop's back over the half-boss on one nacelle half (the lip goes behind the head).
    - Push the nacelle lock key up into its pocket in the wing underside (the longer key is for the inner nacelles).
-   - Close the other half around the wing, the key and the boss: the prop is now trapped and spins.
+   - Close both halves around the wing and the key.
+   - Push the prop onto the nose boss last: the slotted boss squeezes, then springs out behind the prop's lip, and the prop spins.
 4. **Tail.** Slide the fins onto the tailplane tips: the tab on each tip locks into the fin.
 5. **Turrets.** Fit the gun packs into the turrets. Pin the turrets on: the dorsal turret rotates.
 6. **Display.** Either fit the gear (wheel onto the stub on one fork half, close the other half over it, then push the pair into its socket) or put the model on the stand. With the gear down it sits tail-down at 8.7°. For the stand, push the blade's tenon into the plinth, fit the wheels-up inserts, and lower the model onto the key at the blade tip: it sits 5° nose-up.

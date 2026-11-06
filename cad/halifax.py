@@ -249,7 +249,9 @@ SPINNER_R = 4.8
 # prop retention (after the A6M Zero kit card): a mushroom boss on the nacelle nose, split with the
 # nacelle halves; the prop's rear lip is trapped behind the head when the halves close, and the prop
 # spins on the thick neck. No thin spindle, no loose shaft.
-PROP_BOSS = dict(neck_r=2.4, head_r=3.2, lip_r=2.75, cav_r=3.5, lip_t=1.2, head_l=1.5, gap=0.3)
+PROP_BOSS = dict(neck_r=2.4, head_r=3.2, lip_r=2.75, cav_r=3.5, lip_t=1.2, head_l=1.5, gap=0.3,
+                 slot_w=1.2, slot_depth=5.0)   # sprung: a slot splits head and neck into two prongs
+                                                # so the prop pushes on (and off) after assembly
 BLADE_T = 1.2                # mm
 BLADE_ROOT_W, BLADE_MAX_W, BLADE_TIP_W = 3.6, 5.2, 3.4
 
@@ -952,8 +954,8 @@ def nacelle_parts(index, side, wing_panel):
             body = body.union(box(xr + 1.2, xr + d + 0.1, Y + sg * vy - RAD_VANE_T / 2,
                                   Y + sg * vy + RAD_VANE_T / 2, zr - zlo, zr + zhi)
                               .intersect(nacelle_body(zc, x0, length).translate((0, Y, 0))))
-    # prop boss: neck and head on the nose (split with the halves; the prop is trapped on it)
-    body = body.union(prop_boss(x0, yc * side, zc))
+    # prop boss: neck and head on the nose, slotted so it springs (the prop pushes on over the head)
+    body = body.union(prop_boss(x0, yc * side, zc)).cut(prop_boss_slot(x0, yc * side, zc))
     # one upright lock: joins the two halves and pins the nacelle into a pocket in the wing
     y = yc * side
     holes = nacelle_lock_slot(index, side, wing_panel)
@@ -1100,6 +1102,9 @@ def propeller():
     lip0 = 1.0 - b["lip_t"]
     cav_len = 2 * b["gap"] + b["head_l"]
     prop = prop.cut(cyl((1.1, 0, 0), 2 * b["lip_r"], -(1.1 - lip0 + 0.05), "x"))
+    lead = (W("YZ").circle(b["lip_r"] + 0.4).workplane(offset=-0.4).circle(b["lip_r"]).loft()
+            .translate((1.0, 0, 0)))                    # lead-in: the lip rides up over the head
+    prop = prop.cut(lead)
     cav = cyl((lip0, 0, 0), 2 * b["cav_r"], -cav_len, "x")
     roof = (W("YZ").circle(b["cav_r"]).workplane(offset=-b["cav_r"]).circle(0.05).loft()
             .translate((lip0 - cav_len, 0, 0)))
@@ -1116,6 +1121,15 @@ def prop_boss(x0, y, zc):
     head = (cyl((x_neck, y, zc), 2 * b["head_r"], -b["head_l"], "x")
             .faces("<X").edges().chamfer(0.5))
     return neck.union(head)
+
+
+def prop_boss_slot(x0, y, zc):
+    """Horizontal slot through the boss's head and neck and on into the nose: two prongs (each the
+    two nacelle halves together) that squeeze in as the prop's lip rides over the head."""
+    b = PROP_BOSS
+    w, r = b["slot_w"], b["head_r"] + 1.0
+    return box(x0 - PROP_GAP - b["lip_t"] - b["gap"] - b["head_l"] - 1.0, x0 + b["slot_depth"],
+               y - r, y + r, zc - w / 2, zc + w / 2)
 
 
 def prop_shaft(x0, y, zc):
