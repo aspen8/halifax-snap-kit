@@ -192,7 +192,7 @@ def under_white():
             ^ H.wing(1).project())                                    # on the wing only
     (fo, fi), (xm, lm, hm), (xt, lt, ht) = BELLY_STRIPE
     belly = cs([np.array([(fi, 0.0), (xm, lm), (xt, lt), (xt, ht), (xm, hm), (fo, 0.0)])[::-1]])
-    belly = belly + _rect(CHEVRON_TE_X, l0, 171.5, 40.0)    # one band with the trailing-edge strip
+    belly = belly + _rect(CHEVRON_TE_X, lm, 171.5, 40.0)    # one band with the trailing-edge strip
     half = band + belly
     return half + half.mirror([0.0, 1.0])
 
