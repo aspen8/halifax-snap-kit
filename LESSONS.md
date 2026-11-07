@@ -186,3 +186,11 @@ On a dual-nozzle printer, keep the base colour on one nozzle and the accent colo
 ## Wheels: one flat face
 
 A wheel printed lying on a face with the tyre rounded on both sides starts on a thin ring, and the lower fillet is overhang right at the bed (Bambu flags it as floating regions). Make the face that's hidden (the inboard one, behind the fork leg) flat, with only a small chamfer against elephant's foot, and print on it. Nobody sees it on the finished model, and the wheel prints with no overhang and more than twice the bed contact.
+
+## Test print 1: grip clearances (X2D, PLA, 2026-11-07)
+
+- **+0.55 mm on the diameter does not grip.** The stub axles (5 and 3 mm) and the inlay pegs (2.5 mm) all used it, and none held: the fin flash fell out. Round 2 tries +0.2, with a gauge of +0.1 to +0.4 to pick from.
+- **+0.85 mm spins freely** (wheel bores): keep.
+- **A split plug needs its socket sized from the closed halves.** The two fork halves are cut with a gap between them, so a socket at FIT per side was FIT + gap loose across the split, and the heavy main gear fell out. The light tail gear stayed.
+- **Flexing keys beat plain keys.** The waisted, slotted key held well; the plain nose keys at the same KEY_FIT were loose. A key needs to be about 8 mm long for its flex slots (`connector_key` drops them below that).
+- **Prop boss:** neck 0.35 mm smaller than the lip, with a 0.3 mm gap, turned stiffly. Round 2: 0.45 and 0.4.

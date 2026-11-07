@@ -15,14 +15,17 @@ State on 2026-11-07, branch `phase1-airframe`, now worked on the user's Mac. `ki
 - Build times: geometry only (`halifax.build()`) about 13 min in the cloud, test plate 3 min (both), full colour build about 60 min in the cloud (not yet run on the Mac).
 
 ## Next up
-1. **Test plate: built, waiting for a print.** `kit/halifax_test_plate.3mf`, two plates as in the full build: the code letter and fin flash (red, white, blue) alone, the other 18 parts in black. Each part keeps the print settings of its kit part (0.12 mm for prop, gear, fin and keys; 0.16 mm and 3 walls as the nacelle and fuselage). Rebuild with `cd cad && python test_plate.py OUT` (about 3 min; it uses `project_settings_template.json`, as the full build). It contains:
-   - the nacelle 1 nose halves with the sprung boss (two plain keys hold the halves together), plus a prop;
-   - the port "G" in a fuselage-wall coupon, and the stbd fin flash in a fin coupon, both with peg and hole;
-   - main and tail gear fork halves and wheels, each with a block carrying its gear socket;
-   - a flexing nacelle key with two slot blocks.
-   Checks passed: single pieces, no interference, overhangs as in the kit. Render: `docs/test_plate_closeup.png`. Feed the print results back into `LESSONS.md` and the TODO decision on the code letters.
-   - **Sliced locally: clean.** Plate 1 (inlays) 37 min, 1.6 g of parts plus 6.7 g of purge. Plate 2 (black) 1 h 12 min, 20.3 g. Plate 2's mix of 0.12 and 0.16 mm parts slices without complaint (Bambu interleaves the heights), so it wasn't split. No warnings: the wheel's floating-region warning went away once the wheels got a flat side (below).
-   - **Wheels have a flat inboard face (user, 2026-11-07).** `halifax.wheel(..., flat=±1)`: that face has no tyre fillet or hub recess, only a 0.3 mm chamfer, and it prints on the bed. It faces inboard (towards the fuselage, behind the fork leg); the outboard face keeps the rounded tyre and hub. Main wheels: `flat=-side`, posed `rot x 90*side`; tail wheel: port face flat. Overhang went from 241 mm² to 0, and bed contact from 185 to 479 mm². The test plate is rebuilt with it. `kit/halifax_kit.3mf` is not rebuilt yet: it picks this up in the next full rebuild (item 4).
+1. **Test plate round 2: built, waiting for a print.** `kit/halifax_test_plate.3mf`, rebuilt with `cd cad && python test_plate.py OUT` (about 3 min). Sliced clean: plate 1 (inlays) 37 min, plate 2 (black) 1 h 25 min.
+   - **Round 1 results (user, 2026-11-07), and what changed:**
+     - Prop boss: a little tight, turns but doesn't spin freely. Neck radius 2.4 → 2.3 and axial gap 0.3 → 0.4 (`PROP_BOSS`).
+     - Stub axles (main and tail) went through the wheel but didn't grip in the other fork half; the wheels spin freely. `STUB_GRIP` 0.55 → 0.2 on the diameter; `STUB_SPIN` unchanged.
+     - Main gear fell out of its socket (it should stay: the socket holds the halves together); the tail gear stayed. The socket was FIT 0.15 per side plus the FIT gap between the fork halves. `gear_socket` now uses `GEAR_PLUG_FIT` 0.08 per side, measured from the closed fork, so it squeezes the halves. Main and tail both.
+     - Flexing key (`KEY_NAC`): works well, unchanged.
+     - Nacelle nose keys didn't grip. They were coupon-only plain 6 mm keys (too short for flex slots). Now 8 mm flexing keys. The kit's nacelle halves have no nose keys: the wing notch and the flexing lock hold them.
+     - G: stays, could be tighter. Fin flash: fell out. Its peg hole (and every inlay peg hole) was +0.55, the same as the stubs that didn't grip. Now `PEG_GRIP` 0.2, `INLAY_FIT` 0.15 → 0.1, and the fin flash has two pegs (behind the red and the blue). Roundel peg holes 3.5 → 3.2 to match (roundels untested). If the fin flash still won't stay, fall back to painting it on the fin (multi-colour, more purge).
+     - Wheels: flat inboard face (earlier today), no overhang.
+   - **New: grip gauge** (`t6_gauge` plus `t6_peg`). Holes for the 5 mm and 3 mm stubs and the 2.5 mm peg at +0.1/+0.2/+0.3/+0.4 mm (1 to 4 dots above each column). Push the fork-half stubs and the peg tab in: the tightest hole that grips gives `STUB_GRIP` and `PEG_GRIP`, without another round.
+   - Ask the user for: prop spin, stub grip, gear staying in both sockets, nose keys, G and fin flash, and the gauge column that grips for each row.
 2. **Fix the kit's prime towers (4 of 9 plates fail to slice).** `kitlib.write_3mf` copies `wipe_tower_x/y` from the template, which only has 3 positions, from the old 3-plate `halifax.3mf`.
    - Plates 3 and 8: the tower lands on a part (`wing_outer_stbd`, `fin_stbd`).
    - Plates 5 and 6: Bambu's default tower runs off the back of the bed.

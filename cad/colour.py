@@ -78,14 +78,16 @@ FIN_FLASH = (309.0, 15.0, 33.0, 7.0, 1.5)  # x start, z0, z1, red/blue width, wh
 PROP_TIP = 3.0               # mm of yellow at the prop tips
 INLAY_DEPTH = 1.2            # mm, roundel inlay depth at its shallowest point
 FLASH_DEPTH = 1.8            # mm, fin flash inlay (room for the peg's hole behind the face)
-FLASH_PEG = (2.5, 1.0)       # peg on its back: diameter, length (grips in AXLE_HOLE_TIGHT)
+FLASH_PEG = (2.5, 1.0)       # peg on its back: diameter, length (grips in a hole PEG_GRIP larger)
+PEG_GRIP = 0.2               # mm on the diameter: test print 1 had +0.55 (AXLE_HOLE_TIGHT) and the
+                             # fin flash fell out; the stub axles didn't grip at +0.55 either
 CODE_DEPTH = 1.8             # mm, code letter inlays (deeper than 1.2 for the peg's hole)
-INLAY_FIT = 0.15             # mm, radial clearance (press fit, as KEY_FIT from the fit test)
+INLAY_FIT = 0.1              # mm, radial clearance (test print 1: the G stayed in at 0.15 but loosely)
 FUSE_INLAY_DEPTH = 2.4       # fuselage roundels sit deeper, to take the locating peg
-ROUNDEL_PEG = (4.0, 3.0, 3.0, 3.5, 1.4)   # off-centre peg (x, z offset), peg dia, hole dia (grip), length
+ROUNDEL_PEG = (4.0, 3.0, 3.0, 3.2, 1.4)   # off-centre peg (x, z offset), peg dia, hole dia (grip), length
 WING_INLAY_DEPTH = 2.0       # wing roundels: a little deeper too, for their peg
 BACK_MIRROR = {"z": True, 1: False, -1: True}   # so the L/R on each inlay's back reads correctly
-WING_ROUNDEL_PEG = (-6.0, 3.0, 3.0, 3.5, 1.2)  # (x, y offset; toward the thicker leading edge) ...
+WING_ROUNDEL_PEG = (-6.0, 3.0, 3.0, 3.2, 1.2)  # (x, y offset; toward the thicker leading edge) ...
 C1_RINGS = lambda d: [(YELLOW, d), (BLUE, d * 0.889), (WHITE, d / 3 + 1.8), (RED, d / 3)]
 B_RINGS = lambda d: [(BLUE, d), (RED, d * 0.4)]
 
@@ -595,7 +597,8 @@ def add_peg(P, plug, s, x, z):
     pd, pl = FLASH_PEG
     peg = (mf.Manifold.cylinder(pl + 0.5, pd / 2, pd / 2, 32).rotate([-90 * s, 0, 0])
            .translate([x, back - s * 0.5, z]))      # from inside the floor out into the socket
-    hole = (mf.Manifold.cylinder(pl + 0.15 + 0.5, H.AXLE_HOLE_TIGHT / 2, H.AXLE_HOLE_TIGHT / 2, 32)
+    hd = pd + PEG_GRIP
+    hole = (mf.Manifold.cylinder(pl + 0.15 + 0.5, hd / 2, hd / 2, 32)
             .rotate([-90 * s, 0, 0]).translate([x, back - s * 0.5, z]))
     return P + peg, plug - hole
 
@@ -611,12 +614,14 @@ def inlays_for(name, P):
                                      INLAY_FIT, WING_ROUNDEL_PEG, (hand, 6.0, 6.0, -4.0, BACK_MIRROR["z"]))
         out.append((f"roundel_wing_{name.split('_')[-1]}", vols, [0, 0, 0], plug))
     if name.startswith("fin_"):
-        # fin flash (red/white/blue) as one snap-in inlay: press fit plus a gripping peg on its back
+        # fin flash (red/white/blue) as one snap-in inlay: press fit plus two gripping pegs on its
+        # back, one behind the red and one behind the blue (one central peg let it fall out)
         s = 1 if name.endswith("stbd") else -1
         x0, z0, z1, w, ww = FIN_FLASH
         rect = lambda a, b: mf.CrossSection([np.array([[a, z0], [b, z0], [b, z1], [a, z1]])])
         P, plug = K.make_section_inlay(P, rect(x0, x0 + 2 * w + ww), s, FLASH_DEPTH, INLAY_FIT)
-        P, plug = add_peg(P, plug, s, x0 + w + ww / 2, (z0 + z1) / 2)
+        for px in (x0 + w / 2, x0 + 1.5 * w + ww):
+            P, plug = add_peg(P, plug, s, px, (z0 + z1) / 2)
         vols = K.paint(plug, [(WHITE, prism_y(rect(x0 + w, x0 + w + ww))),
                               (BLUE, prism_y(rect(x0 + w + ww, x0 + 2 * w + ww)))], RED)
         out.append((f"flash_fin_{name.split('_')[-1]}", vols, [90 * s, 0, 0], plug))
@@ -638,7 +643,7 @@ def inlays_for(name, P):
                     n += 1
                     P, plug = K.make_section_inlay(P, letter, s, CODE_DEPTH, INLAY_FIT)
                     (px, pz), r = thickest_point(letter)
-                    if r >= H.AXLE_HOLE_TIGHT / 2 + 0.6:            # peg where the stroke is thickest
+                    if r >= (FLASH_PEG[0] + PEG_GRIP) / 2 + 0.6:            # peg where the stroke is thickest
                         P, plug = add_peg(P, plug, s, px, pz)
                     out.append((f"code_{tag}_{n}", {RED: plug}, [90 * s, 0, 0], plug))
     return P, out

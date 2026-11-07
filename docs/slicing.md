@@ -14,13 +14,15 @@ The G-code, Bambu's `result.json` and the slicer log for each plate go to `out/s
 
 The command line can treat some settings differently from the app (filament-to-nozzle mapping in particular, see below), so open the app to confirm anything that matters before printing.
 
-## Test plate (`kit/halifax_test_plate.3mf`): slices cleanly
+## Test plate (`kit/halifax_test_plate.3mf`, round 2): slices cleanly
+
+Round 2 adds the grip gauge and peg tab to plate 2 (13 min more).
 
 | Plate | Time | Layers | Layer mm | Filament on the model (g) | Model g | Flush + tower g | Changes |
 |---|---|---|---|---|---|---|---|
 | 1 inlays | 37m | 39 | 0.16 | Red 1.3, Blue 0.3, White 0.1 | 1.6 | 6.7 | 11 |
-| 2 test parts | 1h 12m | 183 | 0.04/0.08/0.12/0.16 | Black 20.4 | 20.4 | 0.0 | 0 |
-| **All** | **1h 49m** | | | | **22.0** | **6.7** | **11** |
+| 2 test parts | 1h 25m | 183 | 0.04/0.08/0.12/0.16 | Black 23.6 | 23.6 | 0.0 | 0 |
+| **All** | **2h 02m** | | | | **25.2** | **6.7** | **11** |
 
 - **Plate 2 mixes 0.12 and 0.16 mm parts and slices without complaint.** Bambu interleaves the two heights: where they don't line up, it adds 0.04 and 0.08 mm steps, which gives 183 layers in all. So it doesn't need splitting.
 - **Plate 1 is mostly purge.** It uses 6.7 g of flush and tower for 1.6 g of inlays, and about 17 of its 37 minutes are flushing.

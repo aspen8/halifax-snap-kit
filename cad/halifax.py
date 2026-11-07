@@ -249,9 +249,10 @@ SPINNER_R = 4.8
 # prop retention (after the A6M Zero kit card): a mushroom boss on the nacelle nose, split with the
 # nacelle halves; the prop's rear lip is trapped behind the head when the halves close, and the prop
 # spins on the thick neck. No thin spindle, no loose shaft.
-PROP_BOSS = dict(neck_r=2.4, head_r=3.2, lip_r=2.75, cav_r=3.5, lip_t=1.2, head_l=1.5, gap=0.3,
+PROP_BOSS = dict(neck_r=2.3, head_r=3.2, lip_r=2.75, cav_r=3.5, lip_t=1.2, head_l=1.5, gap=0.4,
                  slot_w=1.2, slot_depth=5.0)   # sprung: a slot splits head and neck into two prongs
                                                 # so the prop pushes on (and off) after assembly
+                                                # test print 1: neck 2.4 / gap 0.3 turned but stiffly
 BLADE_T = 1.2                # mm
 BLADE_ROOT_W, BLADE_MAX_W, BLADE_TIP_W = 3.6, 5.2, 3.4
 
@@ -286,7 +287,11 @@ TAIL_PLUG = (5.0, 5.0)
 # of loose 2.5 mm pins, which were brittle: main, tail diameters
 AXLE_STUB = {"main": 5.0, "tail": 3.0}
 GEAR_TOP_W = {8.0: 14.0, 5.8: 7.5}   # leg width where it meets the nacelle / fuselage (by leg x size)
-STUB_GRIP, STUB_SPIN = 0.55, 0.85   # fit-test clearances: hole in the other half grips, wheel bore spins
+STUB_GRIP, STUB_SPIN = 0.2, 0.85    # diameter clearances: hole in the other half grips, wheel bore spins
+                                    # (test print 1: +0.55 didn't grip, main or tail; +0.85 spins freely)
+GEAR_PLUG_FIT = 0.08                # mm per side round the gear plug, measured from the closed fork
+                                    # (test print 1: the main gear fell out of its socket at FIT 0.15,
+                                    # plus the split gap between the halves)
 
 # --- Display stand (in-flight pose, gear removed)
 STAND_X = 165.0              # mm, socket under the fuselage, at the printed model's CG
@@ -1227,9 +1232,12 @@ def plug_gussets(x, yc, z_top, leg, plug, wheel_w, grow=0.0):
 
 
 def gear_socket(x, yc, z_top, leg, plug, wheel_w=None):
+    """Socket for the gear plug. The plug is split between the two fork halves with a FIT gap
+    between them, so in y the socket is sized from the halves pressed together: it squeezes them."""
     lx, _ = leg
     py, depth = plug
-    s = box(x - lx / 2 - FIT, x + lx / 2 + FIT, yc - py / 2 - FIT, yc + py / 2 + FIT,
+    fy = GEAR_PLUG_FIT - FIT / 2
+    s = box(x - lx / 2 - GEAR_PLUG_FIT, x + lx / 2 + GEAR_PLUG_FIT, yc - py / 2 - fy, yc + py / 2 + fy,
             z_top - 1, z_top + depth + 0.3)
     return s.union(plug_gussets(x, yc, z_top, leg, plug, wheel_w, grow=FIT)) if wheel_w else s
 

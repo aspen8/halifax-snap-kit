@@ -4,13 +4,16 @@ Test plate: small coupons that check the new joints without printing the whole k
 Run:  python test_plate.py OUT_DIR [project_settings_template.json]   (defaults to the kit's template)
 
 Everything comes from the kit builders (halifax.py, colour.py), so the fits match the kit:
-  1. Sprung prop boss: the nose of nacelle 1 (stbd), both halves, plus one prop. Two plain
-     keys across the split hold the halves together (the wing does that in the kit).
+  1. Sprung prop boss: the nose of nacelle 1 (stbd), both halves, plus one prop. Two flexing
+     keys across the split hold the halves together (in the kit, the wing and the nacelle lock do).
   2. Code letter "G" (port) in a fuselage-wall coupon, with the floor peg and the hole in the inlay.
   3. Fin flash in a fin-skin coupon (stbd fin), with its peg and hole.
   4. Main gear: both fork halves and the wheel, plus a block with the nacelle's gear socket.
      Tail gear: the same, with the fuselage's tail-gear socket.
   5. A flexing nacelle key (KEY_NAC) and two blocks with its slot.
+  6. Grip gauge: a block with holes for the 5 mm and 3 mm stub axles and the 2.5 mm inlay peg at
+     +0.1, +0.2, +0.3 and +0.4 mm on the diameter (1 to 4 dots over each column), plus a tab with
+     a 2.5 mm peg. Push the fork stubs and the peg in to find the tightest hole that grips.
 
 Two plates, as the full build: the red/white/blue inlays alone, everything else in black. Each
 part keeps the print settings of its kit part (layer height, walls).
@@ -44,6 +47,7 @@ KIT_NAME = {
     "t4_tail_gear_a": "tail_gear_a", "t4_tail_gear_b": "tail_gear_b",
     "t4_tail_wheel": "tail_wheel", "t4_tail_socket": "fuselage_rear",
     "t5_key_block": "nacelle1_stbd_inboard", "t5_key": "key_nacelle",
+    "t6_gauge": "main_gear_stbd_b", "t6_peg": "fin_stbd",
 }
 NO_BRIM = ("brim_type", "brim_width")
 
@@ -58,7 +62,10 @@ PLATE_GROUPS = [
     ("Fin flash and code (inlays)", lambda n: n.startswith(("t2_code", "t3_fin_flash"))),
     ("Test parts", lambda n: True),
 ]
-NOSE_KEY = (6.0, 5.0, 2.4)      # plain keys across the nacelle split: length (y), width (x), thickness (z)
+NOSE_KEY = (8.0, 5.0, 2.4)      # flexing keys across the nacelle split: length (y), width (x), thickness (z)
+                                # (test print 1 had plain 6 mm keys, too short for the flex slots: loose)
+GAUGE_CLEAR = (0.1, 0.2, 0.3, 0.4)   # grip gauge: hole = diameter + this
+GAUGE_T = 3.0                   # gauge block thickness (about a main fork leg)
 NOSE_KEY_AT = (9.5, 5.5)        # x behind the nacelle nose, |z| from its centreline (clear of the intake)
 NOSE_BACK = 13.0                # coupon ends this far behind the nacelle nose
 MARGIN = 4.0                    # mm of skin round each inlay socket
@@ -96,7 +103,7 @@ def prop_boss_coupon():
     for tag, half, rx in (("inboard", inb, -90), ("outboard", outb, 90)):   # split face down, as the kit
         P = K.largest_piece(M(half.intersect(crop).cut(slots)))[0]
         out.append((f"t1_nose_{tag}", {BLACK: P}, lambda m, rx=rx: rot(m, rx=rx)))
-    key = M(K.connector_key(NOSE_KEY, flex=False)).translate([0, 0, -NOSE_KEY[2] / 2])
+    key = M(K.connector_key(NOSE_KEY)).translate([0, 0, -NOSE_KEY[2] / 2])
     for i, p in enumerate(pts):                   # flat key turned so its length runs across the split
         out.append((f"t1_nose_key_{i + 1}", {BLACK: rot(key, rz=90).translate(list(p))},
                     lambda m: rot(m, rz=-90)))
@@ -178,6 +185,28 @@ def key_coupon():
              lambda m: rot(rot(m, ry=-90), rx=-90))]           # flat on the bed, as the kit's keys
 
 
+def grip_gauge():
+    """Holes for the stub axles and the inlay peg at a range of clearances, printed upright like
+    the hole in fork half B and the hole in an inlay's back. Columns: +0.1 .. +0.4 mm, marked with
+    1 to 4 dots; rows: main stub, tail stub, inlay peg."""
+    dias = (H.AXLE_STUB["main"], H.AXLE_STUB["tail"], C.FLASH_PEG[0])
+    px, py, m = 10.0, 9.0, 5.0
+    w, d = m * 2 + px * (len(GAUGE_CLEAR) - 1), m + 3 + py * (len(dias) - 1) + m
+    blk = bbox(0, w, 0, d, 0, GAUGE_T)
+    for j, dia in enumerate(dias):
+        for i, c in enumerate(GAUGE_CLEAR):
+            r = (dia + c) / 2
+            blk = blk - mf.Manifold.cylinder(GAUGE_T + 2, r, r, 48).translate([m + i * px, m + j * py, -1])
+    for i in range(len(GAUGE_CLEAR)):          # 1..4 dots above each column
+        for k in range(i + 1):
+            x = m + i * px + (k - i / 2) * 1.6
+            blk = blk - mf.Manifold.cylinder(1, 0.5, 0.5, 16).translate([x, d - 2.2, GAUGE_T - 0.5])
+    pd, pl = C.FLASH_PEG
+    tab = bbox(0, 8, 0, 8, 0, 1.5) + mf.Manifold.cylinder(pl + 1.0 + 0.5, pd / 2, pd / 2, 32).translate([4, 4, 1.0])
+    return [("t6_gauge", {BLACK: blk.translate([-80, -60, 0])}, None),
+            ("t6_peg", {BLACK: tab.translate([-80, -80, 0])}, None)]
+
+
 # ============================================================
 # MAIN
 # ============================================================
@@ -193,7 +222,7 @@ if __name__ == "__main__":
     for d in ("assembled", "print"):
         (out / d).mkdir(parents=True, exist_ok=True)
     jobs = []
-    for f in (key_coupon, gear_coupons, fin_flash_coupon, code_letter_coupon, prop_boss_coupon):
+    for f in (grip_gauge, key_coupon, gear_coupons, fin_flash_coupon, code_letter_coupon, prop_boss_coupon):
         jobs += f()
         print("built", f.__name__, flush=True)
     objs, preview, bad = {}, [], []
