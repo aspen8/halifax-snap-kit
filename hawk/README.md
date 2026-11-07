@@ -49,7 +49,18 @@ Against photos (top: real aircraft, bottom: model):
 
 ![photo comparison](docs/photo_comparison.png)
 
-> **Status: v15, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+> **Status: v16, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+
+### v16 changes (fin paint clean-up)
+
+- **Watermark glyphs:** the trace now ignores only the glyph's own pixels inside each masked box, not the whole box, and smooths the filled area by a majority vote, so a colour edge through a glyph keeps its shape (the box fill had left a notch in the port lower blue triangle).
+- **Below the rudder's bottom edge:** no flag. The rudder's bottom edge runs forward from the kink corner (8.7 mm port, 10.5 mm starboard, from the photos), and the photos show red fairing below it; the trace had picked up the aerial and sky there as white.
+- **Hinge grooves painted:** the fin halves are now painted from their shape before the panel and hinge grooves are cut, so the paint fills the grooves and the rudder hinge no longer shows as a red line through the flag.
+- **Rudder top groove:** stops 1 mm short of the trailing edge (`RUDDER_TOP_STOP`); the fin half is thinner than the groove there, and running it out cut through the paint.
+- **Smoother outlines:** traced flag outlines are smoothed over about 1.5 mm (`FLAG_EDGE_SMOOTH`), which removes the trace's 0.19 mm pixel steps and the photo's wobble. The printer lays these edges with 0.42 mm lines, so what remains is below what it can show.
+- **Checks:** all 7 plates slice; the fins and canopy plate is 4.0 h.
+
+![v16 tail paint, port and starboard](docs/v16_tail_paint.png)
 
 ### v15 changes (watermarks out of the port flag)
 

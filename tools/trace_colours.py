@@ -50,15 +50,31 @@ names = list(S["palette"])
 pal = np.array([S["palette"][n] for n in names], float)
 d = np.linalg.norm(pix[..., None, :] - pal[None, None], axis=-1)
 cls = np.argmin(d, -1)
-# optional "mask": [[u0, v0, u1, v1], ...] image boxes to ignore (watermarks, labels): each
-# sample inside one takes the class of the nearest sample outside all of them
+# optional "mask": [[u0, v0, u1, v1], ...] image boxes holding watermarks or labels. Inside each
+# box only the pixels that stand out from their surroundings (the glyph itself) are ignored, so a
+# colour edge running through the box keeps its shape; each ignored sample takes the class of
+# the nearest sample that isn't ignored
 if S.get("mask"):
-    U, V = u.reshape(X.shape), v.reshape(X.shape)
-    bad = np.zeros(X.shape, bool)
+    glyph = np.zeros(im.shape[:2], bool)
     for mu0, mv0, mu1, mv1 in S["mask"]:
-        bad |= (U >= mu0) & (U <= mu1) & (V >= mv0) & (V <= mv1)
+        g = 18                                                 # context around the box
+        a0, b0 = max(int(mv0) - g, 0), max(int(mu0) - g, 0)
+        win = im[a0:int(mv1) + g + 1, b0:int(mu1) + g + 1]
+        med = np.stack([ndi.median_filter(win[..., c], size=31) for c in range(3)], -1)
+        diff = np.abs(win - med).sum(-1) > 45
+        diff = ndi.binary_dilation(diff, iterations=2)
+        sub = glyph[a0:a0 + win.shape[0], b0:b0 + win.shape[1]]
+        vv, uu = np.mgrid[a0:a0 + win.shape[0], b0:b0 + win.shape[1]]
+        sub |= diff & (uu >= mu0) & (uu <= mu1) & (vv >= mv0) & (vv <= mv1)
+    bad = glyph[v, u].reshape(X.shape)
     _, (ii, jj) = ndi.distance_transform_edt(bad, return_indices=True)
     cls = cls[ii, jj]
+    # nearest-filling leaves a step where a colour edge crosses the glyph: smooth the filled
+    # area (and a margin round it) by a majority vote over about 1.2 mm
+    near = ndi.binary_dilation(bad, iterations=6)
+    w = max(3, int(round(1.2 / r)) | 1)
+    votes = np.stack([ndi.uniform_filter((cls == i).astype(float), size=w) for i in range(len(pal))])
+    cls = np.where(near, votes.argmax(0), cls)
 k = max(1, int(round(S.get("smooth", 0.4) / r)))
 out, over = {}, (pix * 0.4).astype(np.uint8)
 for i, n in enumerate(names):

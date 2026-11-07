@@ -38,7 +38,9 @@ Then:
 - The user prints on a Bambu X2D (two nozzles, AMS). Keep the base red on the main nozzle (fixed per-plate map in `colour.py` `FILAMENT_MAP`/`MAPPED_PLATES`); the second nozzle runs outer walls at 50 mm/s.
 - The user often asks to "add to the to-do list" when near a usage limit: write it into `hawk/README.md` "Known gaps and next steps", commit, change nothing else.
 
-## State at handoff (v15, built, checked and committed locally)
+## State at handoff (v16, built, checked and committed locally)
+
+v16 changes (paint, plus the rudder top groove): glyph-only watermark mask with majority smoothing (`tools/trace_colours.py`), no flag below the rudder's bottom edge (`RUDDER_FOOT_X`), fin skins taken before the grooves (`P_plain` in `colour.py`), rudder top groove stops 1 mm short of the TE (`RUDDER_TOP_STOP` in `detail.py`), traced outlines smoothed (`FLAG_EDGE_SMOOTH`).
 
 v15 changes (paint only): the port photo's watermark glyphs are masked out of the trace (`mask` in `hawk/tools/fin_flag_port.json`, new optional key in `tools/trace_colours.py`). The user confirmed starboard looks right.
 
@@ -62,5 +64,5 @@ Test-print history: plate 1 (v3 fuselage) and the canopy/gear/nozzle plates (v3/
 2. White markings render slightly fuzzy; the user is checking the slice.
 3. ~~Fin against the drawing~~: done in v11 (outline within about 0.4 mm of the Revell side view, rounded tip). Waiting for the user's look.
 4. README to-dos still open: separate lettering panels (sharper text), nonplanar top-surface test (orcaslicer-nonplanar), canopy fit check on the next fuselage print, print-in-place control surfaces.
-5. Rudder hinge groove shows as a thin red line through the fin flag, and its short top segment leaves a white speck at the trailing edge in the upper blue triangle (both sides). Mentioned to the user; not fixed.
-6. Push to GitHub when the user asks. v10 to v15 are committed locally only (the checkout in use is the older one in Claude's scratch-workspaces folder, which has `ref/` and `.venv`).
+5. ~~Rudder hinge groove red line and TE speck~~: fixed in v16.
+6. Push to GitHub when the user asks. v10 to v16 are committed locally only (the checkout in use is the older one in Claude's scratch-workspaces folder, which has `ref/` and `.venv`).

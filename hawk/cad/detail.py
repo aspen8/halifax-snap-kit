@@ -43,6 +43,7 @@ WING_CHORDWISE = [(0.10, 0.72, 1.0, "hinge"), (0.55, 0.72, 1.0, "hinge"), (0.58,
 WING_FILLER = (0.45, 0.40, 2.2)      # eta, chord fraction, diameter (fuel filler)
 TAIL_LINES = [(0.25, 0.1, 0.95), (0.70, 0.1, 0.95)]   # chord fraction, eta from, to
 RUDDER = (0.70, 27.0, 60.0)          # chord fraction of the hinge, z from, to
+RUDDER_TOP_STOP = 1.0                # mm: the rudder's top groove ends this far ahead of the TE
 
 
 def skin(P, axis, depth):
@@ -115,7 +116,17 @@ def apply(name, P):
             le = lx0 + (z - lz0) * (lx1 - lx0) / (lz1 - lz0)
             te = tx0 + (z - tz0) * (tx1 - tx0) / (tz1 - tz0)
             return le + f * (te - le)
-        sec = band((x_at(z0), z0), (x_at(z1), z1), GROOVE_W) + band((x_at(z1), z1), (H.FIN_TE[0][0] + 20, z1 + 2), GROOVE_W)
+        # the rudder's top edge runs aft from the hinge, rising 2 mm over 20 mm, and stops
+        # RUDDER_TOP_STOP short of the trailing edge: the fin half is thinner than the groove
+        # there, so running it out cut through the paint to the bare red
+        (tx0, tz0), (tx1, tz1) = H.FIN_TE
+        te = lambda z: tx0 + (z - tz0) * (tx1 - tx0) / (tz1 - tz0)
+        xa, za = x_at(z1), z1
+        k = 2.0 / 20.0
+        xe = xa
+        while xe < te(za + k * (xe - xa)) - RUDDER_TOP_STOP:
+            xe += 0.05
+        sec = band((x_at(z0), z0), (x_at(z1), z1), GROOVE_W) + band((xa, za), (xe, za + k * (xe - xa)), GROOVE_W)
         axis = "y" if name.endswith("stbd") else "-y"
         groove(prism_y(sec), axis, HINGE_D)
     elif name.startswith(("fuselage_", "radome")):

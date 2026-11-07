@@ -91,6 +91,21 @@ FLAG_MIN_ISLAND = 10.0             # mm2: smaller separate white/blue islands in
                                    # watermarks or specks (the real flag's pieces are all larger)
 FLAG_BASE_FILL = 0.8               # mm: colours carried down over the ragged traced base...
 FLAG_BASE_X1 = {-1: 239.9, 1: 245.4}   # ...ahead of this x, where the red diagonal reaches the root
+RUDDER_FOOT_X = {-1: 242.3, 1: 240.5}  # the rudder's bottom edge runs forward from the TE's kink
+                                   # corner to here (photos: 8.7 mm port, 10.5 mm starboard); red below
+FLAG_EDGE_SMOOTH = 5               # traced outlines are smoothed over this many vertices (~1.5 mm)
+
+
+def smooth_ring(r):
+    """Soften a traced outline: a closed weighted moving average over FLAG_EDGE_SMOOTH vertices
+    (vertices are ~0.3 mm apart). Removes the trace's pixel steps and the photo's wobble."""
+    n = FLAG_EDGE_SMOOTH // 2
+    w = np.r_[np.arange(1, n + 2), np.arange(n, 0, -1)].astype(float)
+    w /= w.sum()
+    out = np.zeros_like(r)
+    for i, wi in enumerate(w):
+        out += wi * np.roll(r, i - n, axis=0)
+    return out
 FIN_FLAG_ABOVE = 0.4               # mm above the fuselage top line where the fin flag starts
 WHITE_DIR = ROOT / "ref" / "hawk_white"
 
@@ -317,7 +332,7 @@ def fin_flag(side):
             # cut-outs in the white) stay. Also drop anything on the fuselage ahead of the fin.
             if (not hole and area[i] < FLAG_MIN_ISLAND) or area[i] < 0.5 or (cx < 212.0 and cz < 32.0):
                 continue
-            keep.append(r)
+            keep.append(smooth_ring(r))
         if keep:
             secs.append((colour, cs(keep) ^ fin_surface()))
     # Carry each colour straight aft (x only) over the thin red gaps the trace leaves along the
@@ -338,6 +353,11 @@ def fin_flag(side):
     d, x1 = FLAG_BASE_FILL, FLAG_BASE_X1[1 if side > 0 else -1]
     base = (above_fuselage(FIN_FLAG_ABOVE - 0.3) - above_fuselage(FIN_FLAG_ABOVE + d + 0.3)) \
         ^ cs([np.array([(150.0, 0.0), (x1, 0.0), (x1, 120.0), (150.0, 120.0)])])
+    # Below the rudder's bottom edge (level with the kink corner, running forward from the
+    # trailing edge) the photos show the red fairing: no flag there.
+    xf = RUDDER_FOOT_X[1 if side > 0 else -1]
+    zf = H.FIN_TE_KINK[0][1]
+    foot = cs([np.array([(xf, 0.0), (300.0, 0.0), (300.0, zf), (xf, zf)])])
     taken = None
     for _, sec in secs:
         taken = sec if taken is None else taken + sec
@@ -353,6 +373,8 @@ def fin_flag(side):
             down = down + sec.translate([0.0, -d * k / 4])
         add2 = (down ^ base) - taken
         taken = taken + add2
+        sec = sec - foot
+        add, add2 = add - foot, add2 - foot
         ops.append((colour, (sec + add + add2) ^ ahead_te))
     return ops
 
@@ -389,6 +411,7 @@ CANOPY_SILL = 0.9                                 # mm of black along the canopy
 
 
 _WING_DET = {}
+P_plain = {}                 # part name -> the part before detail.apply (panel lines, hinges)
 
 
 def wing_detailed(side):
@@ -409,7 +432,10 @@ def colour_part(name, P):
             return paint(P, roundel_ops(x, y, d, "z", S["up"]))
         return paint(P, [(WHITE, S["down"] ^ prism_z(under_white()))] + roundel_ops(x, y, d, "z", S["down"]))
     if name.startswith("fin_"):
-        S = skins(P, FIN_SKIN)
+        # skins from the fin half before its hinge and panel grooves are cut: the paint then
+        # fills the grooves (their walls and floor), so a groove through the flag doesn't show
+        # as a line of bare red
+        S = skins(P_plain.get(name, P), FIN_SKIN)
         side = S["+y"] if name.endswith("stbd") else S["-y"]
         # the swoosh runs up to the fin root line, where the flag's white takes over
         sw = (side_stripes(1 if name.endswith("stbd") else -1)
@@ -564,6 +590,7 @@ if __name__ == "__main__":
                 - H.gear_bay(side)
             P, _ = K.largest_piece(P)
         else:
+            P_plain[name] = P                 # before panel lines and hinge grooves
             P = D.apply(name, P)
         if name == "stand_base":
             P, _ = stand_decorate(P)
