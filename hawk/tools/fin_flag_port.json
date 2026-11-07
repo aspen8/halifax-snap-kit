@@ -1,6 +1,6 @@
 {
  "image": "ref/hawk/photo_fin_stbd_closeup.webp",
- "_note": "photo trace (v14): similarity through the TE top and kink corners; wm_*: the stock-photo watermark over red (counts as red)",
+ "_note": "photo trace (v14): similarity through the TE top and kink corners; wm_*: the stock-photo watermark over red (counts as red); mask: the watermark \"a\" glyphs on the fin (filled from the surrounding colours)",
  "points": [
   [
    [
@@ -714,5 +714,31 @@
   "white",
   "blue"
  ],
- "smooth": 0.35
+ "smooth": 0.35,
+ "mask": [
+  [
+   570,
+   238,
+   594,
+   274
+  ],
+  [
+   420,
+   370,
+   445,
+   404
+  ],
+  [
+   570,
+   498,
+   595,
+   534
+  ],
+  [
+   270,
+   498,
+   295,
+   534
+  ]
+ ]
 }

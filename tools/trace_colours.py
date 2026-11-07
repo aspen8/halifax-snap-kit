@@ -11,6 +11,8 @@ SPEC (JSON):
   palette: {"red": [r, g, b], "white": [...], "blue": [...]}   reference colours
   keep:    ["white", "blue"]          classes to write (the rest is the part's base colour)
   smooth:  mm, closing/opening radius that removes the drawing's thin lines (default 0.4)
+  mask:    [[u0, v0, u1, v1], ...]    optional image boxes to ignore (watermarks, labels); they
+           are filled from the nearest colour outside them
 
 Writes {"classes": {name: [[[x, z], ...], ...]}} in model mm, and OUT.png for checking.
 """
@@ -48,6 +50,15 @@ names = list(S["palette"])
 pal = np.array([S["palette"][n] for n in names], float)
 d = np.linalg.norm(pix[..., None, :] - pal[None, None], axis=-1)
 cls = np.argmin(d, -1)
+# optional "mask": [[u0, v0, u1, v1], ...] image boxes to ignore (watermarks, labels): each
+# sample inside one takes the class of the nearest sample outside all of them
+if S.get("mask"):
+    U, V = u.reshape(X.shape), v.reshape(X.shape)
+    bad = np.zeros(X.shape, bool)
+    for mu0, mv0, mu1, mv1 in S["mask"]:
+        bad |= (U >= mu0) & (U <= mu1) & (V >= mv0) & (V <= mv1)
+    _, (ii, jj) = ndi.distance_transform_edt(bad, return_indices=True)
+    cls = cls[ii, jj]
 k = max(1, int(round(S.get("smooth", 0.4) / r)))
 out, over = {}, (pix * 0.4).astype(np.uint8)
 for i, n in enumerate(names):

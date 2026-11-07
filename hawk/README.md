@@ -49,7 +49,13 @@ Against photos (top: real aircraft, bottom: model):
 
 ![photo comparison](docs/photo_comparison.png)
 
-> **Status: v14, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+> **Status: v15, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+
+### v15 changes (watermarks out of the port flag)
+
+Paint only. The port photo's stock-photo watermark has small "a" glyphs on the fin; where they crossed the blue and red they traced as white splodges. `tools/trace_colours.py` now takes an optional `mask` list of image boxes, filled from the nearest colour outside them, and the port spec masks the four glyphs on the fin. Starboard is unchanged. All 7 plates slice.
+
+![v15 tail paint, port and starboard](docs/v15_tail_paint.png)
 
 ### v14 changes (fin flag traced from photos)
 
@@ -301,7 +307,7 @@ The shape is measured from the Revell 04284 Hawk T.1A (Red Arrows) instruction s
 
 The scheme is the current one, with the Union-flag fin. It combines two sheets:
 
-- **Fin flag:** traced (v14) from close-up photos of each side with `tools/trace_colours.py`, one trace per side (specs in `tools/fin_flag_*.json`). Each photo is fitted to the model through the trailing edge's top corner and its bottom (kink) corner, so the flag lands exactly on our fin. Note the two close-up files are named the wrong way round: `photo_fin_stbd_closeup.webp` shows the port side (nose left) and is the port trace. Watermark colours in the port photo count as red, and islands under 10 mm² are dropped. (v9 to v13 used the HobbyBoss 81738 sheet, which drew the bands thinner and wobblier.) It's clipped to the fin itself: above the fuselage top line and behind the straight leading edge, so the spine cap and dorsal fillet stay red.
+- **Fin flag:** traced (v14) from close-up photos of each side with `tools/trace_colours.py`, one trace per side (specs in `tools/fin_flag_*.json`). Each photo is fitted to the model through the trailing edge's top corner and its bottom (kink) corner, so the flag lands exactly on our fin. Note the two close-up files are named the wrong way round: `photo_fin_stbd_closeup.webp` shows the port side (nose left) and is the port trace. Watermark colours in the port photo count as red, the watermark's "a" glyphs on the fin are masked out (v15), and islands under 10 mm² are dropped. (v9 to v13 used the HobbyBoss 81738 sheet, which drew the bands thinner and wobblier.) It's clipped to the fin itself: above the fuselage top line and behind the straight leading edge, so the spine cap and dorsal fillet stay red.
 - **Cheat line and swoosh** (parametric, from the photos, the same on both sides):
   - It starts at the nose tip, 1.1 mm wide and crossing the front of the nose just above the probe boss (head-on photo), and thickens gradually to the letter height (5.2 mm) on the side pod, then stops 2 mm short of "ROYAL AIR FORCE".
   - It resumes behind the roundel at the same height and sweeps up in one curve (a cubic Bezier) to the fin root, widening to 8 mm, where it meets the flag's white.
