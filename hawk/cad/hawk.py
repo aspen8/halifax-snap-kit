@@ -244,9 +244,14 @@ TAIL_PLUG_Y0 = 2.0           # each tailplane's own section runs on into the fus
                              # tongue): the fuselage has a socket the shape of the root section
 
 # --- Fin (separate, two halves): straight LE/TE lines from the side view
-FIN_LE = ((206.3, 32.6), (245.9, 70.2))
-FIN_TE = ((250.9, 24.9), (260.0, 70.8))
+# v11: both lines fitted to the Revell side view (centre of the drawn line). The LE is at 45 deg
+# and 1.4-3 mm further forward than v10's; the TE moved by under 0.5 mm.
+FIN_LE = ((205.1, 32.6), (242.7, 70.2))
+FIN_TE = ((250.5, 24.9), (260.5, 70.8))
 FIN_TOP = 70.5
+FIN_TIP_R = 22.0             # the LE rounds into the top on this radius (Revell side view, fin photo)
+FIN_TIP_T_CHORD = 14.0       # sections are never thinner than a 14 mm chord's (each printed half
+                             # keeps at least 2 lines at the tip)
 FIN_ROOT_Z = 24.0            # fin root (the spine is cut flat here to take it)
 FIN_TC = 0.10               # real ~8.5%; 10% leaves wall round the half keys
 FIN_TONGUE = (210.0, 244.0, 4.0)   # x0, x1, depth of the root tongue into the spine
@@ -964,9 +969,9 @@ def tail_socket(side):
 # ============================================================
 # FIN (two halves)
 # ============================================================
-FIN_FILLET_Z = 37.0          # below this the leading edge curves into the spine (Revell side view)
-FIN_SPINE_Z = 29.6           # ...meeting the spine top tangentially at this height
-FIN_TE_KINK = ((251.3, 27.0), (263.5, 20.0))   # below the kink the trailing edge sweeps back at a
+FIN_FILLET_Z = 35.5          # below this the leading edge curves into the spine (Revell side view,
+FIN_SPINE_Z = 28.9           # ...meeting the spine top tangentially at this height; v11 refit to the new LE)
+FIN_TE_KINK = ((251.0, 27.0), (263.5, 20.0))   # below the kink the trailing edge sweeps back at a
                              # shallower angle onto the top of the tail cone (Revell side view)
 
 
@@ -975,9 +980,21 @@ def _fin_le_line(z):
     return lx0 + (z - lz0) * (lx1 - lx0) / (lz1 - lz0)
 
 
+def fin_tip_arc():
+    """The convex arc (radius FIN_TIP_R) tangent to the LE line and to the flat top:
+    returns (centre x, centre z, z where it leaves the LE line)."""
+    (lx0, lz0), (lx1, lz1) = FIN_LE
+    th = math.atan2(lz1 - lz0, lx1 - lx0)                      # LE angle above horizontal
+    t = FIN_TIP_R / math.tan((math.pi - th) / 2)               # tangent length from the corner
+    return _fin_le_line(FIN_TOP) + t, FIN_TOP - FIN_TIP_R, FIN_TOP - t * math.sin(th)
+
+
 def fin_le(z):
     """Straight leading edge; below FIN_FILLET_Z a circular arc tangent to it and to the spine
-    (a concave dorsal fillet, not an angled kink)."""
+    (a concave dorsal fillet, not an angled kink); at the top a convex arc into the flat tip."""
+    cx, cz, z_t = fin_tip_arc()
+    if z > z_t:
+        return cx - math.sqrt(max(FIN_TIP_R ** 2 - (min(z, FIN_TOP) - cz) ** 2, 0.0))
     if z >= FIN_FILLET_Z:
         return _fin_le_line(z)
     (lx0, lz0), (lx1, lz1) = FIN_LE
@@ -1005,6 +1022,7 @@ def fin_section(z):
     le, te = fin_le(z), fin_te(z)
     c = te - le
     c_t = min(c, fin_te(FIN_FILLET_Z) - fin_le(FIN_FILLET_Z))
+    c_t = max(c_t, FIN_TIP_T_CHORD)      # the rounded tip keeps the thickness of v10's square tip
     up, lo = [], []
     n = 36
     for i in range(n + 1):
@@ -1033,7 +1051,9 @@ def fin_tongue(grow=0.0):
 
 @cached
 def fin_whole():
-    zs = list(np.arange(FIN_TE_KINK[1][1] - 0.5, FIN_FILLET_Z, 0.75)) + [FIN_FILLET_Z, FIN_TOP]
+    z_t = fin_tip_arc()[2]
+    zs = (list(np.arange(FIN_TE_KINK[1][1] - 0.5, FIN_FILLET_Z, 0.75)) + [FIN_FILLET_Z]
+          + list(np.linspace(z_t, FIN_TOP, 13)))          # dense through the rounded tip
     f = to_m(loft([fin_section(z) for z in zs], ruled=True))     # dense ruled loft: smooth fillet
     whole = (f + fin_cap()) ^ box(FIN_X0, 300, -30, 30, FIN_ROOT_Z, 100)
     return whole + fin_tongue()

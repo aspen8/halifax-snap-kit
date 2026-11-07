@@ -49,7 +49,19 @@ Against photos (top: real aircraft, bottom: model):
 
 ![photo comparison](docs/photo_comparison.png)
 
-> **Status: v10, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+> **Status: v11, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+
+### v11 changes (fin against the Revell side view)
+
+- **Leading edge:** fitted to the centre of the drawn line. It runs at 45° and sits 1.4–3 mm further forward than in v10 (more towards the top), so the fin's chord is a little longer.
+- **Tip:** the leading edge now rounds into the flat top on a 22 mm radius (1:40), from Z 64, as on the drawing and the fin close-up photo. v10 had a sharp corner. The tip keeps v10's thickness, so each printed half still has at least 2 lines there.
+- **Trailing edge and fillet:** the trailing edge moves by under 0.5 mm to the drawn line. The dorsal fillet is refitted to the new leading edge (within 0.4 mm of the drawing) and still rises from the spine at about X 192.
+- **Union flag:** the HobbyBoss trace is refitted to the new fin corners (`tools/fin_flag_*.json`), so it stays on the fin. The red band along the leading edge is a little wider, as in the photo.
+- **Checks:** interference and overhangs unchanged; each fin half is one piece; all 7 plates slice. The fins and canopy plate is now 4.1 h; the others are unchanged.
+
+![v11 fin against the Revell side view (left v10, right v11)](docs/v11_fin_revell.png)
+
+![v11 fin](docs/v11_fin.png)
 
 ### v10 changes (canopy curve)
 

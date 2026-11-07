@@ -38,7 +38,9 @@ Then:
 - The user prints on a Bambu X2D (two nozzles, AMS). Keep the base red on the main nozzle (fixed per-plate map in `colour.py` `FILAMENT_MAP`/`MAPPED_PLATES`); the second nozzle runs outer walls at 50 mm/s.
 - The user often asks to "add to the to-do list" when near a usage limit: write it into `hawk/README.md` "Known gaps and next steps", commit, change nothing else.
 
-## State at handoff (v10, built, checked and committed locally)
+## State at handoff (v11, built, checked and committed locally)
+
+v11 changes: fin LE, TE, tip and fillet fitted to the Revell side view (`FIN_LE`, `FIN_TE`, `FIN_TIP_R` 22 mm rounded tip, `FIN_FILLET_Z`/`FIN_SPINE_Z`); the flag trace refitted to the new corners (`hawk/tools/fin_flag_*.json`, re-run `tools/trace_colours.py` to regenerate `ref/hawk_white/fin_*.json`). See README "v11 changes".
 
 v10 changes: canopy top line raised to the Revell side view from X 41 to 105 (`SPINE_STATIONS`), nose/front joint, dome cut and panel ring moved from X 46 to X 43 (where the taller canopy leaves the dome). See README "v10 changes".
 
@@ -50,6 +52,6 @@ Test-print history: plate 1 (v3 fuselage) and the canopy/gear/nozzle plates (v3/
 
 1. ~~Compare the canopy's curve with the Revell side view~~: done in v10 (within 0.3 mm of the drawing). Waiting for the user's look.
 2. White markings render slightly fuzzy; the user is checking the slice.
-3. Fin: user may still want to compare with the drawing (v8 changed the fillet and the trailing-edge kink to match).
+3. ~~Fin against the drawing~~: done in v11 (outline within about 0.4 mm of the Revell side view, rounded tip). Waiting for the user's look.
 4. README to-dos still open: separate lettering panels (sharper text), nonplanar top-surface test (orcaslicer-nonplanar), canopy fit check on the next fuselage print, print-in-place control surfaces.
-5. Push to GitHub when the user asks. v10 is committed locally only (the checkout in use is the older one in Claude's scratch-workspaces folder, which has `ref/` and `.venv`).
+5. Push to GitHub when the user asks. v10 and v11 are committed locally only (the checkout in use is the older one in Claude's scratch-workspaces folder, which has `ref/` and `.venv`).
