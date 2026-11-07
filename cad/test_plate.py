@@ -12,6 +12,8 @@ Everything comes from the kit builders (halifax.py, colour.py), so the fits matc
      Tail gear: the same, with the fuselage's tail-gear socket.
   5. A flexing nacelle key (KEY_NAC) and two blocks with its slot.
 
+Two plates, as the full build: the red/white/blue inlays alone, everything else in black. Each
+part keeps the print settings of its kit part (layer height, walls).
 Writes OUT_DIR/halifax_test_plate.3mf, OUT_DIR/assembled/*.stl (for tools/interference.py),
 OUT_DIR/print/*.stl (for tools/overhang.py) and OUT_DIR/test_plate_preview.glb.
 About 5 min, most of it the nacelle.
@@ -30,8 +32,32 @@ import kitlib as K
 from kitlib import mesh_of, pose_matrix, text_section, to_manifold
 
 BLACK, RED = C.BLACK, C.RED
-LAYER = "0.12"                  # one height for the whole plate (the prime tower needs that); the
-                                # fine-detail height, as the kit's prop and gear plate
+# Each test part prints with the settings of the kit part it comes from (colour.object_settings),
+# so the fits behave as in the full build. Brims are left off: no coupon stands on end.
+KIT_NAME = {
+    "t1_nose_inboard": "nacelle1_stbd_inboard", "t1_nose_outboard": "nacelle1_stbd_outboard",
+    "t1_nose_key": "key_nacelle", "t1_prop": "prop1_stbd",
+    "t2_fuselage_wall": "fuselage_rear", "t2_code_G": "code_port_1",
+    "t3_fin_skin": "fin_stbd", "t3_fin_flash": "flash_fin_stbd",
+    "t4_main_gear_a": "main_gear_stbd_a", "t4_main_gear_b": "main_gear_stbd_b",
+    "t4_main_wheel": "main_wheel_stbd", "t4_main_socket": "nacelle1_stbd_inboard",
+    "t4_tail_gear_a": "tail_gear_a", "t4_tail_gear_b": "tail_gear_b",
+    "t4_tail_wheel": "tail_wheel", "t4_tail_socket": "fuselage_rear",
+    "t5_key_block": "nacelle1_stbd_inboard", "t5_key": "key_nacelle",
+}
+NO_BRIM = ("brim_type", "brim_width")
+
+
+def kit_settings(name):
+    kit = next(v for k, v in sorted(KIT_NAME.items(), key=lambda kv: -len(kv[0])) if name.startswith(k))
+    return {k: v for k, v in C.object_settings(kit).items() if k not in NO_BRIM}
+
+
+# plates as in the full build: the multi-colour inlays on their own plate, everything else black
+PLATE_GROUPS = [
+    ("Fin flash and code (inlays)", lambda n: n.startswith(("t2_code", "t3_fin_flash"))),
+    ("Test parts", lambda n: True),
+]
 NOSE_KEY = (6.0, 5.0, 2.4)      # plain keys across the nacelle split: length (y), width (x), thickness (z)
 NOSE_KEY_AT = (9.5, 5.5)        # x behind the nacelle nose, |z| from its centreline (clear of the intake)
 NOSE_BACK = 13.0                # coupon ends this far behind the nacelle nose
@@ -196,23 +222,31 @@ if __name__ == "__main__":
               flush=True)
     assert not bad, "not single pieces: " + "; ".join(bad)
 
-    names = sorted(objs, key=lambda n: -objs[n]["size"][0] * objs[n]["size"][1])
-    plates = C.pack([(n, tuple(objs[n]["size"])) for n in names])
-    assert len(plates) == 1, f"test parts need {len(plates)} plates"
+    plates, seen = [], set()
+    for gname, pred in PLATE_GROUPS:
+        group = sorted((n for n in objs if n not in seen and pred(n)),
+                       key=lambda n: -objs[n]["size"][0] * objs[n]["size"][1])
+        seen.update(group)
+        packed = C.pack([(n, tuple(objs[n]["size"])) for n in group])
+        assert len(packed) == 1, f"{gname} needs {len(packed)} plates"
+        plates.append((gname, packed[0]))
     objects = []
-    for n, x, y, rot90 in plates[0]:
-        o = objs[n]
-        vols = o["vols"]
-        if rot90:
-            sx, sy = o["size"]
-            vols = {c: v.rotate([0, 0, 90]).translate([sy, 0, 0]) for c, v in vols.items()}
-        objects.append({"name": n, "placement": (0, x, y), "settings": {"layer_height": LAYER},
-                        "volumes": [(c, *mesh_of(v)) for c, v in sorted(vols.items())]})
-    cols = sorted({c for o in objs.values() for c in o["vols"]})
-    assert len(cols) <= C.MAX_COLOURS
-    print("colours:", ", ".join(C.FILAMENTS[c][0] for c in cols))
-    K.write_3mf(out / "halifax_test_plate.3mf", objects, ["Test plate"], template, C.FILAMENTS,
-                "Halifax snap kit test plate", dict(C.PRINT_OVERRIDES, layer_height=LAYER))
+    for pi, (gname, items) in enumerate(plates):
+        cols = sorted({c for n, *_ in items for c in objs[n]["vols"]})
+        assert len(cols) <= C.MAX_COLOURS
+        print(f"plate {pi + 1} ({gname}): " + ", ".join(C.FILAMENTS[c][0] for c in cols))
+        for n, x, y, rot90 in items:
+            o = objs[n]
+            vols = o["vols"]
+            if rot90:
+                sx, sy = o["size"]
+                vols = {c: v.rotate([0, 0, 90]).translate([sy, 0, 0]) for c, v in vols.items()}
+            st = kit_settings(n)
+            print(f"   {n:22s} {st or ''}")
+            objects.append({"name": n, "placement": (pi, x, y), "settings": st,
+                            "volumes": [(c, *mesh_of(v)) for c, v in sorted(vols.items())]})
+    K.write_3mf(out / "halifax_test_plate.3mf", objects, [g for g, _ in plates], template, C.FILAMENTS,
+                "Halifax snap kit test plate", C.PRINT_OVERRIDES)
 
     scene = trimesh.Scene()
     for i, (c, V, F) in enumerate(preview):
