@@ -49,7 +49,19 @@ Against photos (top: real aircraft, bottom: model):
 
 ![photo comparison](docs/photo_comparison.png)
 
-> **Status: v11, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+> **Status: v12, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+
+### v12 changes (tail paint, checked against a photo of a pair)
+
+Paint only; the geometry is v11's.
+
+- **Flag to the trailing edge:** the trace left thin red slivers (up to 0.7 mm) between the flag and the trailing edge. Each colour is now carried straight aft over gaps up to 1 mm, only into what would otherwise be red, so the red cross still runs out to the edge.
+- **Angled lower trailing edge red:** the flag is clipped to the straight trailing-edge line, so the piece below the kink that sweeps back over the jet pipe is always plain red.
+- **Swoosh meets the flag's white:** the fuselage swoosh now ends differently on each side. The flag is mirrored on starboard, so its white at the fin root sits in a different place. On each side the swoosh's edges at the root now match the flag's white within 0.3 mm (port X 217–228, starboard X 211–225) and stop at the small blue triangle behind it. It also runs 0.8 mm up under the flag's ragged traced base.
+- No "60" anniversary markings.
+- **Checks:** all 7 plates slice; the fins and canopy plate is 4.1 h.
+
+![v12 tail paint, port and starboard](docs/v12_tail_paint.png)
 
 ### v11 changes (fin against the Revell side view)
 
@@ -309,7 +321,7 @@ Checks: run `tools/interference.py` on the assembled STLs without the `key_*` fi
 | `revell_04284_p15.png`, `revell_04284_p16.png` | Those pages rendered at 400 dpi | Calibrated views |
 | `hawk/hobbyboss_81738_sheet2.webp` | HobbyBoss 81738 marking sheet II (current scheme) | Union-flag fin, both sides |
 | `hawk/hobbyboss_81738_sheets1_2.webp` | HobbyBoss 81738 sheets I and II, small | The older blue-fin scheme, for a future variant |
-| `hawk/photo_*.png/.webp` | Red Arrows photos: side-on taxiing (starboard), head-on, port flight, fin close-ups both sides, high 3/4 | Canopy line, intakes, gear positions, cheat line, fin flag |
+| `hawk/photo_*.png/.webp` | Red Arrows photos: side-on taxiing (starboard), head-on, port flight, fin close-ups both sides, high 3/4, a pair in formation showing both sides' tails (`photo_pair_60th_port_stbd.png`, 60th-season markings, not modelled) | Canopy line, intakes, gear positions, cheat line, fin flag |
 | `hawk/render_50th_scheme_port.png`, `hawk/photo_port_ground_2010_bluefin.png` | Other schemes | Future variants |
 | `hawk/3views/*.png` | blueprintbox and Wikimedia 3-views, Xtradecal X32031/X32037 sheets, the-blueprints Red Arrows 50th | Side profile and pod check; future schemes |
 | `hawk/grwtr_3mf/grwtr-BAEHawkT1_72.3mf` | Greenwater's 1:72 BAE Hawk T1 (Standard Digital File License) | Cross-section check of fuselage, pods and canopy only; no geometry copied |

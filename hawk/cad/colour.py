@@ -74,7 +74,17 @@ CHEAT_NOSE = (1.8, 1.75, 1.1)      # x, lower edge z, width at the nose tip: the
                                    # across the front of the nose (head-on photo)
 CHEAT_POD_X = 95.0                 # full letter height reached here (on the pod)
 CHEAT_GAP = 2.0                    # mm of red between the band and the lettering
-SWOOSH_TOP = (223.5, 25.0, 0.57, 0.82, 8.0)   # x, z where it meets the fin flag, direction, width there
+# Where the swoosh meets the fin flag, per side (+1 starboard, -1 port): x, z of its centre line,
+# direction, width there. v12: set so that 1 mm above the fuselage line it covers exactly the
+# flag's white in front of the small blue triangle, with the white's edge angle: port X 216.9-228.0,
+# starboard X 211.0-224.7 (the flag is mirrored, so its white sits differently on each side;
+# photo ref/hawk/photo_pair_60th_port_stbd.png). Re-measure after re-tracing the flag.
+SWOOSH_TOP = {-1: (221.11, 25.0, 0.514, 0.857, 9.52),
+              +1: (216.45, 25.0, 0.545, 0.838, 12.25)}
+SWOOSH_UP = 0.8                    # the swoosh runs this far above the flag's lower edge, under its
+                                   # ragged traced base (the flag paints over it)
+FLAG_TE_FILL = 1.0                 # mm: the flag is carried aft up to the trailing edge over gaps this
+                                   # wide (the trace loses the drawing's outline line there)
 FIN_FLAG_ABOVE = 0.4               # mm above the fuselage top line where the fin flag starts
 WHITE_DIR = ROOT / "ref" / "hawk_white"
 
@@ -118,12 +128,12 @@ def cheat_front():
     return _ribbon(c, w) + mf.CrossSection.circle(w0 / 2, 16).translate([x0, zl0 + w0 / 2])
 
 
-def cheat_rear():
+def cheat_rear(side):
     """From behind the roundel, level at the letter height, then one smooth curve up onto the fin
     (a cubic Bezier into the flag's white at the fin root), widening as it climbs."""
     _, xc, zc, length, h = LETTERS
     rx, rz, rd = FUSE_ROUNDEL
-    x3, z3, dx, dz, w3 = SWOOSH_TOP
+    x3, z3, dx, dz, w3 = SWOOSH_TOP[1 if side > 0 else -1]
     P = np.array([(rx, zc), (rx + 20.0, zc), (x3 - dx * 13.0, z3 - dz * 13.0), (x3, z3)])
     u = np.linspace(0, 1, 120)[:, None]
     c = ((1 - u) ** 3 * P[0] + 3 * (1 - u) ** 2 * u * P[1] + 3 * (1 - u) * u * u * P[2] + u ** 3 * P[3])
@@ -136,8 +146,9 @@ def cheat_rear():
 
 def side_stripes(side):
     """White on the fuselage side, (x, z): the cheat line in front of the lettering, and the band
-    behind the roundel that sweeps up onto the fin. The same on both sides."""
-    return cheat_front() + cheat_rear()
+    behind the roundel that sweeps up onto the fin. The cheat line is the same on both sides;
+    the swoosh's end differs, to meet each side's flag."""
+    return cheat_front() + cheat_rear(side)
 
 
 def widen(sec, wmin):
@@ -237,9 +248,10 @@ def fuselage_markings(P):
     x0, _, _, x1, _, _ = P.bounding_box()
     _, _, _, bd, bl = H.PROBE
     probe = K.box(-60.0, 3.4, -bd / 2 - 0.15, bd / 2 + 0.15, -bd / 2 - 0.15, bd / 2 + 0.15)
-    ops = [(WHITE, (prism_y(widen(side_stripes(1), STRIPE_MIN_W)) - core) - probe)]
+    ops = [(WHITE, (prism_y(widen(cheat_front(), STRIPE_MIN_W)) - core) - probe)]
     for side in (1, -1):
         sk = K.box(-50.0, 400.0, 0.0 if side > 0 else -100.0, 100.0 if side > 0 else 0.0, -100.0, 100.0) - core
+        ops.append((WHITE, sk ^ prism_y(widen(cheat_rear(side), STRIPE_MIN_W))))   # swoosh: per side
         ops.append((WHITE, sk ^ prism_y(letters_section(side))))
         x, z, d = FUSE_ROUNDEL
         ops += roundel_ops(x, z, d, "y", sk)
@@ -283,7 +295,7 @@ def fin_flag(side):
     if not p.exists():
         raise SystemExit(f"missing {p}: run tools/trace_colours.py hawk/tools/fin_flag_{tag}.json {p}")
     cls = json.load(open(p))["classes"]
-    ops = []
+    secs = []
     for name, colour in (("white", WHITE), ("blue", BLUE)):
         keep = []
         for r in cls.get(name, []):
@@ -294,7 +306,29 @@ def fin_flag(side):
                 continue
             keep.append(r)
         if keep:
-            ops.append((colour, cs(keep) ^ fin_surface()))
+            secs.append((colour, cs(keep) ^ fin_surface()))
+    # Carry each colour straight aft (x only) over the thin red gaps the trace leaves along the
+    # trailing edge, but only into what would otherwise be red, and only near the edge. Then clip
+    # the whole flag to the straight trailing-edge line: the angled piece below the kink, which
+    # sweeps back over the jet pipe, stays red (photos).
+    (tx0, tz0), (tx1, tz1) = H.FIN_TE
+    te = lambda z: tx0 + (z - tz0) * (tx1 - tx0) / (tz1 - tz0)
+    zk = H.FIN_TE_KINK[0][1]
+    near_te = cs([np.array([(te(zk) - FLAG_TE_FILL - 0.3, zk), (te(zk) + 3.0, zk),
+                            (te(90.0) + 3.0, 90.0), (te(90.0) - FLAG_TE_FILL - 0.3, 90.0)])])
+    ahead_te = cs([np.array([(150.0, 0.0), (te(0.0) + 0.3, 0.0), (te(120.0) + 0.3, 120.0),
+                             (150.0, 120.0)])])        # 0.3: through the trailing-edge face itself
+    taken = None
+    for _, sec in secs:
+        taken = sec if taken is None else taken + sec
+    ops = []
+    for colour, sec in secs:
+        sweep = sec
+        for k in range(1, 6):
+            sweep = sweep + sec.translate([FLAG_TE_FILL * k / 5, 0.0])
+        add = (sweep ^ near_te) - taken
+        taken = taken + add
+        ops.append((colour, (sec + add) ^ ahead_te))
     return ops
 
 
@@ -355,7 +389,7 @@ def colour_part(name, P):
         # the swoosh runs up to the fin root line, where the flag's white takes over
         sw = (side_stripes(1 if name.endswith("stbd") else -1)
               ^ cs([np.array([(176, H.FIN_ROOT_Z - 1), (240, H.FIN_ROOT_Z - 1), (240, 60.0), (176, 60.0)])])
-              ) - above_fuselage(FIN_FLAG_ABOVE + 0.3)
+              ) - above_fuselage(FIN_FLAG_ABOVE + SWOOSH_UP)
         ops = [(WHITE, side ^ prism_y(sw))]
         for colour, sec in fin_flag(1 if name.endswith("stbd") else -1):
             ops.append((colour, side ^ prism_y(sec)))
