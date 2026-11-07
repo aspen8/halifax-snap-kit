@@ -75,16 +75,23 @@ CHEAT_NOSE = (1.8, 1.75, 1.1)      # x, lower edge z, width at the nose tip: the
 CHEAT_POD_X = 95.0                 # full letter height reached here (on the pod)
 CHEAT_GAP = 2.0                    # mm of red between the band and the lettering
 # Where the swoosh meets the fin flag, per side (+1 starboard, -1 port): x, z of its centre line,
-# direction, width there. v12: set so that 1 mm above the fuselage line it covers exactly the
-# flag's white in front of the small blue triangle, with the white's edge angle: port X 216.9-228.0,
-# starboard X 211.0-224.7 (the flag is mirrored, so its white sits differently on each side;
-# photo ref/hawk/photo_pair_60th_port_stbd.png). Re-measure after re-tracing the flag.
-SWOOSH_TOP = {-1: (221.11, 25.0, 0.514, 0.857, 9.52),
-              +1: (216.45, 25.0, 0.545, 0.838, 12.25)}
+# direction, width there. Set so that at the seam (FIN_FLAG_ABOVE over the fuselage line) it
+# covers exactly the flag's white in front of the small blue triangle, with the white's edge angle
+# (v13, 0.5 mm over the fuselage line: port X 216.9-227.8, starboard X 211.2-224.4). The flag is
+# mirrored, so its white sits differently on each side (photo
+# ref/hawk/photo_pair_60th_port_stbd.png). Re-measure after re-tracing the flag
+# (out/hawk/fin/join.py style: intersect both with lines just above the fuselage line).
+SWOOSH_TOP = {-1: (221.30, 25.0, 0.514, 0.857, 9.35),
+              +1: (216.39, 25.0, 0.545, 0.838, 11.07)}
 SWOOSH_UP = 0.8                    # the swoosh runs this far above the flag's lower edge, under its
                                    # ragged traced base (the flag paints over it)
 FLAG_TE_FILL = 1.0                 # mm: the flag is carried aft up to the trailing edge over gaps this
                                    # wide (the trace loses the drawing's outline line there)
+FLAG_TE_FILL_FROM = 4.0            # ...but only from this far above the kink corner up
+FLAG_BASE_STRETCH = (3.2, 10.0)    # mm: the flag's lowest 10 mm is stretched down by up to 3.2 mm
+                                   # to reach the fuselage line at the fin root...
+FLAG_BASE_X1 = 242.5               # ...ahead of this x (fading out over the 3 mm before it), where
+                                   # the red diagonal reaches the root (243.9 port, 243.4 starboard)
 FIN_FLAG_ABOVE = 0.4               # mm above the fuselage top line where the fin flag starts
 WHITE_DIR = ROOT / "ref" / "hawk_white"
 
@@ -137,7 +144,7 @@ def cheat_rear(side):
     P = np.array([(rx, zc), (rx + 20.0, zc), (x3 - dx * 13.0, z3 - dz * 13.0), (x3, z3)])
     u = np.linspace(0, 1, 120)[:, None]
     c = ((1 - u) ** 3 * P[0] + 3 * (1 - u) ** 2 * u * P[1] + 3 * (1 - u) * u * u * P[2] + u ** 3 * P[3])
-    c = np.vstack([c, [x3 + dx * 6.0, z3 + dz * 6.0]])     # runs on to the fin root line
+    c = np.vstack([c, [x3 + dx * 12.0, z3 + dz * 12.0]])   # runs on past the fin root line (clipped there)
     s = np.clip((np.r_[u[:, 0], 1.0] - 0.3) / 0.7, 0, 1)
     w = h + (w3 - h) * s
     sec = _ribbon(c, w)
@@ -295,6 +302,18 @@ def fin_flag(side):
     if not p.exists():
         raise SystemExit(f"missing {p}: run tools/trace_colours.py hawk/tools/fin_flag_{tag}.json {p}")
     cls = json.load(open(p))["classes"]
+    # The flag's lower-aft fit point sits above the kink corner (fin_flag_*.json, v13), so the
+    # red diagonal crosses the corner and runs on into the angled piece. That lifts the flag's
+    # base off the fuselage line by up to 2 mm ahead of the diagonal: stretch the lowest band of
+    # the flag down to meet it (a smooth stretch, so the blue triangles keep their slanted sides).
+    fx = np.linspace(170.0, 270.0, 201)
+    fz = np.array([H.fuse_at(x)[2] for x in fx]) + FIN_FLAG_ABOVE
+    drop, band = FLAG_BASE_STRETCH
+    def stretch(r):
+        x, z = r[:, 0], r[:, 1]
+        h = np.clip((z - np.interp(x, fx, fz)) / band, 0.0, 1.0)
+        wx = np.clip((FLAG_BASE_X1 - x) / 3.0, 0.0, 1.0)
+        return np.c_[x, z - drop * (1.0 - h) * wx]
     secs = []
     for name, colour in (("white", WHITE), ("blue", BLUE)):
         keep = []
@@ -304,16 +323,18 @@ def fin_flag(side):
             cx, cz = r.mean(0)
             if a < 1.0 or (cx < 212.0 and cz < 32.0):      # specks, and page background by the fillet
                 continue
-            keep.append(r)
+            keep.append(stretch(r))
         if keep:
             secs.append((colour, cs(keep) ^ fin_surface()))
     # Carry each colour straight aft (x only) over the thin red gaps the trace leaves along the
     # trailing edge, but only into what would otherwise be red, and only near the edge. Then clip
     # the whole flag to the straight trailing-edge line: the angled piece below the kink, which
-    # sweeps back over the jet pipe, stays red (photos).
+    # sweeps back over the jet pipe, stays red (photos). No fill near the kink: there the flag's
+    # red diagonal meets the trailing edge and runs on into the angled piece (v13), and sweeping
+    # the white strip above it aft would push white down over that corner.
     (tx0, tz0), (tx1, tz1) = H.FIN_TE
     te = lambda z: tx0 + (z - tz0) * (tx1 - tx0) / (tz1 - tz0)
-    zk = H.FIN_TE_KINK[0][1]
+    zk = H.FIN_TE_KINK[0][1] + FLAG_TE_FILL_FROM
     near_te = cs([np.array([(te(zk) - FLAG_TE_FILL - 0.3, zk), (te(zk) + 3.0, zk),
                             (te(90.0) + 3.0, 90.0), (te(90.0) - FLAG_TE_FILL - 0.3, 90.0)])])
     ahead_te = cs([np.array([(150.0, 0.0), (te(0.0) + 0.3, 0.0), (te(120.0) + 0.3, 120.0),

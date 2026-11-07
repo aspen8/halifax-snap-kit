@@ -49,7 +49,20 @@ Against photos (top: real aircraft, bottom: model):
 
 ![photo comparison](docs/photo_comparison.png)
 
-> **Status: v12, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+> **Status: v13, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+
+### v13 changes (red diagonal into the angled trailing edge)
+
+Paint only; the geometry is v11's.
+
+- **Red diagonal meets the angled piece:** v12 had white at the bottom corner of the trailing edge, where the angled piece starts. The flag's lower-aft fit point is now 3 mm up the trailing edge (Z 30), so the flag's red diagonal crosses that corner: the bottom 2 mm of the trailing edge are red on both sides, and the diagonal runs on into the angled piece as one red band. The trailing-edge gap fill stops 4 mm above the corner (sweeping the white strip aft had pushed it down over the corner).
+- **Flag base:** moving the fit point lifted the flag's base off the fuselage line by up to 2 mm ahead of the diagonal. The lowest 10 mm of the flag is stretched down to meet it, so the small blue triangles keep their slanted sides down to the root.
+- **Swoosh:** re-matched to the flag's white at the seam on each side (within 0.4 mm), and runs on further into the fin root so its aft corner isn't cut short.
+- **Checks:** all 7 plates slice; the fins and canopy plate is 4.1 h.
+
+![v13 tail paint](docs/v13_tail_paint.png)
+
+![v13 tail, tailplanes hidden: the red diagonal runs into the angled trailing edge](docs/v13_tail_corner.png)
 
 ### v12 changes (tail paint, checked against a photo of a pair)
 
