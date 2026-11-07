@@ -81,13 +81,19 @@ FUSE_STATIONS = [
     (70.0, 11.4,  17.5,  -8.2, 3.8),
     (90.0, 11.5,  20.0,  -8.4, 3.8),
     (110.0, 11.7, 22.0,  -8.5, 3.6),
-    (124.0, 11.8, 23.0,  -8.3, 3.3),
+    (117.0, 11.75, 25.5, -8.4, 3.0, 13.0, 3.4),     # v22: the body's upper sides rise out from
+    (124.0, 11.8, 28.0,  -8.3, 3.0, 13.0, 3.4),     # under the canopy fairing gradually (its top
+                                                    # went 23 -> 33.6 over X 124-134: a step in the
+                                                    # side, seen as a kink behind the canopy)
     # behind the cockpit the body takes the whole top line (no separate spine): an "egg"
     # section, widest at z_w, rounder above (n_up) than below. x, hw, top, bottom, n_lo, z_w, n_up
-    (134.0, 11.8, 33.6,  -8.0, 2.6, 13.0, 2.7),     # upright sides behind the canopy (photos):
-    (140.0, 11.7, 35.5,  -7.9, 2.6, 13.0, 2.7),     # widest higher up and squarer above, so
-    (152.6, 11.6, 33.6,  -7.4, 2.5, 12.5, 2.6),     # the side runs up flat and only rounds
-    (166.7, 11.6, 32.4,  -6.7, 2.6, 12.0, 2.5),     # over near the top
+    (134.0, 11.8, 33.6,  -8.0, 2.6, 13.0, 3.4),     # upright sides behind the canopy (photos):
+    (140.0, 11.7, 34.6,  -7.9, 2.6, 13.0, 3.8),     # widest higher up and squarer above, so
+    (152.6, 11.6, 33.6,  -7.4, 2.5, 12.5, 3.3),     # the side runs up flat and only rounds
+    (166.7, 11.6, 32.4,  -6.7, 2.6, 12.0, 2.9),     # over near the top. v22: squarer shoulders
+                                                    # (n_up) from X 134 to 167, so they carry on
+                                                    # behind the canopy fairing (it ends at X 142)
+                                                    # instead of dropping 3 mm: a waist there
     (180.9, 11.6, 31.2,  -5.2, 2.8, 11.0, 2.8),
     (195.0, 11.6, 29.2,  -3.9, 3.1, 9.5, 4.5),
     (208.0, 11.5, 27.6,  -3.0, 3.2, 8.0, 6.5),
@@ -115,9 +121,11 @@ SPINE_STATIONS = [            # canopy and the fairing just behind it (aft of x 
     (98.0, 10.7, 37.3),
     (105.0, 10.7, 37.5),
     (112.0, 10.6, 37.3),
-    (126.1, 10.2, 36.2),
-    (138.8,  9.6, 35.2),
-    (142.0,  9.0, 34.4),
+    (119.0, 10.7, 36.8),          # v22: behind the canopy the fairing widens steadily to the body's
+    (126.1, 10.9, 36.2),          # width at that height, instead of narrowing to 9.0: it pinched in
+    (132.0, 11.1, 35.7),          # and the body stepped out behind it (a waist and kink at X 126-134)
+    (138.8, 11.2, 35.0),
+    (142.0, 11.1, 34.4),
 ]
 SPINE_N = 2.3
 FRONT_SPLIT_X = 43.0         # nose/front joint, on the dome's vertical cut (DOME_CUT_X): the dome face
@@ -244,9 +252,8 @@ TAIL_ROOT_Y = 8.5            # pivot line at the fuselage side
 TAIL_FLOOR = 15.2            # underside at the root
 TAIL_ANHEDRAL = 10.0
 TAIL_TC = 0.10
-TAIL_PIVOT = (0.32, 2.6, 2.5, 0.05 * _P)   # all-moving tailplanes: pivot at this root chord
-                             # fraction; spigot d, how far it reaches inboard of the fuselage-side
-                             # line (y 8.5 -> 2.5 below); fit per side (snug: holds its setting)
+TAIL_PIVOT = (0.32,)         # all-moving tailplanes: pivot at this root chord fraction (v22: a snap
+                             # boss, TAIL_SNAP, replaces the round spigot)
 TAIL_SWING = 12.0            # deg each way the tailplane can turn without touching the fuselage
 TAIL_GAP = 0.25              # mm between the root and the fuselage side
 TAIL_PLUG_Y0 = 2.0           # each tailplane's own section runs on into the fuselage to here (no
@@ -279,11 +286,15 @@ NOZZLE = dict(r=5.0, out=3.0, wall=1.0, spig_r=4.0, spig_len=8.0, void=10.0, rim
                              # from behind shows a bigger nozzle, about 6.2)
 
 # --- Smoke pod (centreline): (fraction of length, radius) profile
-POD_X0, POD_LEN = 90.5, 95.0  # v18: nose 1.5 mm further forward (Revell plan and underside views)
-POD_NOSE = 0.115             # tangent-ogive nose this fraction of the length (v18: blunter, was 0.14)
-POD_TAIL_END = 189.0         # v18 (Revell side and underside views): behind the tube the underside
-                             # sweeps up to a blunt end at about mid-height while the top stays level
-                             # and the sides taper in; only the last part rises into the belly
+POD_X0, POD_LEN = 87.0, 95.0  # v22 (clean straight-down render): the nose at X 87, just behind the
+                             # point where the underside white chevron meets
+POD_NOSE = 0.116             # tangent-ogive nose this fraction of the length
+POD_TUBE_END = 150.0         # full section to here, then a long taper (render: the sides narrow from
+POD_TAIL_END = 195.0         # about X 150 to a point near X 195); the underside sweeps up from X 160
+                             # in one S-curve, tangent into the belly at the end (v22b: it stopped at
+                             # mid-height and then rounded up again, a bulb on the tail)
+POD_W = 4.8                  # half-width (render: ~9.6 across); POD_R is the half-height (an oval:
+                             # deeper than wide, as from behind)
 POD_R = 5.6                  # photos: a fat tube, round blunt nose, long tail cone, hung close under the belly
 def _ogive(n=14):
     L, R = POD_NOSE * 95.0, POD_R
@@ -296,9 +307,9 @@ def _ogive(n=14):
     return out
 
 
-POD_PROFILE = _ogive() + [(0.80, POD_R)]
+POD_PROFILE = _ogive() + [((POD_TUBE_END - POD_X0) / POD_LEN, POD_R)]
 POD_PYLON = (8.0, 2.6, 0.6)   # (inset unused since v7), half-width, gap pod top to belly
-POD_TAIL_N = 13  # fore/aft inset, half-width, height
+POD_TAIL_N = 19  # fore/aft inset, half-width, height
 POD_KEYS = [0.116, 0.72]     # pylon pegs: the front one sits ahead of the port wing tongue (X 117-124)
 POD_KEY = 4.0
 
@@ -310,9 +321,21 @@ MAIN_PLUG_DEPTH = 2.6        # the wing is 4.1 mm thick here: keep >= 0.8 mm abo
 MAIN_WHEEL = (15.0, 5.0)     # diameter, width
 NOSE_WHEEL = (11.0, 4.0)
 GEAR_DROP = 22.0
-STUB_D = 2.4                 # stub axles moulded on the legs (3.0 mm printed: the 1.8 mm pins broke)
-STUB_CLEAR = 0.35 * _P       # wheel bore over the stub, diametral: the wheel spins
-STUB_GRIP = 0.0              # retainer bore: line-for-line (holes print small, so it grips)
+# v22 snap fits (the Halifax prop boss, tested on the X2D in PLA): a boss on the leg, split by a
+# spring slot, with a mushroom head that pushes through a lip in the wheel's hub into a cavity
+# behind it. All sizes in PRINTED mm (the clearances come from the printer, not the model), so
+# they are multiplied by _P where used. neck/head/lip/cav are diameters.
+GEAR_SNAP = dict(neck=4.6, head=6.8, head_len=1.5, cham=0.8, slot=1.5, slot_in=5.0,
+                 lip=5.5, lip_t=1.2, lip_cham=0.4, cav=7.4, end_gap=0.4, gap=0.3)
+                             # running clearance 0.45 (spins), retention 0.65 (stays on), slot 1.5
+                             # (the prongs close 1.3), cavity 0.3 over the head, 0.4 end gaps,
+                             # 0.3 between the leg and the wheel
+TAIL_SNAP = dict(neck=4.0, head=5.4, head_len=1.5, cham=0.6, slot=1.4, slot_in=4.0,
+                 lip=4.1, lip_t=1.2, lip_cham=0.3, cav=6.0, end_gap=0.4, gap=None)
+                             # the tailplanes: smaller to suit the thin root, retention 0.65, but
+                             # only 0.05 running clearance so they hold their setting (gap: TAIL_GAP)
+LEG_T_IN = 1.0               # main legs are this much thicker on their inner (bed) face, so the
+                             # spring slot can run 4 mm in
 
 # --- Display stand
 STAND_X = 134.0              # between the port and starboard wing tongues
@@ -895,7 +918,8 @@ def wing_half_region(side, top):
 
 
 def wing_pins(side, grow=0.0):
-    """Pins across the split, in thick parts of the wing (grow > 0: their holes)."""
+    """Pins across the split, in thick parts of the wing (grow > 0: their holes). Both wing
+    halves print split face down, so the pins can't be moulded on either: they are separate."""
     d, h = WING_PIN
     ps = []
     for eta, f in WING_PINS:
@@ -954,10 +978,19 @@ def tail_flat():
 
 
 def tail_pivot_axis():
-    """(x, z) of the spigot axis in the flat frame (before anhedral)."""
-    f, d, _, _ = TAIL_PIVOT
+    """(x, z) of the pivot axis in the flat frame (before anhedral): the snap boss's head just
+    clears the bed (the tailplane prints flat on its underside)."""
+    f = TAIL_PIVOT[0]
     le, c = tail_plan(TAIL_ROOT_Y / TAIL_SEMISPAN)
-    return le + f * c, TAIL_FLOOR + d / 2 - 0.2
+    return le + f * c, TAIL_FLOOR + TAIL_SNAP["head"] / 2 * _P + 0.05
+
+
+@cached
+def tail_side_y():
+    """y of the fuselage side on the pivot axis (flat frame)."""
+    ax, az = tail_pivot_axis()
+    o = rot_about(outer(), TAIL_PT, "x", TAIL_ANHEDRAL)
+    return (o ^ box(ax - 0.2, ax + 0.2, 0, 30, az - 0.2, az + 0.2)).bounding_box()[4]
 
 
 def _tail_to_assembled(m, side):
@@ -969,7 +1002,6 @@ def _tail_to_assembled(m, side):
 def tailplane(side):
     """All-moving tailplane: the panel trimmed clear of the fuselage through +-TAIL_SWING about
     the pivot, plus a round spigot (flat on the bed side) into a hole in the fuselage."""
-    f, d, reach, _ = TAIL_PIVOT
     ax, az = tail_pivot_axis()
     t = tail_flat() ^ box(0, 400, TAIL_PLUG_Y0, 100, -50, 100)
     t = _tail_to_assembled(t, 1)
@@ -986,21 +1018,22 @@ def tailplane(side):
     keep_out = union([keep_out] + [keep_out.translate([0, 0, dz]) for dz in (g, -g)] + [keep_out.translate([0, -g, 0])])
     t = t - keep_out
     t = K.largest_piece(t)[0]
-    sp = cyl((ax, TAIL_ROOT_Y - reach, az), d, reach + 3.0, "y", 32) ^ box(0, 400, -50, 100, TAIL_FLOOR, 100)
-    t = t + _tail_to_assembled(sp, 1)
+    # v22: a snap boss (TAIL_SNAP) on the root, into a lip and cavity in the fuselage side; the
+    # spring slot is horizontal, so the prongs bend along the print layers
+    ys = tail_side_y()
+    boss, slot = snap_boss((ax, ys + g, az), (0, -1, 0), (0, 0, 1), TAIL_SNAP, g)
+    boss = boss ^ box(0, 400, -50, 100, TAIL_FLOOR, 100)
+    t = t + _tail_to_assembled(boss, 1) - _tail_to_assembled(slot, 1)
+    t = K.largest_piece(t)[0]
     return t if side > 0 else t.mirror([0, 1, 0])
 
 
 def tail_socket(side):
-    """Teardrop hole for the spigot (point aft: the rear section prints tail up)."""
-    f, d, reach, fit = TAIL_PIVOT
+    """Lip and cavity for the tailplane's snap boss; the cavity is a teardrop pointing aft (the
+    rear section prints tail up)."""
     ax, az = tail_pivot_axis()
-    r = d / 2 + fit
-    y0, L = TAIL_ROOT_Y - reach - 0.3, reach + 4.0
-    c = cyl((ax, y0, az), 2 * r, L, "y", 32)
-    tip = box(ax + r * 1.41 - 0.01, ax + r * 1.41, y0, y0 + L, az - 0.005, az + 0.005)
-    h = M.hull_points(np.vstack([np.asarray(c.to_mesh().vert_properties)[:, :3],
-                                 np.asarray(tip.to_mesh().vert_properties)[:, :3]]))
+    ys = tail_side_y()
+    h = snap_socket((ax, ys, az), (0, -1, 0), (0, 0, 1), TAIL_SNAP, tear=(1, 0, 0))
     return _tail_to_assembled(h, side)
 
 
@@ -1239,18 +1272,21 @@ def smoke_pod():
     """Pod (body of revolution) on a short pylon; two halves split on the centreline."""
     zb, zc = pod_geom()
     front = POD_PROFILE
-    pod = _revolve_x([(POD_X0 + f * POD_LEN, rr) for f, rr in front]).translate([0, 0, zc])
-    # tail: from the end of the tube to POD_TAIL_END the underside curves up and the top rises
-    # with the belly line, narrowing to a point buried in the belly (no step, no gap)
+    pod = _revolve_x([(POD_X0 + f * POD_LEN, rr) for f, rr in front]).scale([1, POD_W / POD_R, 1]).translate([0, 0, zc])
+    # tail: from the end of the tube the sides taper in a long curve to a point at POD_TAIL_END;
+    # the underside sweeps up in one S-curve from X 160 into the belly; the top stays level to
+    # X 175, then eases into the belly
     top0, bot0 = zc + POD_R, zc - POD_R
-    x0, x1 = POD_X0 + 0.80 * POD_LEN, POD_TAIL_END
+    x0, x1 = POD_TUBE_END, POD_TAIL_END
     zbel = fuse_at(x1)[3]
     tail = []
     for t in np.linspace(0.0, 1.0, POD_TAIL_N):
         x = x0 + t * (x1 - x0)
-        top = top0 + (zbel + 1.2 - top0) * max(0.0, (t - 0.6) / 0.4) ** 2
-        bot = bot0 + (zc + 1.0 - bot0) * t ** 1.6 + (zbel + 0.4 - zc - 1.0) * max(0.0, (t - 0.9) / 0.1) ** 2
-        hw_ = max(0.6, POD_R * (1 - t ** 2))
+        u = min(max((x - 160.0) / (x1 - 160.0), 0.0), 1.0)
+        bot = bot0 + (zbel + 0.4 - bot0) * u * u * (3 - 2 * u)
+        v = min(max((x - 175.0) / (x1 - 175.0), 0.0), 1.0)
+        top = top0 + (zbel + 1.2 - top0) * v * v * (3 - 2 * v)
+        hw_ = max(0.5, POD_W * (1 - t * t))
         tail.append((x, hw_, top, bot))
     pod = pod + to_m(loft([superellipse_wire(x, h, tp, bt, 2.0) for x, h, tp, bt in tail], ruled=True))
     # pylon: the whole length, so there is no gap to the belly anywhere; it narrows with the pod
@@ -1258,7 +1294,8 @@ def smoke_pod():
     pw = [(POD_X0 + f * POD_LEN, min(hw, 0.55 * rr), zc) for f, rr in POD_PROFILE if f >= 0.03]
     pw += [(x, min(hw, 0.55 * h), (tp + bt) / 2) for x, h, tp, bt in tail[1:]]
     pylon = to_m(loft([superellipse_wire(x, h, zb + 4.0, z0, 6.0) for x, h, z0 in pw], ruled=True))
-    p = (pod + pylon) - body()
+    p = (pod + pylon) - outer()           # the finished outer shape: body() sits up to 0.6 above
+                                          # the belly ahead of the wing (v22: the pylon cut into it)
     k = STAND_KEY / 2 + FIT
     p = (p + pod_pegs()) - box(STAND_X - k, STAND_X + k, -k, k, zc - 20, zc + STAND_SOCKET_TOP)
     pts = [(POD_X0 + f * POD_LEN, 0.0, zc) for f in POD_HALF_KEYS]
@@ -1271,10 +1308,12 @@ def pod_sockets():
     return pod_key_slots()
 
 
-AERIALS = [  # x, top|bottom, height, chord, sweep
+AERIALS = [  # x, top|bottom, height, chord, sweep (v22: placed from the clean side render; black)
     (143.0, "top", 6.0, 6.5, 3.0),     # UHF blade behind the canopy
-    (68.0, "bottom", 4.5, 5.0, 2.0),   # under the nose
-    (205.0, "bottom", 4.0, 5.0, 2.0),  # under the rear fuselage
+    (16.0, "top", 3.0, 3.5, 1.5),      # small blade on top of the nose
+    (48.0, "bottom", 2.5, 3.5, 1.5),   # under the nose, just behind the nose leg
+    (75.0, "bottom", 4.5, 5.0, 2.0),   # under the nose, below the cockpit
+    (243.0, "bottom", 2.5, 3.5, 1.5),  # small blade under the tail, behind the ventral bulge
 ]
 AERIAL_T = 1.0
 AERIAL_FIT = 0.05 * _P        # along the chord only; the thickness is line-for-line (holes print small)
@@ -1314,7 +1353,9 @@ def strakes():
 
 def aerial_base(a):
     x, where, *_ = a
-    return spine_top(x + 3.0) if where == "top" else fuse_at(x + 3.0)[3]
+    if where == "top":
+        return spine_top(x + 3.0) if x + 3.0 >= SPINE_STATIONS[0][0] else fuse_at(x + 3.0)[2]
+    return fuse_at(x + 3.0)[3]
 
 
 def aerial(a, slot=False):
@@ -1332,43 +1373,92 @@ def aerial(a, slot=False):
     return K.cs([pts]).extrude(AERIAL_T).translate([0, 0, -AERIAL_T / 2]).rotate([90, 0, 0])
 
 
+def _frame(p, a, n):
+    """3x4 matrix taking local (x along n, z along a) to the assembled frame at p."""
+    a = np.asarray(a, float); a /= np.linalg.norm(a)
+    n = np.asarray(n, float); n -= a * (n @ a); n /= np.linalg.norm(n)
+    b = np.cross(a, n)
+    return np.c_[n, b, a, np.asarray(p, float)]
+
+
+def snap_boss(p, a, n, S, gap):
+    """(boss, slot) for a snap fit: the boss stands on its parent's face at p, pointing along a;
+    the spring slot (cut from the boss and the parent) lies across n. Returns both to add/cut."""
+    k = _P
+    rn, rh, hl, ch = S["neck"] / 2 * k, S["head"] / 2 * k, S["head_len"] * k, S["cham"] * k
+    zh = gap + (S["lip_t"] + S["end_gap"]) * k                     # the head's shoulder
+    neck = M.cylinder(zh + 1.0 + 0.01, rn, rn, 48).translate([0, 0, -1.0])   # from inside the parent
+    head = M.cylinder(hl - ch, rh, rh, 64).translate([0, 0, zh]) \
+        + M.cylinder(ch + 0.02, rh, rh - ch, 64).translate([0, 0, zh + hl - ch - 0.02])   # lead-in (overlaps:
+                                                                       # faces that only touch stay apart)
+    w = S["slot"] * k
+    slot = box(-w / 2, w / 2, -rh - 1, rh + 1, -S["slot_in"] * k, zh + hl + 1)
+    T = _frame(p, a, n)
+    return (neck + head).transform(T), slot.transform(T)
+
+
+def snap_socket(p, a, n, S, depth_max=None, tear=None):
+    """Lip and cavity for snap_boss, entering the part's face at p along a. depth_max limits the
+    45-degree cavity roof (flat beyond); tear (a direction) makes the cavity a teardrop for a
+    roof that faces that way when printed."""
+    k = _P
+    rl, lt, lc = S["lip"] / 2 * k, S["lip_t"] * k, S["lip_cham"] * k
+    rc, cd = S["cav"] / 2 * k, (S["head_len"] + 2 * S["end_gap"]) * k
+    hole = M.cylinder(lt + 0.2, rl, rl, 48).translate([0, 0, -0.1]) \
+        + M.cylinder(lc, rl + lc, rl, 48) + M.cylinder(1.0, rl + lc, rl + lc, 48).translate([0, 0, -1.0])
+    cav = M.cylinder(cd, rc, rc, 64).translate([0, 0, lt])
+    roof = rc if depth_max is None else max(0.0, min(rc, depth_max - lt - cd))
+    if roof > 0.01:
+        cav = cav + M.cylinder(roof, rc, rc - roof, 64).translate([0, 0, lt + cd])
+    T = _frame(p, a, n)
+    cav = cav.transform(T)
+    if tear is not None:
+        t = np.asarray(tear, float); t /= np.linalg.norm(t)
+        pa = np.asarray(p, float); av = np.asarray(a, float) / np.linalg.norm(a)
+        tips = [pa + av * z + t * rc * 1.41 for z in (lt, lt + cd)]
+        cav = M.hull_points(np.vstack([np.asarray(cav.to_mesh().vert_properties)[:, :3], np.array(tips)]))
+    return hole.transform(T) + cav
+
+
 def gear_socket_nose():
     zb = fuse_at(NOSE_GEAR_X)[3]
     return box(NOSE_GEAR_X - 2.2 - FIT, NOSE_GEAR_X + 2.2 + FIT, -2.2 - FIT, 2.2 + FIT, zb - 1, zb + 6.3)
 
 
-def wheel_m(x, yc, z_axle, d, w):
-    tyre = cq.Workplane("XZ").circle(d / 2).extrude(w / 2, both=True).edges().fillet(min(1.5, w / 3))
+def wheel_m(x, yc, z_axle, d, w, inb=-1):
+    """Wheel with its snap socket in the inboard face (towards -y for inb=-1): that face is plain
+    and flat with a small chamfer, as it prints on it; tyre rounding and hub detail outboard."""
+    tyre = cq.Workplane("XZ").circle(d / 2).extrude(w / 2, both=True)
+    tyre = tyre.edges(">Y" if inb < 0 else "<Y").fillet(min(1.5, w / 3))
+    tyre = tyre.faces("<Y" if inb < 0 else ">Y").edges().chamfer(0.3 * _P)
     t = to_m(tyre)
-    for s in (-1, 1):
-        t = t - cyl((0, s * (w / 2 + 0.1), 0), d * 0.58, -s * 0.7, "y")
-        t = t + cyl((0, s * (w / 2 - 0.6), 0), d * 0.26, s * 0.45, "y")
-    t = t - cyl((0, -w, 0), STUB_D + STUB_CLEAR, 2 * w, "y")
+    s = -inb                                                    # outboard
+    t = t - cyl((0, s * (w / 2 + 0.1), 0), d * 0.58, -s * 0.7, "y")
+    t = t + cyl((0, s * (w / 2 - 0.6), 0), d * 0.26, s * 0.45, "y")
+    face = (0, inb * w / 2, 0)
+    t = t - snap_socket(face, (0, -inb, 0), (1, 0, 0), GEAR_SNAP, depth_max=w - 1.2)
     return t.translate([x, yc, z_axle])
 
 
 def nose_gear():
-    """Nose leg in two parts (like PB94's Spitfire gear): the main part (plug, oleo, fork top and
-    left arm) carries a stub axle through the wheel; the right arm presses onto the stub's end and
-    tongues into the fork top. Returns (main, right arm, (x, z_axle))."""
+    """Nose leg in one part: plug, oleo, fork top and one (left) arm carrying the snap boss the
+    wheel pushes onto (v22; it was a stub axle into a press-on right arm). The arm is thick
+    enough on its outer (bed) face for the spring slot. Returns (leg, (x, z_axle))."""
     zb = fuse_at(NOSE_GEAR_X)[3]
     d, w = NOSE_WHEEL
     x = NOSE_GEAR_X + 3.0
     z_axle = zb - GEAR_DROP + 1.0 + d / 2
-    yo = w / 2 + 0.5 + 1.2
+    gap = GEAR_SNAP["gap"] * _P
+    yi = -(w / 2 + gap)                                                # arm's inner face (boss face)
+    yb = yi - 4.4                                                      # its outer face, on the bed
     zc0 = z_axle + d / 2 + 0.3                                         # underside of the fork top
-    main = union([box(NOSE_GEAR_X - 2.0, NOSE_GEAR_X + 2.0, -2.0, 2.0, z_axle + d / 2 + 1.0, zb - 0.1),   # oleo
-                  box(NOSE_GEAR_X - 2.2, NOSE_GEAR_X + 2.2, -2.2, 2.2, zb - 0.2, zb + 6.0),                # plug
-                  box(NOSE_GEAR_X - 2.0, x + 2.0, -yo - 1.2, yo + 1.2, zc0, z_axle + d / 2 + 2.6),         # fork top
-                  box(x - 2.0, x + 2.0, -yo - 1.2, -yo + 1.2, z_axle - 2.0, zc0 + 0.01),                   # left arm
-                  cyl((x, -yo + 1.2 - 0.01, z_axle), STUB_D, 2 * yo - 1.2 + 0.01, "y", 32)])              # stub,
-                                                                                          # into the right arm
-    tongue = box(x - 1.0, x + 1.0, yo - 0.6, yo + 0.6, zc0 - 0.01, zc0 + 1.6)
-    arm = box(x - 2.0, x + 2.0, yo - 1.2, yo + 1.2, z_axle - 2.0, zc0) + tongue
-    arm = arm - cyl((x, 0, z_axle), STUB_D + STUB_GRIP, 20, "y", 32)
-    g = FIT
-    main = main - box(x - 1.0 - g, x + 1.0 + g, yo - 0.6 - g, yo + 0.6 + g, zc0 - 0.1, zc0 + 1.6 + 0.3)
-    return main, arm, (x, z_axle)
+    leg = union([box(NOSE_GEAR_X - 2.0, NOSE_GEAR_X + 2.0, -2.0, 2.0, z_axle + d / 2 + 1.0, zb - 0.1),   # oleo
+                 box(NOSE_GEAR_X - 2.2, NOSE_GEAR_X + 2.2, -2.2, 2.2, zb - 0.2, zb + 6.0),                 # plug
+                 box(NOSE_GEAR_X - 2.0, x + 2.0, yb, w / 2 + 0.6, zc0, z_axle + d / 2 + 2.6),               # fork top
+                 box(x - 2.4, x + 2.4, yb, yi, z_axle - 2.6, zc0 + 0.01)])                                # arm
+    S = dict(GEAR_SNAP, slot_in=4.25)                                  # the arm is 5.5 mm (printed)
+    boss, slot = snap_boss((x, yi, z_axle), (0, 1, 0), (1, 0, 0), S, gap)
+    return (leg + boss) - slot, (x, z_axle)
 
 
 def wing_underside_z(y, x=None):
@@ -1397,23 +1487,24 @@ def main_gear(side):
     ang = math.degrees(math.atan2(xa - x, zb - z_axle))                     # leg raked aft
     t = 2.2                                                                 # half-thickness: one flat
                                                                             # face for printing on its side
-    leg = rot_about(box(x - 2.0, x + 2.0, y - t, y + t, zb - L - 2.0, zb - 0.1), (x, y, zb), "y", -ang)
+    ya, yb_ = sorted((y - side * (t + LEG_T_IN), y + side * t))             # thicker on the bed face
+    leg = rot_about(box(x - 2.0, x + 2.0, ya, yb_, zb - L - 2.0, zb - 0.1), (x, y, zb), "y", -ang)
     leg = leg - box(x - 20, x + 40, y - 10, y + 10, zb - 0.1, zb + 20)   # trimmed flush under the wing
     y0 = y + side * t                                                       # boss face, towards the wheel
-    y_out = y0 + side * (0.5 + w + 0.3)                                     # retainer's inner face
+    gap = GEAR_SNAP["gap"] * _P
     f = union([leg,
-               box(x - 2.2, x + 2.2, y - t, y + t, zb - 0.2, zb + MAIN_PLUG_DEPTH),   # plug
-               box(xa - 2.6, xa + 2.6, y - t, y + t, z_axle - 2.6, z_axle + 2.6),     # axle boss
-               cyl((xa, y0 - side * 0.01, z_axle), STUB_D, side * (0.5 + w + 0.3 + 1.0 + 0.01), "y", 32)])
-    cap = cyl((xa, y_out, z_axle), 4.6, side * 1.2, "y", 48) - cyl((xa, y_out - side, z_axle), STUB_D + STUB_GRIP, side * 4, "y", 32)
-    return f, cap, (xa, y0 + side * (0.5 + w / 2), z_axle)
+               box(x - 2.2, x + 2.2, ya, yb_, zb - 0.2, zb + MAIN_PLUG_DEPTH),         # plug
+               box(xa - 2.8, xa + 2.8, ya, yb_, z_axle - 2.8, z_axle + 2.8)])          # axle boss
+    boss, slot = snap_boss((xa, y0, z_axle), (0, side, 0), (1, 0, 0), GEAR_SNAP, gap)
+    return (f + boss) - slot, (xa, y0 + side * (gap + w / 2), z_axle)
 
 
 def main_socket(side):
     x, y = MAIN_GEAR
     y *= side
     zb = wing_underside_z(y)
-    return box(x - 2.2 - FIT, x + 2.2 + FIT, y - 2.2 - FIT, y + 2.2 + FIT, zb - 1, zb + MAIN_PLUG_DEPTH + 0.3)
+    ya, yb_ = sorted((y - side * (2.2 + LEG_T_IN), y + side * 2.2))
+    return box(x - 2.2 - FIT, x + 2.2 + FIT, ya - FIT, yb_ + FIT, zb - 1, zb + MAIN_PLUG_DEPTH + 0.3)
 
 
 def axle_pin(start, axis, sign, length, head=True):
@@ -1648,17 +1739,15 @@ def build():
     parts["smoke_pod_port"], poses["smoke_pod_port"] = pp, R(rx=-90)
     for i, a in enumerate(AERIALS):
         parts[f"aerial_{i + 1}"], poses[f"aerial_{i + 1}"] = aerial(a), R(rx=90)
-    ng, narm, (nx, nz) = nose_gear()
-    parts["gear_nose"], poses["gear_nose"] = ng, R(rx=90)               # on its side, stub up
-    parts["gear_nose_arm"], poses["gear_nose_arm"] = narm, R(rx=-90)     # on its outer face
+    ng, (nx, nz) = nose_gear()
+    parts["gear_nose"], poses["gear_nose"] = ng, R(rx=90)               # on its arm's outer face, boss up
     d, w = NOSE_WHEEL
-    parts["wheel_nose"], poses["wheel_nose"] = wheel_m(nx, 0, nz, d, w), R(rx=90)
+    parts["wheel_nose"], poses["wheel_nose"] = wheel_m(nx, 0, nz, d, w, -1), R(rx=90)   # on its inboard face
     for side, tag in ((1, "stbd"), (-1, "port")):
-        g, cap, (gx, gy, gz) = main_gear(side)
-        parts[f"gear_main_{tag}"], poses[f"gear_main_{tag}"] = g, R(rx=90 * side)    # on its side, stub up
-        parts[f"gear_cap_{tag}"], poses[f"gear_cap_{tag}"] = cap, R(rx=90 * side)
+        g, (gx, gy, gz) = main_gear(side)
+        parts[f"gear_main_{tag}"], poses[f"gear_main_{tag}"] = g, R(rx=90 * side)    # on its side, boss up
         d, w = MAIN_WHEEL
-        parts[f"wheel_main_{tag}"], poses[f"wheel_main_{tag}"] = wheel_m(gx, gy, gz, d, w), R(rx=90)
+        parts[f"wheel_main_{tag}"], poses[f"wheel_main_{tag}"] = wheel_m(gx, gy, gz, d, w, -side), R(rx=90 * side)
     post, base, piv = stand_parts()
     parts["stand_post"] = post
     poses["stand_post"] = lambda m: rot_about(m, piv, "y", STAND_PITCH).rotate([90, 0, 0])

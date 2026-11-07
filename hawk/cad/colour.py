@@ -199,11 +199,48 @@ def widen(sec, wmin):
     return sec + thin.offset(max(0.0, (wmin - 1.2) / 2), mf.JoinType.Round) if not thin.is_empty() else sec
 
 
+# v22 lettering, laid out from the clean side render (units: px of that render, letters 20 tall):
+# each letter's box (start, end) along the line. "A" and "Y" are the RAF lettering's own shapes
+# (A: a vertical right leg and a sloping left leg; Y: one diagonal with a short arm joining it
+# half way up); the rest are DejaVu Sans Bold fitted to their boxes. "AIR FORCE" is set close.
+LETTER_BOXES = [("R", 0, 13), ("O", 18, 36), ("Y", 40, 58), ("A", 53, 69), ("L", 76, 88),
+                ("A", 98, 112), ("I", 118, 121), ("R", 127, 140),
+                ("F", 149, 160), ("O", 162, 181), ("R", 185, 200), ("C", 204, 220), ("E", 226, 239)]
+LETTER_UNIT_H = 20.0
+LETTER_STROKE = 3.2          # px: stroke width of the drawn A and Y (the render's I is 3 px wide)
+
+
+def _glyph(ch, x0, x1):
+    """Polygons for one letter in its box, 0..LETTER_UNIT_H tall."""
+    H_, s_ = LETTER_UNIT_H, LETTER_STROKE
+    if ch == "A":
+        leg = cs([np.array([(x1 - s_, 0), (x1, 0), (x1, H_), (x1 - s_, H_)])])
+        diag = cs([np.array([(x0, 0), (x0 + s_ * 1.3, 0), (x1 - s_ * 0.2, H_), (x1 - s_ * 1.5, H_)])])
+        outline = (leg + diag).hull()
+        bar = cs([np.array([(x0, 5.0), (x1, 5.0), (x1, 5.0 + s_ * 0.9), (x0, 5.0 + s_ * 0.9)])]) ^ outline
+        return leg + diag + bar
+    if ch == "Y":
+        diag = cs([np.array([(x0, 0), (x0 + s_ * 1.3, 0), (x1, H_), (x1 - s_ * 1.3, H_)])])
+        t = 0.45                                                  # the arm joins this far up
+        xm = x0 + s_ * 0.65 + (x1 - x0 - s_ * 1.3) * t
+        arm = cs([np.array([(x0 + 0.5, H_), (x0 + 0.5 + s_ * 1.25, H_), (xm + s_ * 0.6, H_ * t), (xm - s_ * 0.6, H_ * t)])])
+        return diag + arm
+    t = text_section(ch, H_, 0.0, 0.0)
+    gx0, gz0, gx1, gz1 = t.bounds()
+    return t.translate([-gx0, -gz0]).scale([(x1 - x0) / (gx1 - gx0), H_ / (gz1 - gz0)]).translate([x0, 0])
+
+
 def letters_section(side):
+    """ROYAL AIR FORCE on the side, (x, z): R at the front on both sides (mirrored to starboard),
+    sized to LETTERS, tilted to LETTER_TILT, strokes grown by LETTER_BOLD."""
     txt, xc, zc, length, h = LETTERS
-    t = text_section(txt, h, 0.0, 0.0, mirror=side > 0)
-    x0, z0, x1, z1 = t.bounds()
-    t = t.translate([-(x0 + x1) / 2, -(z0 + z1) / 2]).scale([length / (x1 - x0), h / (z1 - z0)])
+    t = mf.CrossSection()
+    for ch, x0, x1 in LETTER_BOXES:
+        t = t + _glyph(ch, x0, x1)
+    gx0, gz0, gx1, gz1 = t.bounds()
+    t = t.translate([-(gx0 + gx1) / 2, -(gz0 + gz1) / 2]).scale([length / (gx1 - gx0), h / (gz1 - gz0)])
+    if side > 0:
+        t = t.mirror([1.0, 0.0])
     t = t.rotate(LETTER_TILT).translate([xc, zc])
     return t.offset(LETTER_BOLD, mf.JoinType.Round)
 
@@ -215,7 +252,8 @@ def letters_section(side):
 # band's tip in to the belly; two stripes along the belly from there to the tail, joined in a U.
 CHEVRON_OUT = ((110.0, 17.40), 0.7068)   # outer edge of the band: point (x, |y|), slope d|y|/dx
 CHEVRON_IN = ((118.0, 16.27), 0.5095)    # inner edge of the band
-CHEVRON_FRONT = (90.6, 3.2)              # the band starts at this x, beside the centre pod (|y|)
+CHEVRON_FRONT = (80.0, 0.0)              # v22: the bands run on to meet in a point on the centreline
+                                         # (X 85.4-86.1), just ahead of the smoke pod's nose (user)
 TE_STRIP_W = 7.3                         # trailing-edge strip, measured forward from the TE
 BELLY_STRIPE = ((-0.0989, 25.62), (-0.0975, 28.64), 255.2)
                                          # belly stripes: inner and outer edge |y| = k x + c, and
@@ -268,6 +306,8 @@ def pod_at(x):
 
 POD_UNDER_UP = 1.6           # mm above a pod's bottom line that the underside white may reach (the
                              # pods hang 2 mm above the belly: v17 left their undersides red)
+POD_PAINT_X1 = 118.0         # ...only ahead of here: behind the wing's leading edge the pods sit on
+                             # the wing, and near its thin trailing edge the white showed above it (v22)
 
 
 def near_bottom(x0, x1, dz, n=120, pods=False):
@@ -326,11 +366,16 @@ def fuselage_markings(P):
     if x1 > 150.0:
         # behind the wing the belly stripes wrap up the rounded belly further than the 2 mm
         # band allows (they showed patchy), and there are no pod undersides there to catch
-        rear = down ^ near_bottom(x0, x1, BELLY_REAR_UP) ^ K.box(BELLY_REAR_X, 400.0, -100.0, 100.0, -100.0, 100.0)
+        # (v22) the full skin, not the downward one: on the round rear belly the stripes climb its
+        # steep sides, where a skin measured straight down thins to slivers (a ragged white edge
+        # just above the wing, seen from the side)
+        rear = (P - core) ^ near_bottom(x0, x1, BELLY_REAR_UP) ^ K.box(BELLY_REAR_X, 400.0, -100.0, 100.0, -100.0, 100.0)
         ops.append((WHITE, (low + rear) ^ prism_z(under_white() ^ fuselage_plan(max(x0, 150.0), x1, inset=-2.0))))
-    if x0 < 162.0 and x1 > 86.0:                       # the chevron's run across the pods' undersides
-        pod_low = down ^ near_bottom(x0, x1, BELLY_CORNER_UP + 0.4, pods=True)
-        ops.append((WHITE, pod_low ^ prism_z(under_white() ^ fuselage_plan(max(x0, 86.0), min(x1, 162.0),
+    if x0 < 162.0 and x1 > 83.0:                       # the stripes' forward run, to their point
+        ops.append((WHITE, low ^ prism_z(under_white() ^ fuselage_plan(max(x0, 83.0), min(x1, 162.0), inset=-2.0))))
+    if x0 < POD_PAINT_X1 and x1 > 86.0:                # the chevron across the pods' undersides,
+        pod_low = down ^ near_bottom(x0, x1, BELLY_CORNER_UP + 0.4, pods=True)   # ahead of the wing
+        ops.append((WHITE, pod_low ^ prism_z(under_white() ^ fuselage_plan(max(x0, 86.0), min(x1, POD_PAINT_X1),
                                                                           inset=-2.0, pods=True))))
     return ops
 
@@ -501,7 +546,13 @@ def colour_part(name, P):
         # fills the grooves (their walls and floor), so a groove through the flag doesn't show
         # as a line of bare red
         S = skins(P_plain.get(name, P), FIN_SKIN)
-        side = S["+y"] if name.endswith("stbd") else S["-y"]
+        # the side skin, plus the upward-facing skin on this half's side: where the fin flares
+        # into the spine the surface levels out, and a skin taken only across y left it red, so
+        # the swoosh and the flag's lowest white stopped short there (v22)
+        sgn = 1 if name.endswith("stbd") else -1
+        half = K.box(-50.0, 400.0, 0.0 if sgn > 0 else -100.0, 100.0 if sgn > 0 else 0.0, -100.0, 200.0)
+        low = K.box(-50.0, 400.0, -100.0, 100.0, -100.0, H.FIN_FILLET_Z)   # only the spine cap and
+        side = (S["+y"] if sgn > 0 else S["-y"]) + (S["up"] ^ half ^ low)  # the root fillet
         # the swoosh runs up to the fin root line, where the flag's white takes over
         sw = (side_stripes(1 if name.endswith("stbd") else -1)
               ^ cs([np.array([(176, H.FIN_ROOT_Z - 1), (240, H.FIN_ROOT_Z - 1), (240, 60.0), (176, 60.0)])])
@@ -536,6 +587,10 @@ def colour_part(name, P):
         hub = K.cyl_axis(c[0], c[1], d * 0.31, "y")
         return paint(P, [(GREY, hub)], base=BLACK)
     if name.startswith(("gear_", "pin_")):
+        return {GREY: P}
+    if name.startswith("aerial_"):                   # black blades (clean renders)
+        return {BLACK: P}
+    if name == "probe":                              # light grey metal (clean renders)
         return {GREY: P}
     if name == "stand_base":
         return stand_paint(P)
@@ -626,7 +681,7 @@ def add_object(objs, name, posed, out, whole):
 
 PLATE_GROUPS = [            # parts kept together by colour set (max 5 colours a plate)
     ("Fuselage", lambda n: n.startswith(("fuselage", "smoke_pod"))),
-    ("Tailplanes and small parts", lambda n: n.startswith(("tailplane", "aerial", "probe", "key_", "wingpin"))),
+    ("Tailplanes and small parts", lambda n: n.startswith(("tailplane", "key_", "wingpin"))),
     ("Wing tops", lambda n: n.startswith("wingtop_")),
     ("Wing undersides", lambda n: n.startswith("wingbot_")),
     ("Fins and canopy", lambda n: n.startswith("fin_") or n == "canopy"),
@@ -654,9 +709,10 @@ if __name__ == "__main__":
             print(f"!! {name}: dropped loose pieces {[round(v, 1) for v in dropped if v > 1.0]} mm3")
         if name.startswith(("wingtop_", "wingbot_")):     # panel lines from the whole wing, then split
             side = 1 if name.endswith("stbd") else -1
-            P = (wing_detailed(side) ^ H.wing_half_region(side, name.startswith("wingtop_"))) \
-                - H.wing_key_slot(side) - H.main_socket(side) - H.wing_pins(side, H.WING_PIN_FIT) \
-                - H.gear_bay(side)
+            top = name.startswith("wingtop_")
+            P = (wing_detailed(side) ^ H.wing_half_region(side, top)) \
+                - H.wing_key_slot(side) - H.main_socket(side) - H.gear_bay(side)
+            P = P - H.wing_pins(side, H.WING_PIN_FIT)
             P, _ = K.largest_piece(P)
         else:
             P_plain[name] = P                 # before panel lines and hinge grooves

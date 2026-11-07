@@ -51,6 +51,36 @@ Against photos (top: real aircraft, bottom: model):
 
 > **Status: v17, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
 
+### v22 changes (snap-fit gear and tailplanes, smoke pod, lettering, fixes)
+
+From the user's look at v21 in the slicer, each point checked against the clean renders.
+
+- **Wheels:** each snaps onto a sprung mushroom boss on its leg (the Halifax prop boss, to the user's tested numbers, kept in printed mm in `GEAR_SNAP`): neck 4.6, head 6.8 x 1.5 with a 0.8 lead-in and a square shoulder, a 1.5 mm spring slot running 5 mm in (4.25 on the nose arm), and in the hub a 5.5 lip 1.2 thick with a 7.4 cavity behind it and a 45-degree roof. The wheels print flat on their plain inboard face; tyre rounding and hub detail are outboard. The nose leg is now one part (one arm), and the separate nose arm and main-wheel caps are gone. The main legs are 1 mm thicker on their bed face so the slot can run in.
+- **Tailplanes:** the same snap fit, smaller to suit the thin root (`TAIL_SNAP`: neck 4.0, head 5.4, lip 4.1, retention 0.65), with only 0.05 mm running clearance so they hold their setting rather than spin. The slot is horizontal, so the prongs bend along the layers; the cavity in the fuselage is a teardrop (the rear section prints tail up).
+- **Smoke pod:** from the straight-down render: nose at X 87, an oval 9.6 wide by 11.2 deep, full section to X 150, then a long taper to a point at X 195, the underside sweeping up in one S-curve into the belly (no bulb at the end). Its pylon is trimmed to the finished belly.
+- **Underside white:** the chevron bands run on to meet in a point just ahead of the pod's nose. The pods' undersides are painted only ahead of the wing (X 118): behind it the white showed above the wing's thin trailing edge.
+- **Lettering:** laid out letter by letter from the clean side render, with the RAF lettering's own A (a vertical right leg) and Y (one diagonal with a short arm), and "AIR FORCE" set close.
+- **Kink behind the canopy:** the canopy fairing now widens steadily into the body, and the body's upper sides rise out from under it gradually (its top went from 23 to 33.6 over 10 mm, which left a step); the top line's bump at X 140 is gone.
+- **Fin paint:** the fin halves are painted on their upward-facing surfaces too, below the root fillet: where the fin flares into the spine the surface levels out, and the swoosh and the flag's lowest white stopped short there. This adds about an hour to the fins and canopy plate.
+- **Aerials and probe:** 5 black aerials at the render's positions; the probe is grey. Both are on the gear plate.
+- **Rear belly stripes:** painted to full skin depth (they climb the round rear belly's sides).
+- **Wing pins:** still separate. Moulding them on a half doesn't work: both halves print split face down.
+- **Checks:** interference shows only the known overlaps; all 7 plates slice. Print times: fuselage 11.7 h, tailplanes and small parts 0.7 h, wing tops 1.8 h, wing undersides 1.7 h, fins and canopy 5.4 h, stand 2.2 h, gear and small black/grey parts 1.2 h. Print a test coupon of the wheel snap before the full gear (user's guidance).
+
+![v22 port side](docs/v22_side.png)
+
+![v21 and v22 behind the canopy (print geometry)](docs/v22_kink.png)
+
+![v22 lettering](docs/v22_letters.png)
+
+![v22 underside](docs/v22_under.png)
+
+![v22 smoke pod tail](docs/v22_pod_tail.png)
+
+![v21 and v22 fin joint from above](docs/v22_fin_seam.png)
+
+![v22 gear](docs/v22_gear.png)
+
 ### v21 changes (roundel ring, pod line)
 
 - **Fuselage roundel:** a 1 mm white ring round the blue, as in the clean side render (about a tenth of the blue's diameter). The wing roundels have none in the references and are unchanged.
@@ -310,18 +340,18 @@ Open `kit/hawk_kit.3mf` in Bambu Studio. Its 7 plates have the filaments already
 
 Suggested settings: PLA, 0.16 mm layers for the gear plate and 0.2 mm elsewhere, 2 walls, 15% gyroid infill, no supports. Use a brim on the fuselage sections (the middle one stands 117 mm tall). Painting the markings in costs purge filament on the fuselage plate (the side markings change colour on most layers); that was chosen over press-in inlays.
 
-## Kit contents (54 parts)
+## Kit contents (53 parts)
 
 - **Airframe:**
   - 4 fuselage sections: nose (radome and the red dome under the windscreen, X 0.9–46), front (front cockpit, X 46–86), middle (rear cockpit, intakes and wing roots) and rear
   - pitot probe, a separate part with a 3 × 5 mm plug that pushes into the nose tip. It is shorter and thicker than scale (30 × 3 mm printed, against 42 × 2 mm).
   - 2 fin halves, which carry the spine cap and the dorsal fillet
   - 2 wings, each a top and a bottom half on 5 alignment pins (glue them). Each root carries a small filler ahead of the leading edge, hidden inside the intake pod, so the pod's socket for it prints without a flat overhang.
-  - 2 all-moving tailplanes with 10° anhedral, each on a spigot
-  - smoke pod (2 halves), a fat tube with a round nose and a long tail cone, with pegs moulded on its pylon that push into the belly
+  - 2 all-moving tailplanes with 10° anhedral, each snapping into the fuselage on a sprung mushroom boss (tight: they hold their setting)
+  - smoke pod (2 halves), an oval tube (deeper than wide) with a round nose and a long taper that sweeps up into the belly, with pegs moulded on its pylon that push into the belly
   - 2 ventral strakes, moulded under the rear fuselage
   - jet nozzle: a separate grey ring standing 3.75 mm out of the tail, black inside, with a 12 mm deep void, a step ring, an exhaust cone and 6 struts at the bottom. A spigot plugs it into a countersunk socket in the tail.
-  - 3 aerials
+  - 5 black aerials (top of the nose, behind the canopy, two under the nose, one under the tail)
   - 2 ram-air scoops on the spine shoulders just behind the canopy (X 129–145, enlarged), teardrop-shaped with a forward-facing opening (side photos)
 - **Canopy:** solid and opaque, so there is no cockpit inside. It has a thick red windscreen arch (X 59.5 at the sill, leaning 23° forward at the top) and a white hoop between the cockpits (X 84, leaning 19° back). (v7: no black sill or rear frame.) It is cut on a flat plane through the two ends of the drawn bottom edge, so the part is canopy only, with no fuselage red, and its underside is flat apart from two pockets. That straight cut is the canopy's visible bottom edge; the drawn edge dips up to 2.5 mm lower under the front cockpit, but on the aircraft it reads as nearly straight. Two tabs moulded on the fuselage (one on the front section, one on the middle) drop into the pockets, so there are no loose canopy keys. The red nose top domes up into the windscreen, so from the front the glass base is an arch, as on the aircraft. The dome stays on the nose section, which ends on the same plane: the canopy's front is cut off on a vertical plane at X 46, exactly where its glass first reaches outside the dome, and ahead of that the canopy's whole cross-section is dome. Behind the cut the dome is left out, so the canopy keeps its shape with no recess underneath.
 - **Painted markings** (no inlays):
@@ -329,8 +359,8 @@ Suggested settings: PLA, 0.16 mm layers for the gear plate and 0.2 mm elsewhere,
   - tail swoosh: from behind the roundel, sweeping up to the fin flag
   - "ROYAL AIR FORCE" on each side
   - fuselage roundels, and wing roundels on the top and the bottom of each wing
-  - underside chevrons meeting in a V across the belly at the pod's nose, and belly stripes along the rear fuselage's lower corners
-- **Gear:** nose leg, 2 main legs, 3 wheels with grey hubs, headed axle pins.
+  - underside chevrons meeting in a point just ahead of the smoke pod's nose, and belly stripes along the rear fuselage's lower corners
+- **Gear:** nose leg (one piece), 2 main legs, 3 wheels. Each wheel snaps onto a sprung mushroom boss on its leg and spins on it (no pins, no glue).
 - **Keys** (fewer and bigger than before: 17.5 × 8.75 × 3.75 mm for the fuselage). Each is a split clip, like PB94's: both ends are split down the middle, so the prongs flex in and the key pushes in easily but still grips; the tips have 45° lead-ins and the middle is waisted. They print flat.
   - 2 at the nose/front joint, 2 at the front/middle joint and 3 at the middle/rear joint
   - 2 wing root keys, 18.5 × 17.5 × 4.25 mm, one per wing
