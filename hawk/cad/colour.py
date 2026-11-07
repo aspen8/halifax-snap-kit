@@ -4,7 +4,7 @@ Colour the Hawk kit (Red Arrows) and write a multi-colour Bambu Studio 3MF.
 Run:  python colour.py OUT_DIR [project_settings_template.json]   (default: cad/bambu_x2d_project_settings.json)
       ONLY=name,name python colour.py OUT_DIR      (just some parts)
 
-Scheme: Red Arrows Hawk T.1A, current Union-flag fin (traced from the HobbyBoss 81738 sheet).
+Scheme: Red Arrows Hawk T.1A, current Union-flag fin (traced from close-up photos of each side, v14).
   - Fuselage sections print red, on end. The white cheat line, tail swoosh, belly stripes,
     "ROYAL AIR FORCE" and the roundels are painted into the skin (multi-colour, no inlays).
     The lettering is regenerated as text; the stripes are drawn from lines fitted to the
@@ -77,21 +77,20 @@ CHEAT_GAP = 2.0                    # mm of red between the band and the letterin
 # Where the swoosh meets the fin flag, per side (+1 starboard, -1 port): x, z of its centre line,
 # direction, width there. Set so that at the seam (FIN_FLAG_ABOVE over the fuselage line) it
 # covers exactly the flag's white in front of the small blue triangle, with the white's edge angle
-# (v13, 0.5 mm over the fuselage line: port X 216.9-227.8, starboard X 211.2-224.4). The flag is
-# mirrored, so its white sits differently on each side (photo
-# ref/hawk/photo_pair_60th_port_stbd.png). Re-measure after re-tracing the flag
-# (out/hawk/fin/join.py style: intersect both with lines just above the fuselage line).
-SWOOSH_TOP = {-1: (221.30, 25.0, 0.514, 0.857, 9.35),
-              +1: (216.39, 25.0, 0.545, 0.838, 11.07)}
+# (v14 photo trace, 0.6 mm over the fuselage line: port X 217.7-229.1, starboard X 222.5-233.4).
+# The flag is mirrored, so its white sits differently on each side. Re-measure after re-tracing
+# the flag (intersect both with lines just above the fuselage line).
+SWOOSH_TOP = {-1: (222.44, 25.0, 0.482, 0.876, 9.99),
+              +1: (227.29, 25.0, 0.447, 0.894, 9.75)}
 SWOOSH_UP = 0.8                    # the swoosh runs this far above the flag's lower edge, under its
                                    # ragged traced base (the flag paints over it)
 FLAG_TE_FILL = 1.0                 # mm: the flag is carried aft up to the trailing edge over gaps this
                                    # wide (the trace loses the drawing's outline line there)
 FLAG_TE_FILL_FROM = 4.0            # ...but only from this far above the kink corner up
-FLAG_BASE_STRETCH = (3.2, 10.0)    # mm: the flag's lowest 10 mm is stretched down by up to 3.2 mm
-                                   # to reach the fuselage line at the fin root...
-FLAG_BASE_X1 = 242.5               # ...ahead of this x (fading out over the 3 mm before it), where
-                                   # the red diagonal reaches the root (243.9 port, 243.4 starboard)
+FLAG_MIN_ISLAND = 10.0             # mm2: smaller separate white/blue islands in the photo trace are
+                                   # watermarks or specks (the real flag's pieces are all larger)
+FLAG_BASE_FILL = 0.8               # mm: colours carried down over the ragged traced base...
+FLAG_BASE_X1 = {-1: 239.9, 1: 245.4}   # ...ahead of this x, where the red diagonal reaches the root
 FIN_FLAG_ABOVE = 0.4               # mm above the fuselage top line where the fin flag starts
 WHITE_DIR = ROOT / "ref" / "hawk_white"
 
@@ -295,43 +294,38 @@ def fin_outline(z0=None):
 
 
 def fin_flag(side):
-    """Union-flag fin traced from the HobbyBoss 81738 side views (tools/trace_colours.py,
-    specs in hawk/tools/fin_flag_*.json). Returns [(colour, section)] in (x, z)."""
+    """Union-flag fin traced from close-up photos of each side (v14; tools/trace_colours.py,
+    specs in hawk/tools/fin_flag_*.json, fitted through the trailing edge's top and kink
+    corners). Returns [(colour, section)] in (x, z)."""
+    from matplotlib.path import Path as MPath
     tag = "stbd" if side > 0 else "port"
     p = WHITE_DIR / f"fin_{tag}.json"
     if not p.exists():
         raise SystemExit(f"missing {p}: run tools/trace_colours.py hawk/tools/fin_flag_{tag}.json {p}")
     cls = json.load(open(p))["classes"]
-    # The flag's lower-aft fit point sits above the kink corner (fin_flag_*.json, v13), so the
-    # red diagonal crosses the corner and runs on into the angled piece. That lifts the flag's
-    # base off the fuselage line by up to 2 mm ahead of the diagonal: stretch the lowest band of
-    # the flag down to meet it (a smooth stretch, so the blue triangles keep their slanted sides).
-    fx = np.linspace(170.0, 270.0, 201)
-    fz = np.array([H.fuse_at(x)[2] for x in fx]) + FIN_FLAG_ABOVE
-    drop, band = FLAG_BASE_STRETCH
-    def stretch(r):
-        x, z = r[:, 0], r[:, 1]
-        h = np.clip((z - np.interp(x, fx, fz)) / band, 0.0, 1.0)
-        wx = np.clip((FLAG_BASE_X1 - x) / 3.0, 0.0, 1.0)
-        return np.c_[x, z - drop * (1.0 - h) * wx]
     secs = []
     for name, colour in (("white", WHITE), ("blue", BLUE)):
+        rings = [np.array(r) for r in cls.get(name, [])]
+        area = [0.5 * abs(np.dot(r[:, 0], np.roll(r[:, 1], 1)) - np.dot(r[:, 1], np.roll(r[:, 0], 1)))
+                for r in rings]
         keep = []
-        for r in cls.get(name, []):
-            r = np.array(r)
-            a = 0.5 * abs(np.dot(r[:, 0], np.roll(r[:, 1], 1)) - np.dot(r[:, 1], np.roll(r[:, 0], 1)))
+        for i, r in enumerate(rings):
             cx, cz = r.mean(0)
-            if a < 1.0 or (cx < 212.0 and cz < 32.0):      # specks, and page background by the fillet
+            hole = any(j != i and area[j] > area[i] and MPath(rings[j]).contains_point(r[0])
+                       for j in range(len(rings)))
+            # islands under FLAG_MIN_ISLAND mm2 are photo watermarks and specks; holes (red
+            # cut-outs in the white) stay. Also drop anything on the fuselage ahead of the fin.
+            if (not hole and area[i] < FLAG_MIN_ISLAND) or area[i] < 0.5 or (cx < 212.0 and cz < 32.0):
                 continue
-            keep.append(stretch(r))
+            keep.append(r)
         if keep:
             secs.append((colour, cs(keep) ^ fin_surface()))
     # Carry each colour straight aft (x only) over the thin red gaps the trace leaves along the
     # trailing edge, but only into what would otherwise be red, and only near the edge. Then clip
     # the whole flag to the straight trailing-edge line: the angled piece below the kink, which
     # sweeps back over the jet pipe, stays red (photos). No fill near the kink: there the flag's
-    # red diagonal meets the trailing edge and runs on into the angled piece (v13), and sweeping
-    # the white strip above it aft would push white down over that corner.
+    # red diagonal meets the fin's bottom edge and runs on into the red below, and sweeping the
+    # white strip above it aft would push white down over it.
     (tx0, tz0), (tx1, tz1) = H.FIN_TE
     te = lambda z: tx0 + (z - tz0) * (tx1 - tx0) / (tz1 - tz0)
     zk = H.FIN_TE_KINK[0][1] + FLAG_TE_FILL_FROM
@@ -339,6 +333,11 @@ def fin_flag(side):
                             (te(90.0) + 3.0, 90.0), (te(90.0) - FLAG_TE_FILL - 0.3, 90.0)])])
     ahead_te = cs([np.array([(150.0, 0.0), (te(0.0) + 0.3, 0.0), (te(120.0) + 0.3, 120.0),
                              (150.0, 120.0)])])        # 0.3: through the trailing-edge face itself
+    # The photo's flag base is ragged just above the fuselage line: carry the colours straight
+    # down over it (z only, into red only), ahead of where the red diagonal reaches the root.
+    d, x1 = FLAG_BASE_FILL, FLAG_BASE_X1[1 if side > 0 else -1]
+    base = (above_fuselage(FIN_FLAG_ABOVE - 0.3) - above_fuselage(FIN_FLAG_ABOVE + d + 0.3)) \
+        ^ cs([np.array([(150.0, 0.0), (x1, 0.0), (x1, 120.0), (150.0, 120.0)])])
     taken = None
     for _, sec in secs:
         taken = sec if taken is None else taken + sec
@@ -349,7 +348,12 @@ def fin_flag(side):
             sweep = sweep + sec.translate([FLAG_TE_FILL * k / 5, 0.0])
         add = (sweep ^ near_te) - taken
         taken = taken + add
-        ops.append((colour, (sec + add) ^ ahead_te))
+        down = sec
+        for k in range(1, 5):
+            down = down + sec.translate([0.0, -d * k / 4])
+        add2 = (down ^ base) - taken
+        taken = taken + add2
+        ops.append((colour, (sec + add + add2) ^ ahead_te))
     return ops
 
 

@@ -38,7 +38,9 @@ Then:
 - The user prints on a Bambu X2D (two nozzles, AMS). Keep the base red on the main nozzle (fixed per-plate map in `colour.py` `FILAMENT_MAP`/`MAPPED_PLATES`); the second nozzle runs outer walls at 50 mm/s.
 - The user often asks to "add to the to-do list" when near a usage limit: write it into `hawk/README.md` "Known gaps and next steps", commit, change nothing else.
 
-## State at handoff (v13, built, checked and committed locally)
+## State at handoff (v14, built, checked and committed locally)
+
+v14 changes (paint only): the fin flag is traced from the two close-up photos instead of the HobbyBoss sheet (`hawk/tools/fin_flag_*.json`; the photo file names are swapped: `photo_fin_stbd_closeup.webp` is the port side). Re-run `tools/trace_colours.py` per side to regenerate `ref/hawk_white/fin_*.json`, then re-check the swoosh/flag seam (`SWOOSH_TOP`) and the trailing-edge corner. The user asked for the flag to match the reference photos; v13's red-corner tweak is superseded by what the photos show. See README "v14 changes".
 
 v13 changes (paint only): the flag's lower-aft fit point is at (te(30), 30) in `hawk/tools/fin_flag_*.json`, so the flag's red diagonal crosses the TE's bottom corner and runs into the angled piece (user: "should flow seamlessly into the red part of the flag"); the flag's lowest 10 mm is stretched down to the fuselage line (`FLAG_BASE_STRETCH`); the swoosh re-matched (`SWOOSH_TOP`). After any re-trace, re-check the TE corner colours and the swoosh/flag seam. See README "v13 changes".
 
@@ -59,4 +61,4 @@ Test-print history: plate 1 (v3 fuselage) and the canopy/gear/nozzle plates (v3/
 3. ~~Fin against the drawing~~: done in v11 (outline within about 0.4 mm of the Revell side view, rounded tip). Waiting for the user's look.
 4. README to-dos still open: separate lettering panels (sharper text), nonplanar top-surface test (orcaslicer-nonplanar), canopy fit check on the next fuselage print, print-in-place control surfaces.
 5. Rudder hinge groove shows as a thin red line through the fin flag (seen in v12 renders); not yet raised with the user.
-6. Push to GitHub when the user asks. v10 to v13 are committed locally only (the checkout in use is the older one in Claude's scratch-workspaces folder, which has `ref/` and `.venv`).
+6. Push to GitHub when the user asks. v10 to v14 are committed locally only (the checkout in use is the older one in Claude's scratch-workspaces folder, which has `ref/` and `.venv`).

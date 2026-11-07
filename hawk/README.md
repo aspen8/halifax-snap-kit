@@ -49,7 +49,19 @@ Against photos (top: real aircraft, bottom: model):
 
 ![photo comparison](docs/photo_comparison.png)
 
-> **Status: v13, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+> **Status: v14, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+
+### v14 changes (fin flag traced from photos)
+
+Paint only; the geometry is v11's.
+
+- **Flag from photos:** the fin flag is now traced from the two close-up photos (one per side) instead of the HobbyBoss sheet, fitted through the trailing edge's top and kink corners. The St George's cross is now as wide as on the aircraft (about twice the HobbyBoss width), and the blue triangles and white bands have the photos' sizes and positions.
+- **Bottom corner:** as on the photos, a thin white strip reaches the trailing edge just above the kink, and the red diagonal meets the fin's bottom edge just ahead of it and runs on into the red below and the angled piece.
+- **Cleanup:** the port photo's watermark counts as red, and stray islands under 10 mm² are dropped. The ragged base just above the fuselage line is filled down 0.8 mm. The v13 stretch of the flag's base is gone (not needed with the photo fit).
+- **Swoosh:** re-matched to the photo flag's white at the seam (within 0.4 mm): port X 218–229, starboard X 223–233.
+- **Checks:** all 7 plates slice; the fins and canopy plate is 4.1 h.
+
+![v14 tail paint, port and starboard](docs/v14_tail_paint.png)
 
 ### v13 changes (red diagonal into the angled trailing edge)
 
@@ -289,7 +301,7 @@ The shape is measured from the Revell 04284 Hawk T.1A (Red Arrows) instruction s
 
 The scheme is the current one, with the Union-flag fin. It combines two sheets:
 
-- **Fin flag:** traced from the HobbyBoss 81738 side views with `tools/trace_colours.py`, one trace per side (specs in `tools/fin_flag_*.json`). Each view is fitted to the model through its fin corners and the nose tip, so the flag lands exactly on our fin. It's clipped to the fin itself: above the fuselage top line and behind the straight leading edge, so the spine cap and dorsal fillet stay red.
+- **Fin flag:** traced (v14) from close-up photos of each side with `tools/trace_colours.py`, one trace per side (specs in `tools/fin_flag_*.json`). Each photo is fitted to the model through the trailing edge's top corner and its bottom (kink) corner, so the flag lands exactly on our fin. Note the two close-up files are named the wrong way round: `photo_fin_stbd_closeup.webp` shows the port side (nose left) and is the port trace. Watermark colours in the port photo count as red, and islands under 10 mm² are dropped. (v9 to v13 used the HobbyBoss 81738 sheet, which drew the bands thinner and wobblier.) It's clipped to the fin itself: above the fuselage top line and behind the straight leading edge, so the spine cap and dorsal fillet stay red.
 - **Cheat line and swoosh** (parametric, from the photos, the same on both sides):
   - It starts at the nose tip, 1.1 mm wide and crossing the front of the nose just above the probe boss (head-on photo), and thickens gradually to the letter height (5.2 mm) on the side pod, then stops 2 mm short of "ROYAL AIR FORCE".
   - It resumes behind the roundel at the same height and sweeps up in one curve (a cubic Bezier) to the fin root, widening to 8 mm, where it meets the flag's white.
@@ -323,7 +335,7 @@ Checks: run `tools/interference.py` on the assembled STLs without the `key_*` fi
 - `cad/hawk.py`: station tables, parts, joints, print poses. CadQuery only makes the lofts and primitives; every boolean runs in manifold3d.
 - `cad/colour.py`: the Red Arrows scheme (painted markings), and the plates and 3MF.
 - `cad/detail.py`: panel lines, hinge lines, access panels and rivets.
-- `tools/refs.json`: calibration of the Revell views. `tools/fin_flag_*.json` holds the HobbyBoss trace specs. `tools/measure.py` is the diagnostic profile dump.
+- `tools/refs.json`: calibration of the Revell views. `tools/fin_flag_*.json` holds the fin-flag photo trace specs. `tools/measure.py` is the diagnostic profile dump.
 - `stl/`, `kit/`, `docs/`: outputs, as for the Halifax.
 
 ## Reference images (not in git)
