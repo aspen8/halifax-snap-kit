@@ -8,13 +8,12 @@ State on 2026-11-07, branch `phase1-airframe`: `kit/halifax_kit.3mf` is current 
 - Previous session's scratch scripts (may be gone): `final3.sh`, `nosecan.py` and `spinecamo.py` in the session scratchpad.
 
 ## Next up
-1. **Test plates** (not built yet). One small 3MF that tests the new fits without a full print:
-   - Sprung prop boss: the nose of one nacelle half-pair plus one prop.
-   - A code letter in a fuselage-wall coupon, and a fin flash in a fin-skin coupon, both with the floor peg and the hole in the inlay.
-   - Main gear: the two fork halves and the wheel. Tail gear: the two fork halves and the wheel.
-   - A flexing key in a slot coupon.
-
-   Make it a script, `cad/test_plate.py`, that reuses the `halifax.py` and `colour.py` builders: cut each part to a small box, then `kitlib.write_3mf`.
+1. **Test plate: built, waiting for a print.** `kit/halifax_test_plate.3mf`, one plate, 20 parts, 4 colours (black, red, white, blue), 0.12 mm layers. Rebuild with `cd cad && python test_plate.py OUT [project_settings_template.json]` (about 3 min). It contains:
+   - the nacelle 1 nose halves with the sprung boss (two plain keys hold the halves together), plus a prop;
+   - the port "G" in a fuselage-wall coupon, and the stbd fin flash in a fin coupon, both with peg and hole;
+   - main and tail gear fork halves and wheels, each with a block carrying its gear socket;
+   - a flexing nacelle key with two slot blocks.
+   Checks passed: single pieces, no interference, overhangs as in the kit. Render: `docs/test_plate_closeup.png`. Feed the print results back into `LESSONS.md` and the TODO decision on the code letters.
 2. **User idea, to discuss first:** "put the fuselage and colours back together and print on the wing plate", to simplify the model. Ask what they mean before building. It could mean merging the spine pieces back into the black body as painted sections, or moving the fuselage onto the wing plate.
 
 ## Recent decisions (the details are in git log)
