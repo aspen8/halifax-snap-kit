@@ -31,7 +31,13 @@ State on 2026-11-07, branch `phase1-airframe`, now worked on the user's Mac. `ki
    - Check in the app whether "Auto For Flush" already does this when slicing in the GUI.
    - Ship the flat wing pose too, as LESSONS suggests.
    - Use real flush volumes in place of the flat 350 mm³.
-4. **User idea, to discuss first:** "put the fuselage and colours back together and print on the wing plate", to simplify the model. Ask what they mean before building. It could mean merging the spine pieces back into the black body as painted sections, or moving the fuselage onto the wing plate.
+4. **Decided (2026-11-07): put the camo paint back on the fuselage. Start after the test print results are in.** The user wants to drop the separate clip-on spine pieces, paint the camo onto the black fuselage sections, and accept the long print and purge that come with it.
+   - Expect plate 1 to look like the wing plate: on end, with two colour changes on most layers.
+   - Fix the prime towers (item 2) in the same rebuild, then re-slice.
+   - **Purge bomb: considered and rejected.** The idea was a 1000 lb GP bomb set to "flush into this object" to take the purge. On the wing plate it doesn't pay:
+     - at 15% infill a 60 × 168 mm sink takes only its own weight (121 g);
+     - solid, it takes about 460 g of the 1078 g purge but adds about 25 h and about 80 g of filament in total.
+     - Bambu won't let the prime tower itself take another shape.
 
 ## Recent decisions (the details are in git log)
 - **Camo:** the spine pieces are painted from the plan pattern (Revell trace, `cad/ref/camo_plan_green.png`). There are 6 pieces, cut where the colours mix and oriented for the fewest purges.
