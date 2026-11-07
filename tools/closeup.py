@@ -1,16 +1,20 @@
 """
 Close-up renders of the coloured preview: one tile per view.
 
-  EGL_PLATFORM=surfaceless PYOPENGL_PLATFORM=egl \
-    python tools/closeup.py preview.glb out.png "40,0,-5 : -0.3,-1,0.35 : 110" "135,61,-30 : 0,1,0.05 : 110"
+  python tools/closeup.py preview.glb out.png "40,0,-5 : -0.3,-1,0.35 : 110" "135,61,-30 : 0,1,0.05 : 110"
 
 Each view is "target x,y,z : direction from target to camera : distance" (mm).
 Up to six views make a 3x2 sheet.
+
+Backend: on Linux it defaults to headless EGL (add EGL_PLATFORM=surfaceless on a
+machine with no display). On macOS it uses pyrender's default pyglet backend.
+Set PYOPENGL_PLATFORM yourself to override either.
 """
 import os
 import sys
 
-os.environ.setdefault("PYOPENGL_PLATFORM", "egl")
+if sys.platform.startswith("linux"):
+    os.environ.setdefault("PYOPENGL_PLATFORM", "egl")
 import numpy as np  # noqa: E402
 import pyrender  # noqa: E402
 import trimesh  # noqa: E402

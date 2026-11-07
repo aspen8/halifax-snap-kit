@@ -157,3 +157,28 @@ The nose spine piece stood on a 2.1 mm-thick end and leaned 12°. A lean of that
 ## Spinning props without a spindle
 
 After the A6M Zero kit card: mould a mushroom boss on the nose, split with the nacelle halves (4.8 mm neck, 6.4 mm head). Give the prop a rear lip that's narrower than the head, with a cavity behind it. Fit the prop over one half-boss, then close the other half: the head forms inside the spinner, so the prop is trapped and spins on a thick neck. Nothing needs to flex. A closed PLA ring can't stretch over 0.5 mm, so make the boss spring instead: a 1.2 mm slot through the head and neck, running 5 mm into the nose, makes two prongs that squeeze in (about 2% strain). The prop then pushes on, and off, after assembly. Add a lead-in chamfer on the lip. It also replaces the old printed shaft, captive flange and hex.
+
+## Slicing from the command line (Bambu Studio CLI)
+
+`tools/slice.py` wraps it. What tripped us up:
+- **Slice plate by plate.** With `--slice 0`, Bambu stops at the first plate with an error, so later plates get no numbers; `--no-check` doesn't change that. `--slice N` per plate gets every plate that can slice.
+- **Read `result.json`, not just the log.** It gives per plate: total time, filament changes, and `main_used_g` (in the parts) vs `total_used_g` (with flush and prime tower). Its `error_string` explains "gcode unprintable" codes in plain words. The G-code header's "volume [cm^3]" is mislabelled mm³.
+- **`--export-3mf` fails on macOS** ("Unable to open the file ...tmp") whatever the path. It isn't needed.
+- **Harmless log noise:**
+  - "can not find system preset file .../machine_full/..." (it uses the settings embedded in the 3MF);
+  - "Invalid T command (T65279/T65535)", from Bambu's own X2D end G-code.
+- **Mixed layer heights on one single-colour plate are fine.** Bambu interleaves them, adding 0.04 and 0.08 mm steps.
+
+## Prime towers need a position per plate
+
+The project template came from a 3-plate project, so it held 3 tower positions, and `write_3mf` copied them as they were. On the 9-plate kit:
+- Two towers landed on parts.
+- Plates without a position got Bambu's default back-left spot. Where there were many colour changes, the tower grew past the back edge of the bed.
+
+The geometry checks can't see any of this; only slicing shows it. Set `wipe_tower_x/y` for every plate in clear space: allow for the part brims, and keep x ≥ 21 on the X2D so both nozzles reach the tower. Slice every plate before handing a kit over.
+
+## Purge dominates multi-colour parts printed on end
+
+The wings print on end in black with camo on top. That means two filament changes on almost every one of the 1065 layers, which comes to 1.08 kg of purge and 50 hours of flushing for 143 g of wing. Count the colour changes per layer when choosing a print pose, not just layer-line visibility.
+
+On a dual-nozzle printer, keep the base colour on one nozzle and the accent colours on the other, so most changes are nozzle swaps without a flush. On the X2D the second nozzle can't reach x < 20.5 mm, so the plate packer must keep parts in that colour clear of it.
