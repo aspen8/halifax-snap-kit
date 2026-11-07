@@ -90,15 +90,15 @@ FUSE_STATIONS = [
     (166.7, 11.6, 32.4,  -6.7, 2.6, 12.0, 2.5),     # over near the top
     (180.9, 11.6, 31.2,  -5.2, 2.8, 11.0, 2.8),
     (195.0, 11.6, 29.2,  -3.9, 3.1, 9.5, 4.5),
-    (208.0, 11.5, 27.6,  -3.0, 3.4, 8.0, 7.0),
-    (226.0, 11.2, 25.9,  -2.0, 3.6, 8.0, 10.0),
-    (240.0, 10.8, 24.6,  -1.3, 3.8, 8.0, 10.0),
-    (252.0, 10.0, 23.0,  -0.6, 4.0, 8.0, 10.0),     # nearly level to the end (Revell side view),
-    (264.2,  8.8, 20.2,   1.0, 4.2, 7.8, 10.0),     # squared off: flat top edge at the end (photos)
+    (208.0, 11.5, 27.6,  -3.0, 3.2, 8.0, 6.5),
+    (226.0, 11.2, 25.9,  -2.0, 2.8, 8.0, 6.0),      # v18: boxy above the widest line, round below
+    (240.0, 10.8, 24.6,  -1.3, 2.4, 8.0, 5.5),      # it, the bottom going cylindrical round the jet
+    (252.0, 10.0, 23.0,  -0.6, 2.15, 8.0, 5.0),     # pipe (reference from behind); the change of
+    (264.2,  8.8, 20.2,   1.0, 2.0, 7.8, 5.0),      # curve at z_w reads as a faint waist line
 ]
 FUSE_END_X = 264.2
-# (v7: the upper squareness n_up rises to 10 from X 226 back: the rear fuselage's top corners are
-# square (photos). The lower corners stay rounder (n_lo 3.1 to 4.2))
+# (v7: the upper squareness n_up rose to 10 from X 226 back; v18 softens it to 5-6, which matches
+# the reference from behind, and rounds the bottom (n_lo 2.0 at the end, was 4.2))
 # Canopy and dorsal spine: (x, half_width, z_top); bottom is buried 6 mm in the body
 SPINE_STATIONS = [            # canopy and the fairing just behind it (aft of x 140 the body takes over)
     # v10: heights from X 41 to 105 traced off the Revell side view, one convex arc from the
@@ -151,13 +151,17 @@ INTAKE_STATIONS = [            # x, y_outer, z_top, z_bottom: the side pods (int
     (134.0, 16.8, 14.8, -5.4),     # ...and taper almost straight back...
     (142.0, 15.2, 14.2, -4.4),
     # rear (v6): a long fade into the fuselage side, the underside staying down on the wing to
-    # its trailing edge, so there is no visible end to the pod behind the wing root
-    (150.0, 13.8, 13.4, -4.6),
-    (158.0, 12.9, 12.6, -4.4),
-    (166.0, 12.2, 11.6, -3.8),
-    (174.0, 11.8, 10.4, -2.8),
-    (182.0, 11.5,  9.0, -1.6),
-    (190.0, 11.2,  7.6, -0.6),
+    # its trailing edge, so there is no visible end to the pod behind the wing root.
+    # v18: the top edge runs straight back to the roundel (Revell side view: z 15.2 at X 141
+    # to 9.5 at X 180) and the side stays just proud of the body until there, so the pod only
+    # finishes blending in at the roundel (it sagged down and in from X 160 before)
+    (150.0, 13.8, 13.3, -4.6),
+    (158.0, 13.0, 12.3, -4.4),
+    (166.0, 12.5, 11.3, -3.8),
+    (174.0, 12.2, 10.3, -2.8),
+    (182.0, 12.0,  9.3, -1.6),
+    (188.0, 11.8,  8.6, -0.9),
+    (192.0, 11.6,  8.0, -0.5),
 ]
 INTAKE_Y_IN = 10.8           # inner edge of the pods, just inside the body side: their rounded
                              # inner top corner leaves a notch, so they read as separate at the inlet
@@ -263,15 +267,17 @@ JET_PIPE = (7.0, 5.4, 6.8)   # (old blind pipe) depth, radius, z centre: the noz
 # out of the tail, wall, spigot radius and length into the fuselage, depth of the void.
 NOZZLE_FIT = 0.04 * _P       # spigot to socket, per side (FIT let it fall out)
 NOZZLE_RIB = 0.15 * _P       # 4 crush ribs along the spigot stand this proud: they grip
-NOZZLE = dict(r=5.0, out=3.0, wall=1.0, spig_r=4.0, spig_len=8.0, void=10.0)   # r 5.0 keeps 0.7 mm
-                                                                                 # of tail below the socket
+NOZZLE = dict(r=5.0, out=3.0, wall=1.0, spig_r=4.0, spig_len=8.0, void=10.0, rim=6.0)
+                             # r 5.0 at the tail face keeps 0.7 mm of tail below the socket; behind
+                             # the face the ring flares out at 45 degrees to rim (v18: the reference
+                             # from behind shows a bigger nozzle, about 6.2)
 
 # --- Smoke pod (centreline): (fraction of length, radius) profile
-POD_X0, POD_LEN = 92.0, 95.0
-POD_NOSE = 0.14              # v8: a tangent-ogive nose this fraction of the length (was a blunt
-                             # half-ellipse of 0.10)
-POD_TAIL_END = 192.0         # the tail sweeps up into the belly here (Revell side view): the underside
-                             # runs flat to about X 170, then curves up
+POD_X0, POD_LEN = 90.5, 95.0  # v18: nose 1.5 mm further forward (Revell plan and underside views)
+POD_NOSE = 0.115             # tangent-ogive nose this fraction of the length (v18: blunter, was 0.14)
+POD_TAIL_END = 189.0         # v18 (Revell side and underside views): behind the tube the underside
+                             # sweeps up to a blunt end at about mid-height while the top stays level
+                             # and the sides taper in; only the last part rises into the belly
 POD_R = 5.6                  # photos: a fat tube, round blunt nose, long tail cone, hung close under the belly
 def _ogive(n=14):
     L, R = POD_NOSE * 95.0, POD_R
@@ -286,7 +292,7 @@ def _ogive(n=14):
 
 POD_PROFILE = _ogive() + [(0.80, POD_R)]
 POD_PYLON = (8.0, 2.6, 0.6)   # (inset unused since v7), half-width, gap pod top to belly
-POD_TAIL_N = 9   # fore/aft inset, half-width, height
+POD_TAIL_N = 13  # fore/aft inset, half-width, height
 POD_KEYS = [0.116, 0.72]     # pylon pegs: the front one sits ahead of the port wing tongue (X 117-124)
 POD_KEY = 4.0
 
@@ -1230,9 +1236,9 @@ def smoke_pod():
     tail = []
     for t in np.linspace(0.0, 1.0, POD_TAIL_N):
         x = x0 + t * (x1 - x0)
-        top = top0 + (zbel + 1.2 - top0) * t * t
-        bot = bot0 + (zbel + 0.4 - bot0) * t ** 1.8
-        hw_ = max(0.35, POD_R * (1 - t ** 1.5))
+        top = top0 + (zbel + 1.2 - top0) * max(0.0, (t - 0.6) / 0.4) ** 2
+        bot = bot0 + (zc + 1.0 - bot0) * t ** 1.6 + (zbel + 0.4 - zc - 1.0) * max(0.0, (t - 0.9) / 0.1) ** 2
+        hw_ = max(0.6, POD_R * (1 - t ** 2))
         tail.append((x, hw_, top, bot))
     pod = pod + to_m(loft([superellipse_wire(x, h, tp, bt, 2.0) for x, h, tp, bt in tail], ruled=True))
     # pylon: the whole length, so there is no gap to the belly anywhere; it narrows with the pod
@@ -1429,12 +1435,16 @@ def nozzle():
     r, out, wall = n["r"], n["out"], n["wall"]
     sr, sl = n["spig_r"], n["spig_len"]
     cham = r - sr                                                   # 45 degrees
+    rim = n.get("rim", r)
+    flare = rim - r                                                 # 45 degrees out from the tail face
     body = (cyl((X - sl, 0, zc), 2 * sr, sl + 0.01, "x", 64)
             + cone_x(X - cham, 2 * sr, X + 0.01, 2 * r, 0, zc)
-            + cyl((X, 0, zc), 2 * r, out, "x", 96))
-    lip = cone_x(X + out - 0.6, 2 * (r - wall), X + out + 0.01, 2 * (r - wall * 0.45), 0, zc)  # thin exit lip
-    void = (cyl((X, 0, zc), 2 * (r - wall), out + 0.01, "x", 96)                # wide exit (not into
-                                                                                 # the flange: too thin)
+            + cone_x(X, 2 * r, X + flare + 0.01, 2 * rim, 0, zc)
+            + cyl((X + flare, 0, zc), 2 * rim, out - flare, "x", 96))
+    lip = cone_x(X + out - 0.6, 2 * (rim - wall), X + out + 0.01, 2 * (rim - wall * 0.45), 0, zc)  # thin exit lip
+    void = (cyl((X, 0, zc), 2 * (r - wall), out + 0.01, "x", 96)                # exit (not into the
+                                                                                 # flange: too thin)
+            + cyl((X + flare, 0, zc), 2 * (rim - wall), out - flare + 0.01, "x", 96)   # wider behind the flare
             + cyl((X + out - n["void"], 0, zc), 2 * (sr - 0.9), n["void"] - out + 0.1, "x", 64))   # deeper pipe,
                                                                                  # open into the exit
     floor = X + out - n["void"]

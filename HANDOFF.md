@@ -38,7 +38,9 @@ Then:
 - The user prints on a Bambu X2D (two nozzles, AMS). Keep the base red on the main nozzle (fixed per-plate map in `colour.py` `FILAMENT_MAP`/`MAPPED_PLATES`); the second nozzle runs outer walls at 50 mm/s.
 - The user often asks to "add to the to-do list" when near a usage limit: write it into `hawk/README.md` "Known gaps and next steps", commit, change nothing else.
 
-## State at handoff (v17, built, checked and committed locally)
+## State at handoff (v18, built, checked and committed locally)
+
+v18 changes: pod undersides painted (`pod_at`, `POD_UNDER_UP` in colour.py); lettering, roundel and cheat line refitted to the Revell side view (`LETTERS`, `LETTER_TILT`, `FUSE_ROUNDEL`, `CHEAT_LO`/`CHEAT_HI`, `SWOOSH_START`); side pods run straight to the roundel (`INTAKE_STATIONS`); rear fuselage boxy above and round below (`FUSE_STATIONS` n_lo/n_up from X 208); smoke pod blunter (`POD_X0`, `POD_NOSE`, `POD_TAIL_END`, tail loft); nozzle rim 6.0 (`NOZZLE["rim"]`). `tools/raster.py` renders the preview GLB without speckle. Still open: squadron badge, serial and aerial detail; lettering font is DejaVu Sans Bold (the real one is narrower, with "AIRFORCE" closer set).
 
 v17 changes: the user found a source of clean renders from any angle (`ref/hawk/renders/`); v17 reworks the underside white (`under_white`), canopy hoops (`CANOPY_FRAMES_X`), wing fins and leading-edge fences (`WING_FINS`, `WING_LE_FENCES` in hawk.py, `WHITE_WING_FINS` in colour.py) and the fin flag trace against them, and paints the wings and fuselage from their shape before the panel grooves (`P_plain`). Open from the review, not done: the rear fuselage looks boxier from behind than the reference; lettering slightly larger and higher in the reference; the reference's small aerials, squadron badge and serial are not modelled. The user can supply more angles on request.
 
@@ -67,4 +69,4 @@ Test-print history: plate 1 (v3 fuselage) and the canopy/gear/nozzle plates (v3/
 3. ~~Fin against the drawing~~: done in v11 (outline within about 0.4 mm of the Revell side view, rounded tip). Waiting for the user's look.
 4. README to-dos still open: separate lettering panels (sharper text), nonplanar top-surface test (orcaslicer-nonplanar), canopy fit check on the next fuselage print, print-in-place control surfaces.
 5. ~~Rudder hinge groove red line and TE speck~~: fixed in v16.
-6. Push to GitHub when the user asks. v10 to v17 are committed locally only (the checkout in use is the older one in Claude's scratch-workspaces folder, which has `ref/` and `.venv`).
+6. Push to GitHub when the user asks. v10 to v17 are pushed; v18 is committed locally only (the checkout in use is the older one in Claude's scratch-workspaces folder, which has `ref/` and `.venv`).

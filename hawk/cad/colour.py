@@ -61,18 +61,21 @@ FILAMENT_MAP = {RED: 1, WHITE: 2, BLUE: 1, BLACK: 1, CANOPY: 1, GREY: 1}
 MAPPED_PLATES = ("Fuselage", "Tailplanes and small parts", "Wing tops", "Wing undersides")
 ROUNDEL = lambda d: [(BLUE, d), (WHITE, d * 2 / 3), (RED, d / 3)]
 
-FUSE_ROUNDEL = (185.0, 4.6, 10.6)        # x, z, diameter: level with the lettering and just behind
-                                         # its last letter (side photos)
+FUSE_ROUNDEL = (186.8, 7.7, 11.1)        # x, z, diameter (v18: Revell side view; was 3 mm low)
 WING_ROUNDEL = (162.2, 94.8, 15.0)       # x, |y|, diameter (Revell top view)
-LETTERS = ("ROYAL AIR FORCE", 143.8, 4.6, 61.0, 5.2)   # text, x centre, z centre, length, height:
-                                                         # half way up the side pod (photos), so the cheat
-                                                         # line runs nearly level from the nose
-# Cheat line (photos): thin at the nose, thickening to the lettering's height on the side pod,
-# broken for "ROYAL AIR FORCE", resumed behind the roundel and swept up onto the fin in one curve.
+LETTERS = ("ROYAL AIR FORCE", 144.85, 6.9, 62.5, 5.6)  # text, x centre, z centre, length, height
+LETTER_TILT = 1.5            # deg, the line of lettering rises aft at this angle about its centre, on
+                             # the line from the cheat line to the roundel's centre (v18: Revell side
+                             # view, letters z 3.5-8.8 at the front, 4.8-10.6 at the back)
+# Cheat line (Revell side view, v18): a thin band from the nose tip whose top edge climbs steadily
+# while its lower edge stays nearly level, so it reaches the lettering's full height at its front
+# end; broken for "ROYAL AIR FORCE", resumed behind the roundel and swept up onto the fin.
 CHEAT_NOSE = (1.8, 1.75, 1.1)      # x, lower edge z, width at the nose tip: the band starts right
                                    # at the tip, just above the probe boss, so the two sides join
                                    # across the front of the nose (head-on photo)
-CHEAT_POD_X = 95.0                 # full letter height reached here (on the pod)
+CHEAT_LO = [(12.0, 2.2), (30.0, 2.5), (70.0, 2.5), (90.0, 2.8)]   # lower edge (x, z), then on to the
+CHEAT_HI = [(10.0, 3.6), (30.0, 4.3), (50.0, 5.0), (70.0, 6.0), (90.0, 7.0)]   # letters' corners
+SWOOSH_START = (8.4, 7.0)          # z of the centre line and width behind the roundel (Revell: 4.9-12.0)
 CHEAT_GAP = 2.0                    # mm of red between the band and the lettering
 # Where the swoosh meets the fin flag, per side (+1 starboard, -1 port): x, z of its centre line,
 # direction, width there. Set so that at the seam (FIN_FLAG_ABOVE over the fuselage line) it
@@ -136,25 +139,38 @@ def _ribbon(c, w):
     return cs([np.vstack([c + nrm, (c - nrm)[::-1]])])
 
 
-def cheat_front():
-    """Nose to the lettering: lower edge rising gently, width growing to the letter height."""
-    x0, zl0, w0 = CHEAT_NOSE
+def letter_box():
+    """Corners of the tilted lettering block: (front bottom, front top, rear bottom, rear top)."""
     _, xc, zc, length, h = LETTERS
-    x_end = xc - length / 2 - CHEAT_GAP
-    xs = np.linspace(x0, x_end, 140)
-    t = np.clip((xs - x0) / (CHEAT_POD_X - x0), 0, 1)
-    ease = t * t * (3 - 2 * t) * 0.35 + t * 0.65            # gradual, settling onto the pod
-    lo = zl0 + (zc - h / 2 - zl0) * ease
-    w = w0 + (h - w0) * ease
-    c = np.c_[xs, lo + w / 2]
-    return _ribbon(c, w) + mf.CrossSection.circle(w0 / 2, 16).translate([x0, zl0 + w0 / 2])
+    t = math.radians(LETTER_TILT)
+    c, s_ = math.cos(t), math.sin(t)
+    pt = lambda dx, dz: (xc + dx * c - dz * s_, zc + dx * s_ + dz * c)
+    return pt(-length / 2, -h / 2), pt(-length / 2, h / 2), pt(length / 2, -h / 2), pt(length / 2, h / 2)
+
+
+def cheat_front():
+    """Nose to the lettering: lower edge nearly level, upper edge climbing to the letter height."""
+    x0, zl0, w0 = CHEAT_NOSE
+    (fbx, fbz), (ftx, ftz), _, _ = letter_box()
+    x_end = min(fbx, ftx) - CHEAT_GAP
+    lo_t = [(x0, zl0)] + CHEAT_LO + [(x_end, fbz)]
+    hi_t = [(x0, zl0 + w0)] + CHEAT_HI + [(x_end, ftz)]
+    xs = np.linspace(x0, x_end, 160)
+    lo = np.interp(xs, *zip(*lo_t))
+    hi = np.interp(xs, *zip(*hi_t))
+    k = 9                                                     # soften the table's corners
+    pad = lambda a: np.r_[np.full(k, a[0]), a, np.full(k, a[-1])]
+    sm = lambda a: np.convolve(pad(a), np.ones(2 * k + 1) / (2 * k + 1), "valid")
+    lo, hi = sm(lo), sm(hi)
+    poly = np.r_[np.c_[xs, hi], np.c_[xs[::-1], lo[::-1]]]
+    return cs([poly]) + mf.CrossSection.circle(w0 / 2, 16).translate([x0, zl0 + w0 / 2])
 
 
 def cheat_rear(side):
     """From behind the roundel, level at the letter height, then one smooth curve up onto the fin
     (a cubic Bezier into the flag's white at the fin root), widening as it climbs."""
-    _, xc, zc, length, h = LETTERS
     rx, rz, rd = FUSE_ROUNDEL
+    zc, h = SWOOSH_START
     x3, z3, dx, dz, w3 = SWOOSH_TOP[1 if side > 0 else -1]
     P = np.array([(rx, zc), (rx + 20.0, zc), (x3 - dx * 13.0, z3 - dz * 13.0), (x3, z3)])
     u = np.linspace(0, 1, 120)[:, None]
@@ -184,7 +200,8 @@ def letters_section(side):
     txt, xc, zc, length, h = LETTERS
     t = text_section(txt, h, 0.0, 0.0, mirror=side > 0)
     x0, z0, x1, z1 = t.bounds()
-    t = t.scale([length / (x1 - x0), 1.0]).translate([xc, zc])
+    t = t.translate([-(x0 + x1) / 2, -(z0 + z1) / 2]).scale([length / (x1 - x0), h / (z1 - z0)])
+    t = t.rotate(LETTER_TILT).translate([xc, zc])
     return t.offset(LETTER_BOLD, mf.JoinType.Round)
 
 
@@ -237,16 +254,39 @@ def under_white():
     return half + half.mirror([0.0, 1.0])
 
 
-def near_bottom(x0, x1, dz, n=120):
-    """Everything below the fuselage's bottom line raised by dz, (x, z) prism through y."""
+def pod_at(x):
+    """Side pod's (outer |y|, bottom z) at x, or None outside it."""
+    st = H.INTAKE_STATIONS
+    if not st[0][0] <= x <= st[-1][0]:
+        return None
+    xs = [s_[0] for s_ in st]
+    return float(np.interp(x, xs, [s_[1] for s_ in st])), float(np.interp(x, xs, [s_[3] for s_ in st]))
+
+
+POD_UNDER_UP = 1.6           # mm above a pod's bottom line that the underside white may reach (the
+                             # pods hang 2 mm above the belly: v17 left their undersides red)
+
+
+def near_bottom(x0, x1, dz, n=120, pods=False):
+    """Everything below the fuselage's bottom line raised by dz, (x, z) prism through y (pods:
+    or below the side pods' bottom line raised by POD_UNDER_UP, if higher)."""
     xs = np.linspace(x0 - 1.0, x1 + 1.0, n)
-    zb = np.array([H.fuse_at(min(max(x, 0.8), H.FUSE_END_X))[3] + dz for x in xs])
+    def zb_at(x):
+        z = H.fuse_at(min(max(x, 0.8), H.FUSE_END_X))[3] + dz
+        p = pod_at(x) if pods else None
+        return max(z, p[1] + POD_UNDER_UP) if p else z
+    zb = np.array([zb_at(x) for x in xs])
     return prism_y(cs([np.r_[[(xs[0], -100.0), (xs[-1], -100.0)], np.c_[xs[::-1], zb[::-1]]]]))
 
 
-def fuselage_plan(x0, x1, inset=0.0, n=160):
+def fuselage_plan(x0, x1, inset=0.0, n=160, pods=False):
+    """Plan outline of the fuselage (pods: and its side pods), grown by -inset."""
     xs = np.linspace(x0, x1, n)
-    hw = np.array([max(H.fuse_at(x)[1] - inset, 0.1) for x in xs])
+    def hw_at(x):
+        h = H.fuse_at(x)[1]
+        p = pod_at(x) if pods else None
+        return max(h, p[0]) if p else h
+    hw = np.array([max(hw_at(x) - inset, 0.1) for x in xs])
     return cs([np.r_[np.c_[xs, hw], np.c_[xs[::-1], -hw[::-1]]]])
 
 
@@ -284,8 +324,10 @@ def fuselage_markings(P):
         # band allows (they showed patchy), and there are no pod undersides there to catch
         rear = down ^ near_bottom(x0, x1, BELLY_REAR_UP) ^ K.box(BELLY_REAR_X, 400.0, -100.0, 100.0, -100.0, 100.0)
         ops.append((WHITE, (low + rear) ^ prism_z(under_white() ^ fuselage_plan(max(x0, 150.0), x1, inset=-2.0))))
-    if x0 < 162.0 and x1 > 86.0:                       # the stripes' forward run to the pod's nose
-        ops.append((WHITE, low ^ prism_z(under_white() ^ fuselage_plan(max(x0, 86.0), min(x1, 162.0), inset=-2.0))))
+    if x0 < 162.0 and x1 > 86.0:                       # the chevron's run across the pods' undersides
+        pod_low = down ^ near_bottom(x0, x1, BELLY_CORNER_UP + 0.4, pods=True)
+        ops.append((WHITE, pod_low ^ prism_z(under_white() ^ fuselage_plan(max(x0, 86.0), min(x1, 162.0),
+                                                                          inset=-2.0, pods=True))))
     return ops
 
 
@@ -480,6 +522,8 @@ def colour_part(name, P):
         # grey metal outside and on the rim, black inside the void
         n = H.NOZZLE
         inside = H.cyl((H.FUSE_END_X - 10.0, 0, H.JET_PIPE[2]), 2 * (n["r"] - n["wall"] + 0.5), 20.0, "x", 96)   # black lining 0.6 mm printed
+        rim = n.get("rim", n["r"])                     # and in the wider exit behind the flare
+        inside = inside + H.cyl((H.FUSE_END_X + rim - n["r"], 0, H.JET_PIPE[2]), 2 * (rim - n["wall"] + 0.5), 20.0, "x", 96)
         return paint(P, [(BLACK, inside)], base=GREY)
     if name.startswith("wheel_"):
         x0, y0, z0, x1, y1, z1 = P.bounding_box()

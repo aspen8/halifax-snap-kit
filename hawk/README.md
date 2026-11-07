@@ -51,6 +51,29 @@ Against photos (top: real aircraft, bottom: model):
 
 > **Status: v17, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
 
+### v18 changes (side markings, pods, rear fuselage, nozzle)
+
+Measured off the Revell side view (orthographic, with the decals drawn on), which agrees with the clean reference renders.
+
+- **Pod undersides:** the underside white chevron now carries across the undersides of the side pods. In v17 it stopped at the plain fuselage's width and 2 mm above its bottom line, so the pods (wider, and hung 2 mm higher) stayed red.
+- **Lettering:** "ROYAL AIR FORCE" is 5.6 x 62.5 mm (was 5.2 x 61), centred 2.3 mm higher (z 6.9), and tilted 1.5 degrees so it rises toward the tail, on the line from the cheat line to the roundel.
+- **Roundel:** 3 mm higher (z 7.7) and slightly bigger (11.1 mm), on the same line.
+- **Cheat line:** its top edge climbs steadily from the nose while its lower edge stays nearly level, meeting the lettering's front corners at full height. Behind the roundel the band is 7 mm wide and centred at z 8.4 (it was letter height, 3 mm lower).
+- **Side pods:** the top edge runs straight back to the roundel, and the side stays just proud of the fuselage until there, so the pod only finishes blending in at the roundel. It used to sag down and in from X 160.
+- **Rear fuselage:** boxy above the widest line with softer top corners, and round below it, going cylindrical around the jet pipe (as seen from behind). The change of curve reads as a faint waist line.
+- **Smoke pod:** a blunter nose 1.5 mm further forward. At the tail the underside sweeps up to a blunt end at mid-height while the top stays level; it used to taper into the belly.
+- **Nozzle:** the ring flares out at 45 degrees behind the tail face to radius 6.0 (was 5.0), and the wider exit is lined in black. The spigot and socket are unchanged, so the fit stays the same.
+- **New tool:** `tools/raster.py` is a gap-free orthographic rasteriser for the preview GLB. It shows paint edges exactly, without the point-splat speckle.
+- **Checks:** interference shows only the known overlaps; overhangs are unchanged; all 7 plates slice. Print times: fuselage 11.6 h, small parts 0.7 h, wing tops 1.8 h, wing undersides 1.7 h, fins and canopy 4.3 h, stand 2.2 h, gear 1.1 h.
+
+![v18 port side](docs/v18_side.png)
+
+![v18 outline and markings over the Revell side view](docs/v18_side_overlay.png)
+
+![v17 and v18 pod undersides](docs/v18_pods_under.png)
+
+![v17 and v18 from behind](docs/v18_tail.png)
+
 ### v17 changes (checked against clean reference renders)
 
 The user supplied clean renders of a Red Arrows Hawk from many angles (`ref/hawk/renders/`, not in git). Sizes were taken from the straight-on, long-shot views; the close-ups (wide-angle, so near parts look fat) only for shapes.
