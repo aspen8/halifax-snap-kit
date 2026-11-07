@@ -2,6 +2,10 @@
 
 For a fresh session picking up the Hawk work. Read this, then `hawk/README.md` (status, version history, known gaps and to-dos) and `LESSONS.md` (hard-won rules). The code is the source of truth.
 
+## Run on the Mac, not in a cloud session
+
+Run this work in a local Claude Code session on the Mac, in the existing checkout (`git pull` first). A cloud session has no `ref/` images, no `.venv` and no Bambu Studio, so it can't build against the references or slice plates.
+
 ## Where things are
 
 - Repo: https://github.com/aspen8/halifax-snap-kit, branch `hawk-red-arrows`, checked out in this folder.
@@ -46,4 +50,4 @@ Test-print history: plate 1 (v3 fuselage) and the canopy/gear/nozzle plates (v3/
 2. White markings render slightly fuzzy; the user is checking the slice.
 3. Fin: user may still want to compare with the drawing (v8 changed the fillet and the trailing-edge kink to match).
 4. README to-dos still open: separate lettering panels (sharper text), nonplanar top-surface test (orcaslicer-nonplanar), canopy fit check on the next fuselage print, print-in-place control surfaces.
-5. Push to GitHub when the user asks (v7 onwards are local only).
+5. Push to GitHub when the user asks. v9 (7a75189) is already on `origin/hawk-red-arrows`, so start with `git pull`.
