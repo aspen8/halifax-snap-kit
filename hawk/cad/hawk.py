@@ -101,21 +101,26 @@ FUSE_END_X = 264.2
 # square (photos). The lower corners stay rounder (n_lo 3.1 to 4.2))
 # Canopy and dorsal spine: (x, half_width, z_top); bottom is buried 6 mm in the body
 SPINE_STATIONS = [            # canopy and the fairing just behind it (aft of x 140 the body takes over)
+    # v10: heights from X 41 to 105 traced off the Revell side view, one convex arc from the
+    # windscreen (v9 ran nearly straight here and sat up to 2.9 mm low at X 60-65)
     (37.0,  8.6, 13.0),
-    (41.0,  9.4, 15.6),
-    (47.0, 10.0, 19.4),
-    (59.7, 10.4, 24.2),
-    (68.0, 10.6, 28.6),
-    (76.6, 10.7, 32.4),
-    (90.8, 10.7, 36.0),
-    (105.0, 10.7, 37.3),
+    (41.0,  9.4, 16.4),
+    (47.0, 10.0, 20.5),
+    (53.5, 10.2, 24.6),
+    (59.7, 10.4, 27.9),
+    (68.0, 10.6, 31.5),
+    (76.6, 10.7, 34.2),
+    (84.0, 10.7, 35.8),
+    (90.8, 10.7, 36.7),
+    (98.0, 10.7, 37.3),
+    (105.0, 10.7, 37.5),
     (112.0, 10.6, 37.3),
     (126.1, 10.2, 36.2),
     (138.8,  9.6, 35.2),
     (142.0,  9.0, 34.4),
 ]
 SPINE_N = 2.3
-FRONT_SPLIT_X = 46.0         # nose/front joint, on the dome's vertical cut (DOME_CUT_X): the dome face
+FRONT_SPLIT_X = 43.0         # nose/front joint, on the dome's vertical cut (DOME_CUT_X): the dome face
                              # was an overhang ledge part way up the nose section, now it is the bed face
 FRONT_KEYS = [(5.0, 2.0), (-5.0, 2.0)]   # (y, z): beside the nose gear socket (x 38-42, y +-2.4)
 NOSE_SPLIT_X = 86.0          # nose/middle section joint (the radome is part of the nose section)
@@ -180,9 +185,10 @@ CANOPY_SILL = [(36.0, 13.3), (49.8, 14.7), (68.3, 16.0), (81.7, 18.0), (95.1, 20
                (108.5, 23.4), (122.0, 26.7), (126.0, 27.6)]
 NOSE_DOME = (4.0, 9.0, 36.0, 62.0)   # height above the sill at the centre, half-width, x range:
                                      # the red nose top domes up into the windscreen (head-on photos)
-DOME_CUT_X = 46.0            # the canopy's front is cut off on this vertical plane, where its glass
+DOME_CUT_X = 43.0            # the canopy's front is cut off on this vertical plane, where its glass
                              # first reaches outside the dome (measured: (outer ^ canopy_region)
-                             # - nose_dome() starts at X 46.0). Ahead of it the canopy region is all
+                             # - nose_dome() starts at X 43.0; X 46.0 before the v10 canopy line,
+                             # re-measure after any change to SPINE_STATIONS or NOSE_DOME). Ahead of it the canopy region is all
                              # dome and stays red on the nose section; behind it is all canopy, so
                              # the canopy needs no recess and its underside stays flat.
 CANOPY_TABS = [(64.0, 78.0), (92.0, 106.0)]   # x ranges of the tabs moulded on the fuselage

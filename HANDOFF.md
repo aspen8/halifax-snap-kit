@@ -38,7 +38,9 @@ Then:
 - The user prints on a Bambu X2D (two nozzles, AMS). Keep the base red on the main nozzle (fixed per-plate map in `colour.py` `FILAMENT_MAP`/`MAPPED_PLATES`); the second nozzle runs outer walls at 50 mm/s.
 - The user often asks to "add to the to-do list" when near a usage limit: write it into `hawk/README.md` "Known gaps and next steps", commit, change nothing else.
 
-## State at handoff (v9, built, checked and committed)
+## State at handoff (v10, built, checked and committed locally)
+
+v10 changes: canopy top line raised to the Revell side view from X 41 to 105 (`SPINE_STATIONS`), nose/front joint, dome cut and panel ring moved from X 46 to X 43 (where the taller canopy leaves the dome). See README "v10 changes".
 
 v9 changes (in the CAD; see README "v9 changes" once written): canopy keeps its straight lower edge (front sections filled to straight sides only below the canopy cut plane); ventral strakes reshaped to the Revell side view (X 218–236, deepest at the front) and moved out to the lower curve (|y| 8.6, canted 30°); under-wing fences moved to the rear part of the chord; belly stripes run forward to a point at the smoke pod's nose and end apart at the tail.
 
@@ -46,8 +48,8 @@ Test-print history: plate 1 (v3 fuselage) and the canopy/gear/nozzle plates (v3/
 
 ## Open items (from the user)
 
-1. Compare the canopy's curve with the Revell side view (user: "isn't following the same curve"); the straight lower edge was fixed in v9, the curve not yet checked in detail.
+1. ~~Compare the canopy's curve with the Revell side view~~: done in v10 (within 0.3 mm of the drawing). Waiting for the user's look.
 2. White markings render slightly fuzzy; the user is checking the slice.
 3. Fin: user may still want to compare with the drawing (v8 changed the fillet and the trailing-edge kink to match).
 4. README to-dos still open: separate lettering panels (sharper text), nonplanar top-surface test (orcaslicer-nonplanar), canopy fit check on the next fuselage print, print-in-place control surfaces.
-5. Push to GitHub when the user asks. v9 (7a75189) is already on `origin/hawk-red-arrows`, so start with `git pull`.
+5. Push to GitHub when the user asks. v10 is committed locally only (the checkout in use is the older one in Claude's scratch-workspaces folder, which has `ref/` and `.venv`).

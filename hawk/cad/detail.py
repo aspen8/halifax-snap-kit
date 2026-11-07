@@ -19,7 +19,7 @@ RIVET_H = 0.2
 RIVET_PITCH = 6.0
 
 # Fuselage rings (x) and side panels (x0, x1, z0, z1), both sides
-FUSE_RINGS = [31.0, 46.0, 92.5, 160.0, 197.0, 232.0, 252.0]
+FUSE_RINGS = [31.0, 43.0, 92.5, 160.0, 197.0, 232.0, 252.0]   # 43: on the nose/front joint (FRONT_SPLIT_X)
 SIDE_PANELS = [(24.0, 36.0, -4.0, 6.0),       # avionics bay door
                (48.0, 62.0, -5.5, 8.5),       # forward equipment bay
                (196.0, 214.0, -1.0, 13.0),    # engine access

@@ -49,7 +49,17 @@ Against photos (top: real aircraft, bottom: model):
 
 ![photo comparison](docs/photo_comparison.png)
 
-> **Status: v9, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+> **Status: v10, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+
+### v10 changes (canopy curve)
+
+- **Canopy top line:** now follows the Revell side view as one convex arc from the windscreen to the top. In v9 the front half ran nearly straight and sat up to 2.9 mm low (3.6 mm printed) at X 60–65; the rear half was already right. The new line is within 0.3 mm of the traced Revell outline from X 39 to 140 (RMS 0.14 mm). The blueprintbox side view also shows the fuller front.
+- **Nose/front joint:** moves from X 46 to X 43, with the dome cut and the panel line on it. The taller canopy leaves the red nose dome at X 43, so the old cut would have left a red strip of canopy shape on the nose.
+- **Checks:** interference and overhangs unchanged from v9; front key slots keep 4.2 mm of wall and clear the nose-gear socket; all 7 plates slice. Print times: fuselage 11.5 h, small parts 0.7 h, wing tops 1.7 h, wing undersides 2.0 h, fins and canopy 4.0 h, stand 2.2 h, gear 1.1 h.
+
+![v10 canopy against the Revell side view (top v9, bottom v10)](docs/v10_canopy_revell.png)
+
+![v10 canopy](docs/v10_canopy.png)
 
 ### v9 changes (v8 feedback)
 
