@@ -3,7 +3,7 @@
 State on 2026-11-07, branch `phase1-airframe`: `kit/halifax_kit.3mf` is current and passed every check (single pieces, no clashes, ≤ 5 colours a plate, no bad overhangs). Read `LESSONS.md`, `TODO.md` and `.claude/skills/snap-kit/SKILL.md` before changing anything.
 
 ## How to build
-- Full colour build plus checks, about 60 min: `cd cad && python -u colour.py OUT project_settings_template.json`. Then `python halifax.py OUT2` for the assembled geometry, `tools/interference.py OUT2/assembled --min 2`, `tools/overhang.py OUT/stl`, and a `trimesh` single-piece check on `OUT/stl/*.stl`.
+- Full colour build plus checks, about 60 min: `cd cad && python -u colour.py OUT project_settings_template.json`. The template is `cad/project_settings_template.json`: the user's Bambu X2D 0.20 mm Standard project settings, taken from `halifax.3mf` (`Metadata/project_settings.config`). The overrides in `colour.py` (`PRINT_OVERRIDES`, `object_settings`) go on top of it. Then `python halifax.py OUT2` for the assembled geometry, `tools/interference.py OUT2/assembled --min 2`, `tools/overhang.py OUT/stl`, and a `trimesh` single-piece check on `OUT/stl/*.stl`.
 - Fast previews (seconds): build one part from `halifax.py`, paint it with `colour.colour_part` or `colour.frames`, and render it with `tools/closeup.py`. Don't run full builds just to look at a change.
 - Previous session's scratch scripts (may be gone): `final3.sh`, `nosecan.py` and `spinecamo.py` in the session scratchpad.
 
