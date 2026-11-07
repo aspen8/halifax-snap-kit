@@ -9,7 +9,7 @@ Axes (assembled): X = distance aft of the nose tip, Y = span (+ = starboard),
 Z = up. All units mm at model scale.
 
 Kit layout (no supports needed except where noted):
-  fuselage    2 full-width black sections printed on end, keyed; camo spine in 9 clip-on pieces
+  fuselage    2 full-width sections printed on end, keyed, camo painted on above the line
   nose        clear perspex nose (Series IA)
   canopy      cockpit glazing, drops into the roof
   turrets     dorsal (Type A) and tail (Type E) + separate gun packs
@@ -50,6 +50,9 @@ NACELLE_TAIL_START = ((10.0, 8.0), (7.0, 7.0))   # its depth below the wing and 
 NACELLE_KEY_AT = (0.30, 0.06)   # chord fraction of the lock for each nacelle (deep wing and nacelle body)
 KEY_NAC_OUTER = (8.0, 6.0, 3.0)  # the outer nacelles are shallower: 3.5 mm up into the wing, 4.5 mm down
 NACELLE_KEY_UP = (4.0, 3.5)      # how far each lock goes up into the wing
+NOSE_KEY_X = 10.5            # nose key (KEY_NAC) across the nacelle split, this far behind the nose, on
+                             # the centreline: holds the halves at the front (test plate round 3)
+NOSE_KEY_FIT = 0.1           # per side: a touch tighter than KEY_FIT (round 3 fit test)
 FIN_TAB = (1.8, 6.0, 1.6)    # tab printed on the tailplane tip, flush with its flat underside:
                              # protrusion into the fin (y), width (x), thickness (z)
 FIN_KEY_AT = (0.24,)         # one key at the thickest part of the tip (mid-chord broke through)
@@ -119,6 +122,8 @@ SPINE_WAVE = (0.7, 7.5, 85.0, 290.0)    # scallop amplitude, period, from x, to 
 SPINE_CUTS = [(13.0, 61.6, "camo"), (72.8, 114.0, "camo"), (114.0, 176.5, "camo"),
               (176.5, 243.5, "camo"), (243.5, 295.5, "camo"), (295.5, 360.0, "camo")]
 SPINE_FRONT_DOWN = [False, True, True, False, True, True]  # which end stands on the bed
+SPINE_PIECES = False         # False: the camo is painted onto the fuselage sections (2026-11-07);
+                             # True: the old separate clip-on spine pieces
 SPINE_SLANT = {}             # square cuts (the colour is painted, so the joins needn't follow it)
 SPINE_REF_Z = 6.5            # height at which the boundary x values are measured
 SPINE_GAP = 0.1              # mm, end clearance between neighbouring spine pieces
@@ -233,6 +238,8 @@ EXH_DEPTH = 2.0              # mm into the nacelle
 EXH_SHROUD_D = 3.4             # mm, flame-damper tube diameter (Halifax II photos)
 EXH_PROUD = 0.5              # mm proud of the widest nacelle point
 EXH_STUBS = 0                # (stub stacks replaced by a shroud tube)
+EXHAUST_SEPARATE = False     # False: printed as part of the nacelle half (it faces up when the half
+                             # prints on its split face); True: separate parts in sockets
 # --- Radiator intake (recess + vanes at the front of each chin radiator)
 RAD_INTAKE = (5.0, 3.6, 3.0, 2.4)        # depth, half-width, below/above centre: intake under the prop
 RAD_VANES = (0.9, 2.3)                   # |y| of the vanes, either side of centre
@@ -576,6 +583,11 @@ def fuselage_parts(wing_tongues):
     keel_hole = K.prism_y(keel_sec.offset(FIT, mf.JoinType.Miter)) ^ M(fuselage_solid(offset=qi - FIT, x0=q0 - 1.0, x1=q1 + 1.0))
     cap = cap + keel
     Bb = Bb - keel_hole
+    if not SPINE_PIECES:
+        # one solid section each side of the joint; the camo is painted on above the line
+        # (colour.py). The front glazing's boss stands on the nose deck.
+        whole = B + mbox(k0, k1, -khw, khw, *canopy_boss_z())
+        whole = whole + mbox(f0, f1, -fhw, fhw, CANOPY_STEP[1] - 0.5, CANOPY_STEP[1] + fh)
     # front/rear keys on the joint face, below the spine line
     _, hw, top, bot, _ = interp(FUSE_STATIONS, FUSE_SPLIT_X)
     zs = float(spine_z(FUSE_SPLIT_X))
@@ -602,7 +614,7 @@ def fuselage_parts(wing_tongues):
     def thick(x):
         return interp(FUSE_STATIONS, x)[2] - split_floor(x)
     tail = (TAIL_ROOT[0] - 3 - KEY_CAP[1] / 2, TAIL_ROOT[0] + TAIL_ROOT[1] + 3 + KEY_CAP[1] / 2)
-    for x0, x1, _ in SPINE_CUTS:
+    for x0, x1, _ in (SPINE_CUTS if SPINE_PIECES else []):
         n = 2 if x1 - x0 >= 45 else 1
         for i in range(n):           # in each share of the piece, the thickest spot clear of the tail
             a = x0 + (x1 - x0) * i / n + KEY_CAP[1] + 6 * SPINE_SLANT.get(x0, 0.0)
@@ -620,7 +632,13 @@ def fuselage_parts(wing_tongues):
             n_keys += 1
 
     parts = {}
+    if not SPINE_PIECES:
+        for sec_name, (a, b) in (("front", (-5, FUSE_SPLIT_X)), ("rear", (FUSE_SPLIT_X, 400))):
+            parts[f"fuselage_{sec_name}"] = T(K.largest_piece((whole ^ mbox(a, b, -50, 50, -60, 60))
+                                                              - fr_holes)[0])
     for sec_name, (a, b) in (("front", (-5, FUSE_SPLIT_X)), ("rear", (FUSE_SPLIT_X, 400))):
+        if not SPINE_PIECES:
+            break
         parts[f"fuselage_{sec_name}"] = T(K.largest_piece(((Bb + pegs) ^ mbox(a, b, -50, 50, -60, 60))
                                                           - fr_holes)[0])
     def behind(xb, gap):
@@ -630,7 +648,7 @@ def fuselage_parts(wing_tongues):
         x = lambda z: xb + gap + k * (z - SPINE_REF_Z)
         return K.prism_y(K.cs([np.array([(x(z0), z0), (500.0, z0), (500.0, z1), (x(z1), z1)])]))
 
-    for i, (x0, x1, col) in enumerate(SPINE_CUTS):
+    for i, (x0, x1, col) in enumerate(SPINE_CUTS if SPINE_PIECES else []):
         piece = (cap ^ behind(x0, SPINE_GAP / 2)) - behind(x1, -SPINE_GAP / 2) - cap_holes
         parts[f"spine_{i + 1:02d}_{col}"] = T(K.largest_piece(piece)[0])
 
@@ -901,6 +919,13 @@ def nacelle_lock_slot(index, side, wing_panel):
     return key_slots([(x, yc, zc)], "z", zc, key, "x")
 
 
+def nose_key_slot(index, side):
+    """Slot for the flexing nose key: across the split, on the centreline, behind the prop boss."""
+    yc, zc, x0, _ = NACELLES[index]
+    return K.key_slots([(x0 + NOSE_KEY_X, yc * side, zc)], "y", yc * side, KEY_NAC, "x",
+                       NOSE_KEY_FIT, KEY_END_GAP)
+
+
 def wing_underside(wing_panel, x, y):
     probe = wing_panel.intersect(box(x - 0.05, x + 0.05, y - 0.05, y + 0.05, -100, 100))
     return probe.val().BoundingBox().zmin
@@ -949,7 +974,8 @@ def nacelle_parts(index, side, wing_panel):
                                     MAIN_LEG, MAIN_PLUG, MAIN_WHEEL_W))
     # exhaust slots on both sides, and the radiator intake
     for face in (1, -1):
-        body = body.cut(exhaust_bank(index, side, face, slot=True))
+        if EXHAUST_SEPARATE:
+            body = body.cut(exhaust_bank(index, side, face, slot=True))
     d, hw, zlo, zhi = RAD_INTAKE
     zr = zc - NACELLE_H / 2 + RADIATOR_R * 0.55
     xr = x0 + RADIATOR_X
@@ -967,6 +993,8 @@ def nacelle_parts(index, side, wing_panel):
     holes = nacelle_lock_slot(index, side, wing_panel)
     kname, key = ("key_nacelle", KEY_NAC) if index == 0 else ("key_nacelle_outer", KEY_NAC_OUTER)
     KEY_COUNTS[kname] = (key, KEY_COUNTS.get(kname, (key, 0))[1] + 1)
+    holes = holes.union(nose_key_slot(index, side))
+    KEY_COUNTS["key_nacelle_nose"] = (KEY_NAC, KEY_COUNTS.get("key_nacelle_nose", (KEY_NAC, 0))[1] + 1)
     inboard = box(-10, 400, y - 50, y, -80, 80) if side > 0 else box(-10, 400, y, y + 50, -80, 80)
     outboard = box(-10, 400, y, y + 50, -80, 80) if side > 0 else box(-10, 400, y - 50, y, -80, 80)
     return body.intersect(inboard).cut(holes), body.intersect(outboard).cut(holes)
@@ -1498,9 +1526,17 @@ def build():
     for i in range(len(NACELLES)):
         for side, tag in ((1, "stbd"), (-1, "port")):
             for face, ftag in ((1, "a"), (-1, "b")):
-                n = f"exhaust{i + 1}_{tag}_{'outboard' if face == side else 'inboard'}"
-                parts[n] = exhaust_bank(i, side, face, wing=wings[side])   # shroud stops at the wing
-                poses[n] = lambda w, fc=face: rot(w, "x", 90 * fc)   # flat back on the bed
+                half = 'outboard' if face == side else 'inboard'
+                ex = exhaust_bank(i, side, face, wing=wings[side])   # shroud stops at the wing
+                if EXHAUST_SEPARATE:
+                    n = f"exhaust{i + 1}_{tag}_{half}"
+                    parts[n] = ex
+                    poses[n] = lambda w, fc=face: rot(w, "x", 90 * fc)   # flat back on the bed
+                else:                                  # one piece with the nacelle half
+                    import trimesh
+                    n = f"nacelle{i + 1}_{tag}_{half}"
+                    u = K.largest_piece(K.to_manifold(mesh(parts[n])) + K.to_manifold(ex))[0]
+                    parts[n] = trimesh.Trimesh(*K.mesh_of(u))
     parts["turret_dorsal"] = dorsal_turret()
     poses["turret_dorsal"] = lambda w: w
     parts["turret_tail"] = tail_turret()

@@ -5,7 +5,7 @@ Run:  python test_plate.py OUT_DIR [project_settings_template.json]   (defaults 
 
 Everything comes from the kit builders (halifax.py, colour.py), so the fits match the kit:
   1. Sprung prop boss: the nose of nacelle 1 (stbd), both halves, plus one prop. One flexing
-     key (KEY_NAC size) across the split holds the halves together (in the kit, the wing and the nacelle lock do).
+     key (KEY_NAC size) across the split holds the halves together, as in the kit.
   2. Code letter "G" (port) in a fuselage-wall coupon, with the floor peg and the hole in the inlay.
   3. Fin flash in a fin-skin coupon (stbd fin), with its peg and hole.
   4. Main gear: both fork halves and the wheel, plus a block with the nacelle's gear socket.
@@ -67,7 +67,7 @@ NOSE_KEY = H.KEY_NAC            # one flexing key across the nacelle split: leng
                                 # too small and still loose; the KEY_NAC key held well in its own test)
 GAUGE_CLEAR = (0.1, 0.2, 0.3, 0.4)   # grip gauge: hole = diameter + this
 GAUGE_T = 3.0                   # gauge block thickness (about a main fork leg)
-NOSE_KEY_AT = (10.5, 0.0)       # x behind the nacelle nose, z from its centreline (behind the prop-boss slot)
+NOSE_KEY_AT = (H.NOSE_KEY_X, 0.0)   # as the kit (halifax.nose_key_slot; its slot comes with the nacelle)
 NOSE_BACK = 16.0                # coupon ends this far behind the nacelle nose (wall behind the key slot)
 MARGIN = 4.0                    # mm of skin round each inlay socket
 FLOOR = 2.5                     # mm of wall behind the letter socket floor
@@ -99,7 +99,7 @@ def prop_boss_coupon():
     crop = H.box(x_front, x0 + NOSE_BACK, yc - 30, yc + 30, zc - 30, zc + 30)
     kx, kz = NOSE_KEY_AT
     pts = [(x0 + kx, yc, zc + kz)]
-    slots = H.key_slots(pts, "y", yc, NOSE_KEY, "x")
+    slots = H.nose_key_slot(idx, side)
     out = []
     for tag, half, rx in (("inboard", inb, -90), ("outboard", outb, 90)):   # split face down, as the kit
         P = K.largest_piece(M(half.intersect(crop).cut(slots)))[0]

@@ -137,6 +137,17 @@ def roof_section(inset=2.0):
     return cs([np.r_[np.c_[xs, hw], np.c_[xs[::-1], -hw[::-1]]]])
 
 
+def side_trace():
+    """The scheme's side-profile camo trace, if it's here. ref/ is git-ignored and this one was
+    never committed, so a fresh checkout lacks it. Only the old split-fuselage halves were painted
+    from it; the current fuselage sections and canopies paint from the plan trace."""
+    f = MK.get("side_camo")
+    if f and not CAMO_PNG.with_name(f).exists():
+        print(f"note: {f} not found; painting from the plan trace only", file=sys.stderr, flush=True)
+        return False
+    return bool(f)
+
+
 def side_camo(g, side):
     """Green region on one fuselage side in (x, z): the plan pattern unfolded
     down the side, cut off at the demarcation line."""
@@ -152,7 +163,7 @@ def side_camo(g, side):
     ok = (row >= 0) & (row < g.shape[0]) & (col >= 0) & (col < g.shape[1])
     val = np.zeros_like(X, bool)
     val[ok] = g[row[ok], col[ok]]
-    if MK.get("side_camo"):                 # traced from the aircraft's own profile (same grid)
+    if side_trace():                         # traced from the aircraft's own profile (same grid)
         val = np.asarray(Image.open(CAMO_PNG.with_name(MK["side_camo"])).convert("L"))[::-1] > 127
     above = Z > demarcation_z(X)
     to_xz = lambda r, c: (xs[0] + c * 0.25, zs[0] + r * 0.25)
@@ -192,7 +203,7 @@ def spine_plan(g, plan_green, inset=2.0):
 def roof_camo():
     """Plan section of green across the fuselage roof: the side trace's colour along the top
     edge, carried straight over the spine (None when the scheme has no side trace)."""
-    if not MK.get("side_camo"):
+    if not side_trace():
         return None
     val = np.asarray(Image.open(CAMO_PNG.with_name(MK["side_camo"])).convert("L"))[::-1] > 127
     xs = np.arange(-2, 365, 0.25)
@@ -238,6 +249,23 @@ def socket_region(name):
     return None
 
 
+def spine_region():
+    """Everything above the camo line on the fuselage (the old spine pieces' split)."""
+    pts = [(float(x), float(H.spine_z(x))) for x in np.arange(-6.0, 401.0, 0.5)] + [(400.0, 80.0), (-6.0, 80.0)]
+    return prism_y(cs([np.array(pts)]))
+
+
+def exhaust_region(idx, side, P):
+    """The exhaust bar and shroud on a nacelle half: whatever stands outside the bare nacelle
+    body along the exhaust run."""
+    yc, zc, x0, length = H.NACELLES[idx]
+    body = to_manifold(H.mesh(H.nacelle_body(zc, x0, length).translate((0, yc * side, 0))))
+    zm = zc + H.EXH_Z
+    r = max(H.EXH_SHROUD_D, H.EXH_H) / 2 + 0.5
+    zone = K.box(x0 + H.EXH_X0 - 1.0, x0 + H.EXH_X0 + H.EXH_LEN + 1.0, -400, 400, zm - r, zm + r)
+    return (P - body) ^ zone
+
+
 def colour_part(name, P, pat):
     S = skins(P)
     up = S["up"]
@@ -251,8 +279,13 @@ def colour_part(name, P, pat):
     sock_op = [(BLACK, sock)] if sock is not None else []
     if name.startswith(("wing_", "tailplane")):
         return paint(P, list(camo_up) + sock_op)
-    if name in ("fuselage_front", "fuselage_rear"):     # black body; codes are inlays
-        return {BLACK: P}
+    if name in ("fuselage_front", "fuselage_rear"):     # codes are inlays
+        if H.SPINE_PIECES:
+            return {BLACK: P}                           # black body; camo on the clip-on spine
+        # camo painted on above the line, as the spine pieces were: the plan pattern across the
+        # roof, each colour carried straight down the sides to the black
+        skin = (up + S["+y"] + S["-y"]) ^ spine_region()
+        return paint(P, [(EARTH, skin), (GREEN, skin ^ prism_z(pat["spine_plan"]))] + sock_op)
     if name.startswith("spine_"):
         # camo painted on (the purge is worth it): the plan pattern across the roof, each colour
         # carried straight down the sides to the black, so from above the colours cross the
@@ -285,7 +318,10 @@ def colour_part(name, P, pat):
         # the whole outer skin above the line, including the forward-facing cowling front
         # (up/side skins alone left the front black with a ragged edge)
         skin = (ALL - K.inner_core(P, SKIN)) ^ upper
-        return paint(P, [(EARTH, skin), (GREEN, skin ^ plan)])
+        ops = [(EARTH, skin), (GREEN, skin ^ plan)]
+        if not H.EXHAUST_SEPARATE:                 # exhaust shroud printed on: black, not camo
+            ops.append((BLACK, exhaust_region(idx, 1 if "_stbd_" in name else -1, P)))
+        return paint(P, ops)
     if name.startswith("fin_"):
         s = 1 if name.endswith("stbd") else -1
         side = S["+y"] if s > 0 else S["-y"]
@@ -735,9 +771,11 @@ def add_object(objs, name, posed, out, whole):
 
 
 PLATE_GROUPS = [            # parts kept together by colour set (max 5 colours a plate)
-    ("Fuselage", lambda n: n.startswith("fuselage")),
-    ("Spine", lambda n: n.startswith("spine_") or n == "df_loop"),
-    ("Wings", lambda n: n.startswith(("wing_", "tailplane"))),
+    ("Fuselage", lambda n: H.SPINE_PIECES and n.startswith("fuselage")),
+    ("Spine", lambda n: n.startswith("spine_") or (H.SPINE_PIECES and n == "df_loop")),
+    # painted fuselage on the wing plate: the wings already swap colours on almost every layer
+    # up to 170 mm, so the fuselage's camo mostly shares those swaps (one long plate)
+    ("Wings and fuselage", lambda n: n.startswith(("wing_", "tailplane", "fuselage")) or n == "df_loop"),
     ("Nacelles", lambda n: n.startswith("nacelle")),
     ("Fin flashes, roundels and codes", lambda n: n.startswith(("flash_", "roundel_", "code_"))),
     ("Canopies and turrets (silk silver)", lambda n: n in CLEAR_PARTS),

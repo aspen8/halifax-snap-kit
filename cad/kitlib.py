@@ -395,7 +395,51 @@ def pack(items, bed, gap=8.0):
     return [p["items"] for p in plates]
 
 
-def project_settings(template, filaments, overrides=None):
+TOWER = 35.0            # prime tower width (template prime_tower_width); depth taken as the same
+TOWER_CLEAR = 9.0       # from every part's outline: a 6 mm brim plus 3
+TOWER_X_MIN = 22.0      # the X2D's second nozzle can't reach x < 20.5
+
+
+def place_towers(objects, n_plates, area=(230.0, 250.0), bed=(256.0, 256.0)):
+    """Lower-left corner of a prime tower on each plate, in clear space: TOWER_CLEAR from every
+    part's convex outline, x >= TOWER_X_MIN, inside `area` if possible (else the whole bed), as
+    close to the parts as it can (short travel). The template's three positions came from an old
+    3-plate project and put towers on parts or off the bed."""
+    from shapely.geometry import MultiPoint, box as sbox
+    from shapely.ops import unary_union
+    out = []
+    for pi in range(n_plates):
+        shapes = []
+        for o in objects:
+            p, px, py = o["placement"]
+            if p != pi:
+                continue
+            pts = np.vstack([V[:, :2] for _, V, _ in o["volumes"]]) + [px, py]
+            shapes.append(MultiPoint(pts[::max(1, len(pts) // 4000)]).convex_hull.buffer(TOWER_CLEAR))
+        if not shapes:
+            out.append((TOWER_X_MIN, 10.0))
+            continue
+        busy = unary_union(shapes)
+        c = busy.centroid
+        best = None
+        for lim in (area, bed):
+            for x in np.arange(TOWER_X_MIN, lim[0] - TOWER - 1.0, 2.0):
+                for y in np.arange(2.0, lim[1] - TOWER - 1.0, 2.0):
+                    t = sbox(x, y, x + TOWER, y + TOWER)
+                    if not t.intersects(busy):
+                        d = t.centroid.distance(c)
+                        if best is None or d < best[0]:
+                            best = (d, float(x), float(y))
+            if best:
+                break
+        if best is None:
+            print(f"WARNING: no clear spot for the prime tower on plate {pi + 1}", flush=True)
+            best = (0, TOWER_X_MIN, 10.0)
+        out.append(best[1:])
+    return out
+
+
+def project_settings(template, filaments, overrides=None, towers=None):
     d = json.load(open(template))
     d.update(overrides or {})
     n0 = len(d["filament_colour"])
@@ -424,6 +468,9 @@ def project_settings(template, filaments, overrides=None):
         d["different_settings_to_system"] = [v[0]] + [""] * n + [v[-1]]
     if "filament_map" in d:
         d["filament_map"] = ["1"] * n
+    if towers:                                  # one prime tower position per plate
+        d["wipe_tower_x"] = [f"{x:.1f}" for x, _ in towers]
+        d["wipe_tower_y"] = [f"{y:.1f}" for _, y in towers]
     for k in ("filament_nozzle_map", "filament_volume_map"):
         if k in d:
             d[k] = ["0"] * n
@@ -524,7 +571,10 @@ def write_3mf(path, objects, plates, template, filaments, title, overrides=None)
     z.writestr("Metadata/model_settings.config", '<?xml version="1.0" encoding="UTF-8"?>\n<config>\n'
                + "".join(settings) + "".join(plate_xml) + '</config>\n')
     if template:
-        z.writestr("Metadata/project_settings.config", project_settings(template, filaments, overrides))
+        towers = place_towers(objects, len(plates))
+        for i, (x, y) in enumerate(towers):
+            print(f"plate {i + 1}: prime tower at x {x:.0f}, y {y:.0f}", flush=True)
+        z.writestr("Metadata/project_settings.config", project_settings(template, filaments, overrides, towers))
     z.writestr("Metadata/slice_info.config", '<?xml version="1.0" encoding="UTF-8"?>\n<config>\n  <header>\n'
                '    <header_item key="X-BBL-Client-Type" value="slicer"/>\n'
                '    <header_item key="X-BBL-Client-Version" value="02.08.02.61"/>\n  </header>\n</config>\n')

@@ -21,57 +21,44 @@ Round 2 adds the grip gauge and peg tab to plate 2 (13 min more).
 | Plate | Time | Layers | Layer mm | Filament on the model (g) | Model g | Flush + tower g | Changes |
 |---|---|---|---|---|---|---|---|
 | 1 inlays | 37m | 39 | 0.16 | Red 1.3, Blue 0.3, White 0.1 | 1.6 | 6.7 | 11 |
-| 2 test parts | 1h 25m | 183 | 0.04/0.08/0.12/0.16 | Black 23.6 | 23.6 | 0.0 | 0 |
-| **All** | **2h 02m** | | | | **25.2** | **6.7** | **11** |
+| 2 test parts | 1h 24m | 184 | 0.04/0.08/0.12/0.16 | Black 24.1 | 24.1 | 0.0 | 0 |
+| **All** | **2h 01m** | | | | **25.7** | **6.7** | **11** |
 
 - **Plate 2 mixes 0.12 and 0.16 mm parts and slices without complaint.** Bambu interleaves the two heights: where they don't line up, it adds 0.04 and 0.08 mm steps, which gives 183 layers in all. So it doesn't need splitting.
 - **Plate 1 is mostly purge.** It uses 6.7 g of flush and tower for 1.6 g of inlays, and about 17 of its 37 minutes are flushing.
-- **No warnings since the wheels got a flat side.** The first slice warned that "t4_main_wheel has floating regions": the rounded tyre edge lifted off the bed (175 mm² of overhang). The wheels now have a flat inboard face that prints on the bed, and the warning has gone. The kit table below is from before that change, so kit plate 8 still shows the wheel warning.
+- **No warnings since the wheels got a flat side.** The first slice warned that "t4_main_wheel has floating regions": the rounded tyre edge lifted off the bed (175 mm² of overhang). The wheels now have a flat inboard face that prints on the bed, and the warning has gone. The kit's wheels don't get the warning either.
 
-## Full kit (`kit/halifax_kit.3mf`): 4 of 9 plates fail
+## Full kit (`kit/halifax_kit.3mf`, rebuilt 2026-11-07): all 7 plates slice
 
-As committed, the kit fails on plates 3, 5, 6 and 8. All four failures come from the **prime tower position**:
-- **Where the positions come from:** `write_3mf` copies `wipe_tower_x/y` unchanged from the project template, which was taken from the original 3-plate `halifax.3mf`. It only has positions for plates 1–3, and they don't match the kit's layout.
-- **Plates 4–9:** they get Bambu's default spot in the back-left corner.
-
-| Plate | Result | Cause |
-|---|---|---|
-| 3 wings + tailplane | **fails** | Tower (48.6, 163.7, from the template) sits on `wing_outer_stbd` |
-| 5 markings | **fails** (unprintable, code 5) | Default back-left tower grows past the back edge of the bed (y ≈ 265 on a 256 mm bed) |
-| 6 glazing | **fails** (unprintable, code 4) | Same, y ≈ 268 |
-| 8 small parts | **fails** | Default tower sits on `fin_stbd` |
-| 1, 2, 4, 7, 9 | slice | |
-
-With `--slice 0`, Bambu stops at the first failing plate, so `tools/slice.py` slices each plate on its own.
-
-### With the towers moved (scratch copy, not committed)
-
-To check the cause, and to get numbers for every plate, I moved each tower into clear space on a scratch copy of the 3MF. The clearance was 9 mm from every part's bounding box (its 6 mm brim plus 3 mm), and every tower sits at x ≥ 22 so both nozzles can reach it. Tower lower-left positions:
-
-| Plate | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
-|---|---|---|---|---|---|---|---|---|---|
-| x, y (mm) | 208, 148 | 208, 174 | 204, 54 | 22, 192 | 194, 88 | 182, 192 | 38, 192 | 204, 42 | 196, 54 |
-
-With those positions every plate slices, with no errors:
+The camo is painted onto the fuselage, and both fuselage sections print on the wing plate. Each plate's prime tower is placed in clear space by `kitlib.place_towers`, at least 9 mm from every part's outline and at x ≥ 22. The exhausts print with the nacelles.
 
 | Plate | Time | Layers | Layer mm | Filament on the model (g) | Model g | Flush + tower g | Changes |
 |---|---|---|---|---|---|---|---|
-| 1 fuselage | 4h 34m | 1170 | 0.16 | Black 103.2 | 103.2 | 0.0 | 0 |
-| 2 camo spine | 10h 30m | 418 | 0.16 | Dark Earth 28.0, Dark Green 5.4 | 33.4 | 156.1 | 305 |
-| 3 wings + tailplane | **66h 46m** | 1065 | 0.16 | Black 107.9, Dark Earth 18.5, Dark Green 16.3 | 142.7 | **1077.7** | **2130** |
-| 4 nacelles | 6h 33m | 68 | 0.16 | Black 39.9, Dark Earth 5.2, Dark Green 3.8 | 48.9 | 68.9 | 136 |
-| 5 markings | 3h 39m | 71 | 0.16 | Red 8.6, Blue 8.7, Yellow 1.0, White 0.4 | 18.8 | 43.1 | 78 |
-| 6 glazing | 9h 03m | 144 | 0.12 | Black 1.1, Dark Earth 0.1, Dark Green 0.6, Silk Silver 7.9 | 9.8 | 141.4 | 277 |
-| 7 stand base | 2h 57m | 81 | 0.16 | Dark Earth 50.8, Dark Green 3.5, Yellow 0.5, White 1.0 | 55.8 | 13.8 | 23 |
-| 8 small parts | 2h 48m | 139 | 0.12 | Black 34.7, Yellow 1.9 | 36.6 | 12.4 | 24 |
-| 9 small parts | 31m | 80 | 0.12 | Black 6.3 | 6.3 | 0.0 | 0 |
-| **All** | **107h 22m** | | | | **455.5** | **1513.4** | **2973** |
+| 1 wings, tailplane, fuselage | 76h 50m | 1170 | 0.16 | Black 224.0, Dark Earth 23.7, Dark Green 20.8 | 268.5 | 1156.7 | 2286 |
+| 2 nacelles | 6h 51m | 89 | 0.16 | Black 42.2, Dark Earth 4.9, Dark Green 3.6 | 50.7 | 69.4 | 137 |
+| 3 markings | 3h 40m | 71 | 0.16 | Red 8.8, Blue 8.8, Yellow 1.0, White 0.4 | 19.0 | 43.1 | 78 |
+| 4 glazing | 9h 02m | 144 | 0.12/0.2 | Black 1.1, Dark Earth 0.1, Dark Green 0.6, Silk Silver 7.9 | 9.8 | 141.4 | 277 |
+| 5 stand base | 2h 57m | 81 | 0.16/0.2 | Dark Earth 50.8, Dark Green 3.5, Yellow 0.5, White 1.0 | 55.8 | 13.8 | 23 |
+| 6 small parts | 2h 54m | 139 | 0.12/0.2 | Black 34.8, Yellow 1.9 | 36.8 | 14.4 | 28 |
+| 7 small parts | 25m | 80 | 0.12 | Black 3.5 | 3.5 | 0.0 | 0 |
+| **All sliced** | **102h 41m** | | | | **444.1** | **1438.8** | **2829** |
 
-(Plate names are by content. Layer mm leaves out the 0.2 mm first layer and bridges.)
+Slicer messages (all non-critical):
 
-### What stands out
+- plate 1 warning: It seems object tailplane has floating cantilever. Please re-orient the object or enable support generation.
+- plate 1 warning: It seems object df_loop has floating regions. Please re-orient the object or enable support generation.
+- plate 1 warning: It seems object fuselage_rear has floating cantilever. Please re-orient the object or enable support generation.
+- plate 4 warning: It seems object turret_dorsal has floating regions. Please re-orient the object or enable support generation.
+- plate 6 warning: It seems object stand_post has floating cantilever. Please re-orient the object or enable support generation.
+- plate 7 warning: It seems object guns_dorsal has floating cantilever. Please re-orient the object or enable support generation.
+- plate 7 warning: It seems object guns_tail has floating cantilever. Please re-orient the object or enable support generation.
 
-- **Purge is 3.3× the model.** 1.5 kg of waste for 0.46 kg of kit, and plate 3 alone is 1.08 kg of it. On plate 3, 50 of the 67 hours are flushing: the wings print on end, so there are two black↔camo changes on almost every one of their 1065 layers.
-- **Only one nozzle is used.** `kitlib.write_3mf` writes `filament_map = 1` for every filament, which puts them all on one nozzle of the X2D. It also writes a flat 350 mm³ flush for every colour pair. In the app, "Auto For Flush" may spread the filaments over both nozzles when you slice, so plate 3 could come out much cheaper in the GUI than here. Check it in the app.
-- **The second nozzle can't reach the leftmost 20.5 mm of the bed** (`extruder_printable_area`). The packer places parts from x = 0, so mapping Black or the camo colours to the second nozzle fails on plate 3: "G-code in unprintable area of multi-extruder printers". Using both nozzles needs the coloured parts packed at x ≥ 21.
-- **Floating-region and cantilever warnings** (non-critical) on: fuselage_front, fuselage_rear, df_loop, spine_02_camo, tailplane, turret_dorsal, stand_post, both main wheels, guns_tail, guns_dorsal. Most are the expected small overhangs that `tools/overhang.py` already accepts. Look at them in the app's preview before a full print.
+
+- **Plate 1 is the long one:** 76 h 50 m, with 1157 g of purge and 2286 colour changes. The wings print on end, so black↔camo swaps happen on nearly every layer up to 170 mm, and the fuselage's camo shares those swaps. The earlier estimate was 77 h and 1.2 kg.
+- **Purge is 3.2× the model** (1.44 kg for 0.44 kg), down from 1.51 kg over 107 h for the 9-plate kit.
+- **Only one nozzle is used.** `kitlib.write_3mf` writes `filament_map = 1` for every filament, and a flat 350 mm³ flush for every colour pair. In the app, "Auto For Flush" may spread the filaments over both nozzles, so check there.
+- **The second nozzle can't reach the leftmost 20.5 mm of the bed** (`extruder_printable_area`). The packer places parts from x = 0, so the coloured parts would need packing at x ≥ 21 to use it.
+
+## Before 2026-11-07: the 9-plate kit
+
+As committed in 8ee28d8, 4 of 9 plates failed to slice: the template's 3 tower positions put towers on parts (plates 3 and 8) or let Bambu's default tower run off the bed (plates 5 and 6). With the towers moved on a scratch copy it sliced at 107 h 22 m, 455.5 g of model and 1513.4 g of purge, of which plate 3 (wings on end) was 66 h 46 m and 1077.7 g. See git history for the full table.

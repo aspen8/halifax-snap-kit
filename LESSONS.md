@@ -195,3 +195,11 @@ A wheel printed lying on a face with the tyre rounded on both sides starts on a 
 - **Flexing keys beat plain keys.** The waisted, slotted key held well; the plain nose keys at the same KEY_FIT were loose. A key needs to be about 8 mm long for its flex slots (`connector_key` drops them below that).
 - **Prop boss:** neck 0.35 mm smaller than the lip, with a 0.3 mm gap, turned stiffly. Round 2: 0.45 and 0.4.
 - **Round 2 (same day):** +0.2 stub grip holds, main and tail. A socket sized from the closed fork halves keeps both gears in. Prop boss at 0.45 / 0.4 spins. Small (8 mm) flexing keys were still loose: use the full-size 11 × 6 × 3 key where it fits. Inlays: a +0.2 peg hole, 0.1 radial inlay fit and two pegs on the fin flash hold both the G and the flash.
+
+## Full rebuild on the Mac (2026-11-07)
+
+- **Packages a fresh setup misses:** the colour build needs scikit-image (`kitlib.raster_section`). The geometry build doesn't, so a geometry-only smoke test won't catch it.
+- **Git-ignored inputs:** `ref/` is ignored, and only `camo_plan_green.png` was force-added. Anything else the build reads from there (the NP-G side trace) never reached git. Either commit reference inputs the build reads, or make the build cope without them.
+- **Single-piece check:** trimesh's `split()` counts zero-volume rounding slivers in exported STLs as pieces. manifold3d's `decompose()`, with the slivers' near-zero volumes ignored, gives the real count.
+- **Painting a merged part:** printing a part (the exhaust) as one piece with its parent means the parent's paint rules reach it. Paint it explicitly: here, whatever stands outside the bare nacelle body along the exhaust run is black.
+- **Estimates held:** adding the fuselage to the wing plate was estimated at 77 h and 1.2 kg of purge from the swap count, and it sliced at 76 h 50 m and 1.16 kg.
