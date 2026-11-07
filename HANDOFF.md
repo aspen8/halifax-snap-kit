@@ -8,7 +8,7 @@ State on 2026-11-07, branch `phase1-airframe`: `kit/halifax_kit.3mf` is current 
 - Previous session's scratch scripts (may be gone): `final3.sh`, `nosecan.py` and `spinecamo.py` in the session scratchpad.
 
 ## Next up
-1. **Test plate: built, waiting for a print.** `kit/halifax_test_plate.3mf`, two plates as in the full build: the code letter and fin flash (red, white, blue) alone, the other 18 parts in black. Each part keeps the print settings of its kit part (0.12 mm for prop, gear, fin and keys; 0.16 mm and 3 walls as the nacelle and fuselage). Rebuild with `cd cad && python test_plate.py OUT [project_settings_template.json]` (about 3 min). It contains:
+1. **Test plate: built, waiting for a print.** `kit/halifax_test_plate.3mf`, two plates as in the full build: the code letter and fin flash (red, white, blue) alone, the other 18 parts in black. Each part keeps the print settings of its kit part (0.12 mm for prop, gear, fin and keys; 0.16 mm and 3 walls as the nacelle and fuselage). Rebuild with `cd cad && python test_plate.py OUT` (about 3 min; it uses `project_settings_template.json`, as the full build). It contains:
    - the nacelle 1 nose halves with the sprung boss (two plain keys hold the halves together), plus a prop;
    - the port "G" in a fuselage-wall coupon, and the stbd fin flash in a fin coupon, both with peg and hole;
    - main and tail gear fork halves and wheels, each with a block carrying its gear socket;

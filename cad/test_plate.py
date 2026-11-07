@@ -1,7 +1,7 @@
 """
 Test plate: small coupons that check the new joints without printing the whole kit.
 
-Run:  python test_plate.py OUT_DIR [project_settings_template.json]
+Run:  python test_plate.py OUT_DIR [project_settings_template.json]   (defaults to the kit's template)
 
 Everything comes from the kit builders (halifax.py, colour.py), so the fits match the kit:
   1. Sprung prop boss: the nose of nacelle 1 (stbd), both halves, plus one prop. Two plain
@@ -188,7 +188,8 @@ def single_piece(m):
 
 if __name__ == "__main__":
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "out_test")
-    template = sys.argv[2] if len(sys.argv) > 2 else None
+    # the kit's Bambu project settings (as colour.py is run for the full build)
+    template = sys.argv[2] if len(sys.argv) > 2 else str(Path(__file__).with_name("project_settings_template.json"))
     for d in ("assembled", "print"):
         (out / d).mkdir(parents=True, exist_ok=True)
     jobs = []
