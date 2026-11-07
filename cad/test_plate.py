@@ -156,7 +156,7 @@ def gear_coupons():
              H.TAIL_LEG, H.TAIL_PLUG))
     for tag, x, y, z_axle, top, d, w, leg, plug in sets:
         ga, gb = H.gear_fork_halves(x, y, z_axle, top, w, leg, plug, H.AXLE_STUB[tag])
-        wh = H.wheel(x, y, z_axle, d, w, bore=H.AXLE_STUB[tag] + H.STUB_SPIN)
+        wh = H.wheel(x, y, z_axle, d, w, bore=H.AXLE_STUB[tag] + H.STUB_SPIN, flat=-1)   # as stbd / tail
         out += [(f"t4_{tag}_gear_a", {BLACK: M(ga)}, lambda m: rot(m, rx=90)),     # as build()
                 (f"t4_{tag}_gear_b", {BLACK: M(gb)}, lambda m: rot(m, rx=-90)),
                 (f"t4_{tag}_wheel", {BLACK: M(wh)}, lambda m: rot(m, rx=90)),

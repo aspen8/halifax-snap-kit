@@ -1297,10 +1297,19 @@ def gear_fork_halves(x, yc, z_axle, z_top, wheel_w, leg, plug, stub_d):
     return a, b
 
 
-def wheel(x, yc, z_axle, d, w, bore=None):
+def wheel(x, yc, z_axle, d, w, bore=None, flat=None):
+    """Tyre with a hub recess on each face. flat=+1 or -1 makes that y face plain and flat (only a
+    0.3 mm chamfer against elephant's foot): it prints on the bed with no overhang and faces inboard,
+    where the fork leg hides it."""
     t = W("XZ").circle(d / 2).extrude(w / 2, both=True)
-    t = t.edges().fillet(min(2.5, w / 3))
-    for s in (-1, 1):   # hub recess on both faces
+    if flat:
+        t = t.faces(">Y" if flat < 0 else "<Y").edges().fillet(min(2.5, w / 3))
+        t = t.faces(">Y" if flat > 0 else "<Y").edges().chamfer(0.3)
+    else:
+        t = t.edges().fillet(min(2.5, w / 3))
+    for s in (-1, 1):   # hub recess on the shaped face(s)
+        if s == flat:
+            continue
         t = t.cut(cyl((0, s * (w / 2 + 0.1), 0), d * 0.55, -s * 0.9, "y"))
         t = t.union(cyl((0, s * (w / 2 - 0.8), 0), max(d * 0.22, (bore or AXLE_HOLE_LOOSE) + 2.4), s * 0.5, "y"))
     t = t.cut(cyl((0, -w, 0), bore or AXLE_HOLE_LOOSE, 2 * w, "y"))
@@ -1430,8 +1439,8 @@ def build():
         poses[f"main_gear_{tag}_a"] = lambda w: rot(w, "x", 90)     # outer face down, stub up
         poses[f"main_gear_{tag}_b"] = lambda w: rot(w, "x", -90)
         parts[f"main_wheel_{tag}"] = wheel(MAIN_AXLE_X, yc0, MAIN_AXLE_Z, MAIN_WHEEL_D, MAIN_WHEEL_W,
-                                           bore=AXLE_STUB["main"] + STUB_SPIN)
-        poses[f"main_wheel_{tag}"] = lambda w: rot(w, "x", 90)
+                                           bore=AXLE_STUB["main"] + STUB_SPIN, flat=-side)
+        poses[f"main_wheel_{tag}"] = lambda w, s=side: rot(w, "x", 90 * s)   # flat inboard face down
         parts[f"wheel_up_{tag}"] = wheel_up_insert(side)
         poses[f"wheel_up_{tag}"] = lambda w: rot(w, "x", 90)               # flat side down
         parts[f"fin_{tag}"] = fin(side)
@@ -1459,8 +1468,8 @@ def build():
     poses["tail_gear_a"] = lambda w: rot(w, "x", 90)
     poses["tail_gear_b"] = lambda w: rot(w, "x", -90)
     parts["tail_wheel"] = wheel(TAIL_AXLE_X, 0, bot_t - TAIL_LEG_DROP, TAIL_WHEEL_D, TAIL_WHEEL_W,
-                                bore=AXLE_STUB["tail"] + STUB_SPIN)
-    poses["tail_wheel"] = lambda w: rot(w, "x", 90)
+                                bore=AXLE_STUB["tail"] + STUB_SPIN, flat=-1)
+    poses["tail_wheel"] = lambda w: rot(w, "x", 90)               # flat (port) face down
     _, _, top_d, _, _ = interp(FUSE_STATIONS, DORSAL_X)
     post, base, sax = stand_parts()
     parts["stand_post"], parts["stand_base"] = post, base

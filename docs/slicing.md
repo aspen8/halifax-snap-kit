@@ -19,12 +19,12 @@ The command line can treat some settings differently from the app (filament-to-n
 | Plate | Time | Layers | Layer mm | Filament on the model (g) | Model g | Flush + tower g | Changes |
 |---|---|---|---|---|---|---|---|
 | 1 inlays | 37m | 39 | 0.16 | Red 1.3, Blue 0.3, White 0.1 | 1.6 | 6.7 | 11 |
-| 2 test parts | 1h 12m | 183 | 0.04/0.08/0.12/0.16 | Black 20.3 | 20.3 | 0.0 | 0 |
-| **All** | **1h 49m** | | | | **21.9** | **6.7** | **11** |
+| 2 test parts | 1h 12m | 183 | 0.04/0.08/0.12/0.16 | Black 20.4 | 20.4 | 0.0 | 0 |
+| **All** | **1h 49m** | | | | **22.0** | **6.7** | **11** |
 
 - **Plate 2 mixes 0.12 and 0.16 mm parts and slices without complaint.** Bambu interleaves the two heights: where they don't line up, it adds 0.04 and 0.08 mm steps, which gives 183 layers in all. So it doesn't need splitting.
 - **Plate 1 is mostly purge.** It uses 6.7 g of flush and tower for 1.6 g of inlays, and about 17 of its 37 minutes are flushing.
-- **Warning on plate 2:** "t4_main_wheel has floating regions". `tools/overhang.py` agrees: the wheel has 175 mm² of overhang, all below z 0.8 mm. It's the curve of the tyre lifting off the bed. It's the same wheel as the kit's, which gets the same warning on kit plate 8. Watch the wheel's underside on the test print.
+- **No warnings since the wheels got a flat side.** The first slice warned that "t4_main_wheel has floating regions": the rounded tyre edge lifted off the bed (175 mm² of overhang). The wheels now have a flat inboard face that prints on the bed, and the warning has gone. The kit table below is from before that change, so kit plate 8 still shows the wheel warning.
 
 ## Full kit (`kit/halifax_kit.3mf`): 4 of 9 plates fail
 

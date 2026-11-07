@@ -182,3 +182,7 @@ The geometry checks can't see any of this; only slicing shows it. Set `wipe_towe
 The wings print on end in black with camo on top. That means two filament changes on almost every one of the 1065 layers, which comes to 1.08 kg of purge and 50 hours of flushing for 143 g of wing. Count the colour changes per layer when choosing a print pose, not just layer-line visibility.
 
 On a dual-nozzle printer, keep the base colour on one nozzle and the accent colours on the other, so most changes are nozzle swaps without a flush. On the X2D the second nozzle can't reach x < 20.5 mm, so the plate packer must keep parts in that colour clear of it.
+
+## Wheels: one flat face
+
+A wheel printed lying on a face with the tyre rounded on both sides starts on a thin ring, and the lower fillet is overhang right at the bed (Bambu flags it as floating regions). Make the face that's hidden (the inboard one, behind the fork leg) flat, with only a small chamfer against elephant's foot, and print on it. Nobody sees it on the finished model, and the wheel prints with no overhang and more than twice the bed contact.
