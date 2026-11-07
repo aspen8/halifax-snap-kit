@@ -104,8 +104,9 @@ if __name__ == "__main__":
     ap.add_argument("--px", type=float, default=0.25)
     ap.add_argument("--box", default=None)
     ap.add_argument("--skip", default="stand,gear,wheel", help="part-name fragments to leave out")
+    ap.add_argument("--light", default="0.3,-0.4,0.85", help="light direction in view space (x right, y up, z to the viewer); a raking light from above, e.g. 0,1,0.35, shows creases")
     a = ap.parse_args()
     box = [float(v) for v in a.box.split(",")] if a.box else None
-    im, _ = raster(load(a.src, [k for k in a.skip.split(",") if k]), a.view, a.px, box)
+    im, _ = raster(load(a.src, [k for k in a.skip.split(",") if k]), a.view, a.px, box, [float(v) for v in a.light.split(",")])
     Image.fromarray(im).save(a.out)
     print(a.out, im.shape)

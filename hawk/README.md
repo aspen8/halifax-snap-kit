@@ -51,6 +51,14 @@ Against photos (top: real aircraft, bottom: model):
 
 > **Status: v17, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
 
+### v20 changes (pod's rear top line)
+
+- **Side pods:** behind their highest point the top now runs in a straight line down to the top of the roundel (z 18.8 at X 142 to 13.25 at X 186.8). v19 curved down and ended in front of the roundel (user).
+- **Tool:** `tools/raster.py --light` sets the light direction; a light from above (`0,1,0.35`) shows creases like the pod's top edge that the default front light hides.
+- **Checks:** interference shows only the known overlaps; all 7 plates slice, with print times as v19.
+
+![v19 and v20 pod, lit from above](docs/v20_pod.png)
+
 ### v19 changes (pods, canopy line, nozzle)
 
 The user's notes, each checked against the Revell side view and the clean renders first.

@@ -38,7 +38,9 @@ Then:
 - The user prints on a Bambu X2D (two nozzles, AMS). Keep the base red on the main nozzle (fixed per-plate map in `colour.py` `FILAMENT_MAP`/`MAPPED_PLATES`); the second nozzle runs outer walls at 50 mm/s.
 - The user often asks to "add to the to-do list" when near a usage limit: write it into `hawk/README.md` "Known gaps and next steps", commit, change nothing else.
 
-## State at handoff (v19, built, checked and committed locally)
+## State at handoff (v20, built, checked and committed locally)
+
+v20 changes: the pod top runs straight from its peak (X 142) to the roundel top (`INTAKE_STATIONS` from X 150); `tools/raster.py --light 0,1,0.35` shows the pod crease.
 
 v19 changes: pod top line lower at the lip and highest mid-length (`INTAKE_STATIONS`), canopy cut in two straight runs (`CANOPY_PLANE` now three points, `canopy_plane_z`, `canopy_angle(run)`, `canopy_zone`), nozzle 0.4 higher (`JET_PIPE`). If the pod height still looks off, ask for a straight side-on shot of the pod (Revell says 19.5 at the peak, the render about 18; 18.8 used).
 
@@ -71,4 +73,4 @@ Test-print history: plate 1 (v3 fuselage) and the canopy/gear/nozzle plates (v3/
 3. ~~Fin against the drawing~~: done in v11 (outline within about 0.4 mm of the Revell side view, rounded tip). Waiting for the user's look.
 4. README to-dos still open: separate lettering panels (sharper text), nonplanar top-surface test (orcaslicer-nonplanar), canopy fit check on the next fuselage print, print-in-place control surfaces.
 5. ~~Rudder hinge groove red line and TE speck~~: fixed in v16.
-6. Push to GitHub when the user asks. v10 to v18 are pushed; v19 is committed locally only (the checkout in use is the older one in Claude's scratch-workspaces folder, which has `ref/` and `.venv`).
+6. Push to GitHub when the user asks. v10 to v19 are pushed; v20 is committed locally only (the checkout in use is the older one in Claude's scratch-workspaces folder, which has `ref/` and `.venv`).
