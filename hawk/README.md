@@ -49,7 +49,24 @@ Against photos (top: real aircraft, bottom: model):
 
 ![photo comparison](docs/photo_comparison.png)
 
-> **Status: v16, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+> **Status: v17, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+
+### v17 changes (checked against clean reference renders)
+
+The user supplied clean renders of a Red Arrows Hawk from many angles (`ref/hawk/renders/`, not in git). Sizes were taken from the straight-on, long-shot views; the close-ups (wide-angle, so near parts look fat) only for shapes.
+
+- **Underside white:** refitted to the straight-up render, calibrated on the wing's own edges (which match our planform within 1 mm). Each wing has one band from beside the centre pod out to the trailing edge, then a 7.3 mm strip along the trailing edge in to the belly, and two stripes along the belly joined in a U under the jet pipe. The old shape (from the Revell sheet) put the band's front too far out and the trailing-edge strip too far forward.
+- **Clean paint over panel lines:** the wing undersides and the fuselage sections are now painted from their shape before the panel and hinge grooves are cut (as the fins were in v16), so the grooves no longer break the white into patches. The gear socket and wheel well are lined in white where they sit in the white band. Behind the wing the belly stripes wrap 7 mm up the rounded belly, so they don't break up on its curve.
+- **Canopy hoops:** the white hoop between the cockpits is now 3.6 mm wide (was 2.0), at X 75.7 at the sill, leaning back 35° (was X 84, 19°). The red windscreen frame is a slimmer 1.3 mm tube (was 2.6).
+- **Wing fins and fences:** under each wing, three slim fairings at the rear of the chord (|y| 25, 65 and 83) and one deeper white fin near the leading edge (|y| 39), as in the views from below and behind. Two fences now wrap round the leading edge near the tip (|y| 78 and 97).
+- **Fin flag:** traced from the clean renders instead of the photos (no watermark, sharper edges); the swoosh re-matched to it (within 0.3 mm).
+- **Checks:** interference unchanged; each wing half is one piece; the wing undersides' overhang rose by about 100 mm² (the leading-edge fences); all 7 plates slice. Print times: fuselage 11.5 h, small parts 0.7 h, wing tops 1.8 h, wing undersides 1.7 h, fins and canopy 4.2 h, stand 2.2 h, gear 1.1 h.
+
+![v17 underside](docs/v17_under.png)
+
+![v17 canopy hoops](docs/v17_canopy.png)
+
+![v17 tail paint](docs/v17_tail_paint.png)
 
 ### v16 changes (fin paint clean-up)
 
@@ -318,7 +335,7 @@ The shape is measured from the Revell 04284 Hawk T.1A (Red Arrows) instruction s
 
 The scheme is the current one, with the Union-flag fin. It combines two sheets:
 
-- **Fin flag:** traced (v14) from close-up photos of each side with `tools/trace_colours.py`, one trace per side (specs in `tools/fin_flag_*.json`). Each photo is fitted to the model through the trailing edge's top corner and its bottom (kink) corner, so the flag lands exactly on our fin. Note the two close-up files are named the wrong way round: `photo_fin_stbd_closeup.webp` shows the port side (nose left) and is the port trace. Watermark colours in the port photo count as red, the watermark's "a" glyphs on the fin are masked out (v15), and islands under 10 mm² are dropped. (v9 to v13 used the HobbyBoss 81738 sheet, which drew the bands thinner and wobblier.) It's clipped to the fin itself: above the fuselage top line and behind the straight leading edge, so the spine cap and dorsal fillet stay red.
+- **Fin flag:** traced (v17) from the clean reference renders of each side (v14 to v16: from close-up photos) with `tools/trace_colours.py`, one trace per side (specs in `tools/fin_flag_*.json`). Each photo is fitted to the model through the trailing edge's top corner and its bottom (kink) corner, so the flag lands exactly on our fin. Note the two close-up files are named the wrong way round: `photo_fin_stbd_closeup.webp` shows the port side (nose left) and is the port trace. Watermark colours in the port photo count as red, the watermark's "a" glyphs on the fin are masked out (v15), and islands under 10 mm² are dropped. (v9 to v13 used the HobbyBoss 81738 sheet, which drew the bands thinner and wobblier.) It's clipped to the fin itself: above the fuselage top line and behind the straight leading edge, so the spine cap and dorsal fillet stay red.
 - **Cheat line and swoosh** (parametric, from the photos, the same on both sides):
   - It starts at the nose tip, 1.1 mm wide and crossing the front of the nose just above the probe boss (head-on photo), and thickens gradually to the letter height (5.2 mm) on the side pod, then stops 2 mm short of "ROYAL AIR FORCE".
   - It resumes behind the roundel at the same height and sweeps up in one curve (a cubic Bezier) to the fin root, widening to 8 mm, where it meets the flag's white.

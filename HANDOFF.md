@@ -38,7 +38,9 @@ Then:
 - The user prints on a Bambu X2D (two nozzles, AMS). Keep the base red on the main nozzle (fixed per-plate map in `colour.py` `FILAMENT_MAP`/`MAPPED_PLATES`); the second nozzle runs outer walls at 50 mm/s.
 - The user often asks to "add to the to-do list" when near a usage limit: write it into `hawk/README.md` "Known gaps and next steps", commit, change nothing else.
 
-## State at handoff (v16, built, checked and committed locally)
+## State at handoff (v17, built, checked and committed locally)
+
+v17 changes: the user found a source of clean renders from any angle (`ref/hawk/renders/`); v17 reworks the underside white (`under_white`), canopy hoops (`CANOPY_FRAMES_X`), wing fins and leading-edge fences (`WING_FINS`, `WING_LE_FENCES` in hawk.py, `WHITE_WING_FINS` in colour.py) and the fin flag trace against them, and paints the wings and fuselage from their shape before the panel grooves (`P_plain`). Open from the review, not done: the rear fuselage looks boxier from behind than the reference; lettering slightly larger and higher in the reference; the reference's small aerials, squadron badge and serial are not modelled. The user can supply more angles on request.
 
 v16 changes (paint, plus the rudder top groove): glyph-only watermark mask with majority smoothing (`tools/trace_colours.py`), no flag below the rudder's bottom edge (`RUDDER_FOOT_X`), fin skins taken before the grooves (`P_plain` in `colour.py`), rudder top groove stops 1 mm short of the TE (`RUDDER_TOP_STOP` in `detail.py`), traced outlines smoothed (`FLAG_EDGE_SMOOTH`).
 
@@ -65,4 +67,4 @@ Test-print history: plate 1 (v3 fuselage) and the canopy/gear/nozzle plates (v3/
 3. ~~Fin against the drawing~~: done in v11 (outline within about 0.4 mm of the Revell side view, rounded tip). Waiting for the user's look.
 4. README to-dos still open: separate lettering panels (sharper text), nonplanar top-surface test (orcaslicer-nonplanar), canopy fit check on the next fuselage print, print-in-place control surfaces.
 5. ~~Rudder hinge groove red line and TE speck~~: fixed in v16.
-6. Push to GitHub when the user asks. v10 to v16 are committed locally only (the checkout in use is the older one in Claude's scratch-workspaces folder, which has `ref/` and `.venv`).
+6. Push to GitHub when the user asks. v10 to v17 are committed locally only (the checkout in use is the older one in Claude's scratch-workspaces folder, which has `ref/` and `.venv`).

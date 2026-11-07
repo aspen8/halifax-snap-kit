@@ -77,11 +77,12 @@ CHEAT_GAP = 2.0                    # mm of red between the band and the letterin
 # Where the swoosh meets the fin flag, per side (+1 starboard, -1 port): x, z of its centre line,
 # direction, width there. Set so that at the seam (FIN_FLAG_ABOVE over the fuselage line) it
 # covers exactly the flag's white in front of the small blue triangle, with the white's edge angle
-# (v14 photo trace, 0.6 mm over the fuselage line: port X 217.7-229.1, starboard X 222.5-233.4).
+# (v17 trace from the clean reference renders, 0.6 mm over the fuselage line: port X 219.3-229.5,
+# starboard X 221.8-231.4).
 # The flag is mirrored, so its white sits differently on each side. Re-measure after re-tracing
 # the flag (intersect both with lines just above the fuselage line).
-SWOOSH_TOP = {-1: (222.44, 25.0, 0.482, 0.876, 9.99),
-              +1: (227.29, 25.0, 0.447, 0.894, 9.75)}
+SWOOSH_TOP = {-1: (223.49, 25.0, 0.482, 0.876, 8.94),
+              +1: (225.88, 25.0, 0.447, 0.894, 8.59)}
 SWOOSH_UP = 0.8                    # the swoosh runs this far above the flag's lower edge, under its
                                    # ragged traced base (the flag paints over it)
 FLAG_TE_FILL = 1.0                 # mm: the flag is carried aft up to the trailing edge over gaps this
@@ -90,7 +91,7 @@ FLAG_TE_FILL_FROM = 4.0            # ...but only from this far above the kink co
 FLAG_MIN_ISLAND = 10.0             # mm2: smaller separate white/blue islands in the photo trace are
                                    # watermarks or specks (the real flag's pieces are all larger)
 FLAG_BASE_FILL = 0.8               # mm: colours carried down over the ragged traced base...
-FLAG_BASE_X1 = {-1: 239.9, 1: 245.4}   # ...ahead of this x, where the red diagonal reaches the root
+FLAG_BASE_X1 = {-1: 241.8, 1: 240.1}   # ...ahead of this x, where the red diagonal reaches the root
 RUDDER_FOOT_X = {-1: 242.3, 1: 240.5}  # the rudder's bottom edge runs forward from the TE's kink
                                    # corner to here (photos: 8.7 mm port, 10.5 mm starboard); red below
 FLAG_EDGE_SMOOTH = 5               # traced outlines are smoothed over this many vertices (~1.5 mm)
@@ -187,22 +188,23 @@ def letters_section(side):
     return t.offset(LETTER_BOLD, mf.JoinType.Round)
 
 
-# Underside white (Revell 04284 under view, lines fitted to the traced areas in ref/hawk_white/
-# under.json): a chevron on each wing - a band along the leading-edge side, widening outboard,
-# and a strip along the trailing edge - running into two stripes along the belly that meet in
-# a U under the jet pipe. Straight lines, so the drawing's panel lines leave no gaps.
-CHEVRON_OUT = ((110.0, 16.9), 0.825)     # outer edge: point (x, |y|), slope d|y|/dx
-CHEVRON_IN = ((118.0, 16.1), 0.547)      # inner edge of the band
-CHEVRON_TE_X = 161.5                     # inner edge of the trailing-edge strip
-BELLY_STRIPE = ((88.0, 92.0), (161.5, 9.4, 12.6), (256.0, 1.2, 3.4))
-                                         # belly stripes (photo from below): from a point at the
-                                         # smoke pod's nose (x of the outer and inner edge on the
-                                         # centreline), out to the wing trailing edge (x, inner and
-                                         # outer |y|), then straight back to the tail, where they end
-                                         # apart (x, inner, outer |y|)
+# Underside white (v17: lines fitted to the clean straight-up reference render
+# ref/hawk/renders/ref_under_straight.png, calibrated on the wing's own leading and trailing
+# edges, which match the model's planform within 1 mm): on each wing a band from beside the
+# centre pod out to the trailing edge, and a narrow strip along the trailing edge from the
+# band's tip in to the belly; two stripes along the belly from there to the tail, joined in a U.
+CHEVRON_OUT = ((110.0, 17.40), 0.7068)   # outer edge of the band: point (x, |y|), slope d|y|/dx
+CHEVRON_IN = ((118.0, 16.27), 0.5095)    # inner edge of the band
+CHEVRON_FRONT = (90.6, 3.2)              # the band starts at this x, beside the centre pod (|y|)
+TE_STRIP_W = 7.3                         # trailing-edge strip, measured forward from the TE
+BELLY_STRIPE = ((-0.0989, 25.62), (-0.0975, 28.64), 255.2)
+                                         # belly stripes: inner and outer edge |y| = k x + c, and
+                                         # the x of the U that joins them under the jet pipe
 BELLY_CORNER_UP = 1.6                    # they wrap this far up the corner
-BELLY_V_W = 6.3                          # the wing chevrons meet across the belly in a V at the
-                                         # smoke pod's nose (photo from below), this wide in x
+BELLY_REAR_X, BELLY_REAR_UP = 165.0, 7.0  # behind this x the stripes may climb this far above the
+                                         # bottom line (the rear belly is rounded; no pods there)
+WHITE_WING_FINS = [3]                    # indices into hawk.WING_FINS of fins painted white (the
+                                         # one near the leading edge at |y| 39: rear reference render)
 
 
 def _rect(a0, b0, a1, b1):
@@ -218,23 +220,20 @@ def _halfplane(pt, slope, below):
 
 def under_white():
     """White on the underside, (x, y), both sides."""
-    band = (_halfplane(*CHEVRON_OUT, True)
-            ^ (_halfplane(*CHEVRON_IN, False) + _rect(CHEVRON_TE_X, -300.0, 300.0, 300.0))
-            ^ _rect(95.0, 4.0, 200.0, 200.0)
-            ^ H.wing(1).project())                                    # on the wing only
-    (fo, fi), (xm, lm, hm), (xt, lt, ht) = BELLY_STRIPE
-    belly = cs([np.array([(fi, 0.0), (xm, lm), (xt, lt), (xt, ht), (xm, hm), (fo, 0.0)])[::-1]])
-    belly = belly + _rect(CHEVRON_TE_X, lm, 171.5, 40.0)    # one band with the trailing-edge strip
-    half = band + belly
-    return half + half.mirror([0.0, 1.0])
-
-
-def belly_v():
-    """Across the belly between the wing roots: the chevrons' outer edge carried to the centreline."""
-    (px, py), k = CHEVRON_OUT
-    ys = np.linspace(0.0, 12.5, 20)
-    xo = px + (ys - py) / k
-    half = cs([np.r_[np.c_[xo, ys], np.c_[xo[::-1] + BELLY_V_W, ys[::-1]]]])
+    (ki, ci), (ko, co), xu = BELLY_STRIPE
+    x0, y0 = CHEVRON_FRONT
+    outer = _halfplane(*CHEVRON_OUT, True)
+    ys = np.linspace(6.0, H.SPAN / 2, 120)
+    te = np.array([sum(H.wing_plan(y)[:2]) for y in ys])
+    ahead = cs([np.r_[[(40.0, 0.0), (te[0] + 3.0, 0.0)], np.c_[te + 3.0, ys], [(40.0, ys[-1])]]])
+    band = outer ^ _halfplane(*CHEVRON_IN, False) ^ _rect(x0, y0, 300.0, 300.0) ^ ahead
+    y_in = ki * 170.0 + ci                                   # belly stripe's inner edge at the TE
+    strip = cs([np.r_[np.c_[te - TE_STRIP_W, ys], np.c_[te[::-1] + 3.0, ys[::-1]]]]) \
+        ^ _rect(100.0, y_in, 300.0, 300.0) ^ outer          # 3.0: past the TE (paint overshoots)
+    xs = np.linspace(te[0] - TE_STRIP_W + 0.5, xu, 60)       # from inside the TE strip
+    belly = cs([np.r_[np.c_[xs, ki * xs + ci], np.c_[xs[::-1], (ko * xs + co)[::-1]]]])
+    cap = _rect(xu - (co - ci + 0.3) - 0.0, 0.0, xu, ko * xu + co)   # the U, as wide as a stripe
+    half = band + strip + belly + cap
     return half + half.mirror([0.0, 1.0])
 
 
@@ -278,9 +277,13 @@ def fuselage_markings(P):
         ops += roundel_ops(x, z, d, "y", sk)
     # the bottom and its corners only: near any downward face, but no higher than just above the
     # fuselage's bottom line (the pods' tapering undersides face down too)
-    low = ((P - P.translate([0, 0, BELLY_CORNER_UP])) - core) ^ near_bottom(x0, x1, BELLY_CORNER_UP + 0.4)
+    down = (P - P.translate([0, 0, BELLY_CORNER_UP])) - core
+    low = down ^ near_bottom(x0, x1, BELLY_CORNER_UP + 0.4)
     if x1 > 150.0:
-        ops.append((WHITE, low ^ prism_z(under_white() ^ fuselage_plan(max(x0, 150.0), x1, inset=-2.0))))
+        # behind the wing the belly stripes wrap up the rounded belly further than the 2 mm
+        # band allows (they showed patchy), and there are no pod undersides there to catch
+        rear = down ^ near_bottom(x0, x1, BELLY_REAR_UP) ^ K.box(BELLY_REAR_X, 400.0, -100.0, 100.0, -100.0, 100.0)
+        ops.append((WHITE, (low + rear) ^ prism_z(under_white() ^ fuselage_plan(max(x0, 150.0), x1, inset=-2.0))))
     if x0 < 162.0 and x1 > 86.0:                       # the stripes' forward run to the pod's nose
         ops.append((WHITE, low ^ prism_z(under_white() ^ fuselage_plan(max(x0, 86.0), min(x1, 162.0), inset=-2.0))))
     return ops
@@ -309,7 +312,7 @@ def fin_outline(z0=None):
 
 
 def fin_flag(side):
-    """Union-flag fin traced from close-up photos of each side (v14; tools/trace_colours.py,
+    """Union-flag fin traced from the clean reference renders of each side (v17; tools/trace_colours.py,
     specs in hawk/tools/fin_flag_*.json, fitted through the trailing edge's top and kink
     corners). Returns [(colour, section)] in (x, z)."""
     from matplotlib.path import Path as MPath
@@ -400,11 +403,12 @@ def paint(P, ops, base=RED):
     return K.paint(P, ops, base)
 
 
-CANOPY_FRAMES_X = [(59.5, 2.6, -23.0, RED),     # windscreen arch: x at the sill, width, lean (deg,
-                                                  # + = top aft), colour. Body colour, thick, leaning
-                                                  # forward at the top (side photo, Revell side view)
-                   (84.0, 2.0, 19.0, WHITE)]      # hoop between the cockpits, leaning back at the top
-                                                  # (side photo; cream on the aircraft, white is closest)
+CANOPY_FRAMES_X = [(58.0, 1.3, -24.0, RED),     # windscreen arch: x at the sill, width, lean (deg,
+                                                  # + = top aft), colour. v17: a slim tube leaning
+                                                  # forward at the top (reference renders: ~1.3 mm)
+                   (75.7, 3.6, 35.0, WHITE)]      # hoop between the cockpits: v17 from the long-shot
+                                                  # side render, 3.6 mm thick, centred at X 75.7 at the
+                                                  # sill and leaning back 35 deg (was 2.0 at X 84, 19 deg)
 CANOPY_REAR_FRAME = 1.8                           # mm, frame along the slanted rear edge
 CANOPY_SILL = 0.9                                 # mm of black along the canopy's bottom edge
                                                   # (the red nose dome is hawk.nose_dome, on the fuselage)
@@ -424,13 +428,28 @@ def wing_detailed(side):
 def colour_part(name, P):
     if name.startswith(("wingtop_", "wingbot_")):
         side = 1 if name.endswith("stbd") else -1
-        whole = wing_detailed(side)          # skins from the whole wing (no split face, no sockets)
+        # skins from the whole wing before its panel and hinge grooves are cut (no split face, no
+        # sockets): the paint fills the grooves, so they don't cut red lines through the white
+        whole = H.wing_outer(side)
         S = skins(whole)
         x, y, d = WING_ROUNDEL
         y *= side
         if name.startswith("wingtop_"):
             return paint(P, roundel_ops(x, y, d, "z", S["up"]))
-        return paint(P, [(WHITE, S["down"] ^ prism_z(under_white()))] + roundel_ops(x, y, d, "z", S["down"]))
+        uw = under_white()
+        # line the gear socket and wheel-well recess in the colour around them: inside the lower
+        # half only (its split face is hidden), so they don't show as red squares in the white
+        holes = (H.main_socket(side) + H.gear_bay(side)).project().offset(0.6, mf.JoinType.Round)
+        lining = prism_z(holes ^ uw)
+        ops = [(WHITE, (S["down"] + lining) ^ prism_z(uw))]
+        for i in WHITE_WING_FINS:                           # fins painted white all over
+            eta, f0, f1, _ = H.WING_FINS[i]
+            yy = eta * H.SPAN / 2
+            le, c, _ = H.wing_plan(yy)
+            blk = H.wing_flat_to_assembled(H.box(le + f0 * c - 1.0, le + f1 * c + 1.0, yy - 1.5, yy + 1.5,
+                                                 -40.0, 40.0), side)
+            ops.append((WHITE, blk - H.wing_assembled(side)))
+        return paint(P, ops + roundel_ops(x, y, d, "z", S["down"]))
     if name.startswith("fin_"):
         # skins from the fin half before its hinge and panel grooves are cut: the paint then
         # fills the grooves (their walls and floor), so a groove through the flag doesn't show
@@ -454,7 +473,9 @@ def colour_part(name, P):
                  for x, w, a, c in CANOPY_FRAMES_X]
         return paint(P, hoops, base=CANOPY)
     if name.startswith("fuselage_"):
-        return paint(P, fuselage_markings(P))
+        # markings measured from the section before its panel lines are cut, so the paint fills
+        # the grooves (the belly stripes showed broken where panel and door lines crossed them)
+        return paint(P, fuselage_markings(P_plain.get(name, P)))
     if name == "nozzle":
         # grey metal outside and on the rim, black inside the void
         n = H.NOZZLE

@@ -1,6 +1,6 @@
 {
- "image": "ref/hawk/photo_fin_stbd_closeup.webp",
- "_note": "photo trace (v14): similarity through the TE top and kink corners; wm_*: the stock-photo watermark over red (counts as red); mask: the watermark \"a\" glyphs on the fin (filled from the surrounding colours)",
+ "image": "ref/hawk/renders/ref_fin_port.png",
+ "_note": "v17: traced from the clean reference renders; similarity through the TE top and kink corners",
  "points": [
   [
    [
@@ -8,8 +8,8 @@
     70.5
    ],
    [
-    733.0,
-    117.0
+    377.0,
+    38.0
    ]
   ],
   [
@@ -18,8 +18,8 @@
     27.0
    ],
    [
-    652.0,
-    580.0
+    318.0,
+    291.0
    ]
   ],
   [
@@ -28,8 +28,8 @@
     61.022875816993434
    ],
    [
-    1196.0,
-    198.0
+    630.0,
+    97.0
    ]
   ]
  ],
@@ -685,60 +685,39 @@
  ],
  "palette": {
   "red": [
-   155,
-   26,
-   25
+   198,
+   49,
+   49
+  ],
+  "red2": [
+   160,
+   36,
+   36
   ],
   "white": [
-   155,
-   155,
-   164
+   225,
+   227,
+   226
+  ],
+  "white2": [
+   186,
+   185,
+   185
   ],
   "blue": [
-   1,
-   24,
-   69
+   0,
+   29,
+   95
   ],
-  "wm_pink": [
-   202,
-   152,
-   157
-  ],
-  "wm_dark": [
-   128,
-   63,
-   71
+  "sky": [
+   55,
+   110,
+   160
   ]
  },
  "keep": [
   "white",
   "blue"
  ],
- "smooth": 0.35,
- "mask": [
-  [
-   570,
-   238,
-   594,
-   274
-  ],
-  [
-   420,
-   370,
-   445,
-   404
-  ],
-  [
-   570,
-   498,
-   595,
-   534
-  ],
-  [
-   270,
-   498,
-   295,
-   534
-  ]
- ]
+ "smooth": 0.35
 }

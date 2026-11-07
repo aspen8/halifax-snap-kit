@@ -805,12 +805,38 @@ def wing_glove(side):
     return g if side > 0 else g.mirror([0, 1, 0])
 
 
-WING_FINS = [(0.30, 0.40, 0.76, 2.4), (0.55, 0.42, 0.76, 2.2), (0.78, 0.44, 0.78, 1.9),
-             (0.24, 0.62, 1.04, 2.8), (0.46, 0.64, 1.04, 2.6)]   # v9: all towards the rear of
-             # the chord; the flap-track fairings run past the trailing edge (photos)
-             # under the wing (photos): three fences behind the leading edge and two flap-track
-             # fairings at the trailing edge. eta, chord fraction from, to, depth below the skin
+WING_FINS = [(0.2156, 0.61, 0.88, 2.4), (0.5529, 0.50, 0.88, 3.2), (0.7046, 0.38, 0.86, 1.6),
+             (0.3306, 0.13, 0.30, 3.0)]
+             # v17, from the clean reference renders (straight up and from behind): three slim
+             # fairings under the rear of the chord at |y| 25, 65 and 83, ending short of the
+             # trailing edge, and a deeper fin near the leading edge at |y| 39 (white, colour.py
+             # WHITE_WING_FINS). eta, chord fraction from, to, depth below the skin
+WING_LE_FENCES = [(0.6645, 2.0, 0.35, 1.8, 2.2), (0.8264, 1.2, 0.18, 1.0, 1.4)]
+             # v17: fences on the leading edge (|y| 78 and 97), wrapping round it above and
+             # below and standing proud of it: eta, mm ahead of the LE, chord fraction they run
+             # back to, height above and below the skin
 WING_FIN_T = 0.9
+
+
+@cached
+def wing_le_fences_flat():
+    from shapely.geometry import Polygon, box as sbox
+    from shapely.ops import unary_union
+    out = []
+    for eta, ahead, f1, up, down in WING_LE_FENCES:
+        y = eta * SPAN / 2
+        le, c, tc = wing_plan(y)
+        sec = Polygon(np.array(cambered_section(tc, c)) + [le, 0.0]).buffer(0)
+        r = 0.6                                              # rounding of the outline
+        steps = np.linspace(-(down - r), up - r, 14)
+        swept = unary_union([Polygon(np.array(sec.exterior.coords) + [0.0, dz]) for dz in steps])
+        prof = swept.buffer(max(ahead, r)) & sbox(le - ahead, -20.0, le + f1 * c, 20.0)
+        prof = np.array(prof.exterior.coords)[:-1]
+        if K.cs([prof]).area() < 0:
+            prof = prof[::-1]
+        plate = K.cs([prof]).extrude(WING_FIN_T).translate([0, 0, -WING_FIN_T / 2]).rotate([90, 0, 0])
+        out.append(plate.translate([0, y, WING_CHORD_Z]))
+    return union(out)
 
 
 @cached
@@ -837,7 +863,7 @@ def wing_fins_flat():
 @cached
 def wing_outer(side):
     """The wing part's outside shape (no sockets or slots): what the paint is measured from."""
-    fins = wing_flat_to_assembled(wing_fins_flat(), side)
+    fins = wing_flat_to_assembled(wing_fins_flat() + wing_le_fences_flat(), side)
     return (wing_assembled(side) + fins + (wing_glove(side) ^ outer())) - body()
 
 

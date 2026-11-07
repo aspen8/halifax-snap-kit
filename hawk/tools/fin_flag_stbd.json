@@ -1,6 +1,6 @@
 {
- "image": "ref/hawk/photo_fin_port_closeup.png",
- "_note": "photo trace (v14): similarity through the TE top and kink corners",
+ "image": "ref/hawk/renders/ref_fin_stbd.png",
+ "_note": "v17: traced from the clean reference renders; similarity through the TE top and kink corners",
  "points": [
   [
    [
@@ -8,8 +8,8 @@
     70.5
    ],
    [
-    58.0,
-    50.0
+    88.0,
+    30.0
    ]
   ],
   [
@@ -18,8 +18,8 @@
     27.0
    ],
    [
-    97.0,
-    372.0
+    160.0,
+    272.0
    ]
   ],
   [
@@ -28,8 +28,8 @@
     61.022875816993434
    ],
    [
-    -264.0,
-    89.0
+    -154.0,
+    102.0
    ]
   ]
  ],
@@ -685,19 +685,34 @@
  ],
  "palette": {
   "red": [
-   192,
-   0,
-   15
+   160,
+   36,
+   36
+  ],
+  "red2": [
+   198,
+   49,
+   49
   ],
   "white": [
-   177,
-   176,
-   182
+   186,
+   185,
+   185
+  ],
+  "white2": [
+   225,
+   227,
+   226
   ],
   "blue": [
-   37,
-   46,
-   79
+   0,
+   26,
+   82
+  ],
+  "sky": [
+   20,
+   80,
+   150
   ]
  },
  "keep": [

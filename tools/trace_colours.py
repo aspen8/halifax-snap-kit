@@ -8,7 +8,8 @@ SPEC (JSON):
   points:  [[[x, z], [u, v]], ...]   three or more model (h, v) -> image px pairs; an affine
            is fitted through them, so the drawing is stretched onto the model's own outline
   region:  [[x, z], ...]              model polygon to trace inside (e.g. the fin outline)
-  palette: {"red": [r, g, b], "white": [...], "blue": [...]}   reference colours
+  palette: {"red": [r, g, b], "white": [...], "blue": [...]}   reference colours; a name ending
+           in digits ("white2") is another shade of the same colour (lit and shaded faces)
   keep:    ["white", "blue"]          classes to write (the rest is the part's base colour)
   smooth:  mm, closing/opening radius that removes the drawing's thin lines (default 0.4)
   mask:    [[u0, v0, u1, v1], ...]    optional image boxes to ignore (watermarks, labels); they
@@ -77,10 +78,12 @@ if S.get("mask"):
     cls = np.where(near, votes.argmax(0), cls)
 k = max(1, int(round(S.get("smooth", 0.4) / r)))
 out, over = {}, (pix * 0.4).astype(np.uint8)
+# palette names ending in digits are extra shades of the same colour ("white2" counts as "white")
+base = [n.rstrip("0123456789") for n in names]
 for i, n in enumerate(names):
     if n not in S["keep"]:
         continue
-    m = (cls == i) & inside
+    m = np.isin(cls, [j for j, b in enumerate(base) if b == n]) & inside
     m = ndi.binary_closing(m, iterations=k)
     m = ndi.binary_opening(m, iterations=k) & inside
     rings = []
