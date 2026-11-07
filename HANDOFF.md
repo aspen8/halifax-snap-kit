@@ -32,7 +32,14 @@ State on 2026-11-07, branch `phase1-airframe`, now worked on the user's Mac. `ki
    - Ship the flat wing pose too, as LESSONS suggests.
    - Use real flush volumes in place of the flat 350 mm³.
 4. **Decided (2026-11-07): put the camo paint back on the fuselage. Start after the test print results are in.** The user wants to drop the separate clip-on spine pieces, paint the camo onto the black fuselage sections, and accept the long print and purge that come with it.
-   - Expect plate 1 to look like the wing plate: on end, with two colour changes on most layers.
+   - **Print the painted fuselage on the wing plate (user, 2026-11-07).** That gives one long plate with all the swaps, in place of a separate fuselage plate and spine plate. Fit checked against the current 3MF, using convex-hull outlines, the kit's 230 × 250 mm usable area and 9 mm between parts (6 mm brim plus 3):
+     - both sections fit, standing on end in the strip behind the outer wings (y ≥ 184);
+     - the prime tower still fits (for example at 50, 28);
+     - with the spine painted back on, each section gets deeper by the spine's thickness, so put the two sections side by side in x (about 90 mm of the 230).
+   - **Why it's cheap:** the wing plate already swaps colours twice per layer, every layer up to the outer wing tips at 170 mm (2129 swaps). The fuselage's camo below 170 mm shares those swaps. Only the 17 mm above the wing tips (the front section is 187 mm tall) adds about 210 swaps.
+   - **Rough estimate, not sliced:** the combined plate takes about 77 h and 1.2 kg of purge. That replaces wing plate (67 h, 1.08 kg) + fuselage plate (4.5 h) + spine plate (10.5 h, 0.16 kg). A separate camo fuselage plate would have cost about another 1.1 kg.
+   - Risk: one ~77 h print holds the wings and the fuselage, so a late failure loses both. Use the brims and watch the first layers.
+   - Code: drop the `spine_*` pieces and their keys; paint the camo onto `fuselage_front`/`fuselage_rear` with `kitlib.paint` (the old pre-v2 approach); and change the plate grouping in `colour.py` so the fuselage joins the wing plate (≤ 5 colours: black, earth and green, so fine).
    - Fix the prime towers (item 2) in the same rebuild, then re-slice.
    - **Purge bomb: considered and rejected.** The idea was a 1000 lb GP bomb set to "flush into this object" to take the purge. On the wing plate it doesn't pay:
      - at 15% infill a 60 × 168 mm sink takes only its own weight (121 g);
