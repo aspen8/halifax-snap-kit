@@ -153,16 +153,16 @@ INTAKE_STATIONS = [            # x, y_outer, z_top, z_bottom: the side pods (int
     (134.0, 16.8, 18.8, -5.4),
     (142.0, 15.2, 18.8, -4.4),
     # rear: a long fade into the fuselage side, the underside staying down on the wing to its
-    # trailing edge (v6); the side stays just proud of the body until the roundel (v18). v20: the
-    # top runs in a straight line from its highest point to the top of the roundel (z 13.25 at
-    # X 186.8); v19 curved down and ended in front of it
-    (150.0, 13.8, 17.8, -4.6),
-    (158.0, 13.0, 16.8, -4.4),
-    (166.0, 12.5, 15.8, -3.8),
-    (174.0, 12.2, 14.8, -2.8),
-    (182.0, 12.0, 13.8, -1.6),
-    (188.0, 11.8, 13.1, -0.9),
-    (192.0, 11.6, 12.6, -0.5),
+    # trailing edge (v6); the side stays just proud of the body until the roundel (v18). The top
+    # runs in a straight line from its highest point to the top of the roundel's white ring (z 14.25
+    # at X 186.8), where it disappears (v21; v20 ran to the blue's top, a touch steeper)
+    (150.0, 13.8, 18.0, -4.6),
+    (158.0, 13.0, 17.2, -4.4),
+    (166.0, 12.5, 16.4, -3.8),
+    (174.0, 12.2, 15.6, -2.8),
+    (182.0, 12.0, 14.7, -1.6),
+    (188.0, 11.8, 14.1, -0.9),
+    (192.0, 11.6, 13.7, -0.5),
 ]
 INTAKE_Y_IN = 10.8           # inner edge of the pods, just inside the body side: their rounded
                              # inner top corner leaves a notch, so they read as separate at the inlet

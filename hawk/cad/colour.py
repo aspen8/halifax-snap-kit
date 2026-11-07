@@ -62,6 +62,9 @@ MAPPED_PLATES = ("Fuselage", "Tailplanes and small parts", "Wing tops", "Wing un
 ROUNDEL = lambda d: [(BLUE, d), (WHITE, d * 2 / 3), (RED, d / 3)]
 
 FUSE_ROUNDEL = (186.8, 7.7, 11.1)        # x, z, diameter (v18: Revell side view; was 3 mm low)
+FUSE_ROUNDEL_RING = 1.0                  # v21: white ring round the blue, mm wide (clean side render:
+                                         # 0.1 of the blue's diameter; the wing roundels have none).
+                                         # The pod's top line runs out at its top (hawk.INTAKE_STATIONS)
 WING_ROUNDEL = (162.2, 94.8, 15.0)       # x, |y|, diameter (Revell top view)
 LETTERS = ("ROYAL AIR FORCE", 144.85, 6.9, 62.5, 5.6)  # text, x centre, z centre, length, height
 LETTER_TILT = 1.5            # deg, the line of lettering rises aft at this angle about its centre, on
@@ -314,6 +317,7 @@ def fuselage_markings(P):
         ops.append((WHITE, sk ^ prism_y(widen(cheat_rear(side), STRIPE_MIN_W))))   # swoosh: per side
         ops.append((WHITE, sk ^ prism_y(letters_section(side))))
         x, z, d = FUSE_ROUNDEL
+        ops.append((WHITE, sk ^ K.cyl_axis(x, z, d / 2 + FUSE_ROUNDEL_RING, "y")))
         ops += roundel_ops(x, z, d, "y", sk)
     # the bottom and its corners only: near any downward face, but no higher than just above the
     # fuselage's bottom line (the pods' tapering undersides face down too)

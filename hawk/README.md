@@ -51,6 +51,14 @@ Against photos (top: real aircraft, bottom: model):
 
 > **Status: v17, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
 
+### v21 changes (roundel ring, pod line)
+
+- **Fuselage roundel:** a 1 mm white ring round the blue, as in the clean side render (about a tenth of the blue's diameter). The wing roundels have none in the references and are unchanged.
+- **Side pods:** the top line behind the highest point is a touch flatter and runs out at the top of the roundel's white ring (z 14.25), as in the references; v20 ran to the top of the blue.
+- **Checks:** interference shows only the known overlaps; all 7 plates slice; the fuselage plate is 11.7 h (the ring adds colour changes), the rest as v20.
+
+![v20 and v21 pod and roundel, lit from above](docs/v21_pod.png)
+
 ### v20 changes (pod's rear top line)
 
 - **Side pods:** behind their highest point the top now runs in a straight line down to the top of the roundel (z 18.8 at X 142 to 13.25 at X 186.8). v19 curved down and ended in front of the roundel (user).
