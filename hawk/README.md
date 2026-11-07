@@ -49,7 +49,19 @@ Against photos (top: real aircraft, bottom: model):
 
 ![photo comparison](docs/photo_comparison.png)
 
-> **Status: v8, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+> **Status: v9, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+
+### v9 changes (v8 feedback)
+
+- **Canopy:** keeps its straight lower edge. The front sections are filled out to straight sides only below the canopy's cut plane (v8 filled above it too, which put red up the canopy's sides).
+- **Ventral strakes:** shaped and placed as on the Revell side view, X 218–236, deepest at the front (6.5 mm seen from the side) with a steep rounded front edge, 3.5 mm deep at the upright rear edge. They sit out on the fuselage's lower curve (|y| 8.6), canted 30°.
+- **Under-wing fences:** moved to the rear part of the chord, with the flap-track fairings.
+- **Belly stripes:** run forward from the wing trailing edge to a point at the smoke pod's nose, and end apart at the tail (photo from below).
+- **Print times:** fuselage 11.5 h, small parts 0.7 h, wing tops 1.7 h, wing undersides 2.0 h, fins and canopy 3.9 h, stand 2.2 h, gear 1.1 h.
+
+![v9 side](docs/v9_side.png)
+
+![v9 underside](docs/v9_under.png)
 
 ### v8 changes (checked against the Revell side view and an underside photo)
 
