@@ -136,32 +136,31 @@ FR_KEYS = [(-5.5, 5.0), (5.5, 5.0), (0.0, 19.0)]   # (y, z) on the joint face (b
 
 # --- Intakes: D-section fairings each side, (x, y_outer, z_top, z_bottom)
 INTAKE_STATIONS = [            # x, y_outer, z_top, z_bottom: the side pods (intake trunks)
-    # boxy D-section pods (cross-sections checked against a reference Hawk model). Side views:
-    # the top edge climbs quickly behind the inlet, then runs nearly level and sweeps back
-    # into the fuselage side below the spine; the outer side tapers in over the same length.
-    (89.0, 20.0, 12.0, -3.6),      # rounded lip (head-on photo)
-    (89.6, 20.5, 12.5, -4.1),
-    (90.5, 20.9, 12.9, -4.5),
-    (92.5, 21.4, 13.5, -5.2),
-    (98.0, 21.7, 14.2, -6.0),      # top climbs a little behind the inlet, staying well clear of
-    (104.0, 21.8, 14.6, -6.4),     # the canopy sill (head-on photo). Widest here, then the
-    (110.0, 21.3, 14.9, -6.4),     # sides turn in at once (convex shoulder, reference model)...
-    (118.0, 20.0, 15.1, -6.3),     # behind the wing LE the pod sits on the wing:
-    (126.0, 18.4, 15.1, -6.0),     # keep its bottom above the wing underside (no slivers)
-    (134.0, 16.8, 14.8, -5.4),     # ...and taper almost straight back...
-    (142.0, 15.2, 14.2, -4.4),
-    # rear (v6): a long fade into the fuselage side, the underside staying down on the wing to
-    # its trailing edge, so there is no visible end to the pod behind the wing root.
-    # v18: the top edge runs straight back to the roundel (Revell side view: z 15.2 at X 141
-    # to 9.5 at X 180) and the side stays just proud of the body until there, so the pod only
-    # finishes blending in at the roundel (it sagged down and in from X 160 before)
-    (150.0, 13.8, 13.3, -4.6),
-    (158.0, 13.0, 12.3, -4.4),
-    (166.0, 12.5, 11.3, -3.8),
-    (174.0, 12.2, 10.3, -2.8),
-    (182.0, 12.0,  9.3, -1.6),
-    (188.0, 11.8,  8.6, -0.9),
-    (192.0, 11.6,  8.0, -0.5),
+    # boxy D-section pods (cross-sections checked against a reference Hawk model); the outer
+    # side tapers in behind the wing LE. v19 top line (Revell side view's pod line, peaking at
+    # z 19.5 near X 135, and the clean side render, ~18 there, with the lettering midway up the
+    # pod side): a lower lip, a long climb to its highest at mid-length, then down to blend into
+    # the fuselage at the roundel. Was 12.0 at the lip, level at 15 from X 110 to 134.
+    (89.0, 20.0, 11.2, -3.6),      # rounded lip (head-on photo)
+    (89.6, 20.5, 11.7, -4.1),
+    (90.5, 20.9, 12.1, -4.5),
+    (92.5, 21.4, 12.9, -5.2),
+    (98.0, 21.7, 14.4, -6.0),
+    (104.0, 21.8, 15.7, -6.4),     # widest here, then the sides turn in at once
+    (110.0, 21.3, 16.8, -6.4),
+    (118.0, 20.0, 17.8, -6.3),     # behind the wing LE the pod sits on the wing:
+    (126.0, 18.4, 18.5, -6.0),     # keep its bottom above the wing underside (no slivers)
+    (134.0, 16.8, 18.8, -5.4),
+    (142.0, 15.2, 18.8, -4.4),
+    # rear: a long fade into the fuselage side, the underside staying down on the wing to its
+    # trailing edge (v6); the side stays just proud of the body until the roundel (v18)
+    (150.0, 13.8, 18.3, -4.6),
+    (158.0, 13.0, 17.4, -4.4),
+    (166.0, 12.5, 16.2, -3.8),
+    (174.0, 12.2, 14.6, -2.8),
+    (182.0, 12.0, 12.4, -1.6),
+    (188.0, 11.8, 10.4, -0.9),
+    (192.0, 11.6,  9.0, -0.5),
 ]
 INTAKE_Y_IN = 10.8           # inner edge of the pods, just inside the body side: their rounded
                              # inner top corner leaves a notch, so they read as separate at the inlet
@@ -175,9 +174,13 @@ SPLITTER_GAP = 0.6           # mm, boundary-layer gap between the lip and the fu
 
 # --- Canopy (cut with a sloping plane through these two (x, z) points)
 CANOPY_X = (36.0, 140.0)
-CANOPY_PLANE = ((36.0, 13.3), (126.0, 27.6))     # through the ends of the sill line, so the whole
-                                                 # sill lies on or below it: the canopy part has no
-                                                 # red, and its bottom edge is straight
+CANOPY_PLANE = ((36.0, 13.3), (60.0, 15.6), (126.0, 29.8))   # v19: the canopy's cut, and visible
+                                                 # bottom edge, in two straight runs (clean side render
+                                                 # and the Revell sill): nearly level (5.5 deg) from the
+                                                 # windscreen tip to the red windscreen arch, then
+                                                 # steeper (12 deg) back to the rear frame. It was one
+                                                 # 9 deg plane. The canopy prints on its rear face, so
+                                                 # its bottom needn't be flat; the tabs sit on the rear run
 CANOPY_REAR = ((116.5, 41.0), (111.0, 22.0))     # rear frame of the glazing, leaning back at the top
                                                   # (Revell side view, v8; was X 122-125 from HobbyBoss,
                                                   # which put the canopy too far aft)
@@ -185,8 +188,8 @@ CANOPY_REAR = ((116.5, 41.0), (111.0, 22.0))     # rear frame of the glazing, le
 # rear seat (HobbyBoss side view, shifted to our windscreen base). The part is cut on the flat
 # CANOPY_PLANE just above it (it prints on it), and that cut is the visible bottom edge: the
 # fuselage stays red below it. The sill line still places the frames and the nose dome.
-CANOPY_SILL = [(36.0, 13.3), (49.8, 14.7), (68.3, 16.0), (81.7, 18.0), (95.1, 20.7),
-               (108.5, 23.4), (122.0, 26.7), (126.0, 27.6)]
+CANOPY_SILL = [(36.0, 13.3), (48.0, 14.45), (60.0, 15.6), (75.0, 18.83), (90.0, 22.06),
+               (105.0, 25.3), (126.0, 29.8)]   # v19: on the two-run cut (CANOPY_PLANE)
 NOSE_DOME = (4.0, 9.0, 36.0, 62.0)   # height above the sill at the centre, half-width, x range:
                                      # the red nose top domes up into the windscreen (head-on photos)
 DOME_CUT_X = 43.0            # the canopy's front is cut off on this vertical plane, where its glass
@@ -262,7 +265,8 @@ FIN_TONGUE = (210.0, 244.0, 4.0)   # x0, x1, depth of the root tongue into the s
 FIN_KEYS = [(189.0, 26.5), (201.0, 26.5)]   # keys in the thick spine cap: (x, z)
 
 # --- Jet pipe
-JET_PIPE = (7.0, 5.4, 6.8)   # (old blind pipe) depth, radius, z centre: the nozzle part replaces it
+JET_PIPE = (7.0, 5.4, 7.2)   # (old blind pipe) depth, radius, z centre: the nozzle part replaces it
+                             # (v19: centre 0.4 higher, Revell side view and the render from behind)
 # Jet nozzle (separate part, plugs into the tail): radius of the visible ring, how far it stands
 # out of the tail, wall, spigot radius and length into the fuselage, depth of the void.
 NOZZLE_FIT = 0.04 * _P       # spigot to socket, per side (FIT let it fall out)
@@ -1132,21 +1136,27 @@ def canopy_sill_z(x):
 
 
 def canopy_plane_z(x):
-    (xa, za), (xb, zb) = CANOPY_PLANE
-    return za + (x - xa) * (zb - za) / (xb - xa)
+    """Height of the canopy's cut (two straight runs, extended at the ends)."""
+    (xa, za), (xk, zk), (xb, zb) = CANOPY_PLANE
+    if x <= xk:
+        return za + (x - xa) * (zk - za) / (xk - xa)
+    return zk + (x - xk) * (zb - zk) / (xb - xk)
 
 
-def canopy_angle():
-    (xa, za), (xb, zb) = CANOPY_PLANE
+def canopy_angle(run=1):
+    """Angle (deg) of the cut's front (run 0) or rear (run 1) run."""
+    (xa, za), (xb, zb) = CANOPY_PLANE[run], CANOPY_PLANE[run + 1]
     return math.degrees(math.atan2(zb - za, xb - xa))
 
 
 def canopy_zone(grow=0.0):
     """Above the sill plane, behind the windscreen base and ahead of the slanted rear edge."""
-    (xa, za), _ = CANOPY_PLANE
     x0, x1 = CANOPY_X
-    blk = box(x0 - 20, x1 + 20, -30, 30, za - grow, za + 50)
-    blk = rot_about(blk, (xa, 0, za), "y", -canopy_angle())
+    blk = None
+    for run in (0, 1):                     # above both runs (the cut is convex: its slope steepens)
+        xa, za = CANOPY_PLANE[run]
+        b = rot_about(box(x0 - 60, x1 + 60, -30, 30, za - grow, za + 80), (xa, 0, za), "y", -canopy_angle(run))
+        blk = b if blk is None else blk ^ b
     (ra, rza), (rb, rzb) = CANOPY_REAR
     ang = math.degrees(math.atan2(rb - ra, rza - rzb))           # lean of the rear edge from vertical
     rear = rot_about(box(ra - 200, ra + grow, -30, 30, rzb - 30, rza + 30), (ra, 0, rza), "y", -ang)
@@ -1170,7 +1180,7 @@ CANOPY_TAB_FIT_Y = 0.03 * _P   # pockets snug across the tabs (FIT all round let
 def canopy_tabs(grow=0.0, grow_y=None):
     """Tabs standing on the sill plane, made level and tipped onto the plane. grow > 0: the
     canopy's pockets for them (clearance all round and 0.3 mm over the top)."""
-    (xa, za), _ = CANOPY_PLANE
+    xa, za = CANOPY_PLANE[1]
     w, h = CANOPY_TAB
     g = grow
     gy = g if grow_y is None else grow_y

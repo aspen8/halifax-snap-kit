@@ -51,6 +51,21 @@ Against photos (top: real aircraft, bottom: model):
 
 > **Status: v17, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
 
+### v19 changes (pods, canopy line, nozzle)
+
+The user's notes, each checked against the Revell side view and the clean renders first.
+
+- **Side pods:** the top line now starts lower at the lip (11.2, was 12.0), climbs to its highest at mid-length (18.8 at X 134-142, was level at about 15), then slopes down to blend into the fuselage at the roundel. Revell's pod line peaks at 19.5 near X 135, and the clean side render at about 18, with the lettering midway up the pod side. The plan view already matched the top-view reference and is unchanged.
+- **Canopy line:** the canopy's cut, which is its visible bottom edge, is now two straight runs: nearly level (5.5 degrees) from the windscreen tip to the red windscreen arch, then steeper (12 degrees) back to the rear frame, which rises at about 16 degrees off vertical (unchanged). It was one 9-degree plane. The canopy prints on its rear face, so its bottom doesn't need to be flat; the tabs sit on the rear run.
+- **Nozzle:** 0.4 mm higher (centre z 7.2), which also leaves more wall under its socket.
+- **Checks:** interference shows only the known overlaps; overhangs are unchanged; all 7 plates slice. Fins and canopy plate 4.3 h, the rest as v18.
+
+![v18 and v19 port side](docs/v19_side.png)
+
+![v18 and v19 head-on](docs/v19_head.png)
+
+![v19 over the Revell side view](docs/v19_side_overlay.png)
+
 ### v18 changes (side markings, pods, rear fuselage, nozzle)
 
 Measured off the Revell side view (orthographic, with the decals drawn on), which agrees with the clean reference renders.
