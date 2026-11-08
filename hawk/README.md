@@ -49,7 +49,21 @@ Against photos (top: real aircraft, bottom: model):
 
 ![photo comparison](docs/photo_comparison.png)
 
-> **Status: v23, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+> **Status: v24, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+
+### v24 changes (tail boss, wing fins and fences, root fillet)
+
+- **Tailplane snap boss:** it stood 1.3 mm proud of the tailplane's top (the 5.4 mm head on a 4.1 mm root) and touched the bed on a line. It is now flat top and bottom, flush with the skins, with its axis at mid-thickness, so the tailplane lies flat. The spring slot is upright, so the two prongs (fore and aft) stand side by side on the bed with nothing overhanging; inside the panel the slot is a pocket within the skins, so no slit shows. Retention is now fore and aft only.
+- **Underside fins moulded on again:** each has a 45° brace on its inboard face (which faces down when the wing stands on its root), out to 0.6 mm from its tip. From behind they look like slim braced tabs rather than plain plates (see the picture). No more tiny separate fins.
+- **Leading-edge fences:** taller above the wing than below (2.9 / 2.1 mm and 1.75 / 1.25 mm printed), as in the view along the leading edge; they were the other way round. Each is a collar that slides back onto the leading edge with a small tongue in a groove under the wing, so it locates itself; glue it.
+- **Trailing-edge root fillet:** in plan, the trailing edge now curves aft into the fuselage side on a 5 mm radius instead of meeting it in a corner (user's photo). It is moulded on the middle fuselage section, as thick as the trailing edge, and its underside carries the white trailing-edge strip in to the belly.
+- **Checks:** interference shows only the known overlaps; no white fuselage paint above the wing; tailplane overhang 1 mm² (it lies flat). Each wing's overhang rose from 143 to about 270 mm², almost all the fins' 45° braces, which the check counts as fine steps. All 6 plates slice: fuselage 11.6 h, tailplanes and small parts 0.7 h, wings 8.0 h, fins and canopy 5.4 h, stand 2.2 h, gear 1.2 h. Test coupons rebuilt: 1.5 h + 0.5 h.
+
+![v23 and v24 tail boss, print pose](docs/v24_tail_boss.png)
+
+![v24 underside fins from behind](docs/v24_fins_rear.png)
+
+![v23 and v24 trailing-edge root, from below](docs/v24_root_fillet.png)
 
 ### v23 changes (one-piece wings printed on end, paint fix)
 
@@ -343,7 +357,7 @@ The stand now plugs into a blind socket in the smoke pod:
 |---|---|---|---|
 | Airframe (red, white) | Tailplane root and a block of the rear fuselage round its socket | 1.5 h, 27 g | The tailplane clicks in, turns when pushed and holds its angle (doesn't spin freely) |
 | | Wing root on end (first 24 mm of span), a block of the middle fuselage round the root joint, and a wing key | | The root prints cleanly on its brim; the key pushes in; the wing slides under the pods and sits flush; the underside white lines up across the joint |
-| | One underside fin (its slot is in the wing-root coupon), one leading-edge fence and the piece of leading edge it clips round | | The fin pushes into its slot and stays with a dab of glue; the fence fits round the leading edge |
+| | The wing-root coupon carries the inner underside fin, moulded on; one leading-edge fence and the piece of leading edge it slides onto | | The fin prints cleanly on end (45° brace, short ledge at its tip); the fence slides back onto the leading edge with its tongue in the underside groove, and stays with a dab of glue |
 | Wheel snap (black, grey) | Starboard main leg and wheel, whole | 0.5 h | The wheel clicks on, spins without wobble and doesn't pull off |
 
 If a snap is too tight or too loose, it's one number: `GEAR_SNAP` / `TAIL_SNAP` in `hawk.py` (the head diameter or the slot width).
@@ -357,7 +371,7 @@ Open `kit/hawk_kit.3mf` in Bambu Studio. Its 6 plates have the filaments already
 | Plate | Parts | Filaments |
 |---|---|---|
 | Fuselage | Nose, front, middle and rear fuselage sections on end (brim), smoke pod halves. The cheat line, swoosh, "ROYAL AIR FORCE", roundels and belly stripes are painted in | Red, White, Blue |
-| Tailplanes and small parts | Tailplanes, wing fins and fences, all keys | Red, White |
+| Tailplanes and small parts | Tailplanes, leading-edge fences, all keys | Red |
 | Wings | Both wings standing on their roots, tip up (brim); roundels and chevrons painted in | Red, White, Blue |
 | Fins and canopy | Fin halves (Union flag in the skin), canopy standing on its rear face | Red, White, Blue, Canopy |
 | Display stand | Plinth with red/white/blue pinstripe and raised lettering, swept blade | Black, Red, White, Blue |
@@ -365,14 +379,15 @@ Open `kit/hawk_kit.3mf` in Bambu Studio. Its 6 plates have the filaments already
 
 Suggested settings: PLA, 0.16 mm layers for the gear plate and 0.2 mm elsewhere, 2 walls, 15% gyroid infill, no supports. Use a brim on the fuselage sections (the middle one stands 117 mm tall). Painting the markings in costs purge filament on the fuselage plate (the side markings change colour on most layers); that was chosen over press-in inlays.
 
-## Kit contents (53 parts)
+## Kit contents (45 parts)
 
 - **Airframe:**
   - 4 fuselage sections: nose (radome and the red dome under the windscreen, X 0.9–46), front (front cockpit, X 46–86), middle (rear cockpit, intakes and wing roots) and rear
   - pitot probe, a separate part with a 3 × 5 mm plug that pushes into the nose tip. It is shorter and thicker than scale (30 × 3 mm printed, against 42 × 2 mm).
   - 2 fin halves, which carry the spine cap and the dorsal fillet
   - 2 wings, each one piece printed standing on its flat root, tip up (as on the Halifax). The root joint is at |y| 11 (1:40): the fuselage covers it on top, and the short stub inboard of it is moulded on the middle section. Each root carries a small filler ahead of the leading edge, hidden inside the intake pod, so the pod's socket for it prints without a flat overhang.
-  - 12 small wing parts, glued on: per wing, 4 underside fins (the deeper one near the leading edge is white) that sit in shallow slots, and 2 leading-edge fences that clip round the leading edge. On a wing printed on end they would be shelves in mid-air.
+  - per wing, 4 underside fins moulded on (the deeper one near the leading edge is white); each has a 45° brace on its inboard face so it prints on the wing standing on end
+  - 4 leading-edge fences (2 per wing), glued on: collars, taller above the wing than below, that slide back onto the leading edge with a small tongue in a groove in the underside
   - 2 all-moving tailplanes with 10° anhedral, each snapping into the fuselage on a sprung mushroom boss (tight: they hold their setting)
   - smoke pod (2 halves), an oval tube (deeper than wide) with a round nose and a long taper that sweeps up into the belly, with pegs moulded on its pylon that push into the belly
   - 2 ventral strakes, moulded under the rear fuselage
@@ -497,6 +512,7 @@ Checks: run `tools/interference.py` on the assembled STLs without the `key_*` fi
 
 ## Known gaps and next steps
 
+- **Smoke pod cross-sections (user to supply).** The user will send cross-section drawings of the smoke pod to settle its shape; rework the pod from them.
 - **Test print 2 feedback (canopy, gear and nozzle plates, from the v3/v4 files):**
   - Canopy fit was poor because of the overhang at the front of the old nose section; the v4 cut at X 46 should fix that, so check it on the next fuselage print. (The canopy pose, tabs, nozzle and gear points are done in v7.)
 - **Nonplanar top surfaces (try).** [orcaslicer-nonplanar](https://github.com/fich-l/orcaslicer-nonplanar) (OrcaSlicer fork, v0.1, Apple Silicon Mac only) makes the top shells of gently sloped surfaces follow the shape (up to 12° slope and 5 mm height span), so there are no contour stair steps. The wing halves (outer skin up) and the tailplanes fit those limits behind the leading edge. Unknowns: painted multi-colour regions, the X2D's two nozzles and AMS (not mentioned in its docs), and opening our Bambu 3MF in it. Test: an outboard wing top-half section, once in plain red and once with the roundel painted in. If the colours fail, use separate press-in roundel discs.

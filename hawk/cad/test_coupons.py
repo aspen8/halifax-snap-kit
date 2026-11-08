@@ -6,10 +6,11 @@ Run:  python test_coupons.py OUT_DIR       (writes OUT_DIR/hawk_test_coupons.3mf
 
   1 wheel snap      the starboard main leg and its wheel, whole (the gear plate's fit)
   2 tailplane snap  the starboard tailplane's root and a block of the rear fuselage round its socket
-  3 wing root       the starboard wing's root, on end as in the kit, a block of the middle
-                    fuselage round the root joint (key slot, root stub, pods over the wing) and a key
-  4 wing fins       one underside fin (its slot is in the wing-root coupon) and one leading-edge
-                    fence with the piece of leading edge it clips round
+  3 wing root       the starboard wing's root, on end as in the kit (with the inner underside fin
+                    moulded on, and the trailing-edge root fillet), a block of the middle fuselage
+                    round the root joint (key slot, root stub, pods over the wing) and a key
+  4 wing fence      one leading-edge fence and the piece of leading edge it slides onto (tongue
+                    in a groove)
 """
 import sys
 from pathlib import Path
@@ -45,8 +46,7 @@ def coupons():
         # the fuselage round the joint: key slot (X 132.5-146.5), stub and the pods' floor
         ("t3_fuselage_block", "fuselage_mid", H.box(124.0, 156.0, 0.0, 22.0, -9.0, 4.0)),
         ("t3_key", "key_wing_1", None),
-        ("t4_fin", "wingfin_stbd_1", None),
-        ("t4_fence", f"wingfin_stbd_{len(H.WING_FINS) + 1}", None),
+        ("t4_fence", "wingfence_stbd_1", None),
         ("t4_fence_le", "wing_stbd", H.box(le - 4.0, le + 0.45 * c, y_fence - 4.0, y_fence + 4.0, -60, 60)),
     ]
 

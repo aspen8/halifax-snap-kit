@@ -21,7 +21,7 @@ Kit layout (Halifax v2 / Lancaster style; no supports):
   canopy       opaque, solid, flat underneath; drops onto 2 tabs moulded on the fuselage
   nozzle       separate jet nozzle with a deep void and exhaust cone, plugs into the tail
   wings        one piece per side, printed standing on the flat root (tip up, brim);
-               underside fins and leading-edge fences are separate glue-on parts
+               underside fins moulded on (45 deg inboard faces), leading-edge fences separate
   tailplane    one per side (10 deg anhedral)
   smoke pod    centreline pod keyed into the belly
   markings     cheat line, swoosh, lettering, stripes and roundels painted into the parts
@@ -230,8 +230,10 @@ WING_ROOT_CUT = 11.0         # |y| of the flat wing root (v23): each wing is one
                              # to |y| 12 or more along the whole chord, so the joint only shows
                              # underneath; the stub inboard of it is moulded on the fuselage
 WING_ROOT_GAP = 0.05         # glue gap at the root joint
-WING_FIN_SEAT = 0.4          # the underside fins are separate (on end they'd be shelves in mid-air):
-                             # each sits this deep in a slot in the skin
+WING_FIN_SEAT = 0.4          # each leading-edge fence (separate) has a tongue this deep in a groove
+WING_FIN_LEDGE = 0.5         # v24: the underside fins are moulded on again, with their inboard face
+                             # sloping at 45 deg (it faces down when the wing prints on end) out to
+                             # this far from the tip, which prints as a short unsupported ledge
 Z_FLOOR = -7.6               # wing underside at the centreline
 DIHEDRAL = 2.0               # deg
 WING_FLAT_FROM = 0.15
@@ -262,6 +264,11 @@ TAIL_SWING = 12.0            # deg each way the tailplane can turn without touch
 TAIL_GAP = 0.25              # mm between the root and the fuselage side
 TAIL_PLUG_Y0 = 2.0           # each tailplane's own section runs on into the fuselage to here (no
                              # tongue): the fuselage has a socket the shape of the root section
+TAIL_BOSS_TOP = 18.4         # v24: the snap boss is flat top and bottom, flush with the root's skins
+                             # (TAIL_FLOOR up to here; the root is 15.2-18.5 at the pivot), so it
+                             # lies flat on the bed and doesn't stand proud of the surface
+TAIL_SLOT_SKIN = 0.6         # the boss's upright spring slot runs on into the panel as a hidden
+                             # pocket, this far inside each skin (no slit through the surface)
 
 # --- Fin (separate, two halves): straight LE/TE lines from the side view
 # v11: both lines fitted to the Revell side view (centre of the drawn line). The LE is at 45 deg
@@ -850,10 +857,11 @@ WING_FINS = [(0.2156, 0.61, 0.88, 2.4), (0.5529, 0.50, 0.88, 3.2), (0.7046, 0.38
              # fairings under the rear of the chord at |y| 25, 65 and 83, ending short of the
              # trailing edge, and a deeper fin near the leading edge at |y| 39 (white, colour.py
              # WHITE_WING_FINS). eta, chord fraction from, to, depth below the skin
-WING_LE_FENCES = [(0.6645, 2.0, 0.35, 1.8, 2.2), (0.8264, 1.2, 0.18, 1.0, 1.4)]
+WING_LE_FENCES = [(0.6645, 2.0, 0.35, 2.3, 1.7), (0.8264, 1.2, 0.18, 1.4, 1.0)]
              # v17: fences on the leading edge (|y| 78 and 97), wrapping round it above and
              # below and standing proud of it: eta, mm ahead of the LE, chord fraction they run
-             # back to, height above and below the skin
+             # back to, height above and below the skin (v24: taller above than below, as in the
+             # view along the leading edge; they were the other way round)
 WING_FIN_T = 0.9
 
 
@@ -887,8 +895,8 @@ def wing_fence_plates(grow=0.0):
 
 
 @cached
-def wing_fin_plates(grow=0.0):
-    """Underside fins (flat starboard frame), one slab each."""
+def _fin_profiles():
+    """Underside fins' side outlines (x, z above the chord plane) and their y (flat frame)."""
     out = []
     for eta, f0, f1, h in WING_FINS:
         y = eta * SPAN / 2
@@ -903,26 +911,94 @@ def wing_fin_plates(grow=0.0):
         prof = np.array(bottom + [(le + xs[-1], 0.0), (le + xs[0], 0.0)])
         if K.cs([prof]).area() < 0:
             prof = prof[::-1]
-        out.append(_fin_slab(prof, y, grow))
+        out.append((prof, y))
     return out
 
 
-def wing_fin_parts(side):
-    """Separate fins and fences, assembled frame: [(index, part)] (index into WING_FINS, then
-    the fences after them). Fins keep a WING_FIN_SEAT tongue that sits in a slot; the fences
-    are collars that wrap the leading edge and are glued on."""
-    w = wing_flat()
-    deep = w ^ w.translate([0, 0, WING_FIN_SEAT])           # more than the seat above the underside
-    out = [(i, p - deep) for i, p in enumerate(wing_fin_plates())]
-    out += [(len(WING_FINS) + i, p - w) for i, p in enumerate(wing_fence_plates())]
-    return [(i, wing_flat_to_assembled(K.largest_piece(p)[0], side)) for i, p in out]
+@cached
+def wing_fin_plates(grow=0.0):
+    """Underside fins (flat starboard frame), one slab each."""
+    return [_fin_slab(prof, y, grow) for prof, y in _fin_profiles()]
 
 
 @cached
-def wing_fin_slots(side):
+def wing_fin_keels():
+    """v24: a 45-degree fillet on each fin's inboard face (flat starboard frame), so the fin can
+    be moulded on a wing that prints standing on its root: at distance e inboard of the fin the
+    keel reaches to within e + WING_FIN_LEDGE of the fin's tip. Built as 0.1 mm steps in y,
+    finer than a print layer."""
+    st = 0.1
+    out = []
+    for prof, y in _fin_profiles():
+        c0 = K.cs([prof])
+        e = st
+        while True:
+            reg = c0 ^ c0.translate([0.0, e + WING_FIN_LEDGE])
+            if reg.area() < 1e-3:
+                break
+            out.append(reg.extrude(st + 0.01).rotate([90, 0, 0])
+                       .translate([0, y - WING_FIN_T / 2 - e + st, WING_CHORD_Z]))
+            e += st
+    return union(out)
+
+
+@cached
+def _fence_tongue_boxes():
+    """Per fence (flat frame): the region its tongue may fill, below the lower skin's lowest
+    point (within the fence's chord) raised by WING_FIN_SEAT and ahead of that point. The
+    groove is open to the front, so the collar slides back onto the leading edge with its
+    tongue running in the groove."""
+    out = []
+    for eta, ahead, f1, up, down in WING_LE_FENCES:
+        y = eta * SPAN / 2
+        le, c, tc = wing_plan(y)
+        sec = np.array(cambered_section(tc, c))
+        lo = sec[int(np.argmin(sec[:, 0])):]
+        m = lo[:, 0] <= f1 * c
+        i = int(np.argmin(lo[m, 1]))
+        out.append((le + lo[m][i, 0], WING_CHORD_Z + lo[m][i, 1] + WING_FIN_SEAT, y))
+    return out
+
+
+def wing_fence_parts(side):
+    """Separate leading-edge fences, assembled frame: collars that wrap the leading edge, each
+    with a tongue in a groove in the underside (they print flat; on a wing printed on end they
+    would be shelves in mid-air)."""
     w = wing_flat()
-    band = w - w.translate([0, 0, WING_FIN_SEAT + 0.1])     # within the seat depth of the underside
-    return wing_flat_to_assembled(union(wing_fin_plates(FIT)) ^ band, side)
+    out = []
+    for p, (xt, zt, y) in zip(wing_fence_plates(), _fence_tongue_boxes()):
+        tongue = box(-50, xt, y - 5, y + 5, -60, zt)
+        out.append(wing_flat_to_assembled(K.largest_piece(p - (w - tongue))[0], side))
+    return out
+
+
+@cached
+def wing_fence_grooves(side):
+    w = wing_flat()
+    g = [p ^ w ^ box(-50, xt + FIT, y - 5, y + 5, -60, zt + FIT)
+         for p, (xt, zt, y) in zip(wing_fence_plates(FIT), _fence_tongue_boxes())]
+    return wing_flat_to_assembled(union(g), side)
+
+
+WING_TE_FILLET = (4.0, 8.8)  # v24: radius, and |y| of the fuselage side just behind the trailing edge
+                             # at its height (the side pod's lower flank): in plan the trailing edge
+                             # curves aft into the fuselage side instead of meeting it in a corner
+                             # (user's photo). Inboard of WING_ROOT_CUT, so it is moulded on the
+                             # middle fuselage section
+
+
+def wing_te_fillet(side):
+    """Plan-view fillet between the wing's trailing edge and the fuselage side, as thick as the
+    trailing edge at the root (on the fuselage)."""
+    r, ys = WING_TE_FILLET
+    le, c, _ = wing_plan(ys + r / 2)
+    te = le + c
+    zb, zt = wing_underside_z(ys + r / 2, te - 0.4), wing_top_z(ys + r / 2, te - 0.4)
+    y1 = min(ys + r, WING_ROOT_CUT)
+    sq = mf.CrossSection.square([r + 1.0, y1 - (ys - 3.0)]).translate([te - 1.0, ys - 3.0])
+    plan = sq - mf.CrossSection.circle(r, 64).translate([te + r, ys + r])
+    f = plan.extrude(zt - zb).translate([0, 0, zb])
+    return f if side > 0 else f.mirror([0, 1, 0])
 
 
 def wing_root_box(side, inboard, gap=0.0):
@@ -933,9 +1009,10 @@ def wing_root_box(side, inboard, gap=0.0):
 
 @cached
 def wing_outer(side):
-    """The whole wing's outside shape, root stub included (no sockets, slots or fins): what the
-    paint is measured from."""
-    return (wing_assembled(side) + (wing_glove(side) ^ outer())) - body()
+    """The whole wing's outside shape, root stub and underside fins included (no sockets, slots
+    or fences): what the paint is measured from."""
+    fins = wing_flat_to_assembled(union(wing_fin_plates()) + wing_fin_keels(), side)
+    return (wing_assembled(side) + fins + (wing_glove(side) ^ outer())) - body()
 
 
 @cached
@@ -944,8 +1021,8 @@ def wing(side):
 
 
 def wing_cuts(side):
-    """Everything cut into the wing part: root key slot, gear socket, wheel bay, fin slots."""
-    return wing_key_slot(side) + main_socket(side) + gear_bay(side) + wing_fin_slots(side)
+    """Everything cut into the wing part: root key slot, gear socket, wheel bay, fence grooves."""
+    return wing_key_slot(side) + main_socket(side) + gear_bay(side) + wing_fence_grooves(side)
 
 
 def wing_part(side):
@@ -1009,7 +1086,7 @@ def tail_pivot_axis():
     clears the bed (the tailplane prints flat on its underside)."""
     f = TAIL_PIVOT[0]
     le, c = tail_plan(TAIL_ROOT_Y / TAIL_SEMISPAN)
-    return le + f * c, TAIL_FLOOR + TAIL_SNAP["head"] / 2 * _P + 0.05
+    return le + f * c, (TAIL_FLOOR + TAIL_BOSS_TOP) / 2      # v24: mid-thickness of the root
 
 
 @cached
@@ -1045,11 +1122,17 @@ def tailplane(side):
     keep_out = union([keep_out] + [keep_out.translate([0, 0, dz]) for dz in (g, -g)] + [keep_out.translate([0, -g, 0])])
     t = t - keep_out
     t = K.largest_piece(t)[0]
-    # v22: a snap boss (TAIL_SNAP) on the root, into a lip and cavity in the fuselage side; the
-    # spring slot is horizontal, so the prongs bend along the print layers
+    # v22: a snap boss (TAIL_SNAP) on the root, into a lip and cavity in the fuselage side.
+    # v24: the boss is cut flat top and bottom, flush with the skins (it had stood 1.3 mm proud
+    # and touched the bed on a line), and the spring slot is upright, so the two prongs (fore and
+    # aft) stand side by side on the bed with nothing overhanging. In the panel the slot is a
+    # pocket inside the skins, open only at the root face.
     ys = tail_side_y()
-    boss, slot = snap_boss((ax, ys + g, az), (0, -1, 0), (0, 0, 1), TAIL_SNAP, g)
-    boss = boss ^ box(0, 400, -50, 100, TAIL_FLOOR, 100)
+    boss, slot = snap_boss((ax, ys + g, az), (0, -1, 0), (1, 0, 0), TAIL_SNAP, g)
+    boss = boss ^ box(0, 400, -50, 100, TAIL_FLOOR, TAIL_BOSS_TOP)
+    root = ys + g
+    slot = (slot ^ box(0, 400, -50, root, -50, 100)) + \
+        (slot ^ box(0, 400, root, 100, TAIL_FLOOR + TAIL_SLOT_SKIN, TAIL_BOSS_TOP - TAIL_SLOT_SKIN))
     t = t + _tail_to_assembled(boss, 1) - _tail_to_assembled(slot, 1)
     t = K.largest_piece(t)[0]
     return t if side > 0 else t.mirror([0, 1, 0])
@@ -1636,6 +1719,7 @@ def fuselage_body():
         w = (wing_assembled(s) + wing_glove(s)) ^ wing_root_box(s, False)
         b = b - w - w.translate([0, 0, FIT]) - w.translate([0, 0, -FIT])
         b = b + (wing_outer(s) ^ wing_root_box(s, True))   # the wing's root stub (v23)
+        b = b + wing_te_fillet(s)                          # and its trailing-edge fillet (v24)
     b = b - (canopy_region() ^ box(DOME_CUT_X, 400, -60, 60, -60, 100)) + canopy_tabs()   # dome stays
     for s in (1, -1):
         b = b - intake_mouth(s) - splitter_gap(s)
@@ -1748,9 +1832,9 @@ def build():
     for side, tag in ((1, "stbd"), (-1, "port")):
         parts[f"wing_{tag}"], poses[f"wing_{tag}"] = wing_part(side), R(rx=90 * side)   # on its root, tip up
         flat = lambda m, s=side: rot_about(m, DIHEDRAL_PT, "x", -DIHEDRAL * s)
-        for i, fin in wing_fin_parts(side):
-            parts[f"wingfin_{tag}_{i + 1}"] = fin
-            poses[f"wingfin_{tag}_{i + 1}"] = lambda m, f=flat: f(m).rotate([90, 0, 0])  # flat on its side
+        for i, fence in enumerate(wing_fence_parts(side)):
+            parts[f"wingfence_{tag}_{i + 1}"] = fence
+            poses[f"wingfence_{tag}_{i + 1}"] = lambda m, f=flat: f(m).rotate([90, 0, 0])  # flat on its side
         parts[f"tailplane_{tag}"] = tailplane(side)
         poses[f"tailplane_{tag}"] = (lambda m, s=side: rot_about(m, (0, s * TAIL_ROOT_Y, TAIL_FLOOR), "x",
                                                                  TAIL_ANHEDRAL * s))

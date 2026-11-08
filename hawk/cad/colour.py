@@ -385,6 +385,13 @@ def fuselage_markings(P):
         ops.append((WHITE, (low + rear) ^ prism_z(under_white() ^ fuselage_plan(max(x0, 150.0), x1, inset=-2.0))))
     if x0 < 162.0 and x1 > 83.0:                       # the stripes' forward run, to their point
         ops.append((WHITE, low ^ prism_z(under_white() ^ fuselage_plan(max(x0, 83.0), min(x1, 162.0), inset=-2.0))))
+    if x0 < 175.0 and x1 > 169.0:                      # v24: the trailing-edge root fillets'
+        for s in (1, -1):                              # undersides take the wing's white strip
+            f = H.wing_te_fillet(s)
+            bb = f.bounding_box()
+            reg = K.box(bb[0] - 0.5, bb[3] + 0.5, min(bb[1], bb[4]) - 0.5, max(bb[1], bb[4]) + 0.5,
+                        bb[2] - 1.0, bb[2] + 0.6)
+            ops.append((WHITE, down ^ reg ^ prism_z(under_white())))
     if x0 < POD_PAINT_X1 and x1 > 86.0:                # the chevron across the pods' undersides,
         pod_low = down ^ near_bottom(x0, x1, BELLY_CORNER_UP + 0.4, pods=True)   # ahead of the wing
         ops.append((WHITE, pod_low ^ prism_z(under_white() ^ fuselage_plan(max(x0, 86.0), min(x1, POD_PAINT_X1),
@@ -529,9 +536,8 @@ def wing_detailed(side):
 
 
 def colour_part(name, P):
-    if name.startswith("wingfin_"):                   # separate fins and fences
-        i = int(name.rsplit("_", 1)[1]) - 1
-        return {WHITE if i in WHITE_WING_FINS else RED: P}
+    if name.startswith("wingfence_"):                 # separate leading-edge fences
+        return {RED: P}
     if name.startswith("wing_"):
         side = 1 if name.endswith("stbd") else -1
         # skins from the whole wing before its panel and hinge grooves are cut (no split face, no
@@ -546,6 +552,13 @@ def colour_part(name, P):
         holes = (H.main_socket(side) + H.gear_bay(side)).project().offset(0.6, mf.JoinType.Round)
         lining = prism_z(holes ^ uw) ^ H.wing_half_region(side, False)
         ops = [(WHITE, (S["down"] + lining) ^ prism_z(uw))]
+        for i in WHITE_WING_FINS:                           # fins painted white all over (with
+            eta, f0, f1, h = H.WING_FINS[i]                 # their 45-degree keel, inboard)
+            yy = eta * H.SPAN / 2
+            le, c, _ = H.wing_plan(yy)
+            blk = H.wing_flat_to_assembled(H.box(le + f0 * c - 1.0, le + f1 * c + 1.0, yy - 1.5 - h, yy + 1.5,
+                                                 -40.0, 40.0), side)
+            ops.append((WHITE, blk - H.wing_assembled(side)))
         return paint(P, ops + roundel_ops(x, y, d, "z", S["down"]) + roundel_ops(x, y, d, "z", S["up"]))
     if name.startswith("fin_"):
         # skins from the fin half before its hinge and panel grooves are cut: the paint then
@@ -687,7 +700,7 @@ def add_object(objs, name, posed, out, whole):
 
 PLATE_GROUPS = [            # parts kept together by colour set (max 5 colours a plate)
     ("Fuselage", lambda n: n.startswith(("fuselage", "smoke_pod"))),
-    ("Tailplanes and small parts", lambda n: n.startswith(("tailplane", "key_", "wingfin"))),
+    ("Tailplanes and small parts", lambda n: n.startswith(("tailplane", "key_", "wingfence"))),
     ("Wings", lambda n: n.startswith("wing_")),
     ("Fins and canopy", lambda n: n.startswith("fin_") or n == "canopy"),
     ("Display stand", lambda n: n.startswith("stand")),
