@@ -38,7 +38,9 @@ Then:
 - The user prints on a Bambu X2D (two nozzles, AMS). Keep the base red on the main nozzle (fixed per-plate map in `colour.py` `FILAMENT_MAP`/`MAPPED_PLATES`); the second nozzle runs outer walls at 50 mm/s.
 - The user often asks to "add to the to-do list" when near a usage limit: write it into `hawk/README.md` "Known gaps and next steps", commit, change nothing else.
 
-## State at handoff (v30, built, checked and committed locally)
+## State at handoff (v31, built, checked and committed locally)
+
+v31: smoke pod underside and tail measured from the side render (`POD_BOTTOM_LINE`, `POD_TAIL_END` 206, `POD_FAIRING_TE`, `POD_DEPTH` 11.0, `POD_W` 4.65; full U from X 140 to 160 then narrowing). Overlay helper for the clean renders: the calibrations in this file (side u = 135 + 3.39 x, v = 318 - 3.39 z; under K 3.445). Measure renders by pixel, not by eye: an eyeballed bottom line was 2 mm off.
 
 v29: fin fronts ramp from the skin (`_fin_profiles`), `WING_FIN_LEDGE` 0.3. v30: smoke pod from the user's sketch (`smoke_pod`: round body `r_at`/`bot_at`, fairing `n_at`, `POD_FAIRING`, `POD_TAIL_EDGE`; `pod_geom` keeps the old bottom line; front peg `POD_KEYS[0]` 0.32). The user calibrated the white on the right nozzle: K 0.35 (on the printer's AMS slot, not in the file), flow ratio 0.98 confirmed (already in the template). Still to test: tailplane on end, two-tongue fences, through-wheel snap, white with the new K (wing coupon).
 
@@ -93,4 +95,4 @@ Test-print history: plate 1 (v3 fuselage) and the canopy/gear/nozzle plates (v3/
 3. ~~Fin against the drawing~~: done in v11 (outline within about 0.4 mm of the Revell side view, rounded tip). Waiting for the user's look.
 4. README to-dos still open: separate lettering panels (sharper text), nonplanar top-surface test (orcaslicer-nonplanar), canopy fit check on the next fuselage print, print-in-place control surfaces.
 5. ~~Rudder hinge groove red line and TE speck~~: fixed in v16.
-6. Push to GitHub when the user asks. v10 to v24 and the test coupons are pushed; v25 to v28 are pushed; v29 and v30 are committed locally only (the checkout in use is the older one in Claude's scratch-workspaces folder, which has `ref/` and `.venv`).
+6. Push to GitHub when the user asks. v10 to v24 and the test coupons are pushed; v25 to v28 are pushed; v29 to v31 are committed locally only (the checkout in use is the older one in Claude's scratch-workspaces folder, which has `ref/` and `.venv`).

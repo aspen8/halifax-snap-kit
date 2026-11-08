@@ -297,19 +297,26 @@ NOZZLE = dict(r=5.0, out=3.0, wall=1.0, spig_r=4.0, spig_len=8.0, void=10.0, rim
 POD_X0, POD_LEN = 87.0, 95.0  # v22 (clean straight-down render): the nose at X 87, just behind the
                              # point where the underside white chevron meets
 POD_NOSE = 0.116             # tangent-ogive nose this fraction of the length
-POD_TUBE_END = 150.0         # full section to here, then a long taper (render: the sides narrow from
-POD_TAIL_END = 195.0         # about X 150 to a point near X 195); the underside sweeps up from X 160
+POD_TUBE_END = 160.0         # v31: the full U runs unchanged from POD_FAIRING[2] to here (user), then
+                             # the width tapers; v22-v30: 150 (render: the sides narrow from
+POD_TAIL_END = 206.0         # about X 150 to a point at X 206 (v31: measured on the side render; was 195); the underside sweeps up from X 160
                              # in one S-curve, tangent into the belly at the end (v22b: it stopped at
                              # mid-height and then rounded up again, a bulb on the tail)
-POD_W = 4.8                  # v30: the pod is a round cylinder this radius (render: ~9.6 across),
-                             # hung on a fairing (user's sketch, plan and sections)
-POD_R = 5.6                  # half of the old oval's depth: kept only to place the pod's bottom line
-                             # (2 * POD_R + POD_PYLON gap below the belly, as fitted to the side view)
-POD_FAIRING = (105.0, 113.0, 150.0)   # v30: the fairing (pylon) starts with a rounded front at the
+POD_W = 4.65                 # v30: the pod is a round cylinder this radius, hung on a fairing (user's
+                             # sketch); v31: 9.3 across, measured on the straight-down render
+POD_DEPTH = 11.0             # v31: belly to the pod's bottom (measured on the side render: Z -19.5)
+POD_FAIRING = (105.0, 113.0, 140.0)   # v31: full width by X 140 (was 150); v30: the fairing (pylon) starts with a rounded front at the
                              # first x, is half the pod's width by the second and its full width by the
                              # third, where the section becomes a U (straight sides into the round bottom)
-POD_TAIL_EDGE = 3.0          # v30: the tail ends in a vertical edge this deep under the belly (rear view
-                             # and side photo); the underside sweeps up to it, the sides taper to it
+POD_BOTTOM_LINE = [(150, -19.17), (155, -18.88), (160, -18.58), (165, -17.99), (170, -17.11),
+                   (175, -16.22), (180, -14.75), (185, -13.27), (190, -12.39), (195, -12.09),
+                   (200, -11.50), (206, -11.0)]
+                             # v31: the pod's underside behind X 150, measured on the side render
+                             # (lowest red pixel per column); it ends in a point at X 206, Z -11, about
+                             # 8 below the belly. The U narrows to it (the rear view's "vertical line"
+                             # is that deep, narrow U seen end on)
+POD_FAIRING_TE = 195.0       # v31: behind this the fairing's top edge slopes down from the belly to the
+                             # tail point
 def _ogive(n=14):
     L, R = POD_NOSE * 95.0, POD_W
     rho = (R * R + L * L) / (2 * R)
@@ -1375,7 +1382,7 @@ def canopy():
 def pod_geom():
     """(belly z, z of the pod's axis): the bottom line stays where the oval's was (v30)."""
     zb = min(fuse_at(POD_X0 + f * POD_LEN)[3] for f in (0.25, 0.5, 0.75))
-    return zb, zb - POD_PYLON[2] - 2 * POD_R + POD_W
+    return zb, zb - POD_DEPTH + POD_W
 
 
 POD_PEG = (7.0, 3.2, 4.0)       # pegs moulded on the pylon top into the belly: length (x), width (y), height
@@ -1416,14 +1423,23 @@ def smoke_pod():
         if x <= nose[-1][0]:
             return float(np.interp(x, [a for a, _ in nose], [r for _, r in nose]))
         t = min(max((x - x0) / (x1 - x0), 0.0), 1.0)
-        return max(0.3, POD_W * (1 - t * t))
+        return max(0.3, POD_W * (1 - t) * (1 + 0.6 * t))      # the U narrows steadily to the tail
+
+    bx, bz = np.array(POD_BOTTOM_LINE, float).T
 
     def bot_at(x):                                   # underside: round about the axis (the nose is a
-        if x <= 160.0:                               # torpedo), then from X 160 up to the tail edge
+        if x <= bx[0]:                               # torpedo), then the measured line to the point
             return zc - r_at(x)
-        b = zc - r_at(160.0)
-        u = min(max((x - 160.0) / (x1 - 160.0), 0.0), 1.0)
-        return b + (zbel - POD_TAIL_EDGE - b) * u * u * (3 - 2 * u)
+        return (zc - POD_W) + float(np.interp(x, bx, bz)) - bz[0]
+
+    tip = bot_at(x1)
+
+    def top_at(x):                                   # the fairing's top: up into the belly, then its
+        zb_ = fuse_at(x)[3] + 4.0                    # rear edge slopes down to the tail point
+        if x <= POD_FAIRING_TE:
+            return zb_
+        u = (x - POD_FAIRING_TE) / (x1 - POD_FAIRING_TE)
+        return max(fuse_at(POD_FAIRING_TE)[3] + (tip + 0.4 - fuse_at(POD_FAIRING_TE)[3]) * u, bot_at(x) + 0.4)
 
     xs = sorted(set([a for a, _ in nose] + list(np.linspace(nose[-1][0], x1, 40))))
     body = to_m(loft([superellipse_wire(x, r_at(x), bot_at(x) + 2 * r_at(x), bot_at(x), 2.0) for x in xs],
@@ -1437,8 +1453,8 @@ def smoke_pod():
         return r * (0.5 + 0.5 * min((x - fb) / (fc - fb), 1.0))
 
     fx = [fa + 0.05] + list(np.linspace(fa + 0.5, fb, 6)) + list(np.linspace(fb, x1, 36))[1:]
-    pylon = to_m(loft([superellipse_wire(x, n_at(x), fuse_at(x)[3] + 4.0, bot_at(x) + r_at(x), 6.0) for x in fx],
-                      ruled=True))
+    pylon = to_m(loft([superellipse_wire(x, n_at(x), top_at(x), min(bot_at(x) + r_at(x), top_at(x) - 0.3), 6.0)
+                       for x in fx], ruled=True))
     pod = body
     p = (pod + pylon) - outer()           # the finished outer shape: body() sits up to 0.6 above
                                           # the belly ahead of the wing (v22: the pylon cut into it)
