@@ -323,3 +323,11 @@ Bambu Studio's "Auto For Flush" picks a nozzle for each filament per project. On
 ### Check for sealed hollows
 
 A void that doesn't reach the outside is a separate, negative-volume shell. `largest_piece` drops it, which silently fills the hollow. The Hawk nozzle's deep pipe stopped 0.9 mm short of the exit and printed solid for several versions. Make each void open into the next, and check `decompose()` for negative volumes.
+
+### Hawk coupon test print 1 (v24/v25)
+
+- **A snap boss on a thin tail root is too weak.** At 4 mm root thickness the boss's prongs were short and the slot left little material; it also turned too freely. Fixed tailplanes on their own aerofoil as a plug are stronger and simpler.
+- **Centre a key slot in the part it cuts.** A slot placed at a fixed height broke through the wing's underside where the wing thins towards the outer end of the key. Place it midway between the skins over its whole footprint.
+- **Fits differ by print orientation.** The same key slot cut through a wing printed on end and a fuselage section printed on end came out looser in the fuselage. Give each part its own fit.
+- **Cut recesses around attached detail.** The wheel-well recess, cut after the fins were added, left a fin floating over it. Subtract the detail from the recess first.
+- **Bambu Studio refuses names containing `<>:/\|?*"`**, including plate names.

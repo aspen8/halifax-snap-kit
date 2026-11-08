@@ -5,7 +5,8 @@ poses), on one plate. Print this before the full kit.
 Run:  python test_coupons.py OUT_DIR       (writes OUT_DIR/hawk_test_coupons.3mf and stl/)
 
   1 wheel snap      the starboard main leg and its wheel, whole (the gear plate's fit)
-  2 tailplane snap  the starboard tailplane's root and a block of the rear fuselage round its socket
+  2 tailplane root  the starboard tailplane's root (its plug) and a block of the rear fuselage round
+                    its socket
   3 wing root       the starboard wing's root, on end as in the kit (with the inner underside fin
                     moulded on, and the trailing-edge root fillet), a block of the middle fuselage
                     round the root joint (key slot, root stub, pods over the wing) and a key
@@ -31,8 +32,8 @@ def flat_tail_box(y1):
 
 def coupons():
     """[(coupon name, kit part name, crop region or None)]"""
-    s = H.tail_socket(1).bounding_box()             # tail socket (assembled frame)
-    tail_block = H.box(s[0] - 5, s[3] + 5, 0, 14, s[2] - 5, s[5] + 5)
+    s = (H.tail_socket(1) ^ H.box(0, 400, 0, 12, -50, 100)).bounding_box()   # the plug's socket
+    tail_block = H.box(s[0] - 4, s[3] + 4, 0, 14, s[2] - 4, s[5] + 4)
     yr = H.WING_ROOT_CUT
     y_fence = H.WING_LE_FENCES[0][0] * H.SPAN / 2
     le, c, _ = H.wing_plan(y_fence)

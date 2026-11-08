@@ -254,21 +254,14 @@ WALL = 1.6
 TAIL_LE = (220.4, 38.9)      # LE x = a + b eta
 TAIL_TE = (260.1, 12.7)
 TAIL_SEMISPAN = 53.7
-TAIL_ROOT_Y = 8.5            # pivot line at the fuselage side
+TAIL_ROOT_Y = 8.5            # root station at the fuselage side
 TAIL_FLOOR = 15.2            # underside at the root
 TAIL_ANHEDRAL = 10.0
 TAIL_TC = 0.10
-TAIL_PIVOT = (0.32,)         # all-moving tailplanes: pivot at this root chord fraction (v22: a snap
-                             # boss, TAIL_SNAP, replaces the round spigot)
-TAIL_SWING = 12.0            # deg each way the tailplane can turn without touching the fuselage
-TAIL_GAP = 0.25              # mm between the root and the fuselage side
 TAIL_PLUG_Y0 = 2.0           # each tailplane's own section runs on into the fuselage to here (no
                              # tongue): the fuselage has a socket the shape of the root section
-TAIL_BOSS_TOP = 18.4         # v24: the snap boss is flat top and bottom, flush with the root's skins
-                             # (TAIL_FLOOR up to here; the root is 15.2-18.5 at the pivot), so it
-                             # lies flat on the bed and doesn't stand proud of the surface
-TAIL_SLOT_SKIN = 0.6         # the boss's upright spring slot runs on into the panel as a hidden
-                             # pocket, this far inside each skin (no slit through the surface)
+TAIL_PLUG_FIT = 0.10 * _P    # v26: fixed tailplanes again (user: the snap boss was weak and turned
+                             # too freely); the root plug is a firm push fit in its socket, glued
 
 # --- Fin (separate, two halves): straight LE/TE lines from the side view
 # v11: both lines fitted to the Revell side view (centre of the drawn line). The LE is at 45 deg
@@ -341,10 +334,6 @@ GEAR_SNAP = dict(neck=4.6, head=6.8, head_len=1.5, cham=0.8, slot=1.5, slot_in=5
                              # running clearance 0.45 (spins), retention 0.65 (stays on), slot 1.5
                              # (the prongs close 1.3), cavity 0.3 over the head, 0.4 end gaps,
                              # 0.3 between the leg and the wheel
-TAIL_SNAP = dict(neck=4.0, head=5.4, head_len=1.5, cham=0.6, slot=1.4, slot_in=4.0,
-                 lip=4.1, lip_t=1.2, lip_cham=0.3, cav=6.0, end_gap=0.4, gap=None)
-                             # the tailplanes: smaller to suit the thin root, retention 0.65, but
-                             # only 0.05 running clearance so they hold their setting (gap: TAIL_GAP)
 LEG_T_IN = 1.0               # main legs are this much thicker on their inner (bed) face, so the
                              # spring slot can run 4 mm in
 
@@ -809,12 +798,32 @@ def wing_assembled(side):
     return w if side > 0 else w.mirror([0, 1, 0])
 
 
-def wing_key_slot(side):
-    """Slot for the wing root key, cut through the fuselage and the wing alike."""
+WING_KEY_FIT = (0.08 * _P, 0.04 * _P)   # v26: per side, (in the wing, in the fuselage). Both
+                             # were KEY_FIT (0.15) and the test print found the key loose in both,
+                             # looser in the fuselage (printed on end)
+
+
+@cached
+def wing_key_z(side):
+    """z centre of the wing key: midway between the highest underside and the lowest top skin
+    over the key's footprint in the wing (v26: at Z_FLOOR + ROOT_TONGUE_Z its slot came within
+    0.3 mm of the underside at the outer end and broke through on the test print)."""
     tx0, tx1 = ROOT_TONGUE[side]
     L, w, t = KEY_WING
-    xc, zc = (tx0 + tx1) / 2, Z_FLOOR + (ROOT_TONGUE_Z[0] + ROOT_TONGUE_Z[1]) / 2
-    g, e = KEY_FIT, KEY_END_GAP
+    ys = [side * y for y in np.linspace(WING_ROOT_CUT + 0.5, ROOT_KEY_Y0 + L, 4)]
+    xs = np.linspace(tx0 - 0.3, tx1 + 0.3, 5)
+    lo = max(wing_underside_z(y, x) for x in xs for y in ys)
+    hi = min(wing_top_z(y, x) for x in xs for y in ys)
+    return (lo + hi) / 2
+
+
+def wing_key_slot(side, g=None):
+    """Slot for the wing root key, cut through the fuselage and the wing alike (g: fit per side)."""
+    tx0, tx1 = ROOT_TONGUE[side]
+    L, w, t = KEY_WING
+    xc, zc = (tx0 + tx1) / 2, wing_key_z(side)
+    g = KEY_FIT if g is None else g
+    e = KEY_END_GAP
     b = box(xc - w / 2 - g, xc + w / 2 + g, ROOT_KEY_Y0 - e, ROOT_KEY_Y0 + L + e, zc - t / 2 - g, zc + t / 2 + g)
     KEY_COUNTS["key_wing"] = (KEY_WING, 2)
     return b if side > 0 else b.mirror([0, 1, 0])
@@ -866,11 +875,17 @@ WING_LE_FENCES = [(0.6645, 2.0, 0.35, 0.175, 2.3, 1.7), (0.8264, 1.2, 0.18, 0.09
 WING_FIN_T = 0.9
 
 
-def _fin_slab(prof, y, grow=0.0):
+WING_FENCE_T = 1.3            # v26: fence thickness (1.6 mm printed; at WING_FIN_T they were thin
+                             # and floppy on the test print)
+WING_FENCE_CURVE = 0.35      # v26: each arm's outer edge curves in towards its rear end, to this
+                             # fraction of its height lower than at the front (user: slightly curved)
+
+
+def _fin_slab(prof, y, grow=0.0, t0=WING_FIN_T):
     c = K.cs([prof])
     if grow:
         c = c.offset(grow, mf.JoinType.Round)
-    t = WING_FIN_T + 2 * grow
+    t = t0 + 2 * grow
     return c.extrude(t).translate([0, 0, -t / 2]).rotate([90, 0, 0]).translate([0, y, WING_CHORD_Z])
 
 
@@ -888,13 +903,28 @@ def wing_fence_plates(grow=0.0):
         steps = np.linspace(-(down - r), up - r, 14)
         swept = unary_union([Polygon(np.array(sec.exterior.coords) + [0.0, dz]) for dz in steps])
         # the top runs back to f_top, the underside to f_bot (the step between them, on the
-        # chord plane, is inside the wing)
-        prof = swept.buffer(max(ahead, r)) & (sbox(le - ahead, 0.0, le + f_top * c, 20.0)
-                                              | sbox(le - ahead, -20.0, le + f_bot * c, 0.0))
+        # chord plane, is inside the wing); each arm's outer edge curves in towards its end
+        sa = np.array(cambered_section(tc, c))
+        k = int(np.argmin(sa[:, 0]))
+        upper, lower = sa[:k + 1][::-1], sa[k:]           # both from the LE aft
+        def edge(f, h, skin, sgn):
+            xs = np.linspace(-ahead - 1.0, f * c, 40)
+            u = np.clip(xs / (f * c), 0.0, 1.0)
+            z = np.interp(np.maximum(xs, 0.0), skin[:, 0], skin[:, 1]) + sgn * h * (1 - WING_FENCE_CURVE * u * u)
+            return np.c_[le + xs, z]
+        grown = max(ahead, r)                              # the outline is grown by this too
+        top = edge(f_top, up + grown, upper, 1.0)
+        bot = edge(f_bot, down + grown, lower, -1.0)
+        env = Polygon(np.r_[top, [(le + f_top * c, 0.0), (le - ahead - 1.0, 0.0)]]).buffer(0) | \
+            Polygon(np.r_[bot, [(le + f_bot * c, 0.0), (le - ahead - 1.0, 0.0)]]).buffer(0)
+        prof = swept.buffer(max(ahead, r)) & env
+        prof = prof.buffer(-0.3).buffer(0.3)              # round the arms' rear corners
+        if prof.geom_type != "Polygon":
+            prof = max(prof.geoms, key=lambda g: g.area)
         prof = np.array(prof.exterior.coords)[:-1]
         if K.cs([prof]).area() < 0:
             prof = prof[::-1]
-        out.append(_fin_slab(prof, y, grow))
+        out.append(_fin_slab(prof, y, grow, WING_FENCE_T))
     return out
 
 
@@ -1026,7 +1056,10 @@ def wing(side):
 
 def wing_cuts(side):
     """Everything cut into the wing part: root key slot, gear socket, wheel bay, fence grooves."""
-    return wing_key_slot(side) + main_socket(side) + gear_bay(side) + wing_fence_grooves(side)
+    # the wheel-well recess stops at the fins (one runs across it; cut through, it floated)
+    fins = wing_flat_to_assembled(union(wing_fin_plates()) + wing_fin_keels(), side)
+    return (wing_key_slot(side, WING_KEY_FIT[0]) + main_socket(side) + (gear_bay(side) - fins)
+            + wing_fence_grooves(side))
 
 
 def wing_part(side):
@@ -1085,22 +1118,6 @@ def tail_flat():
     return panel(st, TAIL_FLOOR, te_t=0.5)
 
 
-def tail_pivot_axis():
-    """(x, z) of the pivot axis in the flat frame (before anhedral): the snap boss's head just
-    clears the bed (the tailplane prints flat on its underside)."""
-    f = TAIL_PIVOT[0]
-    le, c = tail_plan(TAIL_ROOT_Y / TAIL_SEMISPAN)
-    return le + f * c, (TAIL_FLOOR + TAIL_BOSS_TOP) / 2      # v24: mid-thickness of the root
-
-
-@cached
-def tail_side_y():
-    """y of the fuselage side on the pivot axis (flat frame)."""
-    ax, az = tail_pivot_axis()
-    o = rot_about(outer(), TAIL_PT, "x", TAIL_ANHEDRAL)
-    return (o ^ box(ax - 0.2, ax + 0.2, 0, 30, az - 0.2, az + 0.2)).bounding_box()[4]
-
-
 def _tail_to_assembled(m, side):
     m = rot_about(m, TAIL_PT, "x", -TAIL_ANHEDRAL)
     return m if side > 0 else m.mirror([0, 1, 0])
@@ -1108,47 +1125,22 @@ def _tail_to_assembled(m, side):
 
 @cached
 def tailplane(side):
-    """All-moving tailplane: the panel trimmed clear of the fuselage through +-TAIL_SWING about
-    the pivot, plus a round spigot (flat on the bed side) into a hole in the fuselage."""
-    ax, az = tail_pivot_axis()
+    """Fixed tailplane (v26, as v4): the whole panel from TAIL_PLUG_Y0 outboard. The part inside
+    the fuselage is the root plug, the tailplane's own aerofoil, so nothing shows on the surface,
+    the underside stays flat for printing and the whole root chord grips."""
     t = tail_flat() ^ box(0, 400, TAIL_PLUG_Y0, 100, -50, 100)
     t = _tail_to_assembled(t, 1)
-    o = outer()
-    g = TAIL_GAP
-    # the fuselage as seen from the tailplane turned through its range (turned the other way)
-    piv = np.array([ax, TAIL_PT[1], az])
-    def turn(m, a):
-        # rotate about the spigot axis (parallel to the span, tipped by the anhedral)
-        m = rot_about(m, TAIL_PT, "x", TAIL_ANHEDRAL)                 # back to the flat frame
-        m = rot_about(m, tuple(piv), "y", a)
-        return rot_about(m, TAIL_PT, "x", -TAIL_ANHEDRAL)
-    keep_out = union([turn(o, a) for a in np.linspace(-TAIL_SWING, TAIL_SWING, 7)])
-    keep_out = union([keep_out] + [keep_out.translate([0, 0, dz]) for dz in (g, -g)] + [keep_out.translate([0, -g, 0])])
-    t = t - keep_out
-    t = K.largest_piece(t)[0]
-    # v22: a snap boss (TAIL_SNAP) on the root, into a lip and cavity in the fuselage side.
-    # v24: the boss is cut flat top and bottom, flush with the skins (it had stood 1.3 mm proud
-    # and touched the bed on a line), and the spring slot is upright, so the two prongs (fore and
-    # aft) stand side by side on the bed with nothing overhanging. In the panel the slot is a
-    # pocket inside the skins, open only at the root face.
-    ys = tail_side_y()
-    boss, slot = snap_boss((ax, ys + g, az), (0, -1, 0), (1, 0, 0), TAIL_SNAP, g)
-    boss = boss ^ box(0, 400, -50, 100, TAIL_FLOOR, TAIL_BOSS_TOP)
-    root = ys + g
-    slot = (slot ^ box(0, 400, -50, root, -50, 100)) + \
-        (slot ^ box(0, 400, root, 100, TAIL_FLOOR + TAIL_SLOT_SKIN, TAIL_BOSS_TOP - TAIL_SLOT_SKIN))
-    t = t + _tail_to_assembled(boss, 1) - _tail_to_assembled(slot, 1)
-    t = K.largest_piece(t)[0]
     return t if side > 0 else t.mirror([0, 1, 0])
 
 
 def tail_socket(side):
-    """Lip and cavity for the tailplane's snap boss; the cavity is a teardrop pointing aft (the
-    rear section prints tail up)."""
-    ax, az = tail_pivot_axis()
-    ys = tail_side_y()
-    h = snap_socket((ax, ys, az), (0, -1, 0), (0, 0, 1), TAIL_SNAP, tear=(1, 0, 0))
-    return _tail_to_assembled(h, side)
+    """The tailplane grown by TAIL_PLUG_FIT all round its section and at its inboard end (a
+    Minkowski sum approximated by 8 offsets in the x-z plane), cut from the fuselage."""
+    t = tailplane(side)
+    g = TAIL_PLUG_FIT
+    d = g / math.sqrt(2)
+    offs = [(g, 0), (-g, 0), (0, g), (0, -g), (d, d), (d, -d), (-d, d), (-d, -d)]
+    return union([t] + [t.translate([a, 0, c]) for a, c in offs] + [t.translate([0, -side * g, 0])])
 
 
 # ============================================================
@@ -1727,7 +1719,7 @@ def fuselage_body():
     b = b - (canopy_region() ^ box(DOME_CUT_X, 400, -60, 60, -60, 100)) + canopy_tabs()   # dome stays
     for s in (1, -1):
         b = b - intake_mouth(s) - splitter_gap(s)
-        b = b - wing_key_slot(s) - tail_socket(s)
+        b = b - wing_key_slot(s, WING_KEY_FIT[1]) - tail_socket(s)
     b = b - jet_pipe_cut()
     b = b - fin_seat()
     b = b - pod_sockets()
