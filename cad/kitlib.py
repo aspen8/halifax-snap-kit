@@ -271,14 +271,20 @@ def halfspace(n, point):
     return _along(mf.Manifold.cube([1000, 1000, 500]).translate([-500, -500, 0]), n, point)
 
 
-def make_inlay(P, centre, d, rings, axis, side=1, depth=1.2, fit=0.1, peg=None, label=None):
+def make_inlay(P, centre, d, rings, axis, side=1, depth=1.2, fit=0.1, peg=None, label=None, cavity=None):
     """Cut a socket in P for a multi-ring inlay (e.g. a roundel).
     rings: [(colour, diameter)], outermost first. depth: inlay depth at the shallowest
     outward-facing point of the surface; fit: radial press-fit clearance.
     The socket floor is flat, so the inlay prints flat-back down. On a z surface (a wing) the
     floor is tilted to the plane that best fits the surface, so the depth stays even over a
     cambered, sloping wing; on y it is upright. Sockets keep INLAY_FLOOR clear of any underside.
+    cavity: (slot, column) for a key slot that runs under the inlay: the floor is worked out as if
+    the slot were solid, the slot is opened up into the socket (column: the slot carried up
+    through the skin), and the inlay's back is notched over the slot (the key sits under it).
     Returns (P_with_socket, {colour: inlay volume}, whole_plug, rotation_to_print)."""
+    P_real = P
+    if cavity is not None:
+        P = P + cavity[0]
     r = d / 2
     loc, _ = surface_hits(P, centre, r, axis, side)
     n, floor_at, (a, b, w0) = floor_plane(loc, axis, side, depth, centre[0], centre[1])
@@ -325,6 +331,12 @@ def make_inlay(P, centre, d, rings, axis, side=1, depth=1.2, fit=0.1, peg=None, 
         if c.volume() > 1e-3:
             vols[colour] = vols[colour] + c if colour in vols else c
         prev = cyl
+    if cavity is not None:
+        slot, column = cavity
+        notch = slot ^ cyl_axis(*centre, r + 1.0, axis)
+        plug = plug - notch
+        vols = {k: v - notch for k, v in vols.items()}
+        P = P_real - (column ^ cyl_axis(*centre, r + 0.05, axis))
     P = P - socket
     if peg_solid is not None:
         P = P + peg_solid

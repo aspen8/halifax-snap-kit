@@ -28,7 +28,7 @@ Round 2 adds the grip gauge and peg tab to plate 2 (13 min more).
 - **Plate 1 is mostly purge.** It uses 6.7 g of flush and tower for 1.6 g of inlays, and about 17 of its 37 minutes are flushing.
 - **No warnings since the wheels got a flat side.** The first slice warned that "t4_main_wheel has floating regions": the rounded tyre edge lifted off the bed (175 mm² of overhang). The wheels now have a flat inboard face that prints on the bed, and the warning has gone. The kit's wheels don't get the warning either.
 
-## Full kit (`kit/halifax_kit.3mf`, rebuilt 2026-11-08): 7 plates, 49 h 51 m
+## Full kit (`kit/halifax_kit.3mf`, rebuilt 2026-11-08): 7 plates, 50 h 06 m
 
 Half the time and a third of the purge of the 2026-11-07 kit (102 h 39 m, 1439 g), from three changes on the wing plate:
 
@@ -38,14 +38,14 @@ Half the time and a third of the purge of the 2026-11-07 kit (102 h 39 m, 1439 g
 
 | Plate | Time | Layers | Layer mm | Filament on the model (g) | Model g | Flush + tower g | Changes |
 |---|---|---|---|---|---|---|---|
-| 1 wings, tailplane, fuselage | 25h 13m | 439 | 0.24 | Black 230.1, Dark Earth 22.8, Dark Green 20.4 | 273.3 | 262.0 | 439 |
+| 1 wings, tailplane, fuselage | 25h 20m | 439 | 0.24 | Black 232.7, Dark Earth 23.1, Dark Green 20.4 | 276.2 | 262.0 | 439 |
 | 2 nacelles | 5h 45m | 89 | 0.16 | Black 42.2, Dark Earth 4.9, Dark Green 3.6 | 50.8 | 40.5 | 68 |
-| 3 markings | 3h 21m | 30 | 0.16 | Red 5.6, Blue 7.1, Yellow 0.8, White 0.4 | 13.9 | 45.7 | 90 |
+| 3 markings | 3h 22m | 30 | 0.16 | Red 5.6, Blue 7.1, Yellow 0.8, White 0.4 | 13.9 | 45.7 | 90 |
 | 4 glazing | 8h 11m | 144 | 0.12/0.2 | Black 1.1, Dark Earth 0.1, Dark Green 0.6, Silk Silver 7.9 | 9.8 | 124.3 | 236 |
 | 5 stand base | 3h 47m | 81 | 0.16/0.2 | Dark Earth 50.8, Dark Green 3.5, Yellow 0.5, White 1.0 | 55.8 | 7.0 | 6 |
-| 6 small parts | 2h 48m | 139 | 0.12/0.2 | Black 33.2, Yellow 1.9 | 35.2 | 14.4 | 28 |
-| 7 small parts | 45m | 80 | 0.12 | Black 8.8 | 8.8 | 0.0 | 0 |
-| **All sliced** | **49h 51m** | | | | **447.6** | **493.9** | **867** |
+| 6 small parts | 2h 38m | 80 | 0.12/0.2 | Black 32.1, Yellow 1.9 | 34.0 | 14.4 | 28 |
+| 7 small parts | 1h 03m | 139 | 0.12 | Black 13.6 | 13.6 | 0.0 | 0 |
+| **All sliced** | **50h 06m** | | | | **454.1** | **493.9** | **867** |
 
 Slicer messages from the command line (all non-critical; every plate slices). The app showed fewer on the previous build: on plate 1 only the D/F loop, which is now in two halves.
 
@@ -55,20 +55,20 @@ Slicer messages from the command line (all non-critical; every plate slices). Th
 
 Notes:
 
-- **Plate 1:** 25 h 13 m, 262 g of purge and tower, 439 colour changes (was 76 h 50 m, 1157 g, 2286). The underside detail added a few minutes.
+- **Plate 1:** 25h 20m, 262 g of purge and tower, 439 colour changes (was 76 h 50 m, 1157 g, 2286). The underside detail added a few minutes.
 - **For comparison, the Spitfire kit's wings-and-fuselage plate** (Elite Squadron, MasterBuilds) slices at 30 h 21 m on the user's X2D at 0.24 mm, with 306 g of purge and tower and 792 changes. Its plate is 84 mm tall.
 - **Plate 3 (markings):** 3 h 21 m and 46 g of purge (3 h 40 m and 43 g on 2026-11-07). The inlays are thinner now that their sockets follow the skin, which offsets the four colours all staying on the main nozzle (the second nozzle holds Dark Earth for the whole kit).
 - **Nozzle grouping is Manual** (`colour.NOZZLE`, `filament_map_mode`). On "Auto For Flush" the command line put every filament on the main nozzle.
 
-### Joint test (`kit/halifax_joint_test.3mf`)
+### Joint test (`kit/halifax_joint_test.3mf`), round 2
 
-`cad/joint_test.py`: a slice from each side of the three new joints, cut from the kit parts, at 0.24 mm, and their keys at 0.12 mm. Black only.
+`cad/joint_test.py`: a slice from each side of the three new joints, cut from the kit parts, at 0.24 mm, and their keys at 0.12 mm. Black only. Round 1 (2026-11-08): the nose joint was good; the tail joint wanted to be tighter; the wing key, at 10–29 % chord and 8 mm deep, peeled open from the trailing edge. Round 2: the wing key is 24 × 21.9 × 3 mm across 20–55 % chord, 12 mm into each piece, under the roundel (whose back is notched over it); the fuselage keys go 9 mm into each piece (8 at the tail), and the tail joint's slots are 0.10 a side.
 
 | Plate | Time | Layers | Layer mm | Filament on the model (g) | Model g | Flush + tower g | Changes |
 |---|---|---|---|---|---|---|---|
-| 1 joint slices | 58m | 50 | 0.24 | Black 29.0 | 29.0 | 0.0 | 0 |
-| 2 keys | 17m | 24 | 0.12 | Black 3.2 | 3.2 | 0.0 | 0 |
-| **All sliced** | **1h 15m** | | | | **32.2** | **0.0** | **0** |
+| 1 joint slices | 1h 08m | 67 | 0.24 | Black 35.7 | 35.7 | 0.0 | 0 |
+| 2 keys | 22m | 24 | 0.12 | Black 5.2 | 5.2 | 0.0 | 0 |
+| **All sliced** | **1h 30m** | | | | **40.9** | **0.0** | **0** |
 
 ## 2026-11-07: before the splits (one nozzle, 0.16 mm)
 

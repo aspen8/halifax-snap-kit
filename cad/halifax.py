@@ -110,6 +110,9 @@ FUSE_SPLIT_X = 196.0         # front / rear fuselage joint (just ahead of the co
 FUSE_CUTS = (102.0, FUSE_SPLIT_X, 297.5)
 FUSE_SECTIONS = ("fuselage_nose", "fuselage_front", "fuselage_rear", "fuselage_tail")
 FUSE_CUT_KEYS = ("key_fuselage_nose", "key_fuselage_joint", "key_fuselage_tail")
+FUSE_KEY_LEN = (18.0, 18.0, 16.0)   # key length across each joint (half in each piece); was 12. The
+                             # tail's stops 0.8 mm short of the starboard "P" socket
+FUSE_KEY_FIT = (KEY_FIT, KEY_FIT, 0.10)   # per side; joint test 1: the tail joint wanted tighter
 # Fuselage printed Lancaster-style: full-width black sections on end, with the camouflaged
 # spine as separate single-colour pieces sitting on the demarcation line.
 SPINE_LINE = [(0, -10.05), (60.7, 1.4), (290, 1.4),  # NP-G: level at the side-window bottom back from the front
@@ -212,9 +215,11 @@ ROOT_TONGUE_Z = (0.0, 4.0)   # above the floor: flush with the flat underside, s
 JOINT_TONGUE = (0.26, 0.54, 4.3, 7.7, 12.0)  # joint key: chord fr. start/end, z0, z1 (mid-thickness: >=3.4 mm wall), depth each side
 WING_SPLIT_Y = 145.0         # plan y of the outer panel's mid joint (2026-11-08): between the outer nacelle
                              # (to 137) and the roundel (from 147.5); halves its height on end
-WING_SPLIT_KEY = (0.10, 0.29, 2.0, 5.0, 8.0)   # key: chord fr. start/end, z0, z1 above the floor, depth each
-                             # side; ahead of the roundel (from 0.30 chord where the slot ends),
-                             # where the section is thickest
+WING_SPLIT_KEY = (0.20, 0.55, 2.0, 5.0, 12.0)  # key: chord fr. start/end, z0, z1 above the floor, depth each
+                             # side. Joint test 1: at 0.10-0.29 x 8 deep it peeled open from the
+                             # trailing edge; now across the middle of the chord and as deep as
+                             # the inner/outer key. It runs under the roundel, whose back is
+                             # notched over the slot (colour.inlays_for), as the Spitfire's
 WING_POSE = os.environ.get("HALIFAX_WING_POSE", "end")    # wings stand on their joint faces ('flat' kept for reference:
                                                            # it leaves the leading-edge undersides rough)
 
@@ -605,13 +610,14 @@ def fuselage_parts(wing_tongues):
     # keys on each joint face, below the spine line: one tall key each side (it replaced three
     # small ones a side: fewer fiddly parts)
     fr_holes = None
-    for xc, kname in zip(FUSE_CUTS if not SPINE_PIECES else (FUSE_SPLIT_X,),
-                         FUSE_CUT_KEYS if not SPINE_PIECES else ("key_fuselage_joint",)):
+    joints = (zip(FUSE_CUTS, FUSE_CUT_KEYS, FUSE_KEY_LEN, FUSE_KEY_FIT) if not SPINE_PIECES else
+              [(FUSE_SPLIT_X, "key_fuselage_joint", KEY_FR[0], KEY_FIT)])
+    for xc, kname, klen, kfit in joints:
         _, hw, top, bot, _ = interp(FUSE_STATIONS, xc)
         zs = float(spine_z(xc))
-        key_fr = (KEY_FR[0], round(zs - bot - 6.0, 1), KEY_FR[2])
+        key_fr = (klen, round(zs - bot - 6.0, 1), KEY_FR[2])
         fr = [(0, y, (bot + zs) / 2) for y in (-hw / 2, hw / 2)]
-        h = M(key_slots(fr, "x", xc, key_fr, "z"))
+        h = M(K.key_slots(fr, "x", xc, key_fr, "z", kfit, KEY_END_GAP))
         fr_holes = h if fr_holes is None else fr_holes + h
         KEY_COUNTS[kname] = (key_fr, len(fr))
     # spine-to-body keys: one or two per piece, clear of the tailplane tunnel
@@ -910,15 +916,16 @@ def wing_pitch():
     return math.degrees(math.atan2(le[1] - te[1], te[0] - le[0])) - WING_INCIDENCE
 
 
-def wing_split(side):
+def wing_split(side, slot_top=None):
     """(tip_zone, key_slot) in world coordinates for the outer panel's mid joint: a flat cut square
-    to the outer panel's span at WING_SPLIT_Y, and one flexing key across it."""
+    to the outer panel's span at WING_SPLIT_Y, and one flexing key across it. slot_top (above the
+    floor) makes the slot that tall: the roundel's notch."""
     cd = math.cos(math.radians(DIHEDRAL))
     yl = WING_JOINT_Y + (WING_SPLIT_Y - WING_JOINT_Y) / cd
     x, c, _ = outer_planform(yl)
     fs, fe, z0, z1, depth = WING_SPLIT_KEY
     slot = box(x + fs * c - KEY_FIT, x + fe * c + KEY_FIT, yl - depth - KEY_END_GAP, yl + depth + KEY_END_GAP,
-               Z_FLOOR + z0 - KEY_FIT, Z_FLOOR + z1 + KEY_FIT)
+               Z_FLOOR + z0 - KEY_FIT, Z_FLOOR + (slot_top if slot_top else z1) + KEY_FIT)
     KEY_COUNTS["key_wing_split"] = ((2 * depth, round((fe - fs) * c, 1), z1 - z0), 2)
     zone = box(-100, 400, yl, yl + 300, Z_FLOOR - 50, Z_FLOOR + 50)
     pivot = ((0, WING_JOINT_Y, Z_FLOOR), (1, WING_JOINT_Y, Z_FLOOR))

@@ -646,8 +646,11 @@ def inlays_for(name, P):
         s = 1 if name.endswith("stbd") else -1
         x, y, d = WING_ROUNDEL
         hand = "R" if s > 0 else "L"
+        # the mid-joint key runs under the roundel: its slot opens up into the socket and the
+        # roundel's back is notched over it (hidden once pressed in), as on the Spitfire's wings
+        cav = (to_manifold(H.mesh(H.wing_split(s)[1])), to_manifold(H.mesh(H.wing_split(s, slot_top=30.0)[1])))
         P, vols, plug, prot = K.make_inlay(P, (x, s * y), d, B_RINGS(d), "z", 1, WING_INLAY_DEPTH,
-                                     INLAY_FIT, WING_ROUNDEL_PEG, (hand, 6.0, 6.0, -4.0, BACK_MIRROR["z"]))
+                                     INLAY_FIT, WING_ROUNDEL_PEG, (hand, 6.0, 6.0, -4.0, BACK_MIRROR["z"]), cav)
         out.append((f"roundel_wing_{name.split('_')[-1]}", vols, prot, plug))
     if name.startswith("fin_"):
         # fin flash (red/white/blue) as one snap-in inlay: press fit plus two gripping pegs on its

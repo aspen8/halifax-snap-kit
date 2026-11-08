@@ -6,9 +6,11 @@ Run after the colour build:  python joint_test.py KIT_OUT_DIR [project_settings_
 
 Plate 1 (0.24 mm, as the wing plate): a slice from each side of each joint, as each part stands
 on the plate (so each slot prints as in the kit):
-  wing_mid_stbd top 12 mm / wing_outer_stbd bottom 12 mm      (one key_wing_split)
-  fuselage_nose bottom 10 mm / fuselage_front top 10 mm       (two key_fuselage_nose)
-  fuselage_rear top 10 mm / fuselage_tail bottom 10 mm        (two key_fuselage_tail)
+  wing_mid_stbd top 16 mm / wing_outer_stbd bottom 16 mm      (one key_wing_split, 12 mm deep each
+                                                              side; the tip slice shows the slot
+                                                              opening into the roundel socket)
+  fuselage_nose bottom 13 mm / fuselage_front top 13 mm       (two key_fuselage_nose)
+  fuselage_rear top 13 mm / fuselage_tail bottom 13 mm        (two key_fuselage_tail, tighter fit)
 Plate 2 (0.12 mm, as the kit's keys): the five keys.
 Everything in black. Writes KIT_OUT_DIR/halifax_joint_test.3mf.
 """
@@ -23,12 +25,12 @@ import colour as C
 import kitlib as K
 
 SLICES = [  # (test name, kit part, from top?, thickness)
-    ("j1_wing_mid", "wing_mid_stbd", True, 12.0),
-    ("j1_wing_tip", "wing_outer_stbd", False, 12.0),
-    ("j2_nose", "fuselage_nose", False, 10.0),
-    ("j2_front", "fuselage_front", True, 10.0),
-    ("j3_rear", "fuselage_rear", True, 10.0),
-    ("j3_tail", "fuselage_tail", False, 10.0),
+    ("j1_wing_mid", "wing_mid_stbd", True, 16.0),
+    ("j1_wing_tip", "wing_outer_stbd", False, 16.0),
+    ("j2_nose", "fuselage_nose", False, 13.0),
+    ("j2_front", "fuselage_front", True, 13.0),
+    ("j3_rear", "fuselage_rear", True, 13.0),
+    ("j3_tail", "fuselage_tail", False, 13.0),
 ]
 KEYS = ["key_wing_split_1", "key_fuselage_nose_1", "key_fuselage_nose_2",
         "key_fuselage_tail_1", "key_fuselage_tail_2"]

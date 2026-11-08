@@ -218,3 +218,4 @@ A wheel printed lying on a face with the tyre rounded on both sides starts on a 
 - **Keep sockets out of any underside** (0.8 mm) and ignore skin that faces down when measuring depth, or a marking that runs round a curve shows from below.
 - **Check new slots against existing sockets.** The wing joint's key slot ran under the roundel socket; the slicer only reported the roundel as "floating regions".
 - **The command line reports more slicer warnings than the app.** On one plate the app showed only the D/F loop where the command line listed five. Trace each one with a layer check before changing geometry.
+- **A key near the leading edge lets a wing joint peel open from the trailing edge** (joint test 1). Put it across the middle of the chord, and run it deep: how far a key goes into each piece sets its leverage, more than its width. A key may run under an inlay; notch the inlay's back over it.

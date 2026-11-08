@@ -1,6 +1,6 @@
 # Handoff (start here in a new session)
 
-State on 2026-11-08, branch `phase1-airframe`, worked on the user's Mac. **`kit/halifax_kit.3mf` is rebuilt: 7 plates, all slice, 49 h 51 m in total** (448 g of model, 494 g of purge; `docs/slicing.md`). The wing plate is 25 h 13 m (it was 76 h 50 m), with three new joints that haven't been printed yet: **print `kit/halifax_joint_test.3mf` (1 h 15 m) first.** Geometry checks pass: single pieces, no clashes. Read `LESSONS.md`, `TODO.md` and `.claude/skills/snap-kit/SKILL.md` before changing anything.
+State on 2026-11-08, branch `phase1-airframe`, worked on the user's Mac. **`kit/halifax_kit.3mf` is rebuilt: 7 plates, all slice, 50h 06m in total** (448 g of model, 494 g of purge; `docs/slicing.md`). The wing plate is 25h 20m (it was 76 h 50 m). Joint test round 1 printed; **print round 2 (`kit/halifax_joint_test.3mf`, 1h 30m) before the full build.** Geometry checks pass: single pieces, no clashes. Read `LESSONS.md`, `TODO.md` and `.claude/skills/snap-kit/SKILL.md` before changing anything.
 
 ## How to build
 - Full colour build: `cd cad && python -u colour.py OUT project_settings_template.json` (11 min on the Mac). The template is `cad/project_settings_template.json`: the user's Bambu X2D 0.20 mm Standard project settings, taken from `halifax.3mf`. The overrides in `colour.py` (`PRINT_OVERRIDES`, `object_settings`) go on top of it. `write_3mf` places a prime tower on every plate (`kitlib.place_towers`) and prints where.
@@ -16,10 +16,14 @@ State on 2026-11-08, branch `phase1-airframe`, worked on the user's Mac. **`kit/
 - The Mac's OCC meshes curved faces slightly differently from the cloud's, so a rebuild changes the 3MF bytes without changing the design. Only commit a rebuilt 3MF when the design changed.
 - `tools/closeup.py` uses EGL on Linux only; on macOS, pyrender's default pyglet backend.
 
+## What changed on 2026-11-08 (third round, after joint test 1)
+- **Nose joint good. Tail joint: tighter**, 0.10 a side (`FUSE_KEY_FIT`). **Wing key peeled open from the trailing edge** at 10–29 % chord, 8 mm deep: now 20–55 % chord, 12 mm into each piece (24 × 21.9 × 3 mm, as the inner/outer key), running under the roundel. The roundel's socket opens into the slot and its back is notched over the key (`make_inlay(..., cavity=)`), as on the Spitfire's wings.
+- **Fuselage keys deeper:** 9 mm into each piece (8 at the tail, which stops 0.8 mm short of the starboard "P"); they were 6 (`FUSE_KEY_LEN`). Leverage against peeling comes from depth.
+
 ## What changed on 2026-11-08 (second round, after the user's slicer review)
 - **Inlay sockets have flat, tilted floors** (`kitlib.floor_plane`): the plane that best fits the skin under the marking, moved in by the depth. The level floors were 2–7 mm deep on the cambered wing and broke through the wing underside under the roundels; on the hull's curve they made the starboard code letters up to 9.6 mm deep. Wing roundels are now about 3 mm thick, codes 2.3–4.6 mm, fuselage roundels about 4.8 mm. Each inlay is turned flat-back down to print (`make_inlay`/`make_section_inlay` return the rotation), and pegs stand square to the floor (`peg_on_floor`).
 - **No socket within 0.8 mm of an underside** (`kitlib.under_band`, `INLAY_FLOOR`), and the depth is measured only where the skin faces out (`INLAY_FACING`). Where a letter runs round under the hull, its lower edge stops there, so no red shows from below. The wing roundel floor is lifted whole rather than trimmed, so its back stays flat.
-- **Wing mid-joint key moved forward** to 10–29 % chord (`WING_SPLIT_KEY`; key 16 × 11.9 × 3 mm): at 20–48 % its slot ran under the roundel socket.
+- **Wing mid-joint key moved forward** to 10–29 % chord to clear the roundel; reversed in the third round (it peeled).
 - **D/F loop in two halves** (`df_loop_a`, `df_loop_b`), split on the centreline: each lies on its cut face, so nothing hangs (whole, its narrow mast floated). The roof socket holds the two plug halves together; a dab of glue if they splay.
 - **Wing and tailplane underside detail** (`detail.py`): the top's spars, panel joints and flap/aileron hinge lines, the spar rivet rows, and three bomb-cell doors a side in the centre section (`WING_BOMB_CELLS`, approximate). The strips under the nacelles are left plain (`nacelle_zones`) so the nacelles still clamp. The tailplane's hinge and panel lines go on its underside too (its bed face: 0.25 mm deep).
 
