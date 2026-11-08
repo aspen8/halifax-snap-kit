@@ -332,3 +332,7 @@ A void that doesn't reach the outside is a separate, negative-volume shell. `lar
 - **Cut recesses around attached detail.** The wheel-well recess, cut after the fins were added, left a fin floating over it. Subtract the detail from the recess first.
 - **Bambu Studio refuses names containing `<>:/\|?*"`**, including plate names.
 - **Make snap prongs long.** The wheel's mushroom boss, about 3.4 mm free with prongs 1.55 mm thick, broke off on the first push. Running the boss right through the wheel, with the head clipping over the far side, gave about 8 mm of free prong and about a fifth of the bending strain.
+
+### Trace small parts from the kit maker's own part drawings
+
+The Hawk's smoke pod took four tries from descriptions, a sketch and a perspective render, and each moved further from the real shape. What worked: the kit instructions' separate side view of the part and the parts-sheet outlines (flat, true profiles), traced by pixel and scaled to the calibrated side view, then shown overlaid on the drawing before building. Ask the user for that drawing first, and don't take a feature in a render (here a "tail point") as part of the shape without checking where it ends on a true side view.

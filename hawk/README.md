@@ -49,9 +49,20 @@ Against photos (top: real aircraft, bottom: model):
 
 ![photo comparison](docs/photo_comparison.png)
 
-> **Status: v31; test coupons printed twice (see v26 and v28 changes).** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+> **Status: v32; test coupons printed twice (see v26 and v28 changes).** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
 
-### v31 changes (smoke pod fitted to the side render)
+### v32 changes (smoke pod from the Revell drawings: right at last)
+
+- **Smoke pod** (user: "Nailed it"). Traced from Revell's own drawings: the separate smoke pod side view on instructions page 15 (pixel-traced; `tools/revell_p15_smoke_pod.png`) and the pod halves on the parts sheet (page 5), scaled to the calibrated Revell side view (nose X 91.8, tail X 187.2). A round nose bulb; the fairing's vertical front edge at X 98, widening to the pod's full width by X 121 (user, circled on page 15), and from there back every section is a U, vertical sides into a curved base deeper than it is wide; the bottom level at Z -19.7 to X 150, then rising to a vertical tail edge at X 187 (the smoke nozzle's place). Each section is one outline, so the sides run cleanly into the base. v30 and v31 (from a sketch, descriptions and a perspective render) were wrong and are replaced: the render's "tail point" at X 206 was not the pod.
+- **Checks:** interference shows only the known overlaps; each pod half is one piece; overhang 97 mm² a half; all 6 plates slice (fuselage 11.9 h).
+
+![v32 smoke pod (pink) over Revell's smoke pod drawing](docs/v32_pod_vs_revell.png)
+
+![v32 smoke pod, side](docs/v32_pod_side.png)
+
+![v32 smoke pod from below and behind](docs/v32_pod_rear34.png)
+
+### v31 changes (smoke pod fitted to the side render; superseded by v32)
 
 - **Smoke pod, second try** (user: v30 was far off). Laid over the clean renders (yellow: the pod, cyan: the rest of the model), its underside and tail are now measured from the side render (the lowest red pixel per column): the bottom at Z -19.5, level to X 150, rising gently to X 165, faster between X 175 and 185, then flattening into a sharp point at X 206, Z -11 (about 8 below the belly). Above the point the fairing's rear edge slopes down from the belly (from X 195). Round body 9.3 across (measured from below), nose as v30 (it matched from below). Sections: the fairing is narrower than the pod at the front, as wide as the pod by X 140, then an unchanged U to X 160 (user), then the U narrows steadily to the point: from behind, a deep narrow U, the user's "vertical line".
 - **Checks:** interference shows only the known overlaps; each pod half is one piece; all plates slice (fuselage 11.9 h).
@@ -62,7 +73,7 @@ Against photos (top: real aircraft, bottom: model):
 
 ![v31 smoke pod from behind](docs/v31_pod_rear.png)
 
-### v30 changes (smoke pod from the user's sketch)
+### v30 changes (smoke pod from the user's sketch; superseded by v32)
 
 - **Smoke pod:** rebuilt from the user's sketch (plan and three sections) and photos from behind and the side. A round cylinder (9.6 mm across at 1:40) with a torpedo nose on its axis, hung on a fairing that starts with a rounded front at X 105, is half the pod's width by X 113 and its full width by X 150, where the section becomes a U (straight sides into the round bottom). From X 150 pod and fairing taper together to the tail; from X 160 the underside sweeps up to a vertical edge 3 mm deep under the belly at X 195. The bottom line is where it was. The front peg into the belly moved back to X 117 onto the fairing (it was ahead of where the fairing now starts).
 - **Checks:** interference shows only the known overlaps; each pod half is one piece; overhang about as before; all plates slice (fuselage plate 11.9 h).
@@ -449,7 +460,7 @@ Suggested settings: PLA, 0.16 mm layers for the gear plate and 0.2 mm elsewhere,
   - per wing, 4 underside fins moulded on (the deeper one near the leading edge is white); each has a 45° brace on its inboard face so it prints on the wing standing on end
   - 4 leading-edge fences (2 per wing): collars, taller above the wing than below and twice as long on top, that slide back onto the leading edge with a tongue in a groove under the wing and on top; a snug fit holds them (no glue)
   - 2 fixed tailplanes with 10° anhedral, printed on end; each one's own aerofoil runs on into the fuselage as a plug, a firm push fit in a socket of the same shape (no glue)
-  - smoke pod (2 halves): a round cylinder with a torpedo nose on a fairing that widens to the pod's full width (a U section), then narrows to a point under the belly at the tail (fitted to the side render); pegs on the fairing push into the belly
+  - smoke pod (2 halves), from Revell's drawings: a round nose bulb, a fairing that widens to the pod's full width, then U sections (vertical sides, curved base) to a vertical tail edge; pegs on the fairing push into the belly
   - 2 ventral strakes, moulded under the rear fuselage
   - jet nozzle: a separate grey ring standing 3.75 mm out of the tail, black inside, with a 12 mm deep void, a step ring, an exhaust cone and 6 struts at the bottom. A spigot plugs it into a countersunk socket in the tail.
   - 5 black aerials (top of the nose, behind the canopy, two under the nose, one under the tail)

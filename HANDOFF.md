@@ -38,9 +38,9 @@ Then:
 - The user prints on a Bambu X2D (two nozzles, AMS). Keep the base red on the main nozzle (fixed per-plate map in `colour.py` `FILAMENT_MAP`/`MAPPED_PLATES`); the second nozzle runs outer walls at 50 mm/s.
 - The user often asks to "add to the to-do list" when near a usage limit: write it into `hawk/README.md` "Known gaps and next steps", commit, change nothing else.
 
-## State at handoff (v31, built, checked and committed locally)
+## State at handoff (v32, built, checked and committed locally)
 
-**Smoke pod is still wrong (user, after v31: "much worse... moving further away from the correct form").** Don't reshape it from descriptions or eyeballed renders again. The user is working out how to show the correct shape (views from the reference viewer, a sketch or a photo). When it arrives, measure it by pixel, then show the model side by side at the same angles before building. Restoring an older pod was declined ("we need to get it right").
+v32: smoke pod traced from Revell's smoke pod drawing (instructions page 15, `hawk/tools/revell_p15_smoke_pod.png`) and the parts sheet (page 5); the user confirmed it ("Nailed it"). Constants `POD_*` in hawk.py (U from `POD_FAIRING[1]` X 121, `POD_BOTTOM_LINE`, tail edge X 187.2). The pod PDF the user supplied is the same Revell 04284 instructions as `ref/CM_04284.pdf`.
 
 v31: smoke pod underside and tail measured from the side render (`POD_BOTTOM_LINE`, `POD_TAIL_END` 206, `POD_FAIRING_TE`, `POD_DEPTH` 11.0, `POD_W` 4.65; full U from X 140 to 160 then narrowing). Overlay helper for the clean renders: the calibrations in this file (side u = 135 + 3.39 x, v = 318 - 3.39 z; under K 3.445). Measure renders by pixel, not by eye: an eyeballed bottom line was 2 mm off.
 
@@ -97,4 +97,4 @@ Test-print history: plate 1 (v3 fuselage) and the canopy/gear/nozzle plates (v3/
 3. ~~Fin against the drawing~~: done in v11 (outline within about 0.4 mm of the Revell side view, rounded tip). Waiting for the user's look.
 4. README to-dos still open: separate lettering panels (sharper text), nonplanar top-surface test (orcaslicer-nonplanar), canopy fit check on the next fuselage print, print-in-place control surfaces.
 5. ~~Rudder hinge groove red line and TE speck~~: fixed in v16.
-6. Push to GitHub when the user asks. v10 to v24 and the test coupons are pushed; v25 to v28 are pushed; v29 to v31 are committed locally only (the checkout in use is the older one in Claude's scratch-workspaces folder, which has `ref/` and `.venv`).
+6. Push to GitHub when the user asks. v10 to v24 and the test coupons are pushed; v25 to v28 are pushed; v29 to v32 are committed locally only (the checkout in use is the older one in Claude's scratch-workspaces folder, which has `ref/` and `.venv`).
