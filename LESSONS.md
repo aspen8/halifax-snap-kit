@@ -207,3 +207,8 @@ A wheel printed lying on a face with the tyre rounded on both sides starts on a 
 ## Tailplane leading edge (2026-11-08)
 - **A flat-printed aerofoil hangs its leading edge in air.** On the 4 mm tailplane the underside rose 1.3 mm over the front 11 mm, about 7°, which Bambu calls a "floating cantilever". Filling under the nose to 45° (`ramp=` in `flat_bottom_section`) fixes it with a chamfer you can't see from below. Cut every slot and pocket from the same shape so the fits follow.
 - To find which part a slicer message comes from, build it alone (`ONLY=name python colour.py ...`) and slice that.
+
+## Print time on multi-colour plates (2026-11-08)
+- **Colour swaps cost about 1.7 min each on the X2D, and a plate swaps about twice per layer wherever camo shows.** So time follows the tallest coloured part divided by the layer height, not the amount of plastic. The wing plate in one colour was 11 h; with camo, 77 h. Compare with a single-colour slice (set every volume's extruder to 1) to see how much of a plate's time is swapping.
+- **Keep coloured plates low.** Split tall parts so they all fit on one plate at a lower height; splitting onto a second plate doesn't help, since each plate swaps all the way up.
+- **Put one camo colour alone on the X2D's second nozzle** (the user's auxiliary nozzle takes one colour). Its swaps become nozzle changes, with no flush. Set the grouping to Manual: on "Auto For Flush" the command line kept everything on the main nozzle. Parts must sit at x ≥ 20.5 for the second nozzle.

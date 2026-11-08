@@ -3,7 +3,7 @@
 Sliced on 2026-11-07 with the Bambu Studio 02.08.02.61 command line on macOS, using the settings embedded in each 3MF (Bambu Lab X2D 0.4 nozzle, 0.20 mm Standard @BBL X2D template, with the kit's per-object overrides). Regenerate everything here with:
 
 ```
-python tools/slice.py kit/halifax_test_plate.3mf kit/halifax_kit.3mf --md
+python tools/slice.py kit/halifax_test_plate.3mf kit/halifax_kit.3mf kit/halifax_joint_test.3mf --md
 ```
 
 The G-code, Bambu's `result.json` and the slicer log for each plate go to `out/slice/<3mf name>/plate_N/`.
@@ -28,37 +28,52 @@ Round 2 adds the grip gauge and peg tab to plate 2 (13 min more).
 - **Plate 1 is mostly purge.** It uses 6.7 g of flush and tower for 1.6 g of inlays, and about 17 of its 37 minutes are flushing.
 - **No warnings since the wheels got a flat side.** The first slice warned that "t4_main_wheel has floating regions": the rounded tyre edge lifted off the bed (175 mm² of overhang). The wheels now have a flat inboard face that prints on the bed, and the warning has gone. The kit's wheels don't get the warning either.
 
-## Full kit (`kit/halifax_kit.3mf`, rebuilt 2026-11-08): all 7 plates slice
+## Full kit (`kit/halifax_kit.3mf`, rebuilt 2026-11-08): 7 plates, 50 h 43 m
 
-The camo is painted onto the fuselage, and both fuselage sections print on the wing plate. Each plate's prime tower is placed in clear space by `kitlib.place_towers`, at least 9 mm from every part's outline and at x ≥ 22. The exhausts print with the nacelles.
+Half the time and a third of the purge of the 2026-11-07 kit (102 h 39 m, 1439 g), from three changes on the wing plate:
+
+- **Shorter parts.** Both outer wings and both fuselage sections are split once more, so nothing on plate 1 stands taller than 105 mm (it was 187). A plate swaps colours about twice per layer wherever camo shows, so fewer layers means fewer swaps.
+- **0.24 mm layers on plate 1**, as the Spitfire kit: 439 layers instead of 1170.
+- **Dark Earth alone on the second (auxiliary) nozzle**, which takes one colour on the user's X2D. Black and Dark Green stay on the main nozzle. Swaps to or from Earth become nozzle changes, with no flush. Every plate packs from x = 21 mm, where the second nozzle reaches.
 
 | Plate | Time | Layers | Layer mm | Filament on the model (g) | Model g | Flush + tower g | Changes |
 |---|---|---|---|---|---|---|---|
-| 1 wings, tailplane, fuselage | 76h 49m | 1170 | 0.16 | Black 224.2, Dark Earth 23.7, Dark Green 20.8 | 268.7 | 1156.7 | 2286 |
-| 2 nacelles | 6h 51m | 89 | 0.16 | Black 42.2, Dark Earth 4.9, Dark Green 3.6 | 50.7 | 69.4 | 137 |
-| 3 markings | 3h 40m | 71 | 0.16 | Red 8.8, Blue 8.8, Yellow 1.0, White 0.4 | 19.0 | 43.1 | 78 |
-| 4 glazing | 9h 02m | 144 | 0.12/0.2 | Black 1.1, Dark Earth 0.1, Dark Green 0.6, Silk Silver 7.9 | 9.8 | 141.4 | 277 |
-| 5 stand base | 2h 57m | 81 | 0.16/0.2 | Dark Earth 50.8, Dark Green 3.5, Yellow 0.5, White 1.0 | 55.8 | 13.8 | 23 |
-| 6 small parts | 2h 54m | 139 | 0.12/0.2 | Black 34.8, Yellow 1.9 | 36.8 | 14.4 | 28 |
-| 7 small parts | 25m | 80 | 0.12 | Black 3.5 | 3.5 | 0.0 | 0 |
-| **All sliced** | **102h 39m** | | | | **444.3** | **1438.8** | **2829** |
+| 1 wings, tailplane, fuselage | 24h 56m | 439 | 0.24 | Black 228.8, Dark Earth 23.0, Dark Green 20.3 | 272.1 | 262.0 | 439 |
+| 2 nacelles | 5h 45m | 89 | 0.16 | Black 42.2, Dark Earth 4.9, Dark Green 3.6 | 50.8 | 40.5 | 68 |
+| 3 markings | 4h 30m | 71 | 0.16 | Red 8.8, Blue 8.9, Yellow 1.0, White 0.4 | 19.2 | 61.0 | 120 |
+| 4 glazing | 8h 11m | 144 | 0.12/0.2 | Black 1.1, Dark Earth 0.1, Dark Green 0.6, Silk Silver 7.9 | 9.8 | 124.3 | 236 |
+| 5 stand base | 3h 47m | 81 | 0.16/0.2 | Dark Earth 50.8, Dark Green 3.5, Yellow 0.5, White 1.0 | 55.8 | 7.0 | 6 |
+| 6 small parts | 2h 48m | 139 | 0.12/0.2 | Black 33.2, Yellow 1.9 | 35.2 | 14.4 | 28 |
+| 7 small parts | 46m | 80 | 0.12 | Black 9.2 | 9.2 | 0.0 | 0 |
+| **All sliced** | **50h 43m** | | | | **452.1** | **509.2** | **897** |
 
-Slicer messages (all non-critical; the slice succeeds):
+Slicer messages (all non-critical; every plate slices):
 
-- plate 1 error: ZFiller: encounter idx from clip: 7. This comes from the tailplane since its leading-edge fill (2026-11-08); it shows up on every run. It's a note from Bambu's polygon clipping, not a failed slice: every layer of the tailplane prints and its filament matches its volume. Look at the tailplane's first layers in the app's preview.
-- plate 1 warning: It seems object df_loop has floating regions. Please re-orient the object or enable support generation.
-- plate 1 warning: It seems object fuselage_rear has floating cantilever. Please re-orient the object or enable support generation.
-- plate 4 warning: It seems object turret_dorsal has floating regions. Please re-orient the object or enable support generation.
-- plate 6 warning: It seems object stand_post has floating cantilever. Please re-orient the object or enable support generation.
-- plate 7 warning: It seems object guns_dorsal has floating cantilever. Please re-orient the object or enable support generation.
-- plate 7 warning: It seems object guns_tail has floating cantilever. Please re-orient the object or enable support generation.
-- **The tailplane's "floating cantilever" warning has gone.** The tailplane prints flat, and its underside curved up into the leading edge at about 7° from flat over the front 11 mm of the whole span, 800 mm² hanging in air. Under the nose it's now filled to 45° (`TAIL_NOSE_RAMP`). That leaves a 1.2–1.4 mm chamfer under the leading edge; the fuselage slot and the fins are cut from the same shape.
+- plate 1 error: ZFiller: encounter idx from clip: 49. From the tailplane since its leading-edge fill, as before: a note from Bambu's polygon clipping, not a failed slice.
+- plate 1 warnings: df_loop floating regions, as before. New at 0.24 mm: `wing_outer_*` floating regions (the roundel socket and its peg, about 2 mm deep, on a part standing on end), `fuselage_front` and `fuselage_rear` floating cantilever (the wing-root pockets, the stand socket and the key slots: 4 mm bridges). These are the same features as the 0.16 mm kit; the coarser layers trip the warning.
+- plate 4: turret_dorsal floating regions. Plate 6: stand_post cantilever. Plate 7: both gun packs cantilever. As before.
+
+Notes:
+
+- **Plate 1:** 24 h 56 m, 262 g of purge and tower, 439 colour changes (was 76 h 50 m, 1157 g, 2286).
+- **For comparison, the Spitfire kit's wings-and-fuselage plate** (Elite Squadron, MasterBuilds) slices at 30 h 21 m on the user's X2D at 0.24 mm, with 306 g of purge and tower and 792 changes. Its plate is 84 mm tall.
+- **Plate 3 (markings) went up** from 3 h 40 m and 43 g to 4 h 30 m and 61 g. Its four colours all stay on the main nozzle now that the grouping is set by hand; with "Auto For Flush" Bambu seems to have moved some to the second nozzle. The second nozzle holds Dark Earth for the whole kit, so that's the right call.
+- **Nozzle grouping is Manual** (`colour.NOZZLE`, `filament_map_mode`). On "Auto For Flush" the command line put every filament on the main nozzle.
+
+### Joint test (`kit/halifax_joint_test.3mf`)
+
+`cad/joint_test.py`: a slice from each side of the three new joints, cut from the kit parts, at 0.24 mm, and their keys at 0.12 mm. Black only.
+
+| Plate | Time | Layers | Layer mm | Filament on the model (g) | Model g | Flush + tower g | Changes |
+|---|---|---|---|---|---|---|---|
+| 1 joint slices | 56m | 50 | 0.24 | Black 28.9 | 28.9 | 0.0 | 0 |
+| 2 keys | 18m | 24 | 0.12 | Black 3.5 | 3.5 | 0.0 | 0 |
+| **All sliced** | **1h 14m** | | | | **32.4** | **0.0** | **0** |
 
 
-- **Plate 1 is the long one:** 76 h 50 m, with 1157 g of purge and 2286 colour changes. The wings print on end, so black↔camo swaps happen on nearly every layer up to 170 mm, and the fuselage's camo shares those swaps. The earlier estimate was 77 h and 1.2 kg.
-- **Purge is 3.2× the model** (1.44 kg for 0.44 kg), down from 1.51 kg over 107 h for the 9-plate kit.
-- **Only one nozzle is used.** `kitlib.write_3mf` writes `filament_map = 1` for every filament, and a flat 350 mm³ flush for every colour pair. In the app, "Auto For Flush" may spread the filaments over both nozzles, so check there.
-- **The second nozzle can't reach the leftmost 20.5 mm of the bed** (`extruder_printable_area`). The packer places parts from x = 0, so the coloured parts would need packing at x ≥ 21 to use it.
+## 2026-11-07: before the splits (one nozzle, 0.16 mm)
+
+Plate 1 76 h 50 m with 1157 g of purge; the kit 102 h 39 m, 444 g of model and 1439 g of purge over 7 plates. See git history (11378db) for the full table.
 
 ## Before 2026-11-07: the 9-plate kit
 

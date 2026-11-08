@@ -1,12 +1,13 @@
 # Handoff (start here in a new session)
 
-State on 2026-11-07, branch `phase1-airframe`, worked on the user's Mac. **`kit/halifax_kit.3mf` is rebuilt and ready to print: 7 plates, all slice with no errors** (102 h 39 m, 444 g of model, 1.44 kg of purge; `docs/slicing.md`). It passes the geometry checks: single pieces, no clashes, ≤ 5 colours a plate, overhangs as before. Read `LESSONS.md`, `TODO.md` and `.claude/skills/snap-kit/SKILL.md` before changing anything.
+State on 2026-11-08, branch `phase1-airframe`, worked on the user's Mac. **`kit/halifax_kit.3mf` is rebuilt: 7 plates, all slice, 50 h 43 m in total** (452 g of model, 509 g of purge; `docs/slicing.md`). The wing plate is 24 h 56 m (it was 76 h 50 m), with three new joints that haven't been printed yet: **print `kit/halifax_joint_test.3mf` (1 h 14 m) first.** Geometry checks pass: single pieces, no clashes. Read `LESSONS.md`, `TODO.md` and `.claude/skills/snap-kit/SKILL.md` before changing anything.
 
 ## How to build
 - Full colour build: `cd cad && python -u colour.py OUT project_settings_template.json` (11 min on the Mac). The template is `cad/project_settings_template.json`: the user's Bambu X2D 0.20 mm Standard project settings, taken from `halifax.3mf`. The overrides in `colour.py` (`PRINT_OVERRIDES`, `object_settings`) go on top of it. `write_3mf` places a prime tower on every plate (`kitlib.place_towers`) and prints where.
 - Checks: `python halifax.py OUT2` (assembled geometry, 10 min), `tools/interference.py OUT2/assembled --min 2` (the loose keys all sit at the origin, so ignore key-against-key overlaps), `tools/overhang.py OUT/stl`, and a single-piece check on `OUT/stl/*.stl`. Use manifold3d's `decompose()` for that, not trimesh's `split()`: the STLs carry zero-volume slivers from rounding, which trimesh counts as pieces.
 - Slice: `python tools/slice.py kit/halifax_kit.3mf [--md]` (about 1 min), after copying `OUT/halifax_kit.3mf` to `kit/`.
 - Test plate: `cd cad && python test_plate.py OUT` (3 min).
+- Joint test (the 2026-11-08 joints): after the colour build, `cd cad && python joint_test.py OUT` (seconds; it cuts slices from `OUT/stl`).
 - Fast previews (seconds): build one part from `halifax.py`, paint it with `colour.colour_part`, render with `tools/closeup.py`. If pyrender can't find a screen (Mac display asleep: "IndexError" in pyglet's `get_default_screen`), use a software painter's render with matplotlib from the preview GLB.
 
 ## Setting up on the Mac (done 2026-11-07)
@@ -14,6 +15,14 @@ State on 2026-11-07, branch `phase1-airframe`, worked on the user's Mac. **`kit/
 - `cad/ref/` is git-ignored except `camo_plan_green.png`. The side-profile trace `camo_side_npg.png` was never committed; the build now skips it (`colour.side_trace`), since only the old split-fuselage halves were painted from it.
 - The Mac's OCC meshes curved faces slightly differently from the cloud's, so a rebuild changes the 3MF bytes without changing the design. Only commit a rebuilt 3MF when the design changed.
 - `tools/closeup.py` uses EGL on Linux only; on macOS, pyrender's default pyglet backend.
+
+## What changed on 2026-11-08: the wing plate from 77 h to 25 h
+- **Why it was slow:** a plate swaps colour about twice per layer wherever camo shows. The wing plate stood 187 mm tall at 0.16 mm (1170 layers, 2286 swaps, about 1.7 min each on the X2D). The Spitfire kit's plate is 84 mm tall at 0.24 mm, and slices at 30 h on the user's X2D.
+- **More joints, shorter parts:** the fuselage is 4 sections (`FUSE_CUTS` 102, 196, 297.5: `fuselage_nose`, `_front`, `_rear`, `_tail`), and each outer wing is two (`WING_SPLIT_Y` 145: `wing_mid_*` and the tip, still called `wing_outer_*` because it carries the roundel). Every marking stays on one piece. Each new fuselage joint has two tall flexing keys like the 196 joint (`key_fuselage_nose`, `key_fuselage_tail`); each wing joint one 16 × 17.5 × 3 mm flexing key low in the section (`key_wing_split`, clear of the roundel socket). Plate 1's tallest part is now the wing tip, 105 mm.
+- **0.24 mm layers on the wing plate** (`colour.WING_PLATE_LAYER`). The other plates are unchanged.
+- **Dark Earth on the second nozzle** (`colour.NOZZLE`; Manual grouping). On the user's X2D the auxiliary nozzle takes one colour. Every plate is packed from x = 21 (`BED_X0`) so the second nozzle reaches; the packer now also tries each group turned 90 degrees (the nacelle halves only fit that way).
+- **Tailplane leading edge filled underneath to 45°** (`TAIL_NOSE_RAMP`): it prints flat and the old curve hung in air along the whole span.
+- **Not yet printed:** the new joints and the 0.24 mm wing plate. The tailplane slot and wing-root pockets were fit-tested at 0.16 mm; they have the sliding clearance (0.15 a side), so 0.24 should be fine, but check them in the first wing plate.
 
 ## What changed in the 2026-11-07 full build
 - **Camo painted on the fuselage** (`SPINE_PIECES = False`): no separate spine pieces, pegs or nose keel. The camo is a 0.8 mm skin above the old spine line (`colour.spine_region`), from the plan pattern, carried straight down the sides; black below. The canopy bosses stand on the fuselage.
@@ -33,14 +42,9 @@ State on 2026-11-07, branch `phase1-airframe`, worked on the user's Mac. **`kit/
 - Details in `LESSONS.md`.
 
 ## Next up
-1. **Print the kit.** Plate 1 is one 77 h print holding the wings and the fuselage, so a late failure loses both: use the brims and watch the first layers. Look at these non-critical slicer messages in the app's preview first: the tailplane's first layers (a one-off "ZFiller" note from the slicer since its leading-edge fill, see `docs/slicing.md`), `fuselage_rear` floating cantilever, `df_loop` and `turret_dorsal` floating regions, `stand_post` and both gun packs cantilever. Most are the small overhangs `tools/overhang.py` already accepts.
+1. **Print the joint test, then the kit.** `kit/halifax_joint_test.3mf` (1 h 14 m): the wing mid joint and the two new fuselage joints at 0.24 mm, with their keys. Then plate 1 (25 h), with the brims; watch the first layers. Look at these non-critical slicer messages in the app's preview first: the tailplane's first layers (a one-off "ZFiller" note from the slicer since its leading-edge fill, see `docs/slicing.md`); new at 0.24 mm, the wing tips' roundel sockets and the fuselage sections' pockets and key slots (the same features as before); `fuselage_rear` floating cantilever, `df_loop` and `turret_dorsal` floating regions, `stand_post` and both gun packs cantilever. Most are the small overhangs `tools/overhang.py` already accepts.
 2. **For later (user): panel lines and detail on the wing undersides.** They're plain because the wings used to print flat. Now they print on end, so the underside can carry detail like the top (see `cad/detail.py`).
-3. **Purge (1.44 kg for 0.44 kg of model)**, options not yet decided:
-   - Use the X2D's second nozzle: `write_3mf` puts every filament on nozzle 1, and the second nozzle can't reach x < 20.5, so coloured parts would need packing at x ≥ 21.
-   - Check in the app whether "Auto For Flush" already spreads filaments over both nozzles.
-   - Ship the flat wing pose too.
-   - Use real flush volumes in place of the flat 350 mm³.
-   - A purge-sink "bomb" was considered and rejected: it doesn't pay on the wing plate.
+3. **Purge is now 509 g for 452 g of model** (was 1.44 kg). Left to try: real flush volumes in place of the flat 350 mm³. In the app, check that the Filament Grouping panel shows Dark Earth under the auxiliary nozzle.
 4. The test plate (`kit/halifax_test_plate.3mf`) is rebuilt with the kit's nose key slot (0.1 fit). It still carries the grip gauge, which isn't needed any more.
 
 ## Recent decisions (the details are in git log)

@@ -9,11 +9,12 @@ Axes (assembled): X = distance aft of the nose tip, Y = span (+ = starboard),
 Z = up. All units mm at model scale.
 
 Kit layout (no supports needed except where noted):
-  fuselage    2 full-width sections printed on end, keyed, camo painted on above the line
+  fuselage    4 full-width sections printed on end (nose, front, rear, tail), keyed, camo painted
+              on above the line
   nose        clear perspex nose (Series IA)
   canopy      cockpit glazing, drops into the roof
   turrets     dorsal (Type A) and tail (Type E) + separate gun packs
-  wings       inner + outer panel per side, flat underside, tongue joints
+  wings       inner, mid and outer (tip) panel per side, flat underside, keyed joints
   nacelles    clamshell halves that close around the wing
   props       4 x 3-blade, spin on a 1.75 mm filament axle
   tail        one-piece tailplane through the fuselage, two fins
@@ -102,6 +103,13 @@ NOSE_SPLIT_X = 12.8          # perspex nose dome ends at this frame (Revell)
 NOSE_GLASS_TOP = 50.0        # mm, dome covers the full section
 NOSE_SPIGOT_BOX = (4.0, 4.5, -26.0, -16.0)   # length, half-width, z0, z1 of the dome's plug
 FUSE_SPLIT_X = 196.0         # front / rear fuselage joint (just ahead of the codes and roundel)
+# Further joints (2026-11-08) so no section stands taller than ~105 mm on the wing plate: half the
+# layers, so half the colour swaps. 102: behind the rear glazing, ahead of the D/F loop.
+# 297.5: behind the serial (ends 295), ahead of the tailplane slot (301.5): every marking stays
+# on fuselage_rear.
+FUSE_CUTS = (102.0, FUSE_SPLIT_X, 297.5)
+FUSE_SECTIONS = ("fuselage_nose", "fuselage_front", "fuselage_rear", "fuselage_tail")
+FUSE_CUT_KEYS = ("key_fuselage_nose", "key_fuselage_joint", "key_fuselage_tail")
 # Fuselage printed Lancaster-style: full-width black sections on end, with the camouflaged
 # spine as separate single-colour pieces sitting on the demarcation line.
 SPINE_LINE = [(0, -10.05), (60.7, 1.4), (290, 1.4),  # NP-G: level at the side-window bottom back from the front
@@ -202,6 +210,10 @@ WING_PITCH_X = 140.0         # mm, wing is pitched about this x (main spar)
 ROOT_TONGUE = {-1: (128.0, 142.0), 1: (146.0, 160.0)}
 ROOT_TONGUE_Z = (0.0, 4.0)   # above the floor: flush with the flat underside, so it prints on the bed
 JOINT_TONGUE = (0.26, 0.54, 4.3, 7.7, 12.0)  # joint key: chord fr. start/end, z0, z1 (mid-thickness: >=3.4 mm wall), depth each side
+WING_SPLIT_Y = 145.0         # plan y of the outer panel's mid joint (2026-11-08): between the outer nacelle
+                             # (to 137) and the roundel (from 147.5); halves its height on end
+WING_SPLIT_KEY = (0.20, 0.48, 2.0, 5.0, 8.0)   # key: chord fr. start/end, z0, z1 above the floor, depth each
+                             # side (low and short: clears the roundel socket 2 mm under the skin)
 WING_POSE = os.environ.get("HALIFAX_WING_POSE", "end")    # wings stand on their joint faces ('flat' kept for reference:
                                                            # it leaves the leading-edge undersides rough)
 
@@ -589,14 +601,18 @@ def fuselage_parts(wing_tongues):
         # (colour.py). The front glazing's boss stands on the nose deck.
         whole = B + mbox(k0, k1, -khw, khw, *canopy_boss_z())
         whole = whole + mbox(f0, f1, -fhw, fhw, CANOPY_STEP[1] - 0.5, CANOPY_STEP[1] + fh)
-    # front/rear keys on the joint face, below the spine line
-    _, hw, top, bot, _ = interp(FUSE_STATIONS, FUSE_SPLIT_X)
-    zs = float(spine_z(FUSE_SPLIT_X))
-    # one tall key each side (it replaced three small ones a side: fewer fiddly parts)
-    key_fr = (KEY_FR[0], round(zs - bot - 6.0, 1), KEY_FR[2])
-    fr = [(0, y, (bot + zs) / 2) for y in (-hw / 2, hw / 2)]
-    fr_holes = M(key_slots(fr, "x", FUSE_SPLIT_X, key_fr, "z"))
-    KEY_COUNTS["key_fuselage_joint"] = (key_fr, len(fr))
+    # keys on each joint face, below the spine line: one tall key each side (it replaced three
+    # small ones a side: fewer fiddly parts)
+    fr_holes = None
+    for xc, kname in zip(FUSE_CUTS if not SPINE_PIECES else (FUSE_SPLIT_X,),
+                         FUSE_CUT_KEYS if not SPINE_PIECES else ("key_fuselage_joint",)):
+        _, hw, top, bot, _ = interp(FUSE_STATIONS, xc)
+        zs = float(spine_z(xc))
+        key_fr = (KEY_FR[0], round(zs - bot - 6.0, 1), KEY_FR[2])
+        fr = [(0, y, (bot + zs) / 2) for y in (-hw / 2, hw / 2)]
+        h = M(key_slots(fr, "x", xc, key_fr, "z"))
+        fr_holes = h if fr_holes is None else fr_holes + h
+        KEY_COUNTS[kname] = (key_fr, len(fr))
     # spine-to-body keys: one or two per piece, clear of the tailplane tunnel
     cap_holes = K.box(0, 0.001, 0, 0.001, 0, 0.001)
     pegs = K.box(0, 0.001, 0, 0.001, 0, 0.001)
@@ -634,9 +650,10 @@ def fuselage_parts(wing_tongues):
 
     parts = {}
     if not SPINE_PIECES:
-        for sec_name, (a, b) in (("front", (-5, FUSE_SPLIT_X)), ("rear", (FUSE_SPLIT_X, 400))):
-            parts[f"fuselage_{sec_name}"] = T(K.largest_piece((whole ^ mbox(a, b, -50, 50, -60, 60))
-                                                              - fr_holes)[0])
+        ends = (-5.0,) + FUSE_CUTS + (400.0,)
+        for i, sec_name in enumerate(FUSE_SECTIONS):
+            parts[sec_name] = T(K.largest_piece((whole ^ mbox(ends[i], ends[i + 1], -50, 50, -60, 60))
+                                                - fr_holes)[0])
     for sec_name, (a, b) in (("front", (-5, FUSE_SPLIT_X)), ("rear", (FUSE_SPLIT_X, 400))):
         if not SPINE_PIECES:
             break
@@ -890,6 +907,25 @@ def wing_pitch():
     le = min(nose, key=lambda p: p[0])
     te = ((te_lo[0] + te_up[0]) / 2, (te_lo[1] + te_up[1]) / 2)
     return math.degrees(math.atan2(le[1] - te[1], te[0] - le[0])) - WING_INCIDENCE
+
+
+def wing_split(side):
+    """(tip_zone, key_slot) in world coordinates for the outer panel's mid joint: a flat cut square
+    to the outer panel's span at WING_SPLIT_Y, and one flexing key across it."""
+    cd = math.cos(math.radians(DIHEDRAL))
+    yl = WING_JOINT_Y + (WING_SPLIT_Y - WING_JOINT_Y) / cd
+    x, c, _ = outer_planform(yl)
+    fs, fe, z0, z1, depth = WING_SPLIT_KEY
+    slot = box(x + fs * c - KEY_FIT, x + fe * c + KEY_FIT, yl - depth - KEY_END_GAP, yl + depth + KEY_END_GAP,
+               Z_FLOOR + z0 - KEY_FIT, Z_FLOOR + z1 + KEY_FIT)
+    KEY_COUNTS["key_wing_split"] = ((2 * depth, round((fe - fs) * c, 1), z1 - z0), 2)
+    zone = box(-100, 400, yl, yl + 300, Z_FLOOR - 50, Z_FLOOR + 50)
+    pivot = ((0, WING_JOINT_Y, Z_FLOOR), (1, WING_JOINT_Y, Z_FLOOR))
+    ax, d = pitch_axis(), -wing_pitch()
+    zone, slot = [w.rotate(*pivot, DIHEDRAL).rotate(*ax, d) for w in (zone, slot)]
+    if side < 0:
+        zone, slot = zone.mirror("XZ"), slot.mirror("XZ")
+    return zone, slot
 
 
 # ============================================================
@@ -1484,6 +1520,16 @@ def build():
         parts[f"main_gear_{tag}_a"], parts[f"main_gear_{tag}_b"] = ga, gb
         poses[f"main_gear_{tag}_a"] = lambda w: rot(w, "x", 90)     # outer face down, stub up
         poses[f"main_gear_{tag}_b"] = lambda w: rot(w, "x", -90)
+        # outer panel in two (mid and tip) so neither stands taller than ~105 mm on end; the tip
+        # keeps the name wing_outer (it carries the roundel)
+        zone, wslot = wing_split(side)
+        whole = parts[f"wing_outer_{tag}"]
+        parts[f"wing_mid_{tag}"] = whole.cut(zone).cut(wslot)
+        parts[f"wing_outer_{tag}"] = whole.intersect(zone).cut(wslot)
+        poses[f"wing_mid_{tag}"] = poses[f"wing_outer_{tag}"]          # on the inner/outer joint face
+        if WING_POSE == "end":                                        # tip on the new joint face
+            poses[f"wing_outer_{tag}"] = (lambda w, s=side, jp=jp, u=unpitch:
+                                          rot(u(w).rotate(*jp, -DIHEDRAL * s), "x", 90 * s))
         parts[f"main_wheel_{tag}"] = wheel(MAIN_AXLE_X, yc0, MAIN_AXLE_Z, MAIN_WHEEL_D, MAIN_WHEEL_W,
                                            bore=AXLE_STUB["main"] + STUB_SPIN, flat=-side)
         poses[f"main_wheel_{tag}"] = lambda w, s=side: rot(w, "x", 90 * s)   # flat inboard face down
@@ -1495,10 +1541,10 @@ def build():
     fp = fuselage_parts(tongues)
     for k, v in fp.items():
         parts[k] = v
-        if k == "fuselage_front":
-            poses[k] = lambda w: rot(w, "y", 90)      # on end, standing on the joint face
-        elif k == "fuselage_rear":
-            poses[k] = lambda w: rot(w, "y", -90)
+        if k in ("fuselage_nose", "fuselage_front"):
+            poses[k] = lambda w: rot(w, "y", 90)      # on end, standing on its rear joint face
+        elif k in ("fuselage_rear", "fuselage_tail"):
+            poses[k] = lambda w: rot(w, "y", -90)     # on its front joint face
         elif k.startswith("spine_"):
             i = int(k.split("_")[1]) - 1     # on the end chosen for fewest purges (see SPINE_FRONT_DOWN)
             poses[k] = (lambda w: rot(w, "y", -90)) if SPINE_FRONT_DOWN[i] else (lambda w: rot(w, "y", 90))

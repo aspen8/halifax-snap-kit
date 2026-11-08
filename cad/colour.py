@@ -101,8 +101,14 @@ CAMO_CL_PX = 1995            # page x of the centreline
 # Demarcation (top of the black on the fuselage sides), from the profile
 DEMARCATION = MK["demarcation"]
 
-BED = (230.0, 250.0)         # usable plate area (dual-nozzle X limit on the X2D)
+BED = (209.0, 250.0)         # packing area: the X2D's 230 mm, less the strip its second nozzle can't reach
+BED_X0 = 21.0                # every plate starts here, so the second nozzle reaches every part
 PLATE_GAP = 8.0
+NOZZLE = {EARTH: 2}            # filament slot -> nozzle: Dark Earth alone on the second (auxiliary) nozzle,
+                             # which takes one colour; black/earth swaps become nozzle changes, with no
+                             # flush (2026-11-08)
+WING_PLATE_LAYER = "0.24"    # wing plate (wings, fuselage, tailplane, D/F loop): as the Spitfire kit; fewer
+                             # layers, so fewer colour swaps
 
 # ============================================================
 # GEOMETRY HELPERS
@@ -279,7 +285,7 @@ def colour_part(name, P, pat):
     sock_op = [(BLACK, sock)] if sock is not None else []
     if name.startswith(("wing_", "tailplane")):
         return paint(P, list(camo_up) + sock_op)
-    if name in ("fuselage_front", "fuselage_rear"):     # codes are inlays
+    if name in H.FUSE_SECTIONS:                          # codes are inlays
         if H.SPINE_PIECES:
             return {BLACK: P}                           # black body; camo on the clip-on spine
         # camo painted on above the line, as the spine pieces were: the plan pattern across the
@@ -716,7 +722,12 @@ def make_inlay(P, centre, d, rings, axis, side=1):
 
 
 def pack(items):
-    return K.pack(items, BED, PLATE_GAP)
+    """Shelf-pack a group as it lies and turned 90 degrees; keep whichever needs fewer plates (the
+    long nacelle halves only fit the 209 mm width two rows deep, turned)."""
+    plain = K.pack(items, BED, PLATE_GAP)
+    turned = K.pack([(n, (h, w)) for n, (w, h) in items], BED, PLATE_GAP)
+    turned = [[(n, x, y, not r) for n, x, y, r in plate] for plate in turned]
+    return turned if len(turned) < len(plain) else plain
 
 
 # Print settings: the template is the X2D 0.20 mm Standard profile; these replace it
@@ -737,8 +748,10 @@ def object_settings(name):
                                               "tail_gear", "tail_wheel", "pin_", "wheel_up", "key_")):
         # fine detail and silk sheen; whole plates share one height (the prime tower needs that)
         s["layer_height"] = "0.12"
-    if name in ("fuselage_front", "fuselage_rear"):
+    if name in H.FUSE_SECTIONS:
         s.update(TALL_BRIM, wall_loops="3")
+    if name.startswith(("wing_", "fuselage_", "tailplane")) or name == "df_loop":
+        s["layer_height"] = WING_PLATE_LAYER
     if name.startswith("spine_"):
         s.update(TALL_BRIM)                         # standing on an end face
     if name.startswith("wing_") and H.WING_POSE == "end":
@@ -750,7 +763,7 @@ def write_3mf(path, objects, plates, template):
     for o in objects:
         o["settings"] = object_settings(o["name"])
     K.write_3mf(path, objects, plates, template, FILAMENTS, "Halifax B.II Srs IA snap kit 1:60",
-                PRINT_OVERRIDES)
+                PRINT_OVERRIDES, nozzle_map=NOZZLE)
 
 
 # ============================================================
@@ -846,7 +859,7 @@ if __name__ == "__main__":
             if rot90:
                 sx, sy = o["size"]
                 vols = {c: v.rotate([0, 0, 90]).translate([sy, 0, 0]) for c, v in vols.items()}
-            objects.append({"name": n, "placement": (pi, x, y),
+            objects.append({"name": n, "placement": (pi, x + BED_X0, y),
                             "volumes": [(c, *mesh_of(v)) for c, v in sorted(vols.items())]})
     import trimesh
     scene = trimesh.Scene()

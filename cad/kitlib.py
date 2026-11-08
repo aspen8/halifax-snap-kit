@@ -439,7 +439,7 @@ def place_towers(objects, n_plates, area=(230.0, 250.0), bed=(256.0, 256.0)):
     return out
 
 
-def project_settings(template, filaments, overrides=None, towers=None):
+def project_settings(template, filaments, overrides=None, towers=None, nozzle_map=None):
     d = json.load(open(template))
     d.update(overrides or {})
     n0 = len(d["filament_colour"])
@@ -466,8 +466,9 @@ def project_settings(template, filaments, overrides=None, towers=None):
     if "different_settings_to_system" in d:
         v = d["different_settings_to_system"]
         d["different_settings_to_system"] = [v[0]] + [""] * n + [v[-1]]
-    if "filament_map" in d:
-        d["filament_map"] = ["1"] * n
+    if "filament_map" in d:                     # nozzle per filament (1 = main); set by hand when given
+        d["filament_map"] = [str((nozzle_map or {}).get(i, 1)) for i in range(1, n + 1)]
+        d["filament_map_mode"] = "Manual" if nozzle_map else "Auto For Flush"
     if towers:                                  # one prime tower position per plate
         d["wipe_tower_x"] = [f"{x:.1f}" for x, _ in towers]
         d["wipe_tower_y"] = [f"{y:.1f}" for _, y in towers]
@@ -482,13 +483,15 @@ def safe_name(s):
     return "".join(ch for ch in s if ch not in '<>:/\\|?*"')
 
 
-def write_3mf(path, objects, plates, template, filaments, title, overrides=None):
+def write_3mf(path, objects, plates, template, filaments, title, overrides=None, nozzle_map=None):
     """Write a Bambu Studio project 3MF.
     objects: [dict(name, volumes=[(filament_slot, V, F)], placement=(plate, x, y))]
     plates: plate names; template: Bambu project_settings JSON (or None);
     overrides: print settings replacing the template's (e.g. {"layer_height": "0.16"});
     an object may carry "settings": {key: value} for per-object overrides (layer height, brim...);
-    filaments: {slot: (name, hex)}; title: model title."""
+    filaments: {slot: (name, hex)}; title: model title.
+    nozzle_map: {slot: nozzle} pins filaments to nozzles (Manual grouping; others on nozzle 1). Without
+    it every filament is on nozzle 1 and Bambu may regroup (Auto For Flush)."""
     plates = [safe_name(p) for p in plates]       # Bambu Studio rejects <>:/\|?*" in names
     ns = ('xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" '
           'xmlns:BambuStudio="http://schemas.bambulab.com/package/2021" '
@@ -557,6 +560,8 @@ def write_3mf(path, objects, plates, template, filaments, title, overrides=None)
                + "".join(rels) + '</Relationships>\n')
     plate_xml = []
     nfil = len(filaments)
+    fmaps = " ".join(str((nozzle_map or {}).get(i, 1)) for i in range(1, nfil + 1))
+    fmode = "Manual" if nozzle_map else "Auto For Flush"
     for pi, items in enumerate(plates):
         inst = "".join(f'    <model_instance>\n      <metadata key="object_id" value="{o["oid"]}"/>\n'
                        '      <metadata key="instance_id" value="0"/>\n'
@@ -565,8 +570,8 @@ def write_3mf(path, objects, plates, template, filaments, title, overrides=None)
         plate_xml.append(f'  <plate>\n    <metadata key="plater_id" value="{pi + 1}"/>\n'
                          f'    <metadata key="plater_name" value={quoteattr(items)}/>\n'
                          '    <metadata key="locked" value="false"/>\n'
-                         '    <metadata key="filament_map_mode" value="Auto For Flush"/>\n'
-                         f'    <metadata key="filament_maps" value="{" ".join(["1"] * nfil)}"/>\n'
+                         f'    <metadata key="filament_map_mode" value="{fmode}"/>\n'
+                         f'    <metadata key="filament_maps" value="{fmaps}"/>\n'
                          f'{inst}  </plate>\n')
     z.writestr("Metadata/model_settings.config", '<?xml version="1.0" encoding="UTF-8"?>\n<config>\n'
                + "".join(settings) + "".join(plate_xml) + '</config>\n')
@@ -574,7 +579,7 @@ def write_3mf(path, objects, plates, template, filaments, title, overrides=None)
         towers = place_towers(objects, len(plates))
         for i, (x, y) in enumerate(towers):
             print(f"plate {i + 1}: prime tower at x {x:.0f}, y {y:.0f}", flush=True)
-        z.writestr("Metadata/project_settings.config", project_settings(template, filaments, overrides, towers))
+        z.writestr("Metadata/project_settings.config", project_settings(template, filaments, overrides, towers, nozzle_map))
     z.writestr("Metadata/slice_info.config", '<?xml version="1.0" encoding="UTF-8"?>\n<config>\n  <header>\n'
                '    <header_item key="X-BBL-Client-Type" value="slicer"/>\n'
                '    <header_item key="X-BBL-Client-Version" value="02.08.02.61"/>\n  </header>\n</config>\n')
