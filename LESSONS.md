@@ -212,3 +212,9 @@ A wheel printed lying on a face with the tyre rounded on both sides starts on a 
 - **Colour swaps cost about 1.7 min each on the X2D, and a plate swaps about twice per layer wherever camo shows.** So time follows the tallest coloured part divided by the layer height, not the amount of plastic. The wing plate in one colour was 11 h; with camo, 77 h. Compare with a single-colour slice (set every volume's extruder to 1) to see how much of a plate's time is swapping.
 - **Keep coloured plates low.** Split tall parts so they all fit on one plate at a lower height; splitting onto a second plate doesn't help, since each plate swaps all the way up.
 - **Put one camo colour alone on the X2D's second nozzle** (the user's auxiliary nozzle takes one colour). Its swaps become nozzle changes, with no flush. Set the grouping to Manual: on "Auto For Flush" the command line kept everything on the main nozzle. Parts must sit at x ≥ 20.5 for the second nozzle.
+
+## Inlay sockets on curved skins (2026-11-08)
+- **A level socket floor set from the lowest skin point goes far too deep elsewhere** on a cambered wing or a curving hull: 7 mm under a wing roundel (through the underside) and 9.6 mm under a code letter near the tail. Fit a plane to the skin under the marking and set the floor parallel to it; the inlay still has a flat back, turned to the bed for printing.
+- **Keep sockets out of any underside** (0.8 mm) and ignore skin that faces down when measuring depth, or a marking that runs round a curve shows from below.
+- **Check new slots against existing sockets.** The wing joint's key slot ran under the roundel socket; the slicer only reported the roundel as "floating regions".
+- **The command line reports more slicer warnings than the app.** On one plate the app showed only the D/F loop where the command line listed five. Trace each one with a layer check before changing geometry.

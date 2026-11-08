@@ -187,9 +187,14 @@ def paint(P, ops, base):
     return out
 
 
-def surface_extreme(P, centre, r, axis, side):
-    """Deepest point of the outer surface under the disc, measured along the inlay axis
-    (z: lowest top surface; y: the side surface point closest to the centreline)."""
+INLAY_FACING = 0.6     # surface counts toward an inlay's depth only where it faces out this much
+                       # (normal component along the inlay axis): ignores the turn under a hull
+INLAY_FLOOR = 0.8      # mm of part left between any socket and a downward-facing surface
+
+
+def surface_hits(P, centre, r, axis, side, facing=INLAY_FACING):
+    """Outer-surface points under the disc, seen along the inlay axis, keeping only those that
+    face out (normal along the axis >= facing). Returns (points, normals)."""
     import trimesh
     V, F = mesh_of(P)
     tm = trimesh.Trimesh(V, F, process=False)
@@ -198,49 +203,111 @@ def surface_extreme(P, centre, r, axis, side):
     m = A ** 2 + B ** 2 <= r * r
     A, B = A[m] + centre[0], B[m] + centre[1]
     if axis == "z":
-        o = np.c_[A, B, np.full(A.size, 500.0)]
-        d = np.tile([0, 0, -1.0], (A.size, 1))
-        loc, _, _ = tm.ray.intersects_location(o, d, multiple_hits=False)
-        return loc[:, 2].min()
-    o = np.c_[A, np.full(A.size, 500.0 * side), B]
-    d = np.tile([0, -float(side), 0], (A.size, 1))
-    loc, _, _ = tm.ray.intersects_location(o, d, multiple_hits=False)
-    return (loc[:, 1] * side).min()          # distance outward from the centreline
+        o, d, k = np.c_[A, B, np.full(A.size, 500.0)], [0, 0, -1.0], 2
+    else:
+        o, d, k = np.c_[A, np.full(A.size, 500.0 * side), B], [0, -float(side), 0], 1
+    loc, _, tri = tm.ray.intersects_location(o, np.tile(d, (A.size, 1)), multiple_hits=False)
+    n = tm.face_normals[tri]
+    ok = n[:, k] * (side if axis != "z" else 1) >= facing
+    return loc[ok], n[ok]
+
+
+def surface_extreme(P, centre, r, axis, side, facing=INLAY_FACING):
+    """Deepest outward-facing point of the surface under the disc, measured along the inlay axis
+    (z: lowest top surface; y: the side surface point closest to the centreline)."""
+    loc, _ = surface_hits(P, centre, r, axis, side, facing)
+    return loc[:, 2].min() if axis == "z" else (loc[:, 1] * side).min()
+
+
+def under_band(P, t=INLAY_FLOOR):
+    """Material within t above any downward-facing surface: sockets stay out of it, so an inlay
+    never shows from below and never breaks through."""
+    return P - P.translate([0, 0, t])
+
+
+def _z_to(n):
+    """Euler angles (x then y, degrees) turning the unit vector n onto +z."""
+    th = math.degrees(math.atan2(n[1], n[2]))
+    nz = math.hypot(n[1], n[2])
+    ph = math.degrees(math.atan2(-n[0], nz))
+    return th, ph
+
+
+def _along(M, n, point):
+    """M built along +z at the origin, turned so +z points along n, moved to point."""
+    th, ph = _z_to(n)
+    return M.rotate([0, -ph, 0]).rotate([-th, 0, 0]).translate(list(point))
+
+
+def floor_plane(loc, axis, side, depth, cu, cv):
+    """Flat, tilted socket floor `depth` below every outward-facing surface point `loc`: the plane
+    that best fits the surface, moved in. axis 'z' (a wing top) or 'y' (a side, side=+1/-1).
+    Returns (n outward unit normal, floor_at(u, v) -> xyz point, coeffs) with (u, v) = (x, y) on z
+    and (x, z) on y."""
+    if axis == "z":
+        U, Vv, Wv = loc[:, 0], loc[:, 1], loc[:, 2]
+    else:
+        U, Vv, Wv = loc[:, 0], loc[:, 2], loc[:, 1] * side
+    A = np.c_[U - cu, Vv - cv, np.ones(len(U))]
+    (a, b, c), *_ = np.linalg.lstsq(A, Wv, rcond=None)
+    w0 = c + (Wv - A @ np.array([a, b, c])).min() - depth
+    nl = np.array([-a, -b, 1.0]) / math.sqrt(a * a + b * b + 1)
+    return _plane(axis, side, nl, (a, b, w0), cu, cv)
+
+
+def _plane(axis, side, nl, coeffs, cu, cv):
+    a, b, w0 = coeffs
+    if axis == "z":
+        n = nl
+        at = lambda u, v: np.array([u, v, w0 + a * (u - cu) + b * (v - cv)])
+    else:
+        n = np.array([nl[0], side * nl[2], nl[1]])
+        at = lambda u, v: np.array([u, side * (w0 + a * (u - cu) + b * (v - cv)), v])
+    return n, at, (a, b, w0)
+
+
+def halfspace(n, point):
+    """Everything on the n side of the plane through point."""
+    return _along(mf.Manifold.cube([1000, 1000, 500]).translate([-500, -500, 0]), n, point)
 
 
 def make_inlay(P, centre, d, rings, axis, side=1, depth=1.2, fit=0.1, peg=None, label=None):
     """Cut a socket in P for a multi-ring inlay (e.g. a roundel).
     rings: [(colour, diameter)], outermost first. depth: inlay depth at the shallowest
-    point of the surface; fit: radial press-fit clearance.
-    Returns (P_with_socket, {colour: inlay volume}, whole_plug)."""
+    outward-facing point of the surface; fit: radial press-fit clearance.
+    The socket floor is flat, so the inlay prints flat-back down. On a z surface (a wing) the
+    floor is tilted to the plane that best fits the surface, so the depth stays even over a
+    cambered, sloping wing; on y it is upright. Sockets keep INLAY_FLOOR clear of any underside.
+    Returns (P_with_socket, {colour: inlay volume}, whole_plug, rotation_to_print)."""
     r = d / 2
-    flat = surface_extreme(P, centre, r, axis, side) - depth
-    if axis == "z":
-        keep = mf.Manifold.cube([1000, 1000, 500]).translate([-500, -500, flat])
-    elif side > 0:
-        keep = mf.Manifold.cube([1000, 500, 1000]).translate([-500, flat, -500])
-    else:
-        keep = mf.Manifold.cube([1000, 500, 1000]).translate([-500, -flat - 500, -500])
-    socket = cyl_axis(*centre, r, axis) ^ keep         # a plain cylinder: no sheets left on the surface
-    plug = largest_piece(P ^ cyl_axis(*centre, r - fit, axis) ^ keep)[0]   # no stray rivet specks
+    loc, _ = surface_hits(P, centre, r, axis, side)
+    n, floor_at, (a, b, w0) = floor_plane(loc, axis, side, depth, centre[0], centre[1])
+    if axis == "z":       # lift the whole floor if it would come within INLAY_FLOOR of the underside
+        import trimesh
+        tm = trimesh.Trimesh(*mesh_of(P), process=False)
+        g = np.linspace(-r, r, 61)                 # dense grid and the rim: the guard must never trim
+        G = np.array([(u, v) for u in g for v in g if u * u + v * v <= r * r])
+        t = np.linspace(0, 2 * np.pi, 240, endpoint=False)
+        q = np.r_[G, np.c_[r * np.cos(t), r * np.sin(t)]] + np.array(centre)
+        lo, ray, _ = tm.ray.intersects_location(np.c_[q, np.full(len(q), -500.0)],
+                                                np.tile([0, 0, 1.0], (len(q), 1)), multiple_hits=False)
+        if len(lo):
+            need = max(lo[i, 2] + INLAY_FLOOR + 0.15 - floor_at(*q[ray[i]])[2] for i in range(len(lo)))
+            if need > 0:
+                n, floor_at, _ = _plane(axis, side, n, (a, b, w0 + need), centre[0], centre[1])
+    keep = halfspace(n, floor_at(*centre))
+    th, ph = _z_to(n)
+    rot = [th, ph, 0]
+    guard = under_band(P)
+    socket = (cyl_axis(*centre, r, axis) ^ keep) - guard     # a plain cylinder: no sheets left on the surface
+    plug = largest_piece((P ^ cyl_axis(*centre, r - fit, axis) ^ keep) - guard)[0]   # no stray rivet specks
     peg_solid = None
     if peg:   # (offset a, offset b, peg dia, hole dia, peg length): an off-centre peg on the
               # socket floor keys the inlay's rotation and grips it like a printed pin
         oa, ob, pd, hd, pl = peg
-        ca, cb = centre[0] + oa, centre[1] + ob
-        if axis == "z":
-            floor = flat
-            peg_solid = mf.Manifold.cylinder(pl + 0.5, pd / 2, pd / 2, 32).translate([ca, cb, floor - 0.5])
-            hole = mf.Manifold.cylinder(pl + 0.3, hd / 2, hd / 2, 32).translate([ca, cb, floor - 0.01])
-        else:
-            # cylinders along +y (side > 0) or -y, starting just behind the socket floor
-            along = [-90, 0, 0] if side > 0 else [90, 0, 0]
-            peg_solid = (mf.Manifold.cylinder(pl + 0.5, pd / 2, pd / 2, 32).rotate(along)
-                         .translate([ca, side * (flat - 0.5), cb]))
-            hole = (mf.Manifold.cylinder(pl + 0.3, hd / 2, hd / 2, 32).rotate([-90, 0, 0])
-                    .translate([ca, flat - 0.01, cb]) if side > 0 else
-                    mf.Manifold.cylinder(pl + 0.3, hd / 2, hd / 2, 32).rotate([90, 0, 0])
-                    .translate([ca, -flat + 0.01, cb]))
+        fp = floor_at(centre[0] + oa, centre[1] + ob)
+        peg_solid = _along(mf.Manifold.cylinder(pl + 0.5, pd / 2, pd / 2, 32).translate([0, 0, -0.5]), n, fp)
+        hole = _along(mf.Manifold.cylinder(pl + 0.3, hd / 2, hd / 2, 32).translate([0, 0, -0.01]), n, fp)
         plug = plug - hole
     # Each ring is the plug cut by a tube (cylinder minus the previous cylinder). Subtracting
     # the inner ring solids instead leaves zero-thickness sheets on the surface, where their
@@ -248,11 +315,9 @@ def make_inlay(P, centre, d, rings, axis, side=1, depth=1.2, fit=0.1, peg=None, 
     if label:   # (text, height, offset a, offset b, mirror): engraved 0.4 mm into the inlay's back
         txt, lh, la, lb, lmirror = label
         sec = text_section(txt, lh, centre[0] + la, centre[1] + lb, lmirror)
-        if axis == "z":
-            plug = plug - (prism_z(sec) ^ mf.Manifold.cube([1000, 1000, 0.41]).translate([-500, -500, flat - 0.01]))
-        else:
-            y0 = flat - 0.01 if side > 0 else -flat - 0.4
-            plug = plug - (prism_y(sec) ^ mf.Manifold.cube([1000, 0.41, 1000]).translate([-500, y0, -500]))
+        back = _along(mf.Manifold.cube([1000, 1000, 0.41]).translate([-500, -500, -0.01]), n,
+                      floor_at(*centre))
+        plug = plug - ((prism_z(sec) if axis == "z" else prism_y(sec)) ^ back)
     vols, prev = {}, None
     for colour, dd in reversed(rings):               # innermost first
         cyl = cyl_axis(*centre, dd / 2, axis)
@@ -263,13 +328,16 @@ def make_inlay(P, centre, d, rings, axis, side=1, depth=1.2, fit=0.1, peg=None, 
     P = P - socket
     if peg_solid is not None:
         P = P + peg_solid
-    return P, vols, plug
+    return P, vols, plug, rot
 
 
 def make_section_inlay(P, sec, side, depth=1.2, fit=0.15):
     """Inlay of any flat shape (e.g. a code letter) pressed into a side (y) surface.
-    sec: CrossSection in (x, z); side: +1 starboard / -1 port.
-    Returns (P_with_socket, plug)."""
+    sec: CrossSection in (x, z); side: +1 starboard / -1 port. The socket floor is a flat plane
+    fitted to the skin under the shape and moved `depth` in, so the depth stays even on a curving
+    hull (a level floor made deep pockets where the hull bulged, and deep counters that print as
+    hanging posts). Kept INLAY_FLOOR clear of any underside.
+    Returns (P_with_socket, plug, rotation_to_print, (n, floor_at)) for add_peg."""
     import trimesh
     V, F = mesh_of(P)
     tm = trimesh.Trimesh(V, F, process=False)
@@ -277,13 +345,25 @@ def make_section_inlay(P, sec, side, depth=1.2, fit=0.15):
     A, B = np.meshgrid(np.linspace(x0, x1, 30), np.linspace(z0, z1, 30))
     o = np.c_[A.ravel(), np.full(A.size, 500.0 * side), B.ravel()]
     d = np.tile([0, -float(side), 0], (A.size, 1))
-    loc, _, _ = tm.ray.intersects_location(o, d, multiple_hits=False)
-    flat = (loc[:, 1] * side).min() - depth
-    keep = (mf.Manifold.cube([1000, 500, 1000]).translate([-500, flat, -500]) if side > 0 else
-            mf.Manifold.cube([1000, 500, 1000]).translate([-500, -flat - 500, -500]))
-    socket = prism_y(sec) ^ keep
-    plug = largest_piece(P ^ prism_y(sec.offset(-fit, mf.JoinType.Round)) ^ keep)[0]
-    return P - socket, plug
+    loc, _, tri = tm.ray.intersects_location(o, d, multiple_hits=False)
+    ok = tm.face_normals[tri][:, 1] * side >= INLAY_FACING   # not where the hull turns under
+    n, floor_at, _ = floor_plane(loc[ok], "y", side, depth, (x0 + x1) / 2, (z0 + z1) / 2)
+    keep = halfspace(n, floor_at((x0 + x1) / 2, (z0 + z1) / 2))
+    guard = under_band(P)
+    socket = (prism_y(sec) ^ keep) - guard
+    plug = largest_piece((P ^ prism_y(sec.offset(-fit, mf.JoinType.Round)) ^ keep) - guard)[0]
+    th, ph = _z_to(n)
+    return P - socket, plug, [th, ph, 0], (n, floor_at)
+
+
+def peg_on_floor(floor, u, v, peg_d, peg_l, hole_d, hole_l):
+    """(peg, hole): a peg standing square on a tilted socket floor at (u, v) and the matching hole
+    into the back of the inlay."""
+    n, floor_at = floor
+    fp = floor_at(u, v)
+    peg = _along(mf.Manifold.cylinder(peg_l + 0.5, peg_d / 2, peg_d / 2, 32).translate([0, 0, -0.5]), n, fp)
+    hole = _along(mf.Manifold.cylinder(hole_l + 0.5, hole_d / 2, hole_d / 2, 32).translate([0, 0, -0.5]), n, fp)
+    return peg, hole
 
 
 # ============================================================

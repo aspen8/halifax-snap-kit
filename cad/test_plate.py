@@ -125,13 +125,13 @@ def code_letter_coupon():
                                      lz0 - MARGIN - big, lz1 + MARGIN + big)
     P = D.apply("fuselage_rear_port", P) ^ bbox(lx0 - MARGIN, lx1 + MARGIN, -hw - 5, 0, lz0 - MARGIN, lz1 + MARGIN)
     P = K.largest_piece(P)[0]
-    P, plug = K.make_section_inlay(P, letter, s, C.CODE_DEPTH, C.INLAY_FIT)
+    P, plug, lrot, fl = K.make_section_inlay(P, letter, s, C.CODE_DEPTH, C.INLAY_FIT)
     (px, pz), _ = C.thickest_point(letter)
-    P, plug = C.add_peg(P, plug, s, px, pz)
-    floor = plug.bounding_box()[4]                # inner face of the inlay = socket floor (port: max y)
+    P, plug = C.add_peg(P, plug, fl, px, pz)
+    floor = plug.bounding_box()[4]                # inner face of the inlay ~ socket floor (port: max y)
     P = K.largest_piece(P ^ bbox(lx0 - 50, lx1 + 50, -100, floor + FLOOR, lz0 - 50, lz1 + 50))[0]
     return [("t2_fuselage_wall", {BLACK: P}, lambda m: rot(m, rx=-90)),      # cut face down, socket up
-            ("t2_code_G", {RED: plug}, lambda m: rot(m, rx=90 * s))]        # as colour.py: back down
+            ("t2_code_G", {RED: plug}, lambda m: m.rotate(lrot))]            # as colour.py: back down
 
 
 def fin_flash_coupon():

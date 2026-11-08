@@ -345,7 +345,7 @@ def colour_part(name, P, pat):
         core = (mf.Manifold.cylinder(200, r_in, r_in, 96).rotate([0, 90, 0])
                 .translate([-100, s * yc, zc]))
         return paint(P, [(YELLOW, P - core)])
-    if name == "df_loop":      # one camo colour (Dark Earth), not black
+    if name.startswith("df_loop"):      # one camo colour (Dark Earth), not black
         return {EARTH: P}
     if name in ("canopy", "canopy_side", "canopy_rear"):   # cockpit glazing: frames in the camo
         f = frames(name, P)
@@ -631,17 +631,11 @@ def thickest_point(sec):
     return (float(X[i]), float(Z[i])), float(d.max())
 
 
-def add_peg(P, plug, s, x, z):
-    """Gripping peg standing on the socket floor and a hole in the back of a side (y) inlay, as on
-    the roundels: the inlay's back stays flat for the bed (its face follows the curved skin)."""
-    bb = plug.bounding_box()
-    back = bb[1] if s > 0 else bb[4]                # inner face of the inlay = the socket floor
+def add_peg(P, plug, floor, x, z):
+    """Gripping peg standing square on the socket floor and a hole in the back of a side (y)
+    inlay, as on the roundels: the inlay's back stays flat for the bed (its face follows the skin)."""
     pd, pl = FLASH_PEG
-    peg = (mf.Manifold.cylinder(pl + 0.5, pd / 2, pd / 2, 32).rotate([-90 * s, 0, 0])
-           .translate([x, back - s * 0.5, z]))      # from inside the floor out into the socket
-    hd = pd + PEG_GRIP
-    hole = (mf.Manifold.cylinder(pl + 0.15 + 0.5, hd / 2, hd / 2, 32)
-            .rotate([-90 * s, 0, 0]).translate([x, back - s * 0.5, z]))
+    peg, hole = K.peg_on_floor(floor, x, z, pd, pl, pd + PEG_GRIP, pl + 0.15)
     return P + peg, plug - hole
 
 
@@ -652,28 +646,28 @@ def inlays_for(name, P):
         s = 1 if name.endswith("stbd") else -1
         x, y, d = WING_ROUNDEL
         hand = "R" if s > 0 else "L"
-        P, vols, plug = K.make_inlay(P, (x, s * y), d, B_RINGS(d), "z", 1, WING_INLAY_DEPTH,
+        P, vols, plug, prot = K.make_inlay(P, (x, s * y), d, B_RINGS(d), "z", 1, WING_INLAY_DEPTH,
                                      INLAY_FIT, WING_ROUNDEL_PEG, (hand, 6.0, 6.0, -4.0, BACK_MIRROR["z"]))
-        out.append((f"roundel_wing_{name.split('_')[-1]}", vols, [0, 0, 0], plug))
+        out.append((f"roundel_wing_{name.split('_')[-1]}", vols, prot, plug))
     if name.startswith("fin_"):
         # fin flash (red/white/blue) as one snap-in inlay: press fit plus two gripping pegs on its
         # back, one behind the red and one behind the blue (one central peg let it fall out)
         s = 1 if name.endswith("stbd") else -1
         x0, z0, z1, w, ww = FIN_FLASH
         rect = lambda a, b: mf.CrossSection([np.array([[a, z0], [b, z0], [b, z1], [a, z1]])])
-        P, plug = K.make_section_inlay(P, rect(x0, x0 + 2 * w + ww), s, FLASH_DEPTH, INLAY_FIT)
+        P, plug, frot, floor = K.make_section_inlay(P, rect(x0, x0 + 2 * w + ww), s, FLASH_DEPTH, INLAY_FIT)
         for px in (x0 + w / 2, x0 + 1.5 * w + ww):
-            P, plug = add_peg(P, plug, s, px, (z0 + z1) / 2)
+            P, plug = add_peg(P, plug, floor, px, (z0 + z1) / 2)
         vols = K.paint(plug, [(WHITE, prism_y(rect(x0 + w, x0 + w + ww))),
                               (BLUE, prism_y(rect(x0 + w + ww, x0 + 2 * w + ww)))], RED)
-        out.append((f"flash_fin_{name.split('_')[-1]}", vols, [90 * s, 0, 0], plug))
+        out.append((f"flash_fin_{name.split('_')[-1]}", vols, frot, plug))
     if name == "fuselage_rear":
         for s, tag in ((-1, "port"), (1, "stbd")):
             x, z, d = FUSE_ROUNDEL
             hand = "R" if s > 0 else "L"
-            P, vols, plug = K.make_inlay(P, (x, z), d, C1_RINGS(d), "y", s, FUSE_INLAY_DEPTH,
+            P, vols, plug, prot = K.make_inlay(P, (x, z), d, C1_RINGS(d), "y", s, FUSE_INLAY_DEPTH,
                                          INLAY_FIT, ROUNDEL_PEG, (hand, 6.0, -4.0, -3.0, BACK_MIRROR[s]))
-            out.append((f"roundel_fuselage_{tag}", vols, [90 * s, 0, 0], plug))
+            out.append((f"roundel_fuselage_{tag}", vols, prot, plug))
             # squadron code and aircraft letter as red press-in inlays, read nose-to-tail
             rx = FUSE_ROUNDEL[0]
             sx = SQN_CODE_X if s < 0 else 2 * rx - SQN_CODE_X
@@ -683,11 +677,11 @@ def inlays_for(name, P):
                 for letter in sorted(text_section(txt, CODE_HEIGHT, cx, CODE_Z, s > 0).decompose(),
                                      key=lambda q: q.bounds()[0]):
                     n += 1
-                    P, plug = K.make_section_inlay(P, letter, s, CODE_DEPTH, INLAY_FIT)
+                    P, plug, lrot, floor = K.make_section_inlay(P, letter, s, CODE_DEPTH, INLAY_FIT)
                     (px, pz), r = thickest_point(letter)
                     if r >= (FLASH_PEG[0] + PEG_GRIP) / 2 + 0.6:            # peg where the stroke is thickest
-                        P, plug = add_peg(P, plug, s, px, pz)
-                    out.append((f"code_{tag}_{n}", {RED: plug}, [90 * s, 0, 0], plug))
+                        P, plug = add_peg(P, plug, floor, px, pz)
+                    out.append((f"code_{tag}_{n}", {RED: plug}, lrot, plug))
     return P, out
 
 
@@ -750,7 +744,7 @@ def object_settings(name):
         s["layer_height"] = "0.12"
     if name in H.FUSE_SECTIONS:
         s.update(TALL_BRIM, wall_loops="3")
-    if name.startswith(("wing_", "fuselage_", "tailplane")) or name == "df_loop":
+    if name.startswith(("wing_", "fuselage_", "tailplane", "df_loop")):
         s["layer_height"] = WING_PLATE_LAYER
     if name.startswith("spine_"):
         s.update(TALL_BRIM)                         # standing on an end face
@@ -785,10 +779,10 @@ def add_object(objs, name, posed, out, whole):
 
 PLATE_GROUPS = [            # parts kept together by colour set (max 5 colours a plate)
     ("Fuselage", lambda n: H.SPINE_PIECES and n.startswith("fuselage")),
-    ("Spine", lambda n: n.startswith("spine_") or (H.SPINE_PIECES and n == "df_loop")),
+    ("Spine", lambda n: n.startswith("spine_") or (H.SPINE_PIECES and n.startswith("df_loop"))),
     # painted fuselage on the wing plate: the wings already swap colours on almost every layer
     # up to 170 mm, so the fuselage's camo mostly shares those swaps (one long plate)
-    ("Wings and fuselage", lambda n: n.startswith(("wing_", "tailplane", "fuselage")) or n == "df_loop"),
+    ("Wings and fuselage", lambda n: n.startswith(("wing_", "tailplane", "fuselage", "df_loop"))),
     ("Nacelles", lambda n: n.startswith("nacelle")),
     ("Fin flashes, roundels and codes", lambda n: n.startswith(("flash_", "roundel_", "code_"))),
     ("Canopies and turrets (silk silver)", lambda n: n in CLEAR_PARTS),

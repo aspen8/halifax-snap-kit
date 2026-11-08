@@ -44,6 +44,15 @@ WING_CHORDWISE = [           # (s, chord fraction from, to, kind)
 WING_FILLERS = [(30.0, 0.40, 2.2), (95.0, 0.40, 2.2), (175.0, 0.38, 1.8)]  # s, chord frac, diameter
 DINGHY_HATCH = (-1, 28.0, 0.30, 12.0, 9.0)   # side, s, chord frac (centre), span, chord
 
+# Underside (2026-11-08: the wings print on end now, so the underside can carry detail too).
+# The same spars, panel joints and control-surface lines as the top, plus the centre-section
+# bomb cells: three doors a side between the fuselage and the inner nacelle (Halifax B.II;
+# positions approximate, from the Revell underside view). Nothing under the nacelles, which
+# clamp round the wing there.
+WING_BOMB_CELLS = [(16.0, 25.0), (27.0, 36.0), (38.0, 47.0)]   # span s from, to
+WING_BOMB_CELL_CHORD = (0.23, 0.55)                            # chord fractions (between the spars)
+NACELLE_CLEAR = 1.5          # mm either side of a nacelle's width kept free of underside detail
+
 TAIL_HINGE = 0.65            # elevator hinge, fraction of tailplane chord
 TRIM_TAB = (14.0, 30.0, 0.86)   # |y| from, to, chord fraction (to TE)
 RUDDER_HINGE = 0.55          # fraction of fin chord
@@ -100,6 +109,15 @@ def wing_layout(side):
     return segs
 
 
+def nacelle_zones(side):
+    """Plan strips under the nacelles (full chord), kept clear of underside detail."""
+    z = mf.CrossSection()
+    for yc, _, _, _ in H.NACELLES:
+        h = H.NACELLE_W / 2 + NACELLE_CLEAR
+        z = z + mf.CrossSection.square([600.0, 2 * h]).translate([-100.0, side * yc - h])
+    return z
+
+
 def tail_layout():
     y_tip = H.FIN_Y - H.FIN_T / 2
     segs = {"hinge": [], "panel": []}
@@ -126,7 +144,7 @@ def skin(P, axis, depth):
 
 
 def raised(P, axis, height=RIVET_H):
-    v = {"z": [0, 0, height], "y": [0, height, 0], "-y": [0, -height, 0]}[axis]
+    v = {"z": [0, 0, height], "-z": [0, 0, -height], "y": [0, height, 0], "-y": [0, -height, 0]}[axis]
     return P.translate(v) - P
 
 
@@ -157,13 +175,31 @@ def apply(name, P):
         for p0, p1 in segs["spar"]:
             dots = dots + dots_along(p0, p1, RIVET_OFFSET) + dots_along(p0, p1, -RIVET_OFFSET)
         adds.append(raised(P, "z") ^ prism_z(dots))
+        # underside: the same structure lines, the bomb-cell doors, the spar rivets; clear of the
+        # nacelles
+        clear = prism_z(nacelle_zones(side))
+        for kind, depth in (("panel", GROOVE_D), ("spar", GROOVE_D), ("hinge", HINGE_D)):
+            sec = mf.CrossSection()
+            for p0, p1 in segs[kind]:
+                sec = sec + band(p0, p1, GROOVE_W)
+            groove(prism_z(sec) - clear, "-z", depth)
+        doors = mf.CrossSection()
+        f0, f1 = WING_BOMB_CELL_CHORD
+        for s0, s1 in WING_BOMB_CELLS:
+            a, b = wing_point(s0, f0, side), wing_point(s1, f1, side)
+            c, d = wing_point(s0, f1, side), wing_point(s1, f0, side)
+            for q0, q1 in ((a, d), (d, wing_point(s1, f1, side)), (wing_point(s1, f1, side), c), (c, a)):
+                doors = doors + band(q0, q1, GROOVE_W)
+        groove(prism_z(doors) - clear, "-z", GROOVE_D)
+        adds.append((raised(P, "-z") ^ prism_z(dots)) - clear)
     elif name == "tailplane":
         segs = tail_layout()
         for kind, depth in (("panel", GROOVE_D), ("hinge", HINGE_D)):
             sec = mf.CrossSection()
             for p0, p1 in segs[kind]:
                 sec = sec + band(p0, p1, GROOVE_W)
-            groove(prism_z(sec), "z", depth)
+            for axis in ("z", "-z"):                 # underside too (it prints on it: shallow lines)
+                groove(prism_z(sec), axis, depth if axis == "z" else GROOVE_D)
     elif name.startswith("fin_"):
         x = H.FIN_X_LE + RUDDER_HINGE * H.FIN_CHORD
         sec = band((x, H.FIN_Z_BOTTOM + 2), (x, H.FIN_Z_TOP - 2), GROOVE_W)

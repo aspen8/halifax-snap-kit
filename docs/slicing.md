@@ -1,6 +1,6 @@
 # Slicing results
 
-Sliced on 2026-11-07 with the Bambu Studio 02.08.02.61 command line on macOS, using the settings embedded in each 3MF (Bambu Lab X2D 0.4 nozzle, 0.20 mm Standard @BBL X2D template, with the kit's per-object overrides). Regenerate everything here with:
+Sliced on 2026-11-08 with the Bambu Studio 02.08.02.61 command line on macOS, using the settings embedded in each 3MF (Bambu Lab X2D 0.4 nozzle, 0.20 mm Standard @BBL X2D template, with the kit's per-object overrides). Regenerate everything here with:
 
 ```
 python tools/slice.py kit/halifax_test_plate.3mf kit/halifax_kit.3mf kit/halifax_joint_test.3mf --md
@@ -28,7 +28,7 @@ Round 2 adds the grip gauge and peg tab to plate 2 (13 min more).
 - **Plate 1 is mostly purge.** It uses 6.7 g of flush and tower for 1.6 g of inlays, and about 17 of its 37 minutes are flushing.
 - **No warnings since the wheels got a flat side.** The first slice warned that "t4_main_wheel has floating regions": the rounded tyre edge lifted off the bed (175 mm² of overhang). The wheels now have a flat inboard face that prints on the bed, and the warning has gone. The kit's wheels don't get the warning either.
 
-## Full kit (`kit/halifax_kit.3mf`, rebuilt 2026-11-08): 7 plates, 50 h 43 m
+## Full kit (`kit/halifax_kit.3mf`, rebuilt 2026-11-08): 7 plates, 49 h 51 m
 
 Half the time and a third of the purge of the 2026-11-07 kit (102 h 39 m, 1439 g), from three changes on the wing plate:
 
@@ -38,26 +38,26 @@ Half the time and a third of the purge of the 2026-11-07 kit (102 h 39 m, 1439 g
 
 | Plate | Time | Layers | Layer mm | Filament on the model (g) | Model g | Flush + tower g | Changes |
 |---|---|---|---|---|---|---|---|
-| 1 wings, tailplane, fuselage | 24h 56m | 439 | 0.24 | Black 228.8, Dark Earth 23.0, Dark Green 20.3 | 272.1 | 262.0 | 439 |
+| 1 wings, tailplane, fuselage | 25h 13m | 439 | 0.24 | Black 230.1, Dark Earth 22.8, Dark Green 20.4 | 273.3 | 262.0 | 439 |
 | 2 nacelles | 5h 45m | 89 | 0.16 | Black 42.2, Dark Earth 4.9, Dark Green 3.6 | 50.8 | 40.5 | 68 |
-| 3 markings | 4h 30m | 71 | 0.16 | Red 8.8, Blue 8.9, Yellow 1.0, White 0.4 | 19.2 | 61.0 | 120 |
+| 3 markings | 3h 21m | 30 | 0.16 | Red 5.6, Blue 7.1, Yellow 0.8, White 0.4 | 13.9 | 45.7 | 90 |
 | 4 glazing | 8h 11m | 144 | 0.12/0.2 | Black 1.1, Dark Earth 0.1, Dark Green 0.6, Silk Silver 7.9 | 9.8 | 124.3 | 236 |
 | 5 stand base | 3h 47m | 81 | 0.16/0.2 | Dark Earth 50.8, Dark Green 3.5, Yellow 0.5, White 1.0 | 55.8 | 7.0 | 6 |
 | 6 small parts | 2h 48m | 139 | 0.12/0.2 | Black 33.2, Yellow 1.9 | 35.2 | 14.4 | 28 |
-| 7 small parts | 46m | 80 | 0.12 | Black 9.2 | 9.2 | 0.0 | 0 |
-| **All sliced** | **50h 43m** | | | | **452.1** | **509.2** | **897** |
+| 7 small parts | 45m | 80 | 0.12 | Black 8.8 | 8.8 | 0.0 | 0 |
+| **All sliced** | **49h 51m** | | | | **447.6** | **493.9** | **867** |
 
-Slicer messages (all non-critical; every plate slices):
+Slicer messages from the command line (all non-critical; every plate slices). The app showed fewer on the previous build: on plate 1 only the D/F loop, which is now in two halves.
 
-- plate 1 error: ZFiller: encounter idx from clip: 49. From the tailplane since its leading-edge fill, as before: a note from Bambu's polygon clipping, not a failed slice.
-- plate 1 warnings: df_loop floating regions, as before. New at 0.24 mm: `wing_outer_*` floating regions (the roundel socket and its peg, about 2 mm deep, on a part standing on end), `fuselage_front` and `fuselage_rear` floating cantilever (the wing-root pockets, the stand socket and the key slots: 4 mm bridges). These are the same features as the 0.16 mm kit; the coarser layers trip the warning.
+- plate 1: `fuselage_front` floating cantilever and `fuselage_rear` floating regions: the joint key-slot ceilings (2.7 mm bridges), the wing-root pockets and the stand socket, all short bridges.
 - plate 4: turret_dorsal floating regions. Plate 6: stand_post cantilever. Plate 7: both gun packs cantilever. As before.
+- Gone since the first 2026-11-08 build: the tailplane's "ZFiller" note, the D/F loop (now two halves), the wing tips' and wing roundels' floating regions (the roundel sockets and the wing joint's key slot no longer meet).
 
 Notes:
 
-- **Plate 1:** 24 h 56 m, 262 g of purge and tower, 439 colour changes (was 76 h 50 m, 1157 g, 2286).
+- **Plate 1:** 25 h 13 m, 262 g of purge and tower, 439 colour changes (was 76 h 50 m, 1157 g, 2286). The underside detail added a few minutes.
 - **For comparison, the Spitfire kit's wings-and-fuselage plate** (Elite Squadron, MasterBuilds) slices at 30 h 21 m on the user's X2D at 0.24 mm, with 306 g of purge and tower and 792 changes. Its plate is 84 mm tall.
-- **Plate 3 (markings) went up** from 3 h 40 m and 43 g to 4 h 30 m and 61 g. Its four colours all stay on the main nozzle now that the grouping is set by hand; with "Auto For Flush" Bambu seems to have moved some to the second nozzle. The second nozzle holds Dark Earth for the whole kit, so that's the right call.
+- **Plate 3 (markings):** 3 h 21 m and 46 g of purge (3 h 40 m and 43 g on 2026-11-07). The inlays are thinner now that their sockets follow the skin, which offsets the four colours all staying on the main nozzle (the second nozzle holds Dark Earth for the whole kit).
 - **Nozzle grouping is Manual** (`colour.NOZZLE`, `filament_map_mode`). On "Auto For Flush" the command line put every filament on the main nozzle.
 
 ### Joint test (`kit/halifax_joint_test.3mf`)
@@ -66,10 +66,9 @@ Notes:
 
 | Plate | Time | Layers | Layer mm | Filament on the model (g) | Model g | Flush + tower g | Changes |
 |---|---|---|---|---|---|---|---|
-| 1 joint slices | 56m | 50 | 0.24 | Black 28.9 | 28.9 | 0.0 | 0 |
-| 2 keys | 18m | 24 | 0.12 | Black 3.5 | 3.5 | 0.0 | 0 |
-| **All sliced** | **1h 14m** | | | | **32.4** | **0.0** | **0** |
-
+| 1 joint slices | 58m | 50 | 0.24 | Black 29.0 | 29.0 | 0.0 | 0 |
+| 2 keys | 17m | 24 | 0.12 | Black 3.2 | 3.2 | 0.0 | 0 |
+| **All sliced** | **1h 15m** | | | | **32.2** | **0.0** | **0** |
 
 ## 2026-11-07: before the splits (one nozzle, 0.16 mm)
 

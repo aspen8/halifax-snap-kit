@@ -1,6 +1,6 @@
 # Handoff (start here in a new session)
 
-State on 2026-11-08, branch `phase1-airframe`, worked on the user's Mac. **`kit/halifax_kit.3mf` is rebuilt: 7 plates, all slice, 50 h 43 m in total** (452 g of model, 509 g of purge; `docs/slicing.md`). The wing plate is 24 h 56 m (it was 76 h 50 m), with three new joints that haven't been printed yet: **print `kit/halifax_joint_test.3mf` (1 h 14 m) first.** Geometry checks pass: single pieces, no clashes. Read `LESSONS.md`, `TODO.md` and `.claude/skills/snap-kit/SKILL.md` before changing anything.
+State on 2026-11-08, branch `phase1-airframe`, worked on the user's Mac. **`kit/halifax_kit.3mf` is rebuilt: 7 plates, all slice, 49 h 51 m in total** (448 g of model, 494 g of purge; `docs/slicing.md`). The wing plate is 25 h 13 m (it was 76 h 50 m), with three new joints that haven't been printed yet: **print `kit/halifax_joint_test.3mf` (1 h 15 m) first.** Geometry checks pass: single pieces, no clashes. Read `LESSONS.md`, `TODO.md` and `.claude/skills/snap-kit/SKILL.md` before changing anything.
 
 ## How to build
 - Full colour build: `cd cad && python -u colour.py OUT project_settings_template.json` (11 min on the Mac). The template is `cad/project_settings_template.json`: the user's Bambu X2D 0.20 mm Standard project settings, taken from `halifax.3mf`. The overrides in `colour.py` (`PRINT_OVERRIDES`, `object_settings`) go on top of it. `write_3mf` places a prime tower on every plate (`kitlib.place_towers`) and prints where.
@@ -15,6 +15,13 @@ State on 2026-11-08, branch `phase1-airframe`, worked on the user's Mac. **`kit/
 - `cad/ref/` is git-ignored except `camo_plan_green.png`. The side-profile trace `camo_side_npg.png` was never committed; the build now skips it (`colour.side_trace`), since only the old split-fuselage halves were painted from it.
 - The Mac's OCC meshes curved faces slightly differently from the cloud's, so a rebuild changes the 3MF bytes without changing the design. Only commit a rebuilt 3MF when the design changed.
 - `tools/closeup.py` uses EGL on Linux only; on macOS, pyrender's default pyglet backend.
+
+## What changed on 2026-11-08 (second round, after the user's slicer review)
+- **Inlay sockets have flat, tilted floors** (`kitlib.floor_plane`): the plane that best fits the skin under the marking, moved in by the depth. The level floors were 2–7 mm deep on the cambered wing and broke through the wing underside under the roundels; on the hull's curve they made the starboard code letters up to 9.6 mm deep. Wing roundels are now about 3 mm thick, codes 2.3–4.6 mm, fuselage roundels about 4.8 mm. Each inlay is turned flat-back down to print (`make_inlay`/`make_section_inlay` return the rotation), and pegs stand square to the floor (`peg_on_floor`).
+- **No socket within 0.8 mm of an underside** (`kitlib.under_band`, `INLAY_FLOOR`), and the depth is measured only where the skin faces out (`INLAY_FACING`). Where a letter runs round under the hull, its lower edge stops there, so no red shows from below. The wing roundel floor is lifted whole rather than trimmed, so its back stays flat.
+- **Wing mid-joint key moved forward** to 10–29 % chord (`WING_SPLIT_KEY`; key 16 × 11.9 × 3 mm): at 20–48 % its slot ran under the roundel socket.
+- **D/F loop in two halves** (`df_loop_a`, `df_loop_b`), split on the centreline: each lies on its cut face, so nothing hangs (whole, its narrow mast floated). The roof socket holds the two plug halves together; a dab of glue if they splay.
+- **Wing and tailplane underside detail** (`detail.py`): the top's spars, panel joints and flap/aileron hinge lines, the spar rivet rows, and three bomb-cell doors a side in the centre section (`WING_BOMB_CELLS`, approximate). The strips under the nacelles are left plain (`nacelle_zones`) so the nacelles still clamp. The tailplane's hinge and panel lines go on its underside too (its bed face: 0.25 mm deep).
 
 ## What changed on 2026-11-08: the wing plate from 77 h to 25 h
 - **Why it was slow:** a plate swaps colour about twice per layer wherever camo shows. The wing plate stood 187 mm tall at 0.16 mm (1170 layers, 2286 swaps, about 1.7 min each on the X2D). The Spitfire kit's plate is 84 mm tall at 0.24 mm, and slices at 30 h on the user's X2D.
@@ -42,9 +49,9 @@ State on 2026-11-08, branch `phase1-airframe`, worked on the user's Mac. **`kit/
 - Details in `LESSONS.md`.
 
 ## Next up
-1. **Print the joint test, then the kit.** `kit/halifax_joint_test.3mf` (1 h 14 m): the wing mid joint and the two new fuselage joints at 0.24 mm, with their keys. Then plate 1 (25 h), with the brims; watch the first layers. Look at these non-critical slicer messages in the app's preview first: the tailplane's first layers (a one-off "ZFiller" note from the slicer since its leading-edge fill, see `docs/slicing.md`); new at 0.24 mm, the wing tips' roundel sockets and the fuselage sections' pockets and key slots (the same features as before); `fuselage_rear` floating cantilever, `df_loop` and `turret_dorsal` floating regions, `stand_post` and both gun packs cantilever. Most are the small overhangs `tools/overhang.py` already accepts.
+1. **Print the joint test, then the kit.** `kit/halifax_joint_test.3mf` (1 h 15 m): the wing mid joint and the two new fuselage joints at 0.24 mm, with their keys. Then plate 1 (25 h), with the brims; watch the first layers. Look at these non-critical slicer messages in the app's preview first: the tailplane's first layers (a one-off "ZFiller" note from the slicer since its leading-edge fill, see `docs/slicing.md`); new at 0.24 mm, the wing tips' roundel sockets and the fuselage sections' pockets and key slots (the same features as before); `fuselage_rear` floating cantilever, `df_loop` and `turret_dorsal` floating regions, `stand_post` and both gun packs cantilever. Most are the small overhangs `tools/overhang.py` already accepts.
 2. **For later (user): panel lines and detail on the wing undersides.** They're plain because the wings used to print flat. Now they print on end, so the underside can carry detail like the top (see `cad/detail.py`).
-3. **Purge is now 509 g for 452 g of model** (was 1.44 kg). Left to try: real flush volumes in place of the flat 350 mm³. In the app, check that the Filament Grouping panel shows Dark Earth under the auxiliary nozzle.
+3. **Purge is now 494 g for 448 g of model** (was 1.44 kg). Left to try: real flush volumes in place of the flat 350 mm³. In the app, check that the Filament Grouping panel shows Dark Earth under the auxiliary nozzle.
 4. The test plate (`kit/halifax_test_plate.3mf`) is rebuilt with the kit's nose key slot (0.1 fit). It still carries the grip gauge, which isn't needed any more.
 
 ## Recent decisions (the details are in git log)

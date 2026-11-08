@@ -212,8 +212,9 @@ ROOT_TONGUE_Z = (0.0, 4.0)   # above the floor: flush with the flat underside, s
 JOINT_TONGUE = (0.26, 0.54, 4.3, 7.7, 12.0)  # joint key: chord fr. start/end, z0, z1 (mid-thickness: >=3.4 mm wall), depth each side
 WING_SPLIT_Y = 145.0         # plan y of the outer panel's mid joint (2026-11-08): between the outer nacelle
                              # (to 137) and the roundel (from 147.5); halves its height on end
-WING_SPLIT_KEY = (0.20, 0.48, 2.0, 5.0, 8.0)   # key: chord fr. start/end, z0, z1 above the floor, depth each
-                             # side (low and short: clears the roundel socket 2 mm under the skin)
+WING_SPLIT_KEY = (0.10, 0.29, 2.0, 5.0, 8.0)   # key: chord fr. start/end, z0, z1 above the floor, depth each
+                             # side; ahead of the roundel (from 0.30 chord where the slot ends),
+                             # where the section is thickest
 WING_POSE = os.environ.get("HALIFAX_WING_POSE", "end")    # wings stand on their joint faces ('flat' kept for reference:
                                                            # it leaves the leading-edge undersides rough)
 
@@ -1576,8 +1577,15 @@ def build():
             parts[f"{kname}_{i + 1}"] = connector_key(key)
             poses[f"{kname}_{i + 1}"] = lambda w: w
     parts["astrodome"] = astrodome()
-    parts["df_loop"] = df_loop_part()
-    poses["df_loop"] = lambda w: rot(w, "x", 90)          # on its side: plug and housing on the bed
+    # D/F loop in two halves down the centreline (2026-11-08): each lies on its flat cut face, so
+    # nothing hangs (whole, on its side, the narrow mast floated between housing and plug). The
+    # roof socket holds the two plug halves together.
+    df = K.to_manifold(df_loop_part())
+    for tag, sgn in (("a", 1), ("b", -1)):
+        half = df ^ (K.box(-500, 500, 0, 500, -500, 500) if sgn > 0 else K.box(-500, 500, -500, 0, -500, 500))
+        import trimesh
+        parts[f"df_loop_{tag}"] = trimesh.Trimesh(*K.mesh_of(K.largest_piece(half)[0]))
+        poses[f"df_loop_{tag}"] = lambda w, sg=sgn: rot(w, "x", 90 * sg)   # cut face down
     poses["astrodome"] = lambda w: w
     for i in range(len(NACELLES)):
         for side, tag in ((1, "stbd"), (-1, "port")):
