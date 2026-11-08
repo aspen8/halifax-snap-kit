@@ -49,7 +49,15 @@ Against photos (top: real aircraft, bottom: model):
 
 ![photo comparison](docs/photo_comparison.png)
 
-> **Status: v27; test coupons printed twice (see v26 and v27 changes).** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+> **Status: v28; test coupons printed twice (see v26 and v28 changes).** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+
+### v28 changes (from test print 2: no glue)
+
+- **Test print 2:** the wing key fits well in both the wing and the fuselage; the tailplane plug went in, tight; the fence was better but still loose. The user wants no part glued.
+- **Fences:** a tongue in a groove on top of the wing as well as underneath, both deeper (about a fifth of the local wing thickness: 0.95 mm under and 0.7 mm on top printed on the big fence, was 0.5 mm under only), and a snug fit (0.04 mm a side, was 0.15). Both grooves open to the front, so the fence still slides back onto the leading edge; with two tongues it can't rock or lift off. Outside the grooves it clears the wing skin by the same 0.04 mm.
+- **Tailplanes printed on end** (user), standing on the end of the root plug, tip up (about 65 mm tall, auto brim): both skins print as walls, with no contour steps on top. Same plug fit (0.1 mm a side); the coupon re-tests it, since the plug's outline now prints as walls.
+- **No glue anywhere:** the assembly steps no longer ask for any.
+- **Checks:** interference shows only the known overlaps; all 6 plates slice (tailplanes and small parts 0.9 h, the rest as v27); test coupons 1.9 h + 0.5 h. The one-nozzle coupon file is rebuilt from these.
 
 ### v27 changes (wheel snap through the wheel)
 
@@ -381,9 +389,9 @@ The stand now plugs into a blind socket in the smoke pod:
 
 | Plate | Coupons | Time | Check |
 |---|---|---|---|
-| Airframe (red, white) | Tailplane root (its plug) and a block of the rear fuselage round its socket | 1.9 h | The plug pushes in firmly and holds without glue (glue it in the kit) |
+| Airframe (red, white) | Tailplane root (its plug), printed on end, and a block of the rear fuselage round its socket | | The plug pushes in firmly and holds without glue (v27 printed flat: tight but went in) |
 | | Wing root on end (first 24 mm of span), a block of the middle fuselage round the root joint, and a wing key | | The key slot no longer breaks through the underside; the key is a firm push fit in both slots; the wing slides under the pods and sits flush |
-| | The wing-root coupon carries the inner underside fin, moulded on; one leading-edge fence and the piece of leading edge it slides onto | | The fin is attached along its whole length (it crosses the wheel well); the fence is stiff enough and slides back onto the leading edge with its tongue in the groove |
+| | The wing-root coupon carries the inner underside fin, moulded on; one leading-edge fence and the piece of leading edge it slides onto | | The fin is attached along its whole length; the fence slides back onto the leading edge with its tongues in the grooves top and bottom and stays put without glue |
 | Wheel snap (black, grey) | Starboard main leg and wheel, whole | 0.5 h | The boss goes through the wheel and its head clicks out the far side without breaking; the wheel spins and doesn't pull off |
 
 `kit/hawk_test_coupons_one_nozzle.3mf` is the same plates with every colour on the main nozzle (made by `tools/single_nozzle.py`), to compare the white's quality against the second nozzle. One nozzle roughly doubles time and filament (every colour change is an AMS swap and purge): airframe coupons 4.3 h and 83 g (1.9 h, 32 g on two nozzles); in the kit, wings 16.1 h (8.1) and fuselage 23.3 h (11.9).
@@ -415,8 +423,8 @@ Suggested settings: PLA, 0.16 mm layers for the gear plate and 0.2 mm elsewhere,
   - 2 fin halves, which carry the spine cap and the dorsal fillet
   - 2 wings, each one piece printed standing on its flat root, tip up (as on the Halifax). The root joint is at |y| 11 (1:40): the fuselage covers it on top, and the short stub inboard of it is moulded on the middle section. Each root carries a small filler ahead of the leading edge, hidden inside the intake pod, so the pod's socket for it prints without a flat overhang.
   - per wing, 4 underside fins moulded on (the deeper one near the leading edge is white); each has a 45° brace on its inboard face so it prints on the wing standing on end
-  - 4 leading-edge fences (2 per wing), glued on: collars, taller above the wing than below and twice as long on top, that slide back onto the leading edge with a small tongue in a groove in the underside
-  - 2 fixed tailplanes with 10° anhedral; each one's own aerofoil runs on into the fuselage as a plug, in a socket of the same shape (glue them)
+  - 4 leading-edge fences (2 per wing): collars, taller above the wing than below and twice as long on top, that slide back onto the leading edge with a tongue in a groove under the wing and on top; a snug fit holds them (no glue)
+  - 2 fixed tailplanes with 10° anhedral, printed on end; each one's own aerofoil runs on into the fuselage as a plug, a firm push fit in a socket of the same shape (no glue)
   - smoke pod (2 halves), an oval tube (deeper than wide) with a round nose and a long taper that sweeps up into the belly, with pegs moulded on its pylon that push into the belly
   - 2 ventral strakes, moulded under the rear fuselage
   - jet nozzle: a separate grey ring standing 3.75 mm out of the tail, black inside, with a 12 mm deep void, a step ring, an exhaust cone and 6 struts at the bottom. A spigot plugs it into a countersunk socket in the tail.
@@ -449,7 +457,7 @@ Suggested settings: PLA, 0.16 mm layers for the gear plate and 0.2 mm elsewhere,
 1. **Fuselage.** Join the nose to the front section on 2 keys, the front to the middle on 2 and the middle to the rear on 3. Push the probe's plug into the nose tip and the nozzle's spigot into the tail.
 2. **Canopy.** Press it down onto the two tabs on top of the front and middle sections; it bridges the joint.
 3. **Fin.** Join the halves on their 2 keys in the spine cap. Then push the fin's root tongue into the slot in the spine.
-4. **Wings and tailplanes.** Push a wing key into each wing root slot and slide the wing onto the fuselage, so the key goes into the slot in the side (port slot forward, starboard aft). Push each tailplane's root plug into its socket in the side of the tail and glue it. Slide each leading-edge fence back onto the leading edge, its tongue in the groove under the wing, and glue it.
+4. **Wings and tailplanes.** Push a wing key into each wing root slot and slide the wing onto the fuselage, so the key goes into the slot in the side (port slot forward, starboard aft). Push each tailplane's root plug firmly into its socket in the side of the tail. Slide each leading-edge fence back onto the leading edge, its tongues in the grooves under and on top of the wing. Nothing is glued.
 5. **Smoke pod.** Join the halves on 2 keys and push the pylon's pegs into the belly.
 6. **Display.** Either fit the gear (wheels on the headed pins, legs into their sockets) or use the stand: push the blade's tenon into the plinth and lower the model so the key goes into the socket under the smoke pod.
 

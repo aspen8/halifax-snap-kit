@@ -230,7 +230,11 @@ WING_ROOT_CUT = 11.0         # |y| of the flat wing root (v23): each wing is one
                              # to |y| 12 or more along the whole chord, so the joint only shows
                              # underneath; the stub inboard of it is moulded on the fuselage
 WING_ROOT_GAP = 0.05         # glue gap at the root joint
-WING_FIN_SEAT = 0.4          # each leading-edge fence (separate) has a tongue this deep in a groove
+WING_FENCE_SEAT = (0.22, 0.16)   # v28: each leading-edge fence has a tongue in a groove under the
+                             # wing and (new) on top, these fractions of the local wing thickness
+                             # deep (about 0.95 / 0.7 mm printed on the big fence; v27 had 0.5 mm
+                             # under only and the test fence was still loose). No glue (user)
+WING_FENCE_FIT = 0.04 * _P   # v28: per side, fence in its grooves: a snug push fit (was FIT, 0.15)
 WING_FIN_LEDGE = 0.5         # v24: the underside fins are moulded on again, with their inboard face
                              # sloping at 45 deg (it faces down when the wing prints on end) out to
                              # this far from the tip, which prints as a short unsupported ledge
@@ -981,39 +985,51 @@ def wing_fin_keels():
 
 @cached
 def _fence_tongue_boxes():
-    """Per fence (flat frame): the region its tongue may fill, below the lower skin's lowest
-    point (within the fence's chord) raised by WING_FIN_SEAT and ahead of that point. The
-    groove is open to the front, so the collar slides back onto the leading edge with its
-    tongue running in the groove."""
+    """Per fence (flat frame): (y, [(x_t, z_t, sgn)]) for its two tongues. Underneath (sgn -1)
+    the tongue fills the wing below the lower skin's lowest point within the fence's chord,
+    raised by the seat, and ahead of that point; on top (sgn +1) above the upper skin's highest
+    point lowered by the seat. Both grooves open to the front, so the collar slides back onto
+    the leading edge with its tongues running in them, and then can't rock or lift off."""
     out = []
     for eta, ahead, f_top, f_bot, up, down in WING_LE_FENCES:
         y = eta * SPAN / 2
         le, c, tc = wing_plan(y)
         sec = np.array(cambered_section(tc, c))
-        lo = sec[int(np.argmin(sec[:, 0])):]
-        m = lo[:, 0] <= f_bot * c
-        i = int(np.argmin(lo[m, 1]))
-        out.append((le + lo[m][i, 0], WING_CHORD_Z + lo[m][i, 1] + WING_FIN_SEAT, y))
+        k = int(np.argmin(sec[:, 0]))
+        lo, hi = sec[k:], sec[:k + 1][::-1]
+        t = float(np.max(np.interp(lo[:, 0], hi[:, 0], hi[:, 1]) - lo[:, 1]))   # max thickness
+        ml, mh = lo[:, 0] <= f_bot * c, hi[:, 0] <= f_top * c
+        i, j = int(np.argmin(lo[ml, 1])), int(np.argmax(hi[mh, 1]))
+        sb, st = WING_FENCE_SEAT
+        out.append((y, [(le + lo[ml][i, 0], WING_CHORD_Z + lo[ml][i, 1] + sb * t, -1),
+                        (le + hi[mh][j, 0], WING_CHORD_Z + hi[mh][j, 1] - st * t, 1)]))
     return out
 
 
+def _tongue_box(y, xt, zt, sgn, g=0.0):
+    z0, z1 = (-60, zt + g) if sgn < 0 else (zt - g, 60)
+    return box(-50, xt + g, y - 5, y + 5, z0, z1)
+
+
 def wing_fence_parts(side):
-    """Separate leading-edge fences, assembled frame: collars that wrap the leading edge, each
-    with a tongue in a groove in the underside (they print flat; on a wing printed on end they
-    would be shelves in mid-air)."""
+    """Separate leading-edge fences, assembled frame: collars that wrap the leading edge and slide
+    back onto it, with a tongue in a groove under the wing and on top (they print flat; on a wing
+    printed on end they would be shelves in mid-air). A snug fit holds them without glue."""
     w = wing_flat()
+    g = WING_FENCE_FIT                               # clear of the skin outside the grooves too
+    wg = union([w] + [w.translate([a, 0, c]) for a, c in ((g, 0), (-g, 0), (0, g), (0, -g))])
     out = []
-    for p, (xt, zt, y) in zip(wing_fence_plates(), _fence_tongue_boxes()):
-        tongue = box(-50, xt, y - 5, y + 5, -60, zt)
-        out.append(wing_flat_to_assembled(K.largest_piece(p - (w - tongue))[0], side))
+    for p, (y, tongues) in zip(wing_fence_plates(), _fence_tongue_boxes()):
+        keep = union([_tongue_box(y, *t) for t in tongues])
+        out.append(wing_flat_to_assembled(K.largest_piece(p - (wg - (keep ^ w)))[0], side))
     return out
 
 
 @cached
 def wing_fence_grooves(side):
     w = wing_flat()
-    g = [p ^ w ^ box(-50, xt + FIT, y - 5, y + 5, -60, zt + FIT)
-         for p, (xt, zt, y) in zip(wing_fence_plates(FIT), _fence_tongue_boxes())]
+    g = [p ^ w ^ union([_tongue_box(y, *t, g=WING_FENCE_FIT) for t in tongues])
+         for p, (y, tongues) in zip(wing_fence_plates(WING_FENCE_FIT), _fence_tongue_boxes())]
     return wing_flat_to_assembled(union(g), side)
 
 
@@ -1823,7 +1839,9 @@ def build():
             poses[f"wingfence_{tag}_{i + 1}"] = lambda m, f=flat: f(m).rotate([90, 0, 0])  # flat on its side
         parts[f"tailplane_{tag}"] = tailplane(side)
         poses[f"tailplane_{tag}"] = (lambda m, s=side: rot_about(m, (0, s * TAIL_ROOT_Y, TAIL_FLOOR), "x",
-                                                                 TAIL_ANHEDRAL * s))
+                                                                 TAIL_ANHEDRAL * s).rotate([90 * s, 0, 0]))
+                                     # v28: on end, standing on its root plug's end, tip up (user):
+                                     # both skins print as walls, no contour steps on top
     parts["canopy"] = canopy()
     (ra, rza), (rb, rzb) = CANOPY_REAR
     n = np.array([rza - rzb, rb - ra], float)        # outward normal of the rear face (x, z)
