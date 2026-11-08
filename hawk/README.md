@@ -386,6 +386,8 @@ The stand now plugs into a blind socket in the smoke pod:
 | | The wing-root coupon carries the inner underside fin, moulded on; one leading-edge fence and the piece of leading edge it slides onto | | The fin is attached along its whole length (it crosses the wheel well); the fence is stiff enough and slides back onto the leading edge with its tongue in the groove |
 | Wheel snap (black, grey) | Starboard main leg and wheel, whole | 0.5 h | The boss goes through the wheel and its head clicks out the far side without breaking; the wheel spins and doesn't pull off |
 
+`kit/hawk_test_coupons_one_nozzle.3mf` is the same plates with every colour on the main nozzle (made by `tools/single_nozzle.py`), to compare the white's quality against the second nozzle. One nozzle roughly doubles time and filament (every colour change is an AMS swap and purge): airframe coupons 4.3 h and 83 g (1.9 h, 32 g on two nozzles); in the kit, wings 16.1 h (8.1) and fuselage 23.3 h (11.9).
+
 If a fit is too tight or too loose, it's one number in `hawk.py`: `GEAR_SNAP` (wheel snap: head diameter or slot width), `TAIL_PLUG_FIT` (tailplane), `WING_KEY_FIT` (wing key, in the wing and in the fuselage).
 
 ![test coupons](docs/test_coupons.png)
