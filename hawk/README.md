@@ -49,7 +49,14 @@ Against photos (top: real aircraft, bottom: model):
 
 ![photo comparison](docs/photo_comparison.png)
 
-> **Status: v24, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+> **Status: v25, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+
+### v25 changes (fence length)
+
+- **Leading-edge fences:** each now runs back along the top of the wing twice as far as underneath (top to 0.35 and 0.18 chord, as in the top-view render; underneath to half that). Its tongue sits under the shorter underside part. Kit and test coupons rebuilt; the test coupon plate names no longer contain colons (Bambu Studio refused to open the file).
+- **Checks:** interference shows only the known overlaps; all 6 plates and both coupon plates slice, times as v24.
+
+![v24 and v25 fence, side on](docs/v25_fence.png)
 
 ### v24 changes (tail boss, wing fins and fences, root fillet)
 
@@ -387,7 +394,7 @@ Suggested settings: PLA, 0.16 mm layers for the gear plate and 0.2 mm elsewhere,
   - 2 fin halves, which carry the spine cap and the dorsal fillet
   - 2 wings, each one piece printed standing on its flat root, tip up (as on the Halifax). The root joint is at |y| 11 (1:40): the fuselage covers it on top, and the short stub inboard of it is moulded on the middle section. Each root carries a small filler ahead of the leading edge, hidden inside the intake pod, so the pod's socket for it prints without a flat overhang.
   - per wing, 4 underside fins moulded on (the deeper one near the leading edge is white); each has a 45° brace on its inboard face so it prints on the wing standing on end
-  - 4 leading-edge fences (2 per wing), glued on: collars, taller above the wing than below, that slide back onto the leading edge with a small tongue in a groove in the underside
+  - 4 leading-edge fences (2 per wing), glued on: collars, taller above the wing than below and twice as long on top, that slide back onto the leading edge with a small tongue in a groove in the underside
   - 2 all-moving tailplanes with 10° anhedral, each snapping into the fuselage on a sprung mushroom boss (tight: they hold their setting)
   - smoke pod (2 halves), an oval tube (deeper than wide) with a round nose and a long taper that sweeps up into the belly, with pegs moulded on its pylon that push into the belly
   - 2 ventral strakes, moulded under the rear fuselage

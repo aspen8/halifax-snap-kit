@@ -38,7 +38,9 @@ Then:
 - The user prints on a Bambu X2D (two nozzles, AMS). Keep the base red on the main nozzle (fixed per-plate map in `colour.py` `FILAMENT_MAP`/`MAPPED_PLATES`); the second nozzle runs outer walls at 50 mm/s.
 - The user often asks to "add to the to-do list" when near a usage limit: write it into `hawk/README.md` "Known gaps and next steps", commit, change nothing else.
 
-## State at handoff (v24, pushed)
+## State at handoff (v25, built, checked and committed locally)
+
+v25 changes: fences run back further on top than underneath (`WING_LE_FENCES` now has f_top and f_bot); coupon plate names without colons (Bambu rejects `<>:/\\|?*"` in names).
 
 v24 changes: tail snap boss flat top and bottom (`TAIL_BOSS_TOP`, axis at mid-thickness in `tail_pivot_axis`), upright spring slot hidden inside the panel (`TAIL_SLOT_SKIN`); underside fins moulded on with 45-degree inboard braces (`wing_fin_keels`, `WING_FIN_LEDGE`); fences taller on top (`WING_LE_FENCES`), separate `wingfence_*` collars with a tongue in a front-open groove (`_fence_tongue_boxes`, `wing_fence_grooves`); plan-view trailing-edge root fillet on the fuselage (`WING_TE_FILLET`, `wing_te_fillet`), underside painted white in `fuselage_markings`.
 
@@ -85,4 +87,4 @@ Test-print history: plate 1 (v3 fuselage) and the canopy/gear/nozzle plates (v3/
 3. ~~Fin against the drawing~~: done in v11 (outline within about 0.4 mm of the Revell side view, rounded tip). Waiting for the user's look.
 4. README to-dos still open: separate lettering panels (sharper text), nonplanar top-surface test (orcaslicer-nonplanar), canopy fit check on the next fuselage print, print-in-place control surfaces.
 5. ~~Rudder hinge groove red line and TE speck~~: fixed in v16.
-6. Push to GitHub when the user asks. v10 to v24 and the test coupons are pushed (the checkout in use is the older one in Claude's scratch-workspaces folder, which has `ref/` and `.venv`).
+6. Push to GitHub when the user asks. v10 to v24 and the test coupons are pushed; v25 is committed locally only (the checkout in use is the older one in Claude's scratch-workspaces folder, which has `ref/` and `.venv`).

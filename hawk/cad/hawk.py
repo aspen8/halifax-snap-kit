@@ -857,11 +857,12 @@ WING_FINS = [(0.2156, 0.61, 0.88, 2.4), (0.5529, 0.50, 0.88, 3.2), (0.7046, 0.38
              # fairings under the rear of the chord at |y| 25, 65 and 83, ending short of the
              # trailing edge, and a deeper fin near the leading edge at |y| 39 (white, colour.py
              # WHITE_WING_FINS). eta, chord fraction from, to, depth below the skin
-WING_LE_FENCES = [(0.6645, 2.0, 0.35, 2.3, 1.7), (0.8264, 1.2, 0.18, 1.4, 1.0)]
+WING_LE_FENCES = [(0.6645, 2.0, 0.35, 0.175, 2.3, 1.7), (0.8264, 1.2, 0.18, 0.09, 1.4, 1.0)]
              # v17: fences on the leading edge (|y| 78 and 97), wrapping round it above and
              # below and standing proud of it: eta, mm ahead of the LE, chord fraction they run
-             # back to, height above and below the skin (v24: taller above than below, as in the
-             # view along the leading edge; they were the other way round)
+             # back to on top and underneath, height above and below the skin (v24: taller above
+             # than below, as in the view along the leading edge; v25: twice as long on top as
+             # underneath, user; the top run matches the top-view render, about 0.37 chord)
 WING_FIN_T = 0.9
 
 
@@ -879,14 +880,17 @@ def wing_fence_plates(grow=0.0):
     from shapely.geometry import Polygon, box as sbox
     from shapely.ops import unary_union
     out = []
-    for eta, ahead, f1, up, down in WING_LE_FENCES:
+    for eta, ahead, f_top, f_bot, up, down in WING_LE_FENCES:
         y = eta * SPAN / 2
         le, c, tc = wing_plan(y)
         sec = Polygon(np.array(cambered_section(tc, c)) + [le, 0.0]).buffer(0)
         r = 0.6                                              # rounding of the outline
         steps = np.linspace(-(down - r), up - r, 14)
         swept = unary_union([Polygon(np.array(sec.exterior.coords) + [0.0, dz]) for dz in steps])
-        prof = swept.buffer(max(ahead, r)) & sbox(le - ahead, -20.0, le + f1 * c, 20.0)
+        # the top runs back to f_top, the underside to f_bot (the step between them, on the
+        # chord plane, is inside the wing)
+        prof = swept.buffer(max(ahead, r)) & (sbox(le - ahead, 0.0, le + f_top * c, 20.0)
+                                              | sbox(le - ahead, -20.0, le + f_bot * c, 0.0))
         prof = np.array(prof.exterior.coords)[:-1]
         if K.cs([prof]).area() < 0:
             prof = prof[::-1]
@@ -949,12 +953,12 @@ def _fence_tongue_boxes():
     groove is open to the front, so the collar slides back onto the leading edge with its
     tongue running in the groove."""
     out = []
-    for eta, ahead, f1, up, down in WING_LE_FENCES:
+    for eta, ahead, f_top, f_bot, up, down in WING_LE_FENCES:
         y = eta * SPAN / 2
         le, c, tc = wing_plan(y)
         sec = np.array(cambered_section(tc, c))
         lo = sec[int(np.argmin(sec[:, 0])):]
-        m = lo[:, 0] <= f1 * c
+        m = lo[:, 0] <= f_bot * c
         i = int(np.argmin(lo[m, 1]))
         out.append((le + lo[m][i, 0], WING_CHORD_Z + lo[m][i, 1] + WING_FIN_SEAT, y))
     return out
