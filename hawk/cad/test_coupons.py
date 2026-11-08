@@ -94,8 +94,8 @@ if __name__ == "__main__":
         C.add_object(objs, cname, {col: pf(v) for col, v in vols.items()}, out, pf(whole))
     # two plates: the red parts with red on the main nozzle (as the kit's red plates), and the
     # black and grey gear on its own (mixed, every layer changed colour: 4.7 h)
-    groups = [("Test coupons: airframe", lambda n: not n.startswith("t1_"), C.FILAMENT_MAP),
-              ("Test coupons: wheel snap", lambda n: n.startswith("t1_"), None)]
+    groups = [("Test coupons - airframe", lambda n: not n.startswith("t1_"), C.FILAMENT_MAP),
+              ("Test coupons - wheel snap", lambda n: n.startswith("t1_"), None)]
     plates, names, fmaps = [], [], []
     for gname, pred, fmap in groups:
         items = [(n, tuple(objs[n]["size"])) for n in objs if pred(n)]
@@ -117,5 +117,5 @@ if __name__ == "__main__":
         print(f"{name}: " + ", ".join(C.FILAMENTS[col][0] for col in cols) + " | " + ", ".join(n for n, *_ in its))
         assert len(cols) <= C.MAX_COLOURS
     K.write_3mf(out / "hawk_test_coupons.3mf", objects, names, None, C.FILAMENTS,
-                "BAE Hawk T.1A snap kit: test coupons", fmaps)
+                "BAE Hawk T.1A snap kit - test coupons", fmaps)
     print("wrote", out / "hawk_test_coupons.3mf")
