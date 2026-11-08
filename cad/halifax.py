@@ -268,6 +268,7 @@ TAIL_ROOT = (301.6, 40.0)    # x_le, chord at centreline (Revell plan)
 TAIL_TIP = (307.9, 34.0)     # at the fin inner face
 TAIL_FLOOR = 4.0             # mm, flat underside of the tailplane
 TAIL_TC = 0.11
+TAIL_NOSE_RAMP = 45.0        # deg: the tailplane prints flat, so no underside flatter than this
 FIN_Y = 76.0                 # mm, fin mid-plane
 FIN_X_LE = 305.0
 FIN_CHORD = 36.0
@@ -744,7 +745,7 @@ def tail_turret():
 # ============================================================
 # WINGS
 # ============================================================
-def flat_bottom_section(tc, chord, n=40):
+def flat_bottom_section(tc, chord, n=40, ramp=None):
     """NACA 230xx rotated so the underside is flat from max depth to the TE.
 
     Returns (nose_pts, flat_start, te_lower, te_upper) in local (x, z),
@@ -777,12 +778,20 @@ def flat_bottom_section(tc, chord, n=40):
     up = [rot(p) for p in up]
     lo = [(x, max(z, 0.0)) for x, z in (rot(p) for p in lo[:k + 1])]
     lo[-1] = (lo[-1][0], 0.0)
+    if ramp is not None:
+        # fill under the nose so the underside is nowhere flatter than `ramp` degrees: a part
+        # printed flat would otherwise hang its leading edge over a ~7 degree slope
+        xl, zl = lo[0]
+        t = math.tan(math.radians(ramp))
+        lo = [lo[0]] + [(x, min(z, max(0.0, zl - (x - xl) * t))) for x, z in lo[1:]]
+        k0 = next(i for i, (_, z) in enumerate(lo) if z <= 0.0)
+        lo = lo[:k0] + [(xl + zl / t, 0.0)] if lo[k0][0] > xl + zl / t else lo[:k0 + 1]
     nose = list(reversed(up)) + lo[1:]
     return nose, lo[-1], (xt, 0.0), up[-1]
 
 
-def section_wire(tc, chord, place):
-    nose, flat0, te_lo, te_up = flat_bottom_section(tc, chord)
+def section_wire(tc, chord, place, ramp=None):
+    nose, flat0, te_lo, te_up = flat_bottom_section(tc, chord, ramp=ramp)
     pts = [place(*p) for p in nose]
     e1 = cq.Edge.makeSpline(pts)
     e2 = cq.Edge.makeLine(place(*flat0), place(*te_lo))
@@ -790,10 +799,11 @@ def section_wire(tc, chord, place):
     return cq.Wire.assembleEdges([e1, e2, e3])
 
 
-def panel(stations, z_floor=None):
-    """stations: (y_local, x_le, chord, tc), flat underside at z_floor."""
+def panel(stations, z_floor=None, ramp=None):
+    """stations: (y_local, x_le, chord, tc), flat underside at z_floor. ramp: see
+    flat_bottom_section."""
     zf = Z_FLOOR if z_floor is None else z_floor
-    wires = [section_wire(tc, c, lambda px, pz, x=x, y=y: V(x + px, y, zf + pz))
+    wires = [section_wire(tc, c, lambda px, pz, x=x, y=y: V(x + px, y, zf + pz), ramp)
              for y, x, c, tc in stations]
     solid = cq.Solid.makeLoft(wires, ruled=True)
     if solid.Volume() < 0:                       # loft came out inside-out
@@ -1193,7 +1203,7 @@ def tailplane():
     y_tip = FIN_Y - FIN_T / 2 + FIN_POCKET
     st = [(-y_tip, TAIL_TIP[0], TAIL_TIP[1], TAIL_TC), (0.0, TAIL_ROOT[0], TAIL_ROOT[1], TAIL_TC),
           (y_tip, TAIL_TIP[0], TAIL_TIP[1], TAIL_TC)]
-    return panel(st[:2], TAIL_FLOOR).union(panel(st[1:], TAIL_FLOOR))
+    return panel(st[:2], TAIL_FLOOR, TAIL_NOSE_RAMP).union(panel(st[1:], TAIL_FLOOR, TAIL_NOSE_RAMP))
 
 
 def tailplane_slot_cuts():

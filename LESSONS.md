@@ -203,3 +203,7 @@ A wheel printed lying on a face with the tyre rounded on both sides starts on a 
 - **Single-piece check:** trimesh's `split()` counts zero-volume rounding slivers in exported STLs as pieces. manifold3d's `decompose()`, with the slivers' near-zero volumes ignored, gives the real count.
 - **Painting a merged part:** printing a part (the exhaust) as one piece with its parent means the parent's paint rules reach it. Paint it explicitly: here, whatever stands outside the bare nacelle body along the exhaust run is black.
 - **Estimates held:** adding the fuselage to the wing plate was estimated at 77 h and 1.2 kg of purge from the swap count, and it sliced at 76 h 50 m and 1.16 kg.
+
+## Tailplane leading edge (2026-11-08)
+- **A flat-printed aerofoil hangs its leading edge in air.** On the 4 mm tailplane the underside rose 1.3 mm over the front 11 mm, about 7°, which Bambu calls a "floating cantilever". Filling under the nose to 45° (`ramp=` in `flat_bottom_section`) fixes it with a chamfer you can't see from below. Cut every slot and pocket from the same shape so the fits follow.
+- To find which part a slicer message comes from, build it alone (`ONLY=name python colour.py ...`) and slice that.

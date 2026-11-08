@@ -1,6 +1,6 @@
 # Handoff (start here in a new session)
 
-State on 2026-11-07, branch `phase1-airframe`, worked on the user's Mac. **`kit/halifax_kit.3mf` is rebuilt and ready to print: 7 plates, all slice with no errors** (102 h 41 m, 444 g of model, 1.44 kg of purge; `docs/slicing.md`). It passes the geometry checks: single pieces, no clashes, ≤ 5 colours a plate, overhangs as before. Read `LESSONS.md`, `TODO.md` and `.claude/skills/snap-kit/SKILL.md` before changing anything.
+State on 2026-11-07, branch `phase1-airframe`, worked on the user's Mac. **`kit/halifax_kit.3mf` is rebuilt and ready to print: 7 plates, all slice with no errors** (102 h 39 m, 444 g of model, 1.44 kg of purge; `docs/slicing.md`). It passes the geometry checks: single pieces, no clashes, ≤ 5 colours a plate, overhangs as before. Read `LESSONS.md`, `TODO.md` and `.claude/skills/snap-kit/SKILL.md` before changing anything.
 
 ## How to build
 - Full colour build: `cd cad && python -u colour.py OUT project_settings_template.json` (11 min on the Mac). The template is `cad/project_settings_template.json`: the user's Bambu X2D 0.20 mm Standard project settings, taken from `halifax.3mf`. The overrides in `colour.py` (`PRINT_OVERRIDES`, `object_settings`) go on top of it. `write_3mf` places a prime tower on every plate (`kitlib.place_towers`) and prints where.
@@ -22,6 +22,7 @@ State on 2026-11-07, branch `phase1-airframe`, worked on the user's Mac. **`kit/
 - **Nose key in every nacelle** (`NOSE_KEY_X`, `NOSE_KEY_FIT` 0.1): one KEY_NAC flexing key across the split behind the prop boss; 4 more `key_nacelle_nose_*` parts. Before this, nothing held the halves together at the nose.
 - **Exhausts printed with the nacelle halves** (`EXHAUST_SEPARATE = False`), painted black (`colour.exhaust_region`). No separate exhaust parts or sockets.
 - **Fits from the test prints** (below) and **flat-faced wheels**.
+- **Tailplane leading edge filled underneath to 45°** (2026-11-08, `TAIL_NOSE_RAMP`, `panel(..., ramp=)`): it prints flat, and the old 7° curve into the leading edge hung in air along the whole span (Bambu: "floating cantilever"). The wings are unchanged; they print on end.
 
 ## Test print results (settled fits, X2D, PLA)
 - Prop boss: neck 2.3, axial gap 0.4 (`PROP_BOSS`): spins.
@@ -32,7 +33,7 @@ State on 2026-11-07, branch `phase1-airframe`, worked on the user's Mac. **`kit/
 - Details in `LESSONS.md`.
 
 ## Next up
-1. **Print the kit.** Plate 1 is one 77 h print holding the wings and the fuselage, so a late failure loses both: use the brims and watch the first layers. Look at these non-critical slicer warnings in the app's preview first: `fuselage_rear` and `tailplane` floating cantilever, `df_loop` and `turret_dorsal` floating regions, `stand_post` and both gun packs cantilever. Most are the small overhangs `tools/overhang.py` already accepts.
+1. **Print the kit.** Plate 1 is one 77 h print holding the wings and the fuselage, so a late failure loses both: use the brims and watch the first layers. Look at these non-critical slicer messages in the app's preview first: the tailplane's first layers (a one-off "ZFiller" note from the slicer since its leading-edge fill, see `docs/slicing.md`), `fuselage_rear` floating cantilever, `df_loop` and `turret_dorsal` floating regions, `stand_post` and both gun packs cantilever. Most are the small overhangs `tools/overhang.py` already accepts.
 2. **For later (user): panel lines and detail on the wing undersides.** They're plain because the wings used to print flat. Now they print on end, so the underside can carry detail like the top (see `cad/detail.py`).
 3. **Purge (1.44 kg for 0.44 kg of model)**, options not yet decided:
    - Use the X2D's second nozzle: `write_3mf` puts every filament on nozzle 1, and the second nozzle can't reach x < 20.5, so coloured parts would need packing at x ≥ 21.
