@@ -331,3 +331,4 @@ A void that doesn't reach the outside is a separate, negative-volume shell. `lar
 - **Fits differ by print orientation.** The same key slot cut through a wing printed on end and a fuselage section printed on end came out looser in the fuselage. Give each part its own fit.
 - **Cut recesses around attached detail.** The wheel-well recess, cut after the fins were added, left a fin floating over it. Subtract the detail from the recess first.
 - **Bambu Studio refuses names containing `<>:/\|?*"`**, including plate names.
+- **Make snap prongs long.** The wheel's mushroom boss, about 3.4 mm free with prongs 1.55 mm thick, broke off on the first push. Running the boss right through the wheel, with the head clipping over the far side, gave about 8 mm of free prong and about a fifth of the bending strain.

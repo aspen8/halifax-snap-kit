@@ -49,7 +49,15 @@ Against photos (top: real aircraft, bottom: model):
 
 ![photo comparison](docs/photo_comparison.png)
 
-> **Status: v26; test coupons printed once (see v26 changes).** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+> **Status: v27; test coupons printed twice (see v26 and v27 changes).** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+
+### v27 changes (wheel snap through the wheel)
+
+- **Wheel snap:** on the coupon print both mushroom bosses snapped off as the wheel went on (prongs 1.55 mm thick and only about 3.4 mm free). The boss now runs right through the wheel: a plain 5.6 mm bore (with a lead-in on the inboard face) on a 5.0 mm neck, split by a 1.2 mm slot, with a 6.6 mm head that clips over the floor of the outboard hub dish and stands out of it about 1.1 mm like a hub cap (user's idea). Prongs about 1.9 mm thick and 8 mm free, holding 0.5 mm a side: about a fifth of the bending strain. Main and nose wheels alike.
+- **Fences:** unchanged; the user will judge them from the v26 coupon print first (they may need a deeper slot to clip onto).
+- **Checks:** interference shows only the known overlaps; gear overhangs no worse (the wheels now have none). All 6 plates slice; gear plate 1.25 h. Test coupons rebuilt (wheel snap plate 0.5 h).
+
+![v27 wheel snap: leg block, boss through the wheel, split head out the far side](docs/v27_wheel_snap.png)
 
 ### v26 changes (from test print 1 of the coupons)
 
@@ -376,7 +384,7 @@ The stand now plugs into a blind socket in the smoke pod:
 | Airframe (red, white) | Tailplane root (its plug) and a block of the rear fuselage round its socket | 1.9 h | The plug pushes in firmly and holds without glue (glue it in the kit) |
 | | Wing root on end (first 24 mm of span), a block of the middle fuselage round the root joint, and a wing key | | The key slot no longer breaks through the underside; the key is a firm push fit in both slots; the wing slides under the pods and sits flush |
 | | The wing-root coupon carries the inner underside fin, moulded on; one leading-edge fence and the piece of leading edge it slides onto | | The fin is attached along its whole length (it crosses the wheel well); the fence is stiff enough and slides back onto the leading edge with its tongue in the groove |
-| Wheel snap (black, grey) | Starboard main leg and wheel, whole | 0.5 h | The wheel clicks on, spins without wobble and doesn't pull off |
+| Wheel snap (black, grey) | Starboard main leg and wheel, whole | 0.5 h | The boss goes through the wheel and its head clicks out the far side without breaking; the wheel spins and doesn't pull off |
 
 If a fit is too tight or too loose, it's one number in `hawk.py`: `GEAR_SNAP` (wheel snap: head diameter or slot width), `TAIL_PLUG_FIT` (tailplane), `WING_KEY_FIT` (wing key, in the wing and in the fuselage).
 
@@ -419,7 +427,7 @@ Suggested settings: PLA, 0.16 mm layers for the gear plate and 0.2 mm elsewhere,
   - "ROYAL AIR FORCE" on each side
   - fuselage roundels, and wing roundels on the top and the bottom of each wing
   - underside chevrons meeting in a point just ahead of the smoke pod's nose, and belly stripes along the rear fuselage's lower corners
-- **Gear:** nose leg (one piece), 2 main legs, 3 wheels. Each wheel snaps onto a sprung mushroom boss on its leg and spins on it (no pins, no glue).
+- **Gear:** nose leg (one piece), 2 main legs, 3 wheels. Each wheel pushes onto a split boss on its leg that runs right through it; the head clicks out over the outboard hub, and the wheel spins on the boss (no pins, no glue).
 - **Keys** (fewer and bigger than before: 17.5 × 8.75 × 3.75 mm for the fuselage). Each is a split clip, like PB94's: both ends are split down the middle, so the prongs flex in and the key pushes in easily but still grips; the tips have 45° lead-ins and the middle is waisted. They print flat.
   - 2 at the nose/front joint, 2 at the front/middle joint and 3 at the middle/rear joint
   - 2 wing root keys, 18.5 × 17.5 × 4.25 mm, one per wing

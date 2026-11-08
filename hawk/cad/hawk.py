@@ -325,15 +325,18 @@ MAIN_PLUG_DEPTH = 2.6        # the wing is 4.1 mm thick here: keep >= 0.8 mm abo
 MAIN_WHEEL = (15.0, 5.0)     # diameter, width
 NOSE_WHEEL = (11.0, 4.0)
 GEAR_DROP = 22.0
-# v22 snap fits (the Halifax prop boss, tested on the X2D in PLA): a boss on the leg, split by a
-# spring slot, with a mushroom head that pushes through a lip in the wheel's hub into a cavity
-# behind it. All sizes in PRINTED mm (the clearances come from the printer, not the model), so
-# they are multiplied by _P where used. neck/head/lip/cav are diameters.
-GEAR_SNAP = dict(neck=4.6, head=6.8, head_len=1.5, cham=0.8, slot=1.5, slot_in=5.0,
-                 lip=5.5, lip_t=1.2, lip_cham=0.4, cav=7.4, end_gap=0.4, gap=0.3)
-                             # running clearance 0.45 (spins), retention 0.65 (stays on), slot 1.5
-                             # (the prongs close 1.3), cavity 0.3 over the head, 0.4 end gaps,
-                             # 0.3 between the leg and the wheel
+# Wheel snap fit: a boss on the leg, split by a spring slot, with a mushroom head. All sizes in
+# PRINTED mm (the clearances come from the printer, not the model), so they are multiplied by _P
+# where used. neck/head/bore are diameters.
+GEAR_SNAP = dict(neck=5.0, head=6.6, head_len=1.5, cham=0.8, slot=1.2, slot_in=3.0,
+                 bore=5.6, bore_cham=0.4, dish=0.7, end_gap=0.3, gap=0.3)
+                             # v27 (test print: the v22 boss's prongs, 1.55 mm thick and 3.4 mm
+                             # free, snapped off as the wheel went on): the boss now runs right
+                             # through the wheel's bore and its head clips over the floor of the
+                             # outboard hub dish, standing out like a hub cap. Prongs 1.9 mm thick
+                             # and about 8 mm free; running clearance 0.3 a side (bore 5.6 on a
+                             # 5.0 neck), retention 0.5 a side (head 6.6), slot 1.2 (the head
+                             # closes to 5.4, under the bore), 0.3 end gap and leg-wheel gap
 LEG_T_IN = 1.0               # main legs are this much thicker on their inner (bed) face, so the
                              # spring slot can run 4 mm in
 
@@ -1487,12 +1490,14 @@ def _frame(p, a, n):
     return np.c_[n, b, a, np.asarray(p, float)]
 
 
-def snap_boss(p, a, n, S, gap):
+def snap_boss(p, a, n, S, gap, length=None):
     """(boss, slot) for a snap fit: the boss stands on its parent's face at p, pointing along a;
-    the spring slot (cut from the boss and the parent) lies across n. Returns both to add/cut."""
+    the spring slot (cut from the boss and the parent) lies across n. Returns both to add/cut.
+    length: what the head clips over (model mm; default S's lip thickness)."""
     k = _P
     rn, rh, hl, ch = S["neck"] / 2 * k, S["head"] / 2 * k, S["head_len"] * k, S["cham"] * k
-    zh = gap + (S["lip_t"] + S["end_gap"]) * k                     # the head's shoulder
+    length = S.get("lip_t", 0.0) * k if length is None else length
+    zh = gap + length + S["end_gap"] * k                           # the head's shoulder
     neck = M.cylinder(zh + 1.0 + 0.01, rn, rn, 48).translate([0, 0, -1.0])   # from inside the parent
     head = M.cylinder(hl - ch, rh, rh, 64).translate([0, 0, zh]) \
         + M.cylinder(ch + 0.02, rh, rh - ch, 64).translate([0, 0, zh + hl - ch - 0.02])   # lead-in (overlaps:
@@ -1503,46 +1508,32 @@ def snap_boss(p, a, n, S, gap):
     return (neck + head).transform(T), slot.transform(T)
 
 
-def snap_socket(p, a, n, S, depth_max=None, tear=None):
-    """Lip and cavity for snap_boss, entering the part's face at p along a. depth_max limits the
-    45-degree cavity roof (flat beyond); tear (a direction) makes the cavity a teardrop for a
-    roof that faces that way when printed."""
-    k = _P
-    rl, lt, lc = S["lip"] / 2 * k, S["lip_t"] * k, S["lip_cham"] * k
-    rc, cd = S["cav"] / 2 * k, (S["head_len"] + 2 * S["end_gap"]) * k
-    hole = M.cylinder(lt + 0.2, rl, rl, 48).translate([0, 0, -0.1]) \
-        + M.cylinder(lc, rl + lc, rl, 48) + M.cylinder(1.0, rl + lc, rl + lc, 48).translate([0, 0, -1.0])
-    cav = M.cylinder(cd, rc, rc, 64).translate([0, 0, lt])
-    roof = rc if depth_max is None else max(0.0, min(rc, depth_max - lt - cd))
-    if roof > 0.01:
-        cav = cav + M.cylinder(roof, rc, rc - roof, 64).translate([0, 0, lt + cd])
-    T = _frame(p, a, n)
-    cav = cav.transform(T)
-    if tear is not None:
-        t = np.asarray(tear, float); t /= np.linalg.norm(t)
-        pa = np.asarray(p, float); av = np.asarray(a, float) / np.linalg.norm(a)
-        tips = [pa + av * z + t * rc * 1.41 for z in (lt, lt + cd)]
-        cav = M.hull_points(np.vstack([np.asarray(cav.to_mesh().vert_properties)[:, :3], np.array(tips)]))
-    return hole.transform(T) + cav
-
-
 def gear_socket_nose():
     zb = fuse_at(NOSE_GEAR_X)[3]
     return box(NOSE_GEAR_X - 2.2 - FIT, NOSE_GEAR_X + 2.2 + FIT, -2.2 - FIT, 2.2 + FIT, zb - 1, zb + 6.3)
 
 
+def wheel_bearing(w):
+    """Length the snap boss runs through a wheel of width w: inboard face to the dish floor."""
+    return w - GEAR_SNAP["dish"] * _P
+
+
 def wheel_m(x, yc, z_axle, d, w, inb=-1):
-    """Wheel with its snap socket in the inboard face (towards -y for inb=-1): that face is plain
-    and flat with a small chamfer, as it prints on it; tyre rounding and hub detail outboard."""
+    """Wheel with a plain bore right through (v27): the leg's snap boss passes through it and its
+    head clips over the floor of the outboard hub dish. The inboard face is plain and flat with a
+    small chamfer, as it prints on it; tyre rounding outboard."""
+    S, k = GEAR_SNAP, _P
     tyre = cq.Workplane("XZ").circle(d / 2).extrude(w / 2, both=True)
     tyre = tyre.edges(">Y" if inb < 0 else "<Y").fillet(min(1.5, w / 3))
     tyre = tyre.faces("<Y" if inb < 0 else ">Y").edges().chamfer(0.3 * _P)
     t = to_m(tyre)
     s = -inb                                                    # outboard
-    t = t - cyl((0, s * (w / 2 + 0.1), 0), d * 0.58, -s * 0.7, "y")
-    t = t + cyl((0, s * (w / 2 - 0.6), 0), d * 0.26, s * 0.45, "y")
-    face = (0, inb * w / 2, 0)
-    t = t - snap_socket(face, (0, -inb, 0), (1, 0, 0), GEAR_SNAP, depth_max=w - 1.2)
+    t = t - cyl((0, s * (w / 2 + 0.1), 0), d * 0.58, -s * (S["dish"] * k + 0.1), "y")   # hub dish
+    rb = S["bore"] / 2 * k
+    t = t - cyl((0, -s * (w / 2 + 1), 0), 2 * rb, s * (w + 2), "y", 48)            # bore
+    lc = S["bore_cham"] * k                                     # lead-in at the inboard face
+    lead = M.cylinder(lc + 0.01, rb + lc, rb, 48).translate([0, 0, -0.01])
+    t = t - lead.transform(_frame((0, inb * w / 2, 0), (0, -inb, 0), (1, 0, 0)))
     return t.translate([x, yc, z_axle])
 
 
@@ -1562,8 +1553,7 @@ def nose_gear():
                  box(NOSE_GEAR_X - 2.2, NOSE_GEAR_X + 2.2, -2.2, 2.2, zb - 0.2, zb + 6.0),                 # plug
                  box(NOSE_GEAR_X - 2.0, x + 2.0, yb, w / 2 + 0.6, zc0, z_axle + d / 2 + 2.6),               # fork top
                  box(x - 2.4, x + 2.4, yb, yi, z_axle - 2.6, zc0 + 0.01)])                                # arm
-    S = dict(GEAR_SNAP, slot_in=4.25)                                  # the arm is 5.5 mm (printed)
-    boss, slot = snap_boss((x, yi, z_axle), (0, 1, 0), (1, 0, 0), S, gap)
+    boss, slot = snap_boss((x, yi, z_axle), (0, 1, 0), (1, 0, 0), GEAR_SNAP, gap, wheel_bearing(w))
     return (leg + boss) - slot, (x, z_axle)
 
 
@@ -1601,7 +1591,7 @@ def main_gear(side):
     f = union([leg,
                box(x - 2.2, x + 2.2, ya, yb_, zb - 0.2, zb + MAIN_PLUG_DEPTH),         # plug
                box(xa - 2.8, xa + 2.8, ya, yb_, z_axle - 2.8, z_axle + 2.8)])          # axle boss
-    boss, slot = snap_boss((xa, y0, z_axle), (0, side, 0), (1, 0, 0), GEAR_SNAP, gap)
+    boss, slot = snap_boss((xa, y0, z_axle), (0, side, 0), (1, 0, 0), GEAR_SNAP, gap, wheel_bearing(w))
     return (f + boss) - slot, (xa, y0 + side * (gap + w / 2), z_axle)
 
 
