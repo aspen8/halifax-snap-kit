@@ -335,6 +335,21 @@ The stand now plugs into a blind socket in the smoke pod:
 
 ![stand into the pod](docs/stand_pod.png)
 
+## Test coupons (print these first)
+
+`kit/hawk_test_coupons.3mf` (made by `cad/test_coupons.py`) tests the new joints in about 2 hours before you commit to the full kit (about 30 hours). Every coupon is cut from the real v23 part, with the same fits, paint and print pose.
+
+| Plate | Coupons | Time | Check |
+|---|---|---|---|
+| Airframe (red, white) | Tailplane root and a block of the rear fuselage round its socket | 1.5 h, 27 g | The tailplane clicks in, turns when pushed and holds its angle (doesn't spin freely) |
+| | Wing root on end (first 24 mm of span), a block of the middle fuselage round the root joint, and a wing key | | The root prints cleanly on its brim; the key pushes in; the wing slides under the pods and sits flush; the underside white lines up across the joint |
+| | One underside fin (its slot is in the wing-root coupon), one leading-edge fence and the piece of leading edge it clips round | | The fin pushes into its slot and stays with a dab of glue; the fence fits round the leading edge |
+| Wheel snap (black, grey) | Starboard main leg and wheel, whole | 0.5 h | The wheel clicks on, spins without wobble and doesn't pull off |
+
+If a snap is too tight or too loose, it's one number: `GEAR_SNAP` / `TAIL_SNAP` in `hawk.py` (the head diameter or the slot width).
+
+![test coupons](docs/test_coupons.png)
+
 ## Print it
 
 Open `kit/hawk_kit.3mf` in Bambu Studio. Its 6 plates have the filaments already assigned. Slot 5 is the canopy colour: the canopy is opaque, so load any colour you like for it (smoke grey or dark blue look right).
