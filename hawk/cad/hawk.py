@@ -235,7 +235,7 @@ WING_FENCE_SEAT = (0.22, 0.16)   # v28: each leading-edge fence has a tongue in 
                              # deep (about 0.95 / 0.7 mm printed on the big fence; v27 had 0.5 mm
                              # under only and the test fence was still loose). No glue (user)
 WING_FENCE_FIT = 0.04 * _P   # v28: per side, fence in its grooves: a snug push fit (was FIT, 0.15)
-WING_FIN_LEDGE = 0.5         # v24: the underside fins are moulded on again, with their inboard face
+WING_FIN_LEDGE = 0.3         # v29: was 0.5 (0.6 mm printed); v24: the underside fins are moulded on again, with their inboard face
                              # sloping at 45 deg (it faces down when the wing prints on end) out to
                              # this far from the tip, which prints as a short unsupported ledge
 Z_FLOOR = -7.6               # wing underside at the centreline
@@ -301,11 +301,17 @@ POD_TUBE_END = 150.0         # full section to here, then a long taper (render: 
 POD_TAIL_END = 195.0         # about X 150 to a point near X 195); the underside sweeps up from X 160
                              # in one S-curve, tangent into the belly at the end (v22b: it stopped at
                              # mid-height and then rounded up again, a bulb on the tail)
-POD_W = 4.8                  # half-width (render: ~9.6 across); POD_R is the half-height (an oval:
-                             # deeper than wide, as from behind)
-POD_R = 5.6                  # photos: a fat tube, round blunt nose, long tail cone, hung close under the belly
+POD_W = 4.8                  # v30: the pod is a round cylinder this radius (render: ~9.6 across),
+                             # hung on a fairing (user's sketch, plan and sections)
+POD_R = 5.6                  # half of the old oval's depth: kept only to place the pod's bottom line
+                             # (2 * POD_R + POD_PYLON gap below the belly, as fitted to the side view)
+POD_FAIRING = (105.0, 113.0, 150.0)   # v30: the fairing (pylon) starts with a rounded front at the
+                             # first x, is half the pod's width by the second and its full width by the
+                             # third, where the section becomes a U (straight sides into the round bottom)
+POD_TAIL_EDGE = 3.0          # v30: the tail ends in a vertical edge this deep under the belly (rear view
+                             # and side photo); the underside sweeps up to it, the sides taper to it
 def _ogive(n=14):
-    L, R = POD_NOSE * 95.0, POD_R
+    L, R = POD_NOSE * 95.0, POD_W
     rho = (R * R + L * L) / (2 * R)
     out = []
     for t in np.linspace(0.0, 1.0, n):
@@ -315,10 +321,10 @@ def _ogive(n=14):
     return out
 
 
-POD_PROFILE = _ogive() + [((POD_TUBE_END - POD_X0) / POD_LEN, POD_R)]
+POD_PROFILE = _ogive() + [((POD_TUBE_END - POD_X0) / POD_LEN, POD_W)]
 POD_PYLON = (8.0, 2.6, 0.6)   # (inset unused since v7), half-width, gap pod top to belly
 POD_TAIL_N = 19  # fore/aft inset, half-width, height
-POD_KEYS = [0.116, 0.72]     # pylon pegs: the front one sits ahead of the port wing tongue (X 117-124)
+POD_KEYS = [0.32, 0.72]      # pylon pegs (v30: the front one moved back onto the fairing, which now starts at X 105)
 POD_KEY = 4.0
 
 # --- Landing gear
@@ -945,9 +951,11 @@ def _fin_profiles():
         sec = np.array(cambered_section(tc, c))
         k = int(np.argmin(sec[:, 0]))
         lo = sec[k:]
-        xs = np.linspace(f0 * c, min(f1, 0.995) * c, 12)
+        xs = np.linspace(f0 * c, min(f1, 0.995) * c, 24)
         u = (xs - xs[0]) / (xs[-1] - xs[0])
         d = h * np.clip(np.sin(np.pi * np.clip(u * 1.3, 0, 1)) ** 0.6, 0.15, 1.0)   # deepest a third along
+        d[u < 0.5] = h * np.sin(np.pi * np.clip(u[u < 0.5] * 1.3, 0, 1)) ** 0.6     # v29: the front ramps
+        # out of the skin from nothing (its 0.15 h step printed as an unsupported shelf and sagged)
         bottom = [(le + x, float(np.interp(x, lo[:, 0], lo[:, 1])) - dd) for x, dd in zip(xs, d)]
         prof = np.array(bottom + [(le + xs[-1], 0.0), (le + xs[0], 0.0)])
         if K.cs([prof]).area() < 0:
@@ -1365,9 +1373,9 @@ def canopy():
 # SMOKE POD, AERIALS, GEAR
 # ============================================================
 def pod_geom():
+    """(belly z, z of the pod's axis): the bottom line stays where the oval's was (v30)."""
     zb = min(fuse_at(POD_X0 + f * POD_LEN)[3] for f in (0.25, 0.5, 0.75))
-    r = max(r for _, r in POD_PROFILE)
-    return zb, zb - POD_PYLON[2] - r
+    return zb, zb - POD_PYLON[2] - 2 * POD_R + POD_W
 
 
 POD_PEG = (7.0, 3.2, 4.0)       # pegs moulded on the pylon top into the belly: length (x), width (y), height
@@ -1394,31 +1402,44 @@ def pod_key_slots():
 
 @cached
 def smoke_pod():
-    """Pod (body of revolution) on a short pylon; two halves split on the centreline."""
+    """Smoke pod (v30, user's sketch): a round cylinder with a torpedo nose, hung on a fairing
+    that starts narrow behind the nose and widens to the pod's full width (a U section), then
+    pod and fairing taper together to a vertical edge at the tail. Two halves split on the
+    centreline."""
     zb, zc = pod_geom()
-    front = POD_PROFILE
-    pod = _revolve_x([(POD_X0 + f * POD_LEN, rr) for f, rr in front]).scale([1, POD_W / POD_R, 1]).translate([0, 0, zc])
-    # tail: from the end of the tube the sides taper in a long curve to a point at POD_TAIL_END;
-    # the underside sweeps up in one S-curve from X 160 into the belly; the top stays level to
-    # X 175, then eases into the belly
-    top0, bot0 = zc + POD_R, zc - POD_R
     x0, x1 = POD_TUBE_END, POD_TAIL_END
     zbel = fuse_at(x1)[3]
-    tail = []
-    for t in np.linspace(0.0, 1.0, POD_TAIL_N):
-        x = x0 + t * (x1 - x0)
+    bot0 = zc - POD_W
+    nose = [(POD_X0 + f * POD_LEN, r) for f, r in POD_PROFILE[:-1]]
+
+    def r_at(x):                                     # the round part's radius
+        if x <= nose[-1][0]:
+            return float(np.interp(x, [a for a, _ in nose], [r for _, r in nose]))
+        t = min(max((x - x0) / (x1 - x0), 0.0), 1.0)
+        return max(0.3, POD_W * (1 - t * t))
+
+    def bot_at(x):                                   # underside: round about the axis (the nose is a
+        if x <= 160.0:                               # torpedo), then from X 160 up to the tail edge
+            return zc - r_at(x)
+        b = zc - r_at(160.0)
         u = min(max((x - 160.0) / (x1 - 160.0), 0.0), 1.0)
-        bot = bot0 + (zbel + 0.4 - bot0) * u * u * (3 - 2 * u)
-        v = min(max((x - 175.0) / (x1 - 175.0), 0.0), 1.0)
-        top = top0 + (zbel + 1.2 - top0) * v * v * (3 - 2 * v)
-        hw_ = max(0.5, POD_W * (1 - t * t))
-        tail.append((x, hw_, top, bot))
-    pod = pod + to_m(loft([superellipse_wire(x, h, tp, bt, 2.0) for x, h, tp, bt in tail], ruled=True))
-    # pylon: the whole length, so there is no gap to the belly anywhere; it narrows with the pod
-    _, hw, _ = POD_PYLON
-    pw = [(POD_X0 + f * POD_LEN, min(hw, 0.55 * rr), zc) for f, rr in POD_PROFILE if f >= 0.03]
-    pw += [(x, min(hw, 0.55 * h), (tp + bt) / 2) for x, h, tp, bt in tail[1:]]
-    pylon = to_m(loft([superellipse_wire(x, h, zb + 4.0, z0, 6.0) for x, h, z0 in pw], ruled=True))
+        return b + (zbel - POD_TAIL_EDGE - b) * u * u * (3 - 2 * u)
+
+    xs = sorted(set([a for a, _ in nose] + list(np.linspace(nose[-1][0], x1, 40))))
+    body = to_m(loft([superellipse_wire(x, r_at(x), bot_at(x) + 2 * r_at(x), bot_at(x), 2.0) for x in xs],
+                     ruled=True))
+    fa, fb, fc = POD_FAIRING
+
+    def n_at(x):                                     # the fairing's half-width
+        r = r_at(x)
+        if x < fb:
+            return max(0.25, 0.5 * r * math.sqrt(max(x - fa, 0.0) / (fb - fa)))   # rounded front
+        return r * (0.5 + 0.5 * min((x - fb) / (fc - fb), 1.0))
+
+    fx = [fa + 0.05] + list(np.linspace(fa + 0.5, fb, 6)) + list(np.linspace(fb, x1, 36))[1:]
+    pylon = to_m(loft([superellipse_wire(x, n_at(x), fuse_at(x)[3] + 4.0, bot_at(x) + r_at(x), 6.0) for x in fx],
+                      ruled=True))
+    pod = body
     p = (pod + pylon) - outer()           # the finished outer shape: body() sits up to 0.6 above
                                           # the belly ahead of the wing (v22: the pylon cut into it)
     k = STAND_KEY / 2 + FIT

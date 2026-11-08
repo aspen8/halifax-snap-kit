@@ -49,7 +49,20 @@ Against photos (top: real aircraft, bottom: model):
 
 ![photo comparison](docs/photo_comparison.png)
 
-> **Status: v28; test coupons printed twice (see v26 and v28 changes).** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+> **Status: v30; test coupons printed twice (see v26 and v28 changes).** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+
+### v30 changes (smoke pod from the user's sketch)
+
+- **Smoke pod:** rebuilt from the user's sketch (plan and three sections) and photos from behind and the side. A round cylinder (9.6 mm across at 1:40) with a torpedo nose on its axis, hung on a fairing that starts with a rounded front at X 105, is half the pod's width by X 113 and its full width by X 150, where the section becomes a U (straight sides into the round bottom). From X 150 pod and fairing taper together to the tail; from X 160 the underside sweeps up to a vertical edge 3 mm deep under the belly at X 195. The bottom line is where it was. The front peg into the belly moved back to X 117 onto the fairing (it was ahead of where the fairing now starts).
+- **Checks:** interference shows only the known overlaps; each pod half is one piece; overhang about as before; all plates slice (fuselage plate 11.9 h).
+
+![v29 and v30 smoke pod, side](docs/v30_pod_side.png)
+
+![v29 and v30 smoke pod, from behind](docs/v30_pod_rear.png)
+
+### v29 changes (fin front)
+
+- **Underside fins:** the test print showed the inner fin's front end not attached: its front was a step 15% of its depth, under the 45° brace's unsupported ledge, so on a wing printed on end it was a shelf in mid-air and sagged. Each fin's front now ramps out of the skin from nothing, and the brace reaches to within 0.4 mm of the edge (was 0.6).
 
 ### v28 changes (from test print 2: no glue)
 
@@ -425,7 +438,7 @@ Suggested settings: PLA, 0.16 mm layers for the gear plate and 0.2 mm elsewhere,
   - per wing, 4 underside fins moulded on (the deeper one near the leading edge is white); each has a 45° brace on its inboard face so it prints on the wing standing on end
   - 4 leading-edge fences (2 per wing): collars, taller above the wing than below and twice as long on top, that slide back onto the leading edge with a tongue in a groove under the wing and on top; a snug fit holds them (no glue)
   - 2 fixed tailplanes with 10° anhedral, printed on end; each one's own aerofoil runs on into the fuselage as a plug, a firm push fit in a socket of the same shape (no glue)
-  - smoke pod (2 halves), an oval tube (deeper than wide) with a round nose and a long taper that sweeps up into the belly, with pegs moulded on its pylon that push into the belly
+  - smoke pod (2 halves): a round cylinder with a torpedo nose on a fairing that widens from half its width to its full width (a U section), tapering to a vertical edge at the tail; pegs on the fairing push into the belly
   - 2 ventral strakes, moulded under the rear fuselage
   - jet nozzle: a separate grey ring standing 3.75 mm out of the tail, black inside, with a 12 mm deep void, a step ring, an exhaust cone and 6 struts at the bottom. A spigot plugs it into a countersunk socket in the tail.
   - 5 black aerials (top of the nose, behind the canopy, two under the nose, one under the tail)
@@ -548,7 +561,6 @@ Checks: run `tools/interference.py` on the assembled STLs without the `key_*` fi
 
 ## Known gaps and next steps
 
-- **Smoke pod cross-sections (user to supply).** The user will send cross-section drawings of the smoke pod to settle its shape; rework the pod from them.
 - **Test print 2 feedback (canopy, gear and nozzle plates, from the v3/v4 files):**
   - Canopy fit was poor because of the overhang at the front of the old nose section; the v4 cut at X 46 should fix that, so check it on the next fuselage print. (The canopy pose, tabs, nozzle and gear points are done in v7.)
 - **Nonplanar top surfaces (try).** [orcaslicer-nonplanar](https://github.com/fich-l/orcaslicer-nonplanar) (OrcaSlicer fork, v0.1, Apple Silicon Mac only) makes the top shells of gently sloped surfaces follow the shape (up to 12° slope and 5 mm height span), so there are no contour stair steps. The wing halves (outer skin up) and the tailplanes fit those limits behind the leading edge. Unknowns: painted multi-colour regions, the X2D's two nozzles and AMS (not mentioned in its docs), and opening our Bambu 3MF in it. Test: an outboard wing top-half section, once in plain red and once with the roundel painted in. If the colours fail, use separate press-in roundel discs.
