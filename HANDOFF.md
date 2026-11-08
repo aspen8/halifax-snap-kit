@@ -40,6 +40,8 @@ Then:
 
 ## State at handoff (v31, built, checked and committed locally)
 
+**Smoke pod is still wrong (user, after v31: "much worse... moving further away from the correct form").** Don't reshape it from descriptions or eyeballed renders again. The user is working out how to show the correct shape (views from the reference viewer, a sketch or a photo). When it arrives, measure it by pixel, then show the model side by side at the same angles before building. Restoring an older pod was declined ("we need to get it right").
+
 v31: smoke pod underside and tail measured from the side render (`POD_BOTTOM_LINE`, `POD_TAIL_END` 206, `POD_FAIRING_TE`, `POD_DEPTH` 11.0, `POD_W` 4.65; full U from X 140 to 160 then narrowing). Overlay helper for the clean renders: the calibrations in this file (side u = 135 + 3.39 x, v = 318 - 3.39 z; under K 3.445). Measure renders by pixel, not by eye: an eyeballed bottom line was 2 mm off.
 
 v29: fin fronts ramp from the skin (`_fin_profiles`), `WING_FIN_LEDGE` 0.3. v30: smoke pod from the user's sketch (`smoke_pod`: round body `r_at`/`bot_at`, fairing `n_at`, `POD_FAIRING`, `POD_TAIL_EDGE`; `pod_geom` keeps the old bottom line; front peg `POD_KEYS[0]` 0.32). The user calibrated the white on the right nozzle: K 0.35 (on the printer's AMS slot, not in the file), flow ratio 0.98 confirmed (already in the template). Still to test: tailplane on end, two-tongue fences, through-wheel snap, white with the new K (wing coupon).
