@@ -49,7 +49,19 @@ Against photos (top: real aircraft, bottom: model):
 
 ![photo comparison](docs/photo_comparison.png)
 
-> **Status: v17, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+> **Status: v23, not yet printed.** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+
+### v23 changes (one-piece wings printed on end, paint fix)
+
+- **Wings in one piece, printed on end** (user: like the Halifax and Spitfire kits). Each wing stands on a flat root, tip up, 133 mm tall (Bambu's auto brim covers it). The root is cut at |y| 11 (1:40), where the section is complete and the fuselage covers the wing's top along the whole chord, so the joint only shows underneath, as a fore-and-aft line about 4 mm out from the belly behind X 128. The short stub inboard of it is now moulded on the middle fuselage section. The wing root key is unchanged. No more top and bottom halves or wing pins.
+- **Wing fins and fences are separate glue-on parts.** On a wing standing on end they would be shelves in mid-air. Each wing has 4 underside fins (the deeper one near the leading edge prints white) that sit 0.5 mm deep in slots, and 2 leading-edge fences that wrap round the leading edge. They print flat on the small-parts plate.
+- **White above the wing fixed:** the rear belly stripes were allowed to climb the fuselage side from X 165, which is still ahead of the wing's trailing edge, so white showed on the side pod's lower flank just above the wing. They now stop below the wing until 3.5 mm behind its trailing edge.
+- **Plates:** 6, not 7 (one wings plate replaces the wing tops and undersides).
+- **Checks:** interference shows only the known overlaps; no white fuselage paint is left above the wing; overhang on each wing drops from about 600 mm² (both halves) to 143 mm², and the middle section gains 67 mm² (the stub's trailing edge). All 6 plates slice. Print times: fuselage 11.6 h, tailplanes and small parts 0.8 h, wings 8.0 h (was 3.5 h for both wing plates: on end most layers change colour, and the plate uses about 142 g against 77 g), fins and canopy 5.4 h, stand 2.2 h, gear 1.2 h.
+
+![v22 and v23 side pod above the wing](docs/v23_pod_flank.png)
+
+![v23 underside](docs/v23_under.png)
 
 ### v22 changes (snap-fit gear and tailplanes, smoke pod, lettering, fixes)
 
@@ -64,7 +76,6 @@ From the user's look at v21 in the slicer, each point checked against the clean 
 - **Fin paint:** the fin halves are painted on their upward-facing surfaces too, below the root fillet: where the fin flares into the spine the surface levels out, and the swoosh and the flag's lowest white stopped short there. This adds about an hour to the fins and canopy plate.
 - **Aerials and probe:** 5 black aerials at the render's positions; the probe is grey. Both are on the gear plate.
 - **Rear belly stripes:** painted to full skin depth (they climb the round rear belly's sides).
-- **Wing pins:** still separate. Moulding them on a half doesn't work: both halves print split face down.
 - **Checks:** interference shows only the known overlaps; all 7 plates slice. Print times: fuselage 11.7 h, tailplanes and small parts 0.7 h, wing tops 1.8 h, wing undersides 1.7 h, fins and canopy 5.4 h, stand 2.2 h, gear and small black/grey parts 1.2 h. Print a test coupon of the wheel snap before the full gear (user's guidance).
 
 ![v22 port side](docs/v22_side.png)
@@ -326,17 +337,16 @@ The stand now plugs into a blind socket in the smoke pod:
 
 ## Print it
 
-Open `kit/hawk_kit.3mf` in Bambu Studio. Its 7 plates have the filaments already assigned. Slot 5 is the canopy colour: the canopy is opaque, so load any colour you like for it (smoke grey or dark blue look right).
+Open `kit/hawk_kit.3mf` in Bambu Studio. Its 6 plates have the filaments already assigned. Slot 5 is the canopy colour: the canopy is opaque, so load any colour you like for it (smoke grey or dark blue look right).
 
 | Plate | Parts | Filaments |
 |---|---|---|
 | Fuselage | Nose, front, middle and rear fuselage sections on end (brim), smoke pod halves. The cheat line, swoosh, "ROYAL AIR FORCE", roundels and belly stripes are painted in | Red, White, Blue |
-| Tailplanes and small parts | Tailplanes, aerials, probe (standing on its plug: use a brim), wing pins, all keys | Red |
-| Wing tops | Top halves, split face down; upper roundels in the top layers | Red, White, Blue |
-| Wing undersides | Bottom halves, split face down (underside up); chevrons and lower roundels in the top layers | Red, White, Blue |
+| Tailplanes and small parts | Tailplanes, wing fins and fences, all keys | Red, White |
+| Wings | Both wings standing on their roots, tip up (brim); roundels and chevrons painted in | Red, White, Blue |
 | Fins and canopy | Fin halves (Union flag in the skin), canopy standing on its rear face | Red, White, Blue, Canopy |
 | Display stand | Plinth with red/white/blue pinstripe and raised lettering, swept blade | Black, Red, White, Blue |
-| Gear | Nose and main legs, wheels, axle pins, jet nozzle (spigot down) | Grey, Black |
+| Gear | Nose and main legs, wheels, jet nozzle (spigot down), aerials, probe (standing on its plug: brim) | Grey, Black |
 
 Suggested settings: PLA, 0.16 mm layers for the gear plate and 0.2 mm elsewhere, 2 walls, 15% gyroid infill, no supports. Use a brim on the fuselage sections (the middle one stands 117 mm tall). Painting the markings in costs purge filament on the fuselage plate (the side markings change colour on most layers); that was chosen over press-in inlays.
 
@@ -346,7 +356,8 @@ Suggested settings: PLA, 0.16 mm layers for the gear plate and 0.2 mm elsewhere,
   - 4 fuselage sections: nose (radome and the red dome under the windscreen, X 0.9–46), front (front cockpit, X 46–86), middle (rear cockpit, intakes and wing roots) and rear
   - pitot probe, a separate part with a 3 × 5 mm plug that pushes into the nose tip. It is shorter and thicker than scale (30 × 3 mm printed, against 42 × 2 mm).
   - 2 fin halves, which carry the spine cap and the dorsal fillet
-  - 2 wings, each a top and a bottom half on 5 alignment pins (glue them). Each root carries a small filler ahead of the leading edge, hidden inside the intake pod, so the pod's socket for it prints without a flat overhang.
+  - 2 wings, each one piece printed standing on its flat root, tip up (as on the Halifax). The root joint is at |y| 11 (1:40): the fuselage covers it on top, and the short stub inboard of it is moulded on the middle section. Each root carries a small filler ahead of the leading edge, hidden inside the intake pod, so the pod's socket for it prints without a flat overhang.
+  - 12 small wing parts, glued on: per wing, 4 underside fins (the deeper one near the leading edge is white) that sit in shallow slots, and 2 leading-edge fences that clip round the leading edge. On a wing printed on end they would be shelves in mid-air.
   - 2 all-moving tailplanes with 10° anhedral, each snapping into the fuselage on a sprung mushroom boss (tight: they hold their setting)
   - smoke pod (2 halves), an oval tube (deeper than wide) with a round nose and a long taper that sweeps up into the belly, with pegs moulded on its pylon that push into the belly
   - 2 ventral strakes, moulded under the rear fuselage

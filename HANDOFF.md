@@ -38,9 +38,11 @@ Then:
 - The user prints on a Bambu X2D (two nozzles, AMS). Keep the base red on the main nozzle (fixed per-plate map in `colour.py` `FILAMENT_MAP`/`MAPPED_PLATES`); the second nozzle runs outer walls at 50 mm/s.
 - The user often asks to "add to the to-do list" when near a usage limit: write it into `hawk/README.md` "Known gaps and next steps", commit, change nothing else.
 
-## State at handoff (v22, built, checked and committed locally)
+## State at handoff (v23, built, checked and committed locally)
 
-v22 changes: snap-fit wheels and tailplanes (`GEAR_SNAP`, `TAIL_SNAP`, `snap_boss`, `snap_socket`, one-piece `nose_gear`, `wheel_m(inb)`, `LEG_T_IN`, `tail_side_y`); smoke pod oval with a long S-curve taper (`POD_W`, `POD_TUBE_END`, `POD_TAIL_END`, trimmed to `outer()`); chevron to a point (`CHEVRON_FRONT`), pod paint ahead of the wing only (`POD_PAINT_X1`); lettering from the render (`LETTER_BOXES`, `_glyph`); kink behind the canopy (`SPINE_STATIONS` 119-142, `FUSE_STATIONS` 117/124 eggs, 140 top); fin up-facing paint below `FIN_FILLET_Z`; aerials black at render positions (5), probe grey, on the gear plate; rear belly stripes full skin depth. Wing pins stay separate (both halves print split face down): ask the user what "print them on end" meant. Fins and canopy plate is now 5.4 h.
+v23 changes: each wing is one piece printed standing on a flat root at |y| `WING_ROOT_CUT` (11), as the user asked ("print the whole wing on end like the halifax and spitfire kits"); the stub inboard of it is moulded on fuselage_mid (`fuselage_body` adds `wing_outer ^ wing_root_box(inboard)`). Underside fins and LE fences are separate `wingfin_*` parts (`wing_fin_parts`): fins seat `WING_FIN_SEAT` in slots (`wing_fin_slots`), fences are glued collars. Wing pins and the top/bottom halves are gone (`wing_part`, `wing_cuts`). Plates: "Wings" replaces the two wing plates (6 plates). Paint: rear belly stripes clipped below the wing ahead of its TE (white showed on the pod flank above the wing at X 165-171, user).
+
+v22 changes: snap-fit wheels and tailplanes (`GEAR_SNAP`, `TAIL_SNAP`, `snap_boss`, `snap_socket`, one-piece `nose_gear`, `wheel_m(inb)`, `LEG_T_IN`, `tail_side_y`); smoke pod oval with a long S-curve taper (`POD_W`, `POD_TUBE_END`, `POD_TAIL_END`, trimmed to `outer()`); chevron to a point (`CHEVRON_FRONT`), pod paint ahead of the wing only (`POD_PAINT_X1`); lettering from the render (`LETTER_BOXES`, `_glyph`); kink behind the canopy (`SPINE_STATIONS` 119-142, `FUSE_STATIONS` 117/124 eggs, 140 top); fin up-facing paint below `FIN_FILLET_Z`; aerials black at render positions (5), probe grey, on the gear plate; rear belly stripes full skin depth. Fins and canopy plate is now 5.4 h.
 
 v21 changes: white ring round the fuselage roundel (`FUSE_ROUNDEL_RING` in colour.py); pod top line flatter, running out at the ring's top (`INTAKE_STATIONS` from X 150).
 
@@ -77,4 +79,4 @@ Test-print history: plate 1 (v3 fuselage) and the canopy/gear/nozzle plates (v3/
 3. ~~Fin against the drawing~~: done in v11 (outline within about 0.4 mm of the Revell side view, rounded tip). Waiting for the user's look.
 4. README to-dos still open: separate lettering panels (sharper text), nonplanar top-surface test (orcaslicer-nonplanar), canopy fit check on the next fuselage print, print-in-place control surfaces.
 5. ~~Rudder hinge groove red line and TE speck~~: fixed in v16.
-6. Push to GitHub when the user asks. v10 to v21 are pushed; v22 is committed locally only (the checkout in use is the older one in Claude's scratch-workspaces folder, which has `ref/` and `.venv`).
+6. Push to GitHub when the user asks. v10 to v22 are pushed; v23 is committed locally only (the checkout in use is the older one in Claude's scratch-workspaces folder, which has `ref/` and `.venv`).

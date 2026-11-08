@@ -58,7 +58,7 @@ FILAMENT_MAP = {RED: 1, WHITE: 2, BLUE: 1, BLACK: 1, CANOPY: 1, GREY: 1}
                              # nozzle (200 mm/s outer walls), white on the second (50 mm/s). "Auto"
                              # once put red on the second nozzle (+4 h). Other plates stay on Auto:
                              # with 4-5 colours one fixed map makes them swap on every layer
-MAPPED_PLATES = ("Fuselage", "Tailplanes and small parts", "Wing tops", "Wing undersides")
+MAPPED_PLATES = ("Fuselage", "Tailplanes and small parts", "Wings")
 ROUNDEL = lambda d: [(BLUE, d), (WHITE, d * 2 / 3), (RED, d / 3)]
 
 FUSE_ROUNDEL = (186.8, 7.7, 11.1)        # x, z, diameter (v18: Revell side view; was 3 mm low)
@@ -276,6 +276,15 @@ def _halfplane(pt, slope, below):
     return cs([np.array([(40.0, f(40.0)), (300.0, f(300.0)), (300.0, far), (40.0, far)])])
 
 
+def wing_plan_cs():
+    """Both wings' plan outline (x, y), carried in to the centreline at the root's chord, 3.5 past the TE."""
+    ys = np.linspace(0.0, H.SPAN / 2, 60)
+    le = np.array([H.wing_plan(max(y, H.WING_ROOT_Y))[0] for y in ys])
+    te = np.array([sum(H.wing_plan(max(y, H.WING_ROOT_Y))[:2]) + 3.5 for y in ys])   # past the TE strip's 3.0 overshoot
+    half = cs([np.r_[np.c_[le, ys], np.c_[te[::-1], ys[::-1]]]])
+    return half + half.mirror([0.0, 1.0])
+
+
 def under_white():
     """White on the underside, (x, y), both sides."""
     (ki, ci), (ko, co), xu = BELLY_STRIPE
@@ -370,6 +379,9 @@ def fuselage_markings(P):
         # steep sides, where a skin measured straight down thins to slivers (a ragged white edge
         # just above the wing, seen from the side)
         rear = (P - core) ^ near_bottom(x0, x1, BELLY_REAR_UP) ^ K.box(BELLY_REAR_X, 400.0, -100.0, 100.0, -100.0, 100.0)
+        # ...but not on the pods' flanks above the wing, ahead of its trailing edge (v23: white
+        # showed there from the side, X 165-171)
+        rear = rear - (prism_z(wing_plan_cs()) ^ K.box(-50.0, 400.0, -100.0, 100.0, H.WING_CHORD_Z - 0.3, 100.0))
         ops.append((WHITE, (low + rear) ^ prism_z(under_white() ^ fuselage_plan(max(x0, 150.0), x1, inset=-2.0))))
     if x0 < 162.0 and x1 > 83.0:                       # the stripes' forward run, to their point
         ops.append((WHITE, low ^ prism_z(under_white() ^ fuselage_plan(max(x0, 83.0), min(x1, 162.0), inset=-2.0))))
@@ -517,7 +529,10 @@ def wing_detailed(side):
 
 
 def colour_part(name, P):
-    if name.startswith(("wingtop_", "wingbot_")):
+    if name.startswith("wingfin_"):                   # separate fins and fences
+        i = int(name.rsplit("_", 1)[1]) - 1
+        return {WHITE if i in WHITE_WING_FINS else RED: P}
+    if name.startswith("wing_"):
         side = 1 if name.endswith("stbd") else -1
         # skins from the whole wing before its panel and hinge grooves are cut (no split face, no
         # sockets): the paint fills the grooves, so they don't cut red lines through the white
@@ -525,22 +540,13 @@ def colour_part(name, P):
         S = skins(whole)
         x, y, d = WING_ROUNDEL
         y *= side
-        if name.startswith("wingtop_"):
-            return paint(P, roundel_ops(x, y, d, "z", S["up"]))
         uw = under_white()
-        # line the gear socket and wheel-well recess in the colour around them: inside the lower
-        # half only (its split face is hidden), so they don't show as red squares in the white
+        # line the gear socket and wheel-well recess in the colour around them, below the chord
+        # plane only (the top skin above them stays red), so they don't show as red squares
         holes = (H.main_socket(side) + H.gear_bay(side)).project().offset(0.6, mf.JoinType.Round)
-        lining = prism_z(holes ^ uw)
+        lining = prism_z(holes ^ uw) ^ H.wing_half_region(side, False)
         ops = [(WHITE, (S["down"] + lining) ^ prism_z(uw))]
-        for i in WHITE_WING_FINS:                           # fins painted white all over
-            eta, f0, f1, _ = H.WING_FINS[i]
-            yy = eta * H.SPAN / 2
-            le, c, _ = H.wing_plan(yy)
-            blk = H.wing_flat_to_assembled(H.box(le + f0 * c - 1.0, le + f1 * c + 1.0, yy - 1.5, yy + 1.5,
-                                                 -40.0, 40.0), side)
-            ops.append((WHITE, blk - H.wing_assembled(side)))
-        return paint(P, ops + roundel_ops(x, y, d, "z", S["down"]))
+        return paint(P, ops + roundel_ops(x, y, d, "z", S["down"]) + roundel_ops(x, y, d, "z", S["up"]))
     if name.startswith("fin_"):
         # skins from the fin half before its hinge and panel grooves are cut: the paint then
         # fills the grooves (their walls and floor), so a groove through the flag doesn't show
@@ -681,9 +687,8 @@ def add_object(objs, name, posed, out, whole):
 
 PLATE_GROUPS = [            # parts kept together by colour set (max 5 colours a plate)
     ("Fuselage", lambda n: n.startswith(("fuselage", "smoke_pod"))),
-    ("Tailplanes and small parts", lambda n: n.startswith(("tailplane", "key_", "wingpin"))),
-    ("Wing tops", lambda n: n.startswith("wingtop_")),
-    ("Wing undersides", lambda n: n.startswith("wingbot_")),
+    ("Tailplanes and small parts", lambda n: n.startswith(("tailplane", "key_", "wingfin"))),
+    ("Wings", lambda n: n.startswith("wing_")),
     ("Fins and canopy", lambda n: n.startswith("fin_") or n == "canopy"),
     ("Display stand", lambda n: n.startswith("stand")),
     ("Gear", lambda n: True),
@@ -707,12 +712,9 @@ if __name__ == "__main__":
         P, dropped = K.largest_piece(P)
         if any(v > 1.0 for v in dropped):
             print(f"!! {name}: dropped loose pieces {[round(v, 1) for v in dropped if v > 1.0]} mm3")
-        if name.startswith(("wingtop_", "wingbot_")):     # panel lines from the whole wing, then split
+        if name.startswith("wing_"):                     # panel lines from the whole wing, then cut
             side = 1 if name.endswith("stbd") else -1
-            top = name.startswith("wingtop_")
-            P = (wing_detailed(side) ^ H.wing_half_region(side, top)) \
-                - H.wing_key_slot(side) - H.main_socket(side) - H.gear_bay(side)
-            P = P - H.wing_pins(side, H.WING_PIN_FIT)
+            P = (wing_detailed(side) ^ H.wing_root_box(side, False, H.WING_ROOT_GAP)) - H.wing_cuts(side)
             P, _ = K.largest_piece(P)
         else:
             P_plain[name] = P                 # before panel lines and hinge grooves

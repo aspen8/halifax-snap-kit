@@ -20,7 +20,8 @@ Kit layout (Halifax v2 / Lancaster style; no supports):
   fin          two halves split on the centreline, printed flat (Union flag in the skin)
   canopy       opaque, solid, flat underneath; drops onto 2 tabs moulded on the fuselage
   nozzle       separate jet nozzle with a deep void and exhaust cone, plugs into the tail
-  wings        one per side, flat underside (white underside chevrons print face down)
+  wings        one piece per side, printed standing on the flat root (tip up, brim);
+               underside fins and leading-edge fences are separate glue-on parts
   tailplane    one per side (10 deg anhedral)
   smoke pod    centreline pod keyed into the belly
   markings     cheat line, swoosh, lettering, stripes and roundels painted into the parts
@@ -220,14 +221,17 @@ WING_TE = (169.3, 12.3)
 WING_TIP_ROUND = 3.0
 TC_ROOT, TC_TIP = 0.109, 0.090
 WING_CAMBER = 0.012
-WING_SPLIT_TE_T = 1.2        # trailing edge thickness of the split wing (0.75 mm printed per half)
+WING_SPLIT_TE_T = 1.2        # trailing edge thickness (from the split wing; kept: 1.5 mm printed)
 WING_CHORD_DZ = 3.7          # chord plane above Z_FLOOR: the root's underside sits about 1.8 mm
                              # (2.25 printed) above the fuselage's lowest point, so some fuselage
                              # shows below the wing (photos)
-WING_PINS = [(0.15, 0.30), (0.15, 0.55), (0.25, 0.30), (0.25, 0.45), (0.40, 0.30)]   # eta, chord fraction:
-                             # where each half is 2 mm or more thick (the outer wing is too thin)
-WING_PIN = (2.0, 1.0)        # pin d, depth into each half: alignment pins (2.5 x 2 mm printed); glue the halves
-WING_PIN_FIT = 0.05 * _P
+WING_ROOT_CUT = 11.0         # |y| of the flat wing root (v23): each wing is one piece printed standing
+                             # on this face (Halifax style). The fuselage covers the wing's top out
+                             # to |y| 12 or more along the whole chord, so the joint only shows
+                             # underneath; the stub inboard of it is moulded on the fuselage
+WING_ROOT_GAP = 0.05         # glue gap at the root joint
+WING_FIN_SEAT = 0.4          # the underside fins are separate (on end they'd be shelves in mid-air):
+                             # each sits this deep in a slot in the skin
 Z_FLOOR = -7.6               # wing underside at the centreline
 DIHEDRAL = 2.0               # deg
 WING_FLAT_FROM = 0.15
@@ -853,8 +857,17 @@ WING_LE_FENCES = [(0.6645, 2.0, 0.35, 1.8, 2.2), (0.8264, 1.2, 0.18, 1.0, 1.4)]
 WING_FIN_T = 0.9
 
 
+def _fin_slab(prof, y, grow=0.0):
+    c = K.cs([prof])
+    if grow:
+        c = c.offset(grow, mf.JoinType.Round)
+    t = WING_FIN_T + 2 * grow
+    return c.extrude(t).translate([0, 0, -t / 2]).rotate([90, 0, 0]).translate([0, y, WING_CHORD_Z])
+
+
 @cached
-def wing_le_fences_flat():
+def wing_fence_plates(grow=0.0):
+    """Leading-edge fences (flat starboard frame), one slab each."""
     from shapely.geometry import Polygon, box as sbox
     from shapely.ops import unary_union
     out = []
@@ -869,13 +882,13 @@ def wing_le_fences_flat():
         prof = np.array(prof.exterior.coords)[:-1]
         if K.cs([prof]).area() < 0:
             prof = prof[::-1]
-        plate = K.cs([prof]).extrude(WING_FIN_T).translate([0, 0, -WING_FIN_T / 2]).rotate([90, 0, 0])
-        out.append(plate.translate([0, y, WING_CHORD_Z]))
-    return union(out)
+        out.append(_fin_slab(prof, y, grow))
+    return out
 
 
 @cached
-def wing_fins_flat():
+def wing_fin_plates(grow=0.0):
+    """Underside fins (flat starboard frame), one slab each."""
     out = []
     for eta, f0, f1, h in WING_FINS:
         y = eta * SPAN / 2
@@ -890,21 +903,55 @@ def wing_fins_flat():
         prof = np.array(bottom + [(le + xs[-1], 0.0), (le + xs[0], 0.0)])
         if K.cs([prof]).area() < 0:
             prof = prof[::-1]
-        plate = K.cs([prof]).extrude(WING_FIN_T).translate([0, 0, -WING_FIN_T / 2]).rotate([90, 0, 0])
-        out.append(plate.translate([0, y, WING_CHORD_Z]))
-    return union(out)
+        out.append(_fin_slab(prof, y, grow))
+    return out
+
+
+def wing_fin_parts(side):
+    """Separate fins and fences, assembled frame: [(index, part)] (index into WING_FINS, then
+    the fences after them). Fins keep a WING_FIN_SEAT tongue that sits in a slot; the fences
+    are collars that wrap the leading edge and are glued on."""
+    w = wing_flat()
+    deep = w ^ w.translate([0, 0, WING_FIN_SEAT])           # more than the seat above the underside
+    out = [(i, p - deep) for i, p in enumerate(wing_fin_plates())]
+    out += [(len(WING_FINS) + i, p - w) for i, p in enumerate(wing_fence_plates())]
+    return [(i, wing_flat_to_assembled(K.largest_piece(p)[0], side)) for i, p in out]
+
+
+@cached
+def wing_fin_slots(side):
+    w = wing_flat()
+    band = w - w.translate([0, 0, WING_FIN_SEAT + 0.1])     # within the seat depth of the underside
+    return wing_flat_to_assembled(union(wing_fin_plates(FIT)) ^ band, side)
+
+
+def wing_root_box(side, inboard, gap=0.0):
+    y0, y1 = (-1.0, WING_ROOT_CUT) if inboard else (WING_ROOT_CUT + gap, 200.0)
+    b = box(0, 400, y0, y1, -60, 60)
+    return b if side > 0 else b.mirror([0, 1, 0])
 
 
 @cached
 def wing_outer(side):
-    """The wing part's outside shape (no sockets or slots): what the paint is measured from."""
-    fins = wing_flat_to_assembled(wing_fins_flat() + wing_le_fences_flat(), side)
-    return (wing_assembled(side) + fins + (wing_glove(side) ^ outer())) - body()
+    """The whole wing's outside shape, root stub included (no sockets, slots or fins): what the
+    paint is measured from."""
+    return (wing_assembled(side) + (wing_glove(side) ^ outer())) - body()
 
 
 @cached
 def wing(side):
     return wing_outer(side) - wing_key_slot(side)
+
+
+def wing_cuts(side):
+    """Everything cut into the wing part: root key slot, gear socket, wheel bay, fin slots."""
+    return wing_key_slot(side) + main_socket(side) + gear_bay(side) + wing_fin_slots(side)
+
+
+def wing_part(side):
+    """The wing as printed: one piece outboard of the root cut (v23; it was two halves split on
+    the chord plane, pinned)."""
+    return (wing_outer(side) ^ wing_root_box(side, False, WING_ROOT_GAP)) - wing_cuts(side)
 
 
 def wing_flat_to_assembled(m, side):
@@ -915,20 +962,6 @@ def wing_flat_to_assembled(m, side):
 def wing_half_region(side, top):
     z0, z1 = (WING_CHORD_Z, 60.0) if top else (-60.0, WING_CHORD_Z)
     return wing_flat_to_assembled(box(0, 400, -5, 200, z0, z1), side)
-
-
-def wing_pins(side, grow=0.0):
-    """Pins across the split, in thick parts of the wing (grow > 0: their holes). Both wing
-    halves print split face down, so the pins can't be moulded on either: they are separate."""
-    d, h = WING_PIN
-    ps = []
-    for eta, f in WING_PINS:
-        y = eta * SPAN / 2
-        le, c, _ = wing_plan(y)
-        ps.append(cyl((le + f * c, y, WING_CHORD_Z - h - (0.2 if grow else 0)), d + 2 * grow,
-                      2 * h + (0.4 if grow else 0) - (0.4 if not grow else 0), "z", 24)
-                  .translate([0, 0, 0 if grow else 0.2]))
-    return wing_flat_to_assembled(union(ps), side)
 
 
 GEAR_BAY = (152.0, 27.0, 16.0, 5.0, 0.5)   # main wheel bay in the underside (the wheels retract
@@ -949,12 +982,6 @@ def gear_bay(side):
     w = wing_assembled(side)
     under = w - w.translate([0, 0, depth])            # within depth above the underside
     return under ^ K.prism_z(plan)
-
-
-def wing_halves(side):
-    """(top, bottom) halves of the finished wing (gear socket, key slot, pin holes, wheel bay cut)."""
-    w = wing(side) - main_socket(side) - wing_pins(side, WING_PIN_FIT) - gear_bay(side)
-    return w ^ wing_half_region(side, True), w ^ wing_half_region(side, False)
 
 
 def tail_plan(eta):
@@ -1606,8 +1633,9 @@ def fuselage_body():
     """The whole fuselage (all sections) with every socket, pocket and cut."""
     b = outer() + spine_ducts() + strakes() + ventral_bulge() + fin_tail_fairing()
     for s in (1, -1):                                   # intakes sit on the wing
-        w = wing_assembled(s) + wing_glove(s)
+        w = (wing_assembled(s) + wing_glove(s)) ^ wing_root_box(s, False)
         b = b - w - w.translate([0, 0, FIT]) - w.translate([0, 0, -FIT])
+        b = b + (wing_outer(s) ^ wing_root_box(s, True))   # the wing's root stub (v23)
     b = b - (canopy_region() ^ box(DOME_CUT_X, 400, -60, 60, -60, 100)) + canopy_tabs()   # dome stays
     for s in (1, -1):
         b = b - intake_mouth(s) - splitter_gap(s)
@@ -1718,13 +1746,11 @@ def build():
     parts["fin_stbd"], poses["fin_stbd"] = fs - fslots, R(rx=90)       # split face down
     parts["fin_port"], poses["fin_port"] = fp - fslots, R(rx=-90)
     for side, tag in ((1, "stbd"), (-1, "port")):
-        top, bot = wing_halves(side)
+        parts[f"wing_{tag}"], poses[f"wing_{tag}"] = wing_part(side), R(rx=90 * side)   # on its root, tip up
         flat = lambda m, s=side: rot_about(m, DIHEDRAL_PT, "x", -DIHEDRAL * s)
-        parts[f"wingtop_{tag}"], poses[f"wingtop_{tag}"] = top, flat                       # split face down
-        parts[f"wingbot_{tag}"] = bot
-        poses[f"wingbot_{tag}"] = lambda m, f=flat: f(m).rotate([180, 0, 0])              # underside up
-        for i, pin in enumerate(wing_pins(side).decompose()):
-            parts[f"wingpin_{tag}_{i + 1}"], poses[f"wingpin_{tag}_{i + 1}"] = pin, flat
+        for i, fin in wing_fin_parts(side):
+            parts[f"wingfin_{tag}_{i + 1}"] = fin
+            poses[f"wingfin_{tag}_{i + 1}"] = lambda m, f=flat: f(m).rotate([90, 0, 0])  # flat on its side
         parts[f"tailplane_{tag}"] = tailplane(side)
         poses[f"tailplane_{tag}"] = (lambda m, s=side: rot_about(m, (0, s * TAIL_ROOT_Y, TAIL_FLOOR), "x",
                                                                  TAIL_ANHEDRAL * s))

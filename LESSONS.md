@@ -306,6 +306,8 @@ The Hawk's stand key first ran right through the smoke pod and into the belly, w
 
 A flat-bottomed wing prints well, but it looks wrong from below and its underside markings end up in the first layers, on the bed. Splitting the wing on the chord plane gives two halves that each lie flat on the split face with their outer skin facing up. Both skins keep the true aerofoil, and the markings on both print as top layers, which is where lettering and roundels come out sharpest. Thicken the trailing edge so each half keeps at least 2 lines there, and put the alignment pins only where each half is at least 2 mm thick.
 
+The Hawk went back to a one-piece wing in v23 (the user's choice): it stands on a flat root cut, tip up, like the Halifax panels. Put the cut where the fuselage covers the wing's top along the whole chord and the section is complete (no body over it), or the root face carries an overhang. Anything that sticks out of the skin at right angles to the span (fins, fences) becomes a shelf in mid-air on end: make those separate parts.
+
 ### Bound a "near the bottom" paint region by height as well
 
 Painting "everything within d of a downward-facing surface" also catches every other downward face: on the Hawk that meant the pods' tapering undersides, high on the fuselage side, which turned white and covered the lettering and the roundel. Also clip such a region to a band just above the fuselage's bottom line.
