@@ -60,9 +60,9 @@ Notes:
 - **Plate 3 (markings):** 3 h 21 m and 46 g of purge (3 h 40 m and 43 g on 2026-11-07). The inlays are thinner now that their sockets follow the skin, which offsets the four colours all staying on the main nozzle (the second nozzle holds Dark Earth for the whole kit).
 - **Nozzle grouping is Manual** (`colour.NOZZLE`, `filament_map_mode`). On "Auto For Flush" the command line put every filament on the main nozzle.
 
-### Joint test (`kit/halifax_joint_test.3mf`), round 2
+### Joint test (`kit/halifax_joint_test.3mf`), round 3
 
-`cad/joint_test.py`: a slice from each side of the three new joints, cut from the kit parts, at 0.24 mm, and their keys at 0.12 mm. Black only. Round 1 (2026-11-08): the nose joint was good; the tail joint wanted to be tighter; the wing key, at 10–29 % chord and 8 mm deep, peeled open from the trailing edge. Round 2: the wing key is 24 × 21.9 × 3 mm across 20–55 % chord, 12 mm into each piece, under the roundel (whose back is notched over it); the fuselage keys go 9 mm into each piece (8 at the tail), and the tail joint's slots are 0.10 a side.
+`cad/joint_test.py`: a slice from each side of the three new joints, cut from the kit parts, at 0.24 mm, and their keys at 0.12 mm. Black only. Round 1 (2026-11-08): the nose joint was good; the tail joint wanted to be tighter; the wing key, at 10–29 % chord and 8 mm deep, peeled open from the trailing edge. Round 2: the wing key is 24 × 21.9 × 3 mm across 20–55 % chord, 12 mm into each piece, under the roundel (whose back is notched over it); the fuselage keys go 9 mm into each piece (8 at the tail), and the tail joint's slots are 0.10 a side. Round 2 (2026-11-09): the tail joint is right at 0.10; the nose and wing joints were a touch loose at 0.15, so they are now 0.10 a side too (round 3).
 
 | Plate | Time | Layers | Layer mm | Filament on the model (g) | Model g | Flush + tower g | Changes |
 |---|---|---|---|---|---|---|---|

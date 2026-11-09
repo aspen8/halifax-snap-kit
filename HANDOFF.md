@@ -1,6 +1,6 @@
 # Handoff (start here in a new session)
 
-State on 2026-11-08, branch `phase1-airframe`, worked on the user's Mac. **`kit/halifax_kit.3mf` is rebuilt: 7 plates, all slice, 50h 06m in total** (448 g of model, 494 g of purge; `docs/slicing.md`). The wing plate is 25h 20m (it was 76 h 50 m). Joint test round 1 printed; **print round 2 (`kit/halifax_joint_test.3mf`, 1h 30m) before the full build.** Geometry checks pass: single pieces, no clashes. Read `LESSONS.md`, `TODO.md` and `.claude/skills/snap-kit/SKILL.md` before changing anything.
+State on 2026-11-08, branch `phase1-airframe`, worked on the user's Mac. **`kit/halifax_kit.3mf` is rebuilt: 7 plates, all slice, 50h 06m in total** (448 g of model, 494 g of purge; `docs/slicing.md`). The wing plate is 25h 20m (it was 76 h 50 m). Joint tests 1 and 2 printed; **print round 3 (`kit/halifax_joint_test.3mf`, 1h 30m) to check the nose and wing at 0.10 a side, then the full build.** Geometry checks pass: single pieces, no clashes. Read `LESSONS.md`, `TODO.md` and `.claude/skills/snap-kit/SKILL.md` before changing anything.
 
 ## How to build
 - Full colour build: `cd cad && python -u colour.py OUT project_settings_template.json` (11 min on the Mac). The template is `cad/project_settings_template.json`: the user's Bambu X2D 0.20 mm Standard project settings, taken from `halifax.3mf`. The overrides in `colour.py` (`PRINT_OVERRIDES`, `object_settings`) go on top of it. `write_3mf` places a prime tower on every plate (`kitlib.place_towers`) and prints where.
@@ -15,6 +15,9 @@ State on 2026-11-08, branch `phase1-airframe`, worked on the user's Mac. **`kit/
 - `cad/ref/` is git-ignored except `camo_plan_green.png`. The side-profile trace `camo_side_npg.png` was never committed; the build now skips it (`colour.side_trace`), since only the old split-fuselage halves were painted from it.
 - The Mac's OCC meshes curved faces slightly differently from the cloud's, so a rebuild changes the 3MF bytes without changing the design. Only commit a rebuilt 3MF when the design changed.
 - `tools/closeup.py` uses EGL on Linux only; on macOS, pyrender's default pyglet backend.
+
+## What changed on 2026-11-09 (after joint test 2)
+- **Tail joint right at 0.10 a side. Nose and wing joints a touch loose at 0.15**: both now 0.10 a side (`FUSE_KEY_FIT[0]`, `WING_SPLIT_FIT`). The middle fuselage joint stays at `KEY_FIT` (good in round 1).
 
 ## What changed on 2026-11-08 (third round, after joint test 1)
 - **Nose joint good. Tail joint: tighter**, 0.10 a side (`FUSE_KEY_FIT`). **Wing key peeled open from the trailing edge** at 10–29 % chord, 8 mm deep: now 20–55 % chord, 12 mm into each piece (24 × 21.9 × 3 mm, as the inner/outer key), running under the roundel. The roundel's socket opens into the slot and its back is notched over the key (`make_inlay(..., cavity=)`), as on the Spitfire's wings.

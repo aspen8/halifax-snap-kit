@@ -219,3 +219,4 @@ A wheel printed lying on a face with the tyre rounded on both sides starts on a 
 - **Check new slots against existing sockets.** The wing joint's key slot ran under the roundel socket; the slicer only reported the roundel as "floating regions".
 - **The command line reports more slicer warnings than the app.** On one plate the app showed only the D/F loop where the command line listed five. Trace each one with a layer check before changing geometry.
 - **A key near the leading edge lets a wing joint peel open from the trailing edge** (joint test 1). Put it across the middle of the chord, and run it deep: how far a key goes into each piece sets its leverage, more than its width. A key may run under an inlay; notch the inlay's back over it.
+- **Flexing keys in these joints want 0.10 a side, not 0.15** (joint tests 1–2): at 0.15 the nose, tail and wing keys were all slightly loose; the tail at 0.10 was right.
