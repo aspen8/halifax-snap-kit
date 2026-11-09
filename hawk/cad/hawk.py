@@ -1026,28 +1026,66 @@ def _tongue_box(y, xt, zt, sgn, g=0.0):
     return box(-50, xt + g, y - 5, y + 5, z0, z1)
 
 
+WING_FENCE_TOOTH = {1: 0.4 * _P, -1: 0.3 * _P}   # v35: snap teeth on the fence's tongues (top,
+                             # underneath; the lower arm is shorter and stiffer). The C-shaped collar
+                             # springs open as they ride the groove floors, and shuts as they drop
+                             # into pockets (user: v34's fence was still loose)
+WING_FENCE_TOOTH_X = (1.2, 0.9, 0.9)   # tooth centre this far ahead of the tongue's end; half its
+                             # base; its apex this far ahead of the centre: a long ramp on the side
+                             # that leads going on, and a square face behind (user: the fences never
+                             # need to come off again)
+
+
+def _fence_teeth(grow=0.0):
+    """Teeth (grow 0) or their pockets (grow > 0: grown in-plane only), flat starboard frame."""
+    out = []
+    for (y, tongues) in _fence_tongue_boxes():
+        y_s = y + _fence_layer_dy(y)
+        for xt, zt, sgn in tongues:
+            h = WING_FENCE_TOOTH[sgn]
+            c, hb, ah = WING_FENCE_TOOTH_X
+            xc = xt - c
+            zr = zt - WING_CHORD_Z                      # in the slab's frame (chord plane at 0)
+            into = -sgn                                 # the tooth points into the wing
+            lap = zr + sgn * 1.2                        # runs back into the fence arm, so they join
+                                                        # (its pocket covers this root too)
+            prof = np.array([(xc - hb, lap), (xc + hb, lap), (xc + hb, zr), (xc - ah, zr + into * h),
+                             (xc - hb, zr)])
+            if K.cs([prof]).area() < 0:
+                prof = prof[::-1]
+            out.append(_fin_slab(prof, y_s, grow, WING_FENCE_T, 0.0))
+    return union(out)
+
+
 def wing_fence_parts(side):
     """Separate leading-edge fences, assembled frame: collars that wrap the leading edge and slide
     back onto it, with a tongue in a groove under the wing and on top (they print flat; on a wing
-    printed on end they would be shelves in mid-air). A snug fit holds them without glue."""
+    printed on end they would be shelves in mid-air). v35: each tongue has a snap tooth that
+    clicks into a pocket in its groove, and the tongues bear on the groove floors (no clearance),
+    so the collar grips like a spring clip: no glue."""
     w = wing_flat()
     g = WING_FENCE_FIT                               # clear of the skin outside the grooves too
     wg = union([w] + [w.translate([a, 0, c]) for a, c in ((g, 0), (-g, 0), (0, g), (0, -g))])
+    teeth = _fence_teeth()
     out = []
     for p, (y, tongues) in zip(wing_fence_plates(), _fence_tongue_boxes()):
         keep = union([_tongue_box(y, *t) for t in tongues])
-        out.append(wing_flat_to_assembled(K.largest_piece(p - (wg - (keep ^ w)))[0], side))
+        f = (p - (wg - (keep ^ w))) + (teeth ^ box(-50, 400, y - 3, y + 3, -60, 60))
+        out.append(wing_flat_to_assembled(K.largest_piece(f)[0], side))
     return out
 
 
 @cached
 def wing_fence_grooves(side):
     w = wing_flat()
-    g = [p ^ w ^ union([_tongue_box(y, *t, g=WING_FENCE_FIT) for t in tongues])
-         for p, (y, tongues) in zip(wing_fence_plates(WING_FENCE_FIT, 0.0), _fence_tongue_boxes())]
+    g = WING_FENCE_FIT
+    grooves = [p ^ w ^ union([box(-50, xt + g, y - 5, y + 5, *((-60, zt) if sgn < 0 else (zt, 60)))
+                              for xt, zt, sgn in tongues])
+               for p, (y, tongues) in zip(wing_fence_plates(g, 0.0), _fence_tongue_boxes())]
                              # v34: no clearance across the fence's thickness (the groove is
-                             # snapped to layers), the fit clearance only along its edges
-    return wing_flat_to_assembled(union(g), side)
+                             # snapped to layers); v35: none at the groove floor either (the
+                             # tongues bear on it), the fit clearance only at the groove's ends
+    return wing_flat_to_assembled(union(grooves) + (_fence_teeth(g) ^ w), side)
 
 
 WING_TE_FILLET = (4.0, 8.8)  # v24: radius, and |y| of the fuselage side just behind the trailing edge
