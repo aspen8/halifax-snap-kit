@@ -13,6 +13,7 @@ Run:  python test_coupons.py OUT_DIR       (writes OUT_DIR/hawk_test_coupons.3mf
   4 wing fence      one leading-edge fence and the piece of leading edge it slides onto (tongue
                     in a groove)
 """
+import math
 import sys
 from pathlib import Path
 
@@ -28,6 +29,14 @@ GAP = H.WING_ROOT_GAP
 def flat_tail_box(y1):
     """Box over the tailplane's root in its flat frame (cut face square to its print bed)."""
     return H._tail_to_assembled(H.box(150, 330, 0, y1, -50, 100), 1)
+
+
+def y_layer(y):
+    """The nearest assembled y at or below y that is a print-layer boundary of the full wing, which
+    prints on end from its root face (v34: the fence groove is snapped to those layers)."""
+    base = H.WING_ROOT_CUT + H.WING_ROOT_GAP
+    step = H.LAYER / H.PRINT_K
+    return base + math.floor((y - base) / step) * step
 
 
 def coupons():
@@ -48,7 +57,8 @@ def coupons():
         ("t3_fuselage_block", "fuselage_mid", H.box(124.0, 156.0, 0.0, 22.0, -9.0, 4.0)),
         ("t3_key", "key_wing_1", None),
         ("t4_fence", "wingfence_stbd_1", None),
-        ("t4_fence_le", "wing_stbd", H.box(le - 4.0, le + 0.45 * c, y_fence - 4.0, y_fence + 4.0, -60, 60)),
+        # cut on one of the full wing's print layers, so the fence groove prints exactly as in the kit
+        ("t4_fence_le", "wing_stbd", H.box(le - 4.0, le + 0.45 * c, y_layer(y_fence - 4.0), y_fence + 4.0, -60, 60)),
     ]
 
 

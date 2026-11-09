@@ -881,22 +881,36 @@ WING_LE_FENCES = [(0.6645, 2.0, 0.35, 0.175, 2.3, 1.7), (0.8264, 1.2, 0.18, 0.09
 WING_FIN_T = 0.9
 
 
-WING_FENCE_T = 1.3            # v26: fence thickness (1.6 mm printed; at WING_FIN_T they were thin
-                             # and floppy on the test print)
+WING_FENCE_T = 1.6 * _P       # v26: fence thickness, 1.6 mm printed (8 layers: it prints flat). At
+                             # WING_FIN_T they were thin and floppy (v26 test print)
 WING_FENCE_CURVE = 0.35      # v26: each arm's outer edge curves in towards its rear end, to this
                              # fraction of its height lower than at the front (user: slightly curved)
+LAYER = 0.2                  # print layer height (mm, printed)
 
 
-def _fin_slab(prof, y, grow=0.0, t0=WING_FIN_T):
+def _fence_layer_dy(y):
+    """v34: shift (flat-frame y) that puts a fence's groove exactly on the wing's print layers. The
+    wing prints on end from its root face, so the groove's faces are horizontal in the print and
+    land on layer boundaries: drawn 1.68 wide, it printed up to 1.8 and the fence was loose (test
+    print 3). Snapped, the groove is 8 layers, the fence's own thickness, with no clearance."""
+    d = math.radians(DIHEDRAL)
+    yc = y * math.cos(d) - (WING_CHORD_Z - Z_FLOOR) * math.sin(d)           # assembled y
+    zc = (yc - (WING_ROOT_CUT + WING_ROOT_GAP)) * PRINT_K                   # print height
+    t = WING_FENCE_T * PRINT_K
+    z0 = round((zc - t / 2) / LAYER) * LAYER
+    return (z0 + t / 2 - zc) / PRINT_K / math.cos(d)
+
+
+def _fin_slab(prof, y, grow=0.0, t0=WING_FIN_T, t_grow=None):
     c = K.cs([prof])
     if grow:
         c = c.offset(grow, mf.JoinType.Round)
-    t = t0 + 2 * grow
+    t = t0 + 2 * (grow if t_grow is None else t_grow)
     return c.extrude(t).translate([0, 0, -t / 2]).rotate([90, 0, 0]).translate([0, y, WING_CHORD_Z])
 
 
 @cached
-def wing_fence_plates(grow=0.0):
+def wing_fence_plates(grow=0.0, t_grow=None):
     """Leading-edge fences (flat starboard frame), one slab each."""
     from shapely.geometry import Polygon, box as sbox
     from shapely.ops import unary_union
@@ -930,7 +944,7 @@ def wing_fence_plates(grow=0.0):
         prof = np.array(prof.exterior.coords)[:-1]
         if K.cs([prof]).area() < 0:
             prof = prof[::-1]
-        out.append(_fin_slab(prof, y, grow, WING_FENCE_T))
+        out.append(_fin_slab(prof, y + _fence_layer_dy(y), grow, WING_FENCE_T, t_grow))
     return out
 
 
@@ -1030,7 +1044,9 @@ def wing_fence_parts(side):
 def wing_fence_grooves(side):
     w = wing_flat()
     g = [p ^ w ^ union([_tongue_box(y, *t, g=WING_FENCE_FIT) for t in tongues])
-         for p, (y, tongues) in zip(wing_fence_plates(WING_FENCE_FIT), _fence_tongue_boxes())]
+         for p, (y, tongues) in zip(wing_fence_plates(WING_FENCE_FIT, 0.0), _fence_tongue_boxes())]
+                             # v34: no clearance across the fence's thickness (the groove is
+                             # snapped to layers), the fit clearance only along its edges
     return wing_flat_to_assembled(union(g), side)
 
 

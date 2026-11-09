@@ -49,7 +49,12 @@ Against photos (top: real aircraft, bottom: model):
 
 ![photo comparison](docs/photo_comparison.png)
 
-> **Status: v33; test coupons printed three times (see v26, v28 and v33 changes).** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+> **Status: v34; test coupons printed three times (see v26, v28 and v33 changes).** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+
+### v34 changes (fence fit)
+
+- **Fences still loose** (test print 3, v28 fences). The fence prints flat, so its thickness is exact (now 1.6 mm, 8 layers). Its groove is cut in a wing that prints on end, so the groove's faces are horizontal in the print and fall on layer boundaries: drawn 1.68 mm wide, it could print up to 1.8. Each fence now moves a few hundredths of a millimetre so its groove lies exactly on the wing's layers, 8 layers wide, with no clearance across the fence's thickness (the 0.04 mm fit stays only along its edges, so it still slides on). The test coupon's piece of leading edge is cut on one of the wing's layers too, so it prints the same.
+- **Checks:** interference shows only the known overlaps; all plates slice.
 
 ### v33 changes (test print 3: bigger wheel snap)
 
