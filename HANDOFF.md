@@ -38,7 +38,7 @@ Then:
 - The user prints on a Bambu X2D (two nozzles, AMS). Keep the base red on the main nozzle (fixed per-plate map in `colour.py` `FILAMENT_MAP`/`MAPPED_PLATES`); the second nozzle runs outer walls at 50 mm/s.
 - The user often asks to "add to the to-do list" when near a usage limit: write it into `hawk/README.md` "Known gaps and next steps", commit, change nothing else.
 
-## State at handoff (v33, built, checked and committed locally)
+## State at handoff (v33, pushed)
 
 v33 (test print 3): tailplane on end good and fits; white improved with K 0.35; wheel boss broke again (bore too tight) so `GEAR_SNAP` is bigger (bore 6.6, neck 6.0, head 7.4, slot 1.6) and the nose arm wider. Still to test: the v33 wheel snap, the two-tongue fence (v28).
 
@@ -99,4 +99,4 @@ Test-print history: plate 1 (v3 fuselage) and the canopy/gear/nozzle plates (v3/
 3. ~~Fin against the drawing~~: done in v11 (outline within about 0.4 mm of the Revell side view, rounded tip). Waiting for the user's look.
 4. README to-dos still open: separate lettering panels (sharper text), nonplanar top-surface test (orcaslicer-nonplanar), canopy fit check on the next fuselage print, print-in-place control surfaces.
 5. ~~Rudder hinge groove red line and TE speck~~: fixed in v16.
-6. Push to GitHub when the user asks. v10 to v24 and the test coupons are pushed; v25 to v28 are pushed; v29 to v33 are committed locally only (the checkout in use is the older one in Claude's scratch-workspaces folder, which has `ref/` and `.venv`).
+6. Push to GitHub when the user asks. v10 to v24 and the test coupons are pushed; v25 to v28 are pushed; v29 to v33 are pushed (the checkout in use is the older one in Claude's scratch-workspaces folder, which has `ref/` and `.venv`).
