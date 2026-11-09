@@ -1622,19 +1622,28 @@ def build():
     return parts, poses
 
 
-def mesh(w, tol=0.02, ang=0.15):
-    """Tessellate a part to a trimesh (exact bounds, unlike the B-rep box)."""
+def mesh(w, tol=0.02, ang=0.05):
+    """Tessellate a part to a trimesh (exact bounds, unlike the B-rep box). The angular limit
+    sets the accuracy on the lofted skins: at 0.15 rad the fuselage sides came out as flat
+    bands up to 0.5 mm inside the true surface (seen as a dip by the code letters); 0.05 keeps
+    it under 0.15 mm. OCC's mesher sometimes leaves a gap at the finer setting (the tail
+    turret's glazing did): a part that does not close is meshed again at the old 0.15."""
     import trimesh
+    from OCP.BRepTools import BRepTools
     if isinstance(w, trimesh.Trimesh):          # parts made with mesh booleans pass through
         return w.copy()
-    verts, tris = [], []
-    for solid in w.vals():
-        v, t = solid.tessellate(tol, ang)
-        off = len(verts)
-        verts += [(p.x, p.y, p.z) for p in v]
-        tris += [(a + off, b + off, c + off) for a, b, c in t]
-    m = trimesh.Trimesh(verts, tris, process=True)
-    m.merge_vertices()
+    for a in (ang, 0.15) if ang < 0.15 else (ang,):
+        verts, tris = [], []
+        for solid in w.vals():
+            BRepTools.Clean_s(solid.wrapped)    # drop any cached triangulation from another setting
+            v, t = solid.tessellate(tol, a)
+            off = len(verts)
+            verts += [(p.x, p.y, p.z) for p in v]
+            tris += [(i + off, j + off, k + off) for i, j, k in t]
+        m = trimesh.Trimesh(verts, tris, process=True)
+        m.merge_vertices()
+        if m.is_watertight:
+            break
     return m
 
 

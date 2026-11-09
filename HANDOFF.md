@@ -17,6 +17,8 @@ State on 2026-11-08, branch `phase1-airframe`, worked on the user's Mac. **`kit/
 - `tools/closeup.py` uses EGL on Linux only; on macOS, pyrender's default pyglet backend.
 
 ## What changed on 2026-11-09 (after joint test 2)
+- **Fuselage "fillet" fixed**: the curved skins were meshed too coarsely (flat bands up to 0.5 mm deep, seen by the code letters on the starboard rear and tail). `halifax.mesh` now uses 0.05 rad (falls back to 0.15 for a part that won't close). Sides now match to 0.03 mm. The kit 3MF is 39 MB and the build takes 16 minutes.
+- **Parts start at x 27.5** (`BED_X0`): Bambu printed the fuselage nose brim with Dark Earth, which put the second nozzle at x 15 and failed plate 1.
 - **Tail joint right at 0.10 a side. Nose and wing joints a touch loose at 0.15**: both now 0.10 a side (`FUSE_KEY_FIT[0]`, `WING_SPLIT_FIT`). The middle fuselage joint stays at `KEY_FIT` (good in round 1).
 
 ## What changed on 2026-11-08 (third round, after joint test 1)

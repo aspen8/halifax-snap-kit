@@ -101,8 +101,11 @@ CAMO_CL_PX = 1995            # page x of the centreline
 # Demarcation (top of the black on the fuselage sides), from the profile
 DEMARCATION = MK["demarcation"]
 
-BED = (209.0, 250.0)         # packing area: the X2D's 230 mm, less the strip its second nozzle can't reach
-BED_X0 = 21.0                # every plate starts here, so the second nozzle reaches every part
+BED = (209.0, 250.0)         # packing area (the X2D bed is 256 square; its second nozzle reaches x 20.5-256)
+BED_X0 = 27.5                # every plate starts here: past the second nozzle's 20.5 plus a 6 mm brim and
+                             # 1 mm spare. Bambu prints a brim with whichever filament starts the first
+                             # layer; when that was Dark Earth (second nozzle), a brim on a part at x 21
+                             # reached x 15 and the plate would not slice (2026-11-09)
 PLATE_GAP = 8.0
 NOZZLE = {EARTH: 2}            # filament slot -> nozzle: Dark Earth alone on the second (auxiliary) nozzle,
                              # which takes one colour; black/earth swaps become nozzle changes, with no
