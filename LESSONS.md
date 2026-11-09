@@ -336,3 +336,4 @@ A void that doesn't reach the outside is a separate, negative-volume shell. `lar
 ### Trace small parts from the kit maker's own part drawings
 
 The Hawk's smoke pod took four tries from descriptions, a sketch and a perspective render, and each moved further from the real shape. What worked: the kit instructions' separate side view of the part and the parts-sheet outlines (flat, true profiles), traced by pixel and scaled to the calibrated side view, then shown overlaid on the drawing before building. Ask the user for that drawing first, and don't take a feature in a render (here a "tail point") as part of the shape without checking where it ends on a true side view.
+- **Leave a real margin on a snap's squeeze.** The v27 wheel head closed to 5.4 mm against a 5.6 mm bore: 0.2 mm on paper, but the hole printed tight and the boss broke. v33 leaves 0.8 mm (head closes to 5.8 in a 6.6 bore) and keeps the hold to 0.4 mm a side.

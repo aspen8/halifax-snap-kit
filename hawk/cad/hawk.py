@@ -332,15 +332,14 @@ GEAR_DROP = 22.0
 # Wheel snap fit: a boss on the leg, split by a spring slot, with a mushroom head. All sizes in
 # PRINTED mm (the clearances come from the printer, not the model), so they are multiplied by _P
 # where used. neck/head/bore are diameters.
-GEAR_SNAP = dict(neck=5.0, head=6.6, head_len=1.5, cham=0.8, slot=1.2, slot_in=3.0,
-                 bore=5.6, bore_cham=0.4, dish=0.7, end_gap=0.3, gap=0.3)
-                             # v27 (test print: the v22 boss's prongs, 1.55 mm thick and 3.4 mm
-                             # free, snapped off as the wheel went on): the boss now runs right
-                             # through the wheel's bore and its head clips over the floor of the
-                             # outboard hub dish, standing out like a hub cap. Prongs 1.9 mm thick
-                             # and about 8 mm free; running clearance 0.3 a side (bore 5.6 on a
-                             # 5.0 neck), retention 0.5 a side (head 6.6), slot 1.2 (the head
-                             # closes to 5.4, under the bore), 0.3 end gap and leg-wheel gap
+GEAR_SNAP = dict(neck=6.0, head=7.4, head_len=1.5, cham=1.0, slot=1.6, slot_in=3.0,
+                 bore=6.6, bore_cham=0.6, dish=0.7, end_gap=0.3, gap=0.3)
+                             # v33 (test print: the v27 boss broke again forcing its head through the
+                             # 5.6 bore, which printed tight): bore 6.6 with a 0.6 lead-in, neck 6.0
+                             # (prongs 2.2 thick), slot 1.6 so the head closes to 5.8, 0.8 under the
+                             # bore; head 7.4 holds 0.4 a side; 0.3 running clearance a side.
+                             # v27: the boss runs right through the wheel's bore and its head clips
+                             # over the floor of the outboard hub dish, standing out like a hub cap
 LEG_T_IN = 1.0               # main legs are this much thicker on their inner (bed) face, so the
                              # spring slot can run 4 mm in
 
@@ -1612,7 +1611,7 @@ def nose_gear():
     leg = union([box(NOSE_GEAR_X - 2.0, NOSE_GEAR_X + 2.0, -2.0, 2.0, z_axle + d / 2 + 1.0, zb - 0.1),   # oleo
                  box(NOSE_GEAR_X - 2.2, NOSE_GEAR_X + 2.2, -2.2, 2.2, zb - 0.2, zb + 6.0),                 # plug
                  box(NOSE_GEAR_X - 2.0, x + 2.0, yb, w / 2 + 0.6, zc0, z_axle + d / 2 + 2.6),               # fork top
-                 box(x - 2.4, x + 2.4, yb, yi, z_axle - 2.6, zc0 + 0.01)])                                # arm
+                 box(x - 3.2, x + 3.2, yb, yi, z_axle - 3.3, zc0 + 0.01)])   # arm (v33: wider for the bigger boss)
     boss, slot = snap_boss((x, yi, z_axle), (0, 1, 0), (1, 0, 0), GEAR_SNAP, gap, wheel_bearing(w))
     return (leg + boss) - slot, (x, z_axle)
 

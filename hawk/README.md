@@ -49,7 +49,13 @@ Against photos (top: real aircraft, bottom: model):
 
 ![photo comparison](docs/photo_comparison.png)
 
-> **Status: v32; test coupons printed twice (see v26 and v28 changes).** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+> **Status: v33; test coupons printed three times (see v26, v28 and v33 changes).** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+
+### v33 changes (test print 3: bigger wheel snap)
+
+- **Test print 3:** the tailplane printed on end came out well and fits its socket; the white is better with the right nozzle calibrated (K 0.35, set on the printer); the wheel's boss broke again forcing its head through the 5.6 mm bore, which printed tight.
+- **Wheel snap, bigger and stronger** (user): bore 6.6 mm with a 0.6 mm lead-in, neck 6.0 mm (prongs about 2.2 mm thick), slot 1.6 mm so the head closes to 5.8 mm, 0.8 under the bore (was 0.2), head 7.4 mm with a 1.0 mm lead-in cone, still holding 0.4 mm a side. The nose leg's arm is wider and deeper to carry the bigger boss.
+- **Checks:** interference shows only the known overlaps; every gear part is one piece; all plates slice (gear 1.3 h); test coupons rebuilt (wheel snap plate 0.5 h).
 
 ### v32 changes (smoke pod from the Revell drawings: right at last)
 
