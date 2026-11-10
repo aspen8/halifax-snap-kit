@@ -40,7 +40,7 @@ Then:
 
 ## State at handoff (v35, pushed)
 
-v35 (test print 4): wheel snap v33 good. Fences snap on: `_fence_teeth`, `WING_FENCE_TOOTH`, `WING_FENCE_TOOTH_X`, pockets in `wing_fence_grooves`; groove floors with no clearance (the interference check shows about 1 mm3 fence x wing from that contact, expected). Parts don't need to come apart again (user): favour firm snaps. Still to test: v35 fence.
+v35 (test print 4): wheel snap v33 good. Fences snap on: `_fence_teeth`, `WING_FENCE_TOOTH`, `WING_FENCE_TOOTH_X`, pockets in `wing_fence_grooves`; groove floors with no clearance (the interference check shows about 1 mm3 fence x wing from that contact, expected). Parts don't need to come apart again (user): favour firm snaps. v35 fence tested good (test print 5): every joint on the coupons now works.
 
 v34: fence grooves snapped to the wing's print layers (`_fence_layer_dy`, `LAYER`, `WING_FENCE_T` = 1.6 printed, groove thickness grow 0); the coupon cut uses `y_layer`. Still to test: v33 wheel snap, v34 fence fit.
 

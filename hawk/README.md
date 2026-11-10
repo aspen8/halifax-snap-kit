@@ -49,13 +49,14 @@ Against photos (top: real aircraft, bottom: model):
 
 ![photo comparison](docs/photo_comparison.png)
 
-> **Status: v35; test coupons printed four times (see v26, v28, v33 and v35 changes).** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
+> **Status: v35; test coupons printed five times; every joint now tested good (see v26, v28, v33 and v35 changes).** v4 fixed what the first test print showed (see "Test print 1" below); v5 reworks the shape and markings against photos (see "v5 changes"). The geometry passes the three checks in `LESSONS.md` (single pieces, interference, overhangs).
 
 ### v35 changes (snap-on fences)
 
 - **Test print 4:** the bigger wheel snap (v33) works; the fence (v34) was still loose.
 - **Fences snap on** (user's idea: the C-shaped collar is already a spring). Each tongue has a small tooth near its end (0.4 mm on top, 0.3 mm underneath, where the arm is shorter and stiffer) that clicks into a pocket in its groove. Each tooth has a long ramp on the side that leads going on and a square face behind, since the fences never need to come off (user). The tongues now bear on the groove floors with no clearance, so the collar always grips slightly. No glue.
 - **Checks:** all plates slice. The overlap check shows about 1 mm³ between each big fence and its wing: the tongues touching the groove floors, as intended.
+- **Test print 5:** the snap-on fence works (user: test print successful).
 
 ![v35 fence with its snap teeth, alone and on a slice of the wing](docs/v35_fence_teeth.png)
 
