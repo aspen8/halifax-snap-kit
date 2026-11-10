@@ -7,7 +7,7 @@ State on 2026-11-08, branch `phase1-airframe`, worked on the user's Mac. **`kit/
 - Checks: `python halifax.py OUT2` (assembled geometry, 10 min), `tools/interference.py OUT2/assembled --min 2` (the loose keys all sit at the origin, so ignore key-against-key overlaps), `tools/overhang.py OUT/stl`, and a single-piece check on `OUT/stl/*.stl`. Use manifold3d's `decompose()` for that, not trimesh's `split()`: the STLs carry zero-volume slivers from rounding, which trimesh counts as pieces.
 - Slice: `python tools/slice.py kit/halifax_kit.3mf [--md]` (about 1 min), after copying `OUT/halifax_kit.3mf` to `kit/`.
 - Test plate: `cd cad && python test_plate.py OUT` (3 min).
-- Joint test (the 2026-11-08 joints): after the colour build, `cd cad && python joint_test.py OUT` (seconds; it cuts slices from `OUT/stl`).
+- Joint test (the 2026-11-08 joints): after the colour build, `cd cad && python joint_test.py OUT` (seconds; it cuts slices from `OUT/stl`). Tail test: `python tail_test.py OUT`.
 - Fast previews (seconds): build one part from `halifax.py`, paint it with `colour.colour_part`, render with `tools/closeup.py`. If pyrender can't find a screen (Mac display asleep: "IndexError" in pyglet's `get_default_screen`), use a software painter's render with matplotlib from the preview GLB.
 
 ## Setting up on the Mac (done 2026-11-07)
@@ -15,6 +15,10 @@ State on 2026-11-08, branch `phase1-airframe`, worked on the user's Mac. **`kit/
 - `cad/ref/` is git-ignored except `camo_plan_green.png`. The side-profile trace `camo_side_npg.png` was never committed; the build now skips it (`colour.side_trace`), since only the old split-fuselage halves were painted from it.
 - The Mac's OCC meshes curved faces slightly differently from the cloud's, so a rebuild changes the 3MF bytes without changing the design. Only commit a rebuilt 3MF when the design changed.
 - `tools/closeup.py` uses EGL on Linux only; on macOS, pyrender's default pyglet backend.
+
+## What changed on 2026-11-10
+- **Fuselage bomb doors**: engraved under the belly, x 95-198, 15 mm wide, split on the centreline (`detail.FUSE_BOMB_BAY`; positions approximate). Ends ahead of the H2S radome.
+- **Tail fit test** (`kit/halifax_tail_test.3mf`, `cad/tail_test.py`, 2 h): the tailplane, the tail fuselage up to just past its slot, and four fins: the two kit fins (tab slot 0.15 a side) and two plain fins at 0.10. The fin tabs had never been fit-tested. Keep whichever fit holds the fins on without forcing.
 
 ## What changed on 2026-11-09 (after joint test 2)
 - **Fuselage "fillet" fixed**: the curved skins were meshed too coarsely (flat bands up to 0.5 mm deep, seen by the code letters on the starboard rear and tail). `halifax.mesh` now uses 0.05 rad (falls back to 0.15 for a part that won't close). Sides now match to 0.03 mm. The kit 3MF is 39 MB and the build takes 16 minutes.

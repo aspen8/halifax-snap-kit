@@ -13,7 +13,7 @@ assembled frame (see halifax.py axes).
 import manifold3d as mf
 
 import halifax as H
-from kitlib import band, rect_outline, ring  # noqa: F401
+from kitlib import band, box, rect_outline, ring  # noqa: F401
 from kitlib import dots_along as _dots
 
 # ============================================================
@@ -60,6 +60,9 @@ RUDDER_HINGE = 0.55          # fraction of fin chord
 FUSE_RINGS = [32.0, 48.0, 140.0, 165.0, 200.0, 245.0, 280.0, 315.0, 342.0]
 FUSE_SEAMS = [(-24.0, 30.0, 340.0)]     # (z, x from, x to) side seams; the spine joint is the upper seam
 CREW_DOOR = (-1, 252.0, 264.0, -30.0, -8.0)    # side, x0, x1, z0, z1 (port, rear fuselage)
+FUSE_BOMB_BAY = (95.0, 198.0, 7.5)   # x from, to, half-width: the main bomb doors under the fuselage
+                             # (about 22 ft long; positions approximate), a pair split on the centreline,
+                             # ending ahead of the H2S radome (202). Kept on the flat of the belly.
 ROOF_HATCHES = [(150.0, 9.0, 7.0), (232.0, 9.0, 7.0)]       # x centre, length, width
 NOSE_WINDOWS = [(54.0, 61.0, -10.3, -2.6),     # navigator's D-window (Revell side view)
                 (61.3, 71.7, -1.3, 0.9)]       # strip window under the canopy; x0, x1, z0, z1
@@ -237,6 +240,11 @@ def apply(name, P):
         for x, L, w in ROOF_HATCHES:
             hat = hat + rect_outline(x - L / 2, -w / 2, x + L / 2, w / 2, GROOVE_W)
         groove(prism_z(hat), "z", GROOVE_D)
+        bx0, bx1, bhw = FUSE_BOMB_BAY
+        if name.startswith("fuselage_"):
+            bay = rect_outline(bx0, -bhw, bx1, bhw, GROOVE_W) + band((bx0, 0.0), (bx1, 0.0), GROOVE_W)
+            zb = max(H.interp(H.FUSE_STATIONS, x)[3] for x in (bx0, bx1)) + 2.0   # belly skin only
+            groove(prism_z(bay) ^ box(bx0 - 1, bx1 + 1, -bhw - 1, bhw + 1, -100, zb), "-z", GROOVE_D)
     elif name.startswith("nacelle"):
         idx = int(name[7]) - 1
         _, _, x0, L = H.NACELLES[idx]
