@@ -1,14 +1,16 @@
 """
-Tail fit test: the tailplane through the tail fuselage, held by the two fins.
+Tail fit test, round 2: the tailplane and the fins (the fuselage slot passed round 1).
 
 Run after the colour build:  python tail_test.py KIT_OUT_DIR [project_settings_template.json]
 
-Plate 1 (0.24 mm, as the wing plate):
-  tailplane (the kit part) and the bottom of fuselage_tail, up to just past the tailplane slot
-Plate 2 (0.12 mm, as the kit's fins):
-  fin_stbd, fin_port: the kit fins, tab slot KEY_FIT (0.15) a side
-  fin_stbd_tight, fin_port_tight: the same fins with the tab slot at 0.10 a side (the fit the
-  other joints settled on), plain (no panel lines or flash socket): try both, keep the better
+Round 1 (2026-11-10): the fins printed inner face down, so the 0.6 mm tip pocket and the tab
+slot opened onto the bed and their roofs bridged the whole tip chord: rough and loose. The fins
+now print outer face down (pocket and slot open upwards), with a 1.2 mm pocket and a 1.2 mm tab.
+
+Plate 1 (0.24 mm, as the wing plate): the tailplane (the kit part).
+Plate 2 (0.12 mm, as the kit's fins), plain fins in the kit pose:
+  fin_stbd_kit, fin_port_kit:      pocket FIN_POCKET_FIT (0.15) a side, tab slot FIN_TAB_FIT (0.10)
+  fin_stbd_tight, fin_port_tight:  pocket 0.10 a side, tab slot 0.10
 Everything in black. Writes KIT_OUT_DIR/halifax_tail_test.3mf.
 """
 import sys
@@ -22,8 +24,7 @@ import colour as C
 import halifax as H
 import kitlib as K
 
-TAIL_SLICE = H.TAIL_ROOT[0] + H.TAIL_ROOT[1] + 4.0 - H.FUSE_CUTS[-1]   # posed height: past the slot's TE
-TIGHT_FIT = 0.10
+VARIANTS = {"kit": (H.FIN_POCKET_FIT, H.FIN_TAB_FIT), "tight": (0.10, 0.10)}
 
 
 def load(path):
@@ -31,31 +32,25 @@ def load(path):
     return mf.Manifold(mf.Mesh(t.vertices.astype(np.float32), t.faces.astype(np.uint32)))
 
 
-def tight_fin(side):
-    keep = H.KEY_FIT
-    H.KEY_FIT = TIGHT_FIT                       # fin() cuts its tab slot with KEY_FIT
+def test_fin(side, pocket_fit, tab_fit):
+    keep = H.FIN_POCKET_FIT, H.FIN_TAB_FIT
+    H.FIN_POCKET_FIT, H.FIN_TAB_FIT = pocket_fit, tab_fit
     try:
         f = H.fin(side)
     finally:
-        H.KEY_FIT = keep
-    P = C.to_manifold(H.mesh(f)).rotate([90 * side, 0, 0])   # kit pose: inner face down
-    return P
+        H.FIN_POCKET_FIT, H.FIN_TAB_FIT = keep
+    return C.to_manifold(H.mesh(f)).rotate([-90 * side, 0, 0])   # kit pose: outer face down
 
 
 def main():
     out = Path(sys.argv[1])
     template = sys.argv[2] if len(sys.argv) > 2 else str(Path(__file__).with_name("project_settings_template.json"))
-    stl = out / "stl"
-    pieces = {"tailplane": (load(stl / "tailplane.stl"), "tailplane")}
-    P = load(stl / "fuselage_tail.stl")
-    x0, y0, z0, x1, y1, z1 = P.bounding_box()
-    S, _ = K.largest_piece(P ^ K.box(x0 - 1, x1 + 1, y0 - 1, y1 + 1, z0, z0 + TAIL_SLICE))
-    pieces["fuselage_tail_slot"] = (S, "fuselage_tail")
-    for tag, side in (("stbd", 1), ("port", -1)):
-        pieces[f"fin_{tag}"] = (load(stl / f"fin_{tag}.stl"), f"fin_{tag}")
-        pieces[f"fin_{tag}_tight"] = (tight_fin(side), f"fin_{tag}")
-    groups = [("Tailplane and slot (0.24 mm)", ["tailplane", "fuselage_tail_slot"]),
-              ("Fins (0.12 mm)", ["fin_stbd", "fin_port", "fin_stbd_tight", "fin_port_tight"])]
+    pieces = {"tailplane": (load(out / "stl" / "tailplane.stl"), "tailplane")}
+    for v, (pf, tf) in VARIANTS.items():
+        for tag, side in (("stbd", 1), ("port", -1)):
+            pieces[f"fin_{tag}_{v}"] = (test_fin(side, pf, tf), f"fin_{tag}")
+    groups = [("Tailplane (0.24 mm)", ["tailplane"]),
+              ("Fins (0.12 mm)", [n for n in pieces if n.startswith("fin_")])]
     objects, names = [], []
     for pi, (gname, group) in enumerate(groups):
         items = []
@@ -77,9 +72,9 @@ def main():
             st = {k: v for k, v in C.object_settings(kit).items() if k not in ("brim_type", "brim_width")}
             objects.append({"name": n, "placement": (pi, x + C.BED_X0, y), "settings": st,
                             "volumes": [(C.BLACK, *K.mesh_of(S))]})
-            print(f"plate {pi + 1}: {n:20} from {kit:14} {st}")
+            print(f"plate {pi + 1}: {n:18} from {kit:10} {st}")
     path = out / "halifax_tail_test.3mf"
-    K.write_3mf(path, objects, names, template, C.FILAMENTS, "Halifax tail test", C.PRINT_OVERRIDES)
+    K.write_3mf(path, objects, names, template, C.FILAMENTS, "Halifax tail test 2", C.PRINT_OVERRIDES)
     print("wrote", path)
 
 

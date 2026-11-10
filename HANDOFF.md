@@ -18,7 +18,10 @@ State on 2026-11-08, branch `phase1-airframe`, worked on the user's Mac. **`kit/
 
 ## What changed on 2026-11-10
 - **Fuselage bomb doors**: engraved under the belly, x 95-198, 15 mm wide, split on the centreline (`detail.FUSE_BOMB_BAY`; positions approximate). Ends ahead of the H2S radome.
-- **Tail fit test** (`kit/halifax_tail_test.3mf`, `cad/tail_test.py`, 2 h): the tailplane, the tail fuselage up to just past its slot, and four fins: the two kit fins (tab slot 0.15 a side) and two plain fins at 0.10. The fin tabs had never been fit-tested. Keep whichever fit holds the fins on without forcing.
+- **Tail fit test 1**: the fuselage slot is fine. The fins were bad: printed inner face down, the tip pocket and tab slot opened onto the bed and their roofs bridged the whole tip chord.
+- **Fins now print outer face down** (pose `rot x -90*s`): pocket and slot open upwards. Pocket 1.2 mm deep (`FIN_POCKET`, was 0.6; the tailplane is 0.6 longer each side), tab 1.2 into the fin (`FIN_TAB`, was 1.8: 0.9 mm of fin stays outside its slot), tab slot 0.10 a side (`FIN_TAB_FIT`), pocket `FIN_POCKET_FIT` 0.15. **The fin flash is painted** on the outer (bed) face over the yellow, not an inlay (`FIN_FLASH_INLAY = False`): colour swaps only in the first 0.8 mm.
+- **Prime towers** are placed with room for 35 x 50 mm and 12 mm clear (`kitlib.TOWER_DEPTH`, `TOWER_CLEAR`): with five colours the props/fins plate failed with "G-code conflicts" at 35 x 35. Kit: 7 plates, 50 h 06 m.
+- **Tail fit test 2** (`kit/halifax_tail_test.3mf`, `cad/tail_test.py`): the tailplane, and plain fins at the kit fit (pocket 0.15, tab 0.10) and tight (both 0.10). Set `FIN_POCKET_FIT` from the result.
 
 ## What changed on 2026-11-09 (after joint test 2)
 - **Fuselage "fillet" fixed**: the curved skins were meshed too coarsely (flat bands up to 0.5 mm deep, seen by the code letters on the starboard rear and tail). `halifax.mesh` now uses 0.05 rad (falls back to 0.15 for a part that won't close). Sides now match to 0.03 mm. The kit 3MF is 39 MB and the build takes 16 minutes.
@@ -57,7 +60,7 @@ State on 2026-11-08, branch `phase1-airframe`, worked on the user's Mac. **`kit/
 - Prop boss: neck 2.3, axial gap 0.4 (`PROP_BOSS`): spins.
 - Stub axles: grip hole +0.2 (`STUB_GRIP`); wheel bore +0.85 spins.
 - Gear socket sized from the closed fork halves, 0.08 per side (`GEAR_PLUG_FIT`): both gears stay in.
-- Inlays: `INLAY_FIT` 0.1, peg hole +0.2 (`PEG_GRIP`), two pegs on the fin flash: the G and the fin flash stay in.
+- Inlays: `INLAY_FIT` 0.1, peg hole +0.2 (`PEG_GRIP`): the G stays in. (The fin flash was an inlay with two pegs until 2026-11-10; it is painted on the fins now.)
 - Keys: the full-size flexing key (`KEY_NAC`) holds; plain and small (8 mm) keys don't. Nose key at 0.1 per side.
 - Details in `LESSONS.md`.
 

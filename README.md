@@ -20,7 +20,7 @@ The wings print standing on end, like the fuselage. Layer lines then run along t
 | Spine | 6 camo spine pieces on end (cut and oriented for fewest purges), painted from the plan pattern, and the D/F loop (Dark Earth) | Dark Earth, Dark Green |
 | Wings | Inner and outer panels, tailplane | Black, Dark Earth, Dark Green |
 | Nacelles | 8 nacelle halves | Black, Dark Earth, Dark Green |
-| Fin flashes, roundels and codes | Fin flash inlays, roundel inlays, NP-G code letters | Black, Red, Blue, Yellow, White |
+| Fin flashes, roundels and codes | Roundel inlays, NP-G code letters | Black, Red, Blue, Yellow, White |
 | Canopies and turrets | Cockpit canopy (2 pieces) and rear roof glazing with camo frames, nose, turrets, astrodome | Black, Silk Silver, Dark Earth, Dark Green |
 | Display plinth | Camo plinth (150 × 95 mm, no black) with raised white badge and name | Dark Earth, Dark Green, Yellow, White |
 | Props, gear, fins, guns and stand blade | Fins, props, exhausts, 2-piece gear forks, wheels, gun packs, keys, stand blade | Black, Yellow |
@@ -74,14 +74,14 @@ The single-colour STLs are in `stl/`, in print orientation.
    - Lay the tailplane on its seat.
    - Press the spine pieces on, nose to tail, over the pegs on the body. The piece over the tail holds the tailplane down, and the piece over the joint locks the two sections together.
    - Push the D/F loop into its socket in the roof.
-   - Press in the red code letters and the roundels: each letter and fin flash has a hole in its back that grips a peg on the socket floor. Each roundel (wing and fuselage) has an off-centre peg, so it only fits one way round and grips, and an L or R engraved on its back.
+   - Press in the red code letters and the roundels: each letter has a hole in its back that grips a peg on the socket floor. Each roundel (wing and fuselage) has an off-centre peg, so it only fits one way round and grips, and an L or R engraved on its back.
 2. **Wings.** Join each outer panel to its inner panel with a wing key. The joint faces set the 5° dihedral. Press the wing roundels into their sockets.
 3. **Nacelles.**
    - Push the exhaust banks into their side slots.
    - Push the nacelle lock key up into its pocket in the wing underside (the longer key is for the inner nacelles).
    - Close both halves around the wing and the key.
    - Push the prop onto the nose boss last: the slotted boss squeezes, then springs out behind the prop's lip, and the prop spins.
-4. **Tail.** Snap the red/white/blue fin flashes into the fins (the peg on the back grips). Slide the fins onto the tailplane tips: the tab on each tip locks into the fin.
+4. **Tail.** Slide the fins onto the tailplane tips: each tip seats in a pocket in the fin and the tab under it locks into a slot. (The fin flashes are printed on the fins.)
 5. **Turrets.** Fit the gun packs into the turrets. Pin the turrets on: the dorsal turret rotates.
 6. **Display.** Either fit the gear (wheel onto the stub on one fork half, close the other half over it, then push the pair into its socket) or put the model on the stand. With the gear down it sits tail-down at 8.7°. For the stand, push the blade's tenon into the plinth, fit the wheels-up inserts, and lower the model onto the key at the blade tip: it sits 5° nose-up.
 

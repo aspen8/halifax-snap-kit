@@ -487,8 +487,11 @@ def pack(items, bed, gap=8.0):
     return [p["items"] for p in plates]
 
 
-TOWER = 35.0            # prime tower width (template prime_tower_width); depth taken as the same
-TOWER_CLEAR = 9.0       # from every part's outline: a 6 mm brim plus 3
+TOWER = 35.0            # prime tower width (template prime_tower_width)
+TOWER_DEPTH = 50.0      # room kept for its depth: it grows with the colours on the plate, and its rib
+                        # walls stick out past the square. At 35 x 35 a five-colour plate (the props
+                        # and fins with the painted fin flash) failed with "G-code conflicts"
+TOWER_CLEAR = 12.0      # from every part's outline (a 6 mm brim plus room for the ribs)
 TOWER_X_MIN = 22.0      # the X2D's second nozzle can't reach x < 20.5
 
 
@@ -516,8 +519,8 @@ def place_towers(objects, n_plates, area=(230.0, 250.0), bed=(256.0, 256.0)):
         best = None
         for lim in (area, bed):
             for x in np.arange(TOWER_X_MIN, lim[0] - TOWER - 1.0, 2.0):
-                for y in np.arange(2.0, lim[1] - TOWER - 1.0, 2.0):
-                    t = sbox(x, y, x + TOWER, y + TOWER)
+                for y in np.arange(2.0, lim[1] - TOWER_DEPTH - 1.0, 2.0):
+                    t = sbox(x, y, x + TOWER, y + TOWER_DEPTH)
                     if not t.intersects(busy):
                         d = t.centroid.distance(c)
                         if best is None or d < best[0]:

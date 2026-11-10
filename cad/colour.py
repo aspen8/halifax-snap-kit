@@ -75,6 +75,7 @@ FIN_STRIPES = [[(304.0, 17.0), (342.0, 34.8), (342.0, 21.7), (304.0, 3.3)],
                [(304.0, -8.6), (342.0, 11.1), (342.0, -2.7), (304.0, -25.0)]]
 WING_ROUNDEL = (154.3, 166.0, 37.0)     # x, |y|, diameter (84 in Type B)
 FIN_FLASH = (309.0, 15.0, 33.0, 7.0, 1.5)  # x start, z0, z1, red/blue width, white width
+FIN_FLASH_INLAY = False      # painted on the fin's bed face now (fins print outer face down)
 PROP_TIP = 3.0               # mm of yellow at the prop tips
 INLAY_DEPTH = 1.2            # mm, roundel inlay depth at its shallowest point
 FLASH_DEPTH = 1.8            # mm, fin flash inlay (room for the peg's hole behind the face)
@@ -334,11 +335,18 @@ def colour_part(name, P, pat):
     if name.startswith("fin_"):
         s = 1 if name.endswith("stbd") else -1
         side = S["+y"] if s > 0 else S["-y"]
-        # outer face only (the inner face stays black); the fin flash is a separate inlay
+        # outer face only (the inner face stays black). The fins print outer face down, so the
+        # stripes and the flash (over the yellow) are the first SKIN of layers: crisp on the bed,
+        # and only a few layers of colour swaps (the flash was a snap-in inlay until 2026-11-10)
         ops = []
         if MK["fin_stripes"]:
             for quad in FIN_STRIPES:
                 ops.append((YELLOW, side ^ prism_y(cs([quad]))))
+        x0, z0, z1, w, ww = FIN_FLASH
+        rect = lambda a, b: cs([[(a, z0), (b, z0), (b, z1), (a, z1)]])
+        ops += [(RED, side ^ prism_y(rect(x0, x0 + 2 * w + ww))),
+                (WHITE, side ^ prism_y(rect(x0 + w, x0 + w + ww))),
+                (BLUE, side ^ prism_y(rect(x0 + w + ww, x0 + 2 * w + ww)))]
         return paint(P, ops)
     if name.startswith("prop") and not name.startswith("prop_shaft"):
         idx = int(name[4]) - 1
@@ -655,7 +663,7 @@ def inlays_for(name, P):
         P, vols, plug, prot = K.make_inlay(P, (x, s * y), d, B_RINGS(d), "z", 1, WING_INLAY_DEPTH,
                                      INLAY_FIT, WING_ROUNDEL_PEG, (hand, 6.0, 6.0, -4.0, BACK_MIRROR["z"]), cav)
         out.append((f"roundel_wing_{name.split('_')[-1]}", vols, prot, plug))
-    if name.startswith("fin_"):
+    if name.startswith("fin_") and FIN_FLASH_INLAY:
         # fin flash (red/white/blue) as one snap-in inlay: press fit plus two gripping pegs on its
         # back, one behind the red and one behind the blue (one central peg let it fall out)
         s = 1 if name.endswith("stbd") else -1

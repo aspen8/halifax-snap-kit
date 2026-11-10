@@ -54,8 +54,11 @@ NACELLE_KEY_UP = (4.0, 3.5)      # how far each lock goes up into the wing
 NOSE_KEY_X = 10.5            # nose key (KEY_NAC) across the nacelle split, this far behind the nose, on
                              # the centreline: holds the halves at the front (test plate round 3)
 NOSE_KEY_FIT = 0.1           # per side: a touch tighter than KEY_FIT (round 3 fit test)
-FIN_TAB = (1.8, 6.0, 1.6)    # tab printed on the tailplane tip, flush with its flat underside:
-                             # protrusion into the fin (y), width (x), thickness (z)
+FIN_TAB = (1.2, 6.0, 1.6)    # tab printed on the tailplane tip, flush with its flat underside:
+                             # protrusion into the fin (y), width (x), thickness (z). 1.2 (was 1.8)
+                             # with the deeper pocket, so 0.9 mm of fin stays outside its slot
+FIN_TAB_FIT = 0.10           # per side, the tab's slot (tail test 1: the fins print outer face down now)
+FIN_POCKET_FIT = FIT         # per side, round the tailplane tip in its pocket
 FIN_KEY_AT = (0.24,)         # one key at the thickest part of the tip (mid-chord broke through)
 
 AXLE_HOLE_TIGHT = 3.05       # mm, printed 2.5 mm pins grip here (fit-test clearance +0.55)
@@ -295,7 +298,9 @@ FIN_Z_BOTTOM = -23.0
 FIN_Z_TOP = 42.5             # ~31 mm above the roof line (side profile)
 FIN_T = 3.6
 FIN_CORNER_R = 9.0
-FIN_POCKET = 0.6             # mm, tailplane tip sits this deep in the fin (seats it; keys hold it)
+FIN_POCKET = 1.2             # mm, tailplane tip sits this deep in the fin (seats it; the tab holds it).
+                             # Was 0.6 printed face down: its roof bridged the whole tip chord and
+                             # printed badly (tail test 1); the fins now print outer face down
 
 # --- Landing gear (Messier main legs either side of the wheel; castoring tailwheel)
 MAIN_AXLE_X = 120.0          # mm, just aft of the radiator (Revell side view)
@@ -1267,10 +1272,11 @@ def fin(side):
          .faces("+Y or -Y").edges().fillet(1.2))
     f = f.translate((0, FIN_Y * side, 0))
     tp = tailplane()
-    for dx, dz in ((0, 0), (FIT, 0), (-FIT, 0), (0, FIT), (0, -FIT)):
+    g = FIN_POCKET_FIT
+    for dx, dz in ((0, 0), (g, 0), (-g, 0), (0, g), (0, -g), (g, g), (-g, g), (g, -g), (-g, -g)):
         f = f.cut(tp.translate((dx, 0, dz)))
-    # tailplane tip sits in a shallow recess; its printed-on tab locks into a slot
-    return f.cut(fin_tab(side, grow=KEY_FIT))
+    # tailplane tip sits in a recess; its printed-on tab locks into a slot
+    return f.cut(fin_tab(side, grow=FIN_TAB_FIT))
 
 
 def fin_tab(side, grow=0.0):
@@ -1545,7 +1551,8 @@ def build():
         parts[f"wheel_up_{tag}"] = wheel_up_insert(side)
         poses[f"wheel_up_{tag}"] = lambda w: rot(w, "x", 90)               # flat side down
         parts[f"fin_{tag}"] = fin(side)
-        poses[f"fin_{tag}"] = lambda w, s=side: rot(w, "x", 90 * s)   # inner (fuselage-facing) face down on both
+        poses[f"fin_{tag}"] = lambda w, s=side: rot(w, "x", -90 * s)  # outer face down: the pocket and tab
+                                                                         # slot open upwards (no bridging)
 
     fp = fuselage_parts(tongues)
     for k, v in fp.items():
