@@ -16,7 +16,10 @@ State on 2026-11-08, branch `phase1-airframe`, worked on the user's Mac. **`kit/
 - The Mac's OCC meshes curved faces slightly differently from the cloud's, so a rebuild changes the 3MF bytes without changing the design. Only commit a rebuilt 3MF when the design changed.
 - `tools/closeup.py` uses EGL on Linux only; on macOS, pyrender's default pyglet backend.
 
-## What changed on 2026-11-10
+## What changed on 2026-11-10 (later: tail redesign)
+- **Tail test 2: a pocket and small tab will never hold a fin.** New design (`halifax.fin_rod`, `fin_rod_slot`, `tail_half`): each fin has a dovetail rod on its inner face (2.3 mm tall, 8 mm wide at the floor, 10 at the top, 16 mm long, with a 1.2 mm slit and a 0.3 mm click tooth each side near its free end). It slides into a slot along the underside of its **tailplane half**; the rod's underside is part of the tailplane's flat underside. Fits: `FIN_ROD_FIT` 0.10. The tailplane is now **two halves** (`tailplane_stbd`, `tailplane_port`), each printed on end root down on the wing plate (brim), joined on the centreline inside the fuselage slot by one flexing key (`TAIL_KEY` 20 x 6 x 1.8, `TAIL_KEY_X` 311, fit 0.10; about 0.8 mm walls). The fin flash and stripes stay painted on the fins' bed face; the rod and inner face are black.
+- **Tail test 3** (`kit/halifax_tail_test.3mf`, `cad/tail_test.py`): both halves (port with the rod slot at 0.15 to compare), both fins, the centre key.
+
 - **Fuselage bomb doors**: engraved under the belly, x 95-198, 15 mm wide, split on the centreline (`detail.FUSE_BOMB_BAY`; positions approximate). Ends ahead of the H2S radome.
 - **Tail fit test 1**: the fuselage slot is fine. The fins were bad: printed inner face down, the tip pocket and tab slot opened onto the bed and their roofs bridged the whole tip chord.
 - **Fins now print outer face down** (pose `rot x -90*s`): pocket and slot open upwards. Pocket 1.2 mm deep (`FIN_POCKET`, was 0.6; the tailplane is 0.6 longer each side), tab 1.2 into the fin (`FIN_TAB`, was 1.8: 0.9 mm of fin stays outside its slot), tab slot 0.10 a side (`FIN_TAB_FIT`), pocket `FIN_POCKET_FIT` 0.15. **The fin flash is painted** on the outer (bed) face over the yellow, not an inlay (`FIN_FLASH_INLAY = False`): colour swaps only in the first 0.8 mm.

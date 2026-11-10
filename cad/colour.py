@@ -334,8 +334,8 @@ def colour_part(name, P, pat):
         return paint(P, ops)
     if name.startswith("fin_"):
         s = 1 if name.endswith("stbd") else -1
-        side = S["+y"] if s > 0 else S["-y"]
-        # outer face only (the inner face stays black). The fins print outer face down, so the
+        side = (S["+y"] if s > 0 else S["-y"]) ^ H_box(-100, 500, *((H.FIN_Y, 200) if s > 0 else (-200, -H.FIN_Y)), -100, 100)
+        # outer face only (the inner face and the dovetail rod stay black). The fins print outer face down, so the
         # stripes and the flash (over the yellow) are the first SKIN of layers: crisp on the bed,
         # and only a few layers of colour swaps (the flash was a snap-in inlay until 2026-11-10)
         ops = []
@@ -763,6 +763,8 @@ def object_settings(name):
     if name.startswith("spine_"):
         s.update(TALL_BRIM)                         # standing on an end face
     if name.startswith("wing_") and H.WING_POSE == "end":
+        s.update(TALL_BRIM)
+    if name.startswith("tailplane_"):               # halves stand on their root faces
         s.update(TALL_BRIM)
     return s
 

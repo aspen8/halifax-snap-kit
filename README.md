@@ -81,7 +81,7 @@ The single-colour STLs are in `stl/`, in print orientation.
    - Push the nacelle lock key up into its pocket in the wing underside (the longer key is for the inner nacelles).
    - Close both halves around the wing and the key.
    - Push the prop onto the nose boss last: the slotted boss squeezes, then springs out behind the prop's lip, and the prop spins.
-4. **Tail.** Slide the fins onto the tailplane tips: each tip seats in a pocket in the fin and the tab under it locks into a slot. (The fin flashes are printed on the fins.)
+4. **Tail.** Push the centre key into one tailplane half, slide the two halves into the fuselage slot from each side and press them together on the key. Then slide each fin's dovetail rod into the slot under its tailplane tip until the teeth click. (The fin flashes are printed on the fins.)
 5. **Turrets.** Fit the gun packs into the turrets. Pin the turrets on: the dorsal turret rotates.
 6. **Display.** Either fit the gear (wheel onto the stub on one fork half, close the other half over it, then push the pair into its socket) or put the model on the stand. With the gear down it sits tail-down at 8.7°. For the stand, push the blade's tenon into the plinth, fit the wheels-up inserts, and lower the model onto the key at the blade tip: it sits 5° nose-up.
 

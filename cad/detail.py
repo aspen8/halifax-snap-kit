@@ -195,7 +195,7 @@ def apply(name, P):
                 doors = doors + band(q0, q1, GROOVE_W)
         groove(prism_z(doors) - clear, "-z", GROOVE_D)
         adds.append((raised(P, "-z") ^ prism_z(dots)) - clear)
-    elif name == "tailplane":
+    elif name.startswith("tailplane"):
         segs = tail_layout()
         for kind, depth in (("panel", GROOVE_D), ("hinge", HINGE_D)):
             sec = mf.CrossSection()

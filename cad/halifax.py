@@ -17,7 +17,7 @@ Kit layout (no supports needed except where noted):
   wings       inner, mid and outer (tip) panel per side, flat underside, keyed joints
   nacelles    clamshell halves that close around the wing
   props       4 x 3-blade, spin on a 1.75 mm filament axle
-  tail        one-piece tailplane through the fuselage, two fins
+  tail        tailplane in two halves (keyed inside the fuselage slot), fins with dovetail rods
 """
 import math
 import os
@@ -54,12 +54,22 @@ NACELLE_KEY_UP = (4.0, 3.5)      # how far each lock goes up into the wing
 NOSE_KEY_X = 10.5            # nose key (KEY_NAC) across the nacelle split, this far behind the nose, on
                              # the centreline: holds the halves at the front (test plate round 3)
 NOSE_KEY_FIT = 0.1           # per side: a touch tighter than KEY_FIT (round 3 fit test)
-FIN_TAB = (1.2, 6.0, 1.6)    # tab printed on the tailplane tip, flush with its flat underside:
-                             # protrusion into the fin (y), width (x), thickness (z). 1.2 (was 1.8)
-                             # with the deeper pocket, so 0.9 mm of fin stays outside its slot
-FIN_TAB_FIT = 0.10           # per side, the tab's slot (tail test 1: the fins print outer face down now)
 FIN_POCKET_FIT = FIT         # per side, round the tailplane tip in its pocket
-FIN_KEY_AT = (0.24,)         # one key at the thickest part of the tip (mid-chord broke through)
+# Fin to tailplane, from tail test 2 (2026-11-10): a tab and pocket were never enough. Each fin
+# carries a dovetail rod on its inner face that slides 16 mm into a slot in its tailplane half.
+# The rod's underside is part of the tailplane's flat underside (the slot is open there, so the
+# rod can use the full thickness); it is wider at the top, so it can't drop out. A slit down its
+# free end makes two springy prongs with a tooth on each side that clicks into a recess.
+FIN_ROD_X = (312.0, 322.0)   # x at the rod's top (the wide face): where the tip is >= 3.3 mm thick
+FIN_ROD = (2.3, 1.0, 16.0)   # height above the floor, undercut each side, length into the tailplane
+FIN_ROD_FIT = 0.10           # per side (sides and top) in the tailplane slot
+FIN_ROD_SLIT = (1.2, 10.0)   # width, length in from the rod's free end
+FIN_ROD_TOOTH = (0.3, 2.5, 1.8)   # proud of each side, centre from the free end, length along the rod
+# The tailplane is two halves (each prints on end, root down, like the wings) joined on the
+# centreline inside the fuselage slot by one flexing key where the root is thickest.
+TAIL_KEY = (20.0, 6.0, 1.8)  # length across the joint, width (x), thickness (z): 0.8 mm walls
+TAIL_KEY_X = 311.0           # its centre: the root is >= 3.9 mm thick over 308-314
+TAIL_KEY_FIT = 0.10
 
 AXLE_HOLE_TIGHT = 3.05       # mm, printed 2.5 mm pins grip here (fit-test clearance +0.55)
 AXLE_HOLE_LOOSE = 3.35       # mm, ...and spin freely here (fit-test clearance +0.85)
@@ -1275,20 +1285,85 @@ def fin(side):
     g = FIN_POCKET_FIT
     for dx, dz in ((0, 0), (g, 0), (-g, 0), (0, g), (0, -g), (g, g), (-g, g), (g, -g), (-g, -g)):
         f = f.cut(tp.translate((dx, 0, dz)))
-    # tailplane tip sits in a recess; its printed-on tab locks into a slot
-    return f.cut(fin_tab(side, grow=FIN_TAB_FIT))
+    # tailplane tip sits in a recess; the dovetail rod runs on into the tailplane
+    return f.union(fin_rod(side))
 
 
-def fin_tab(side, grow=0.0):
-    """Tab on the tailplane tip, flush with the flat underside (prints on the bed, no loose key).
-    With grow: the matching slot in the fin."""
-    y_tip = FIN_Y - FIN_T / 2 + FIN_POCKET
-    p, w, t = FIN_TAB
-    x = TAIL_TIP[0] + FIN_KEY_AT[0] * TAIL_TIP[1]
-    y0, y1 = y_tip - 1.0, y_tip + p + (KEY_END_GAP if grow else 0.0)
+def tail_y_tip():
+    return FIN_Y - FIN_T / 2 + FIN_POCKET
+
+
+def _dovetail(y0, y1, grow=0.0, extra=0.0, below=0.0):
+    """Dovetail prism along y between y0 < y1: bottom on the tailplane floor (or `below` under it),
+    sides undercut, wider at the top; grow widens the sides and raises the top, extra widens more."""
+    h, u, _ = FIN_ROD
+    xa, xb = FIN_ROD_X
+    w = extra + grow
+    pts = [(xa + u - w, TAIL_FLOOR - below), (xb - u + w, TAIL_FLOOR - below),
+           (xb + w, TAIL_FLOOR + h + grow), (xa - w, TAIL_FLOOR + h + grow)]
+    # bottom edge: carry the side slope down past the floor so the shape stays a dovetail
+    if below:
+        k = u / h
+        pts[0] = (xa + u - w + k * below, TAIL_FLOOR - below)
+        pts[1] = (xb - u + w - k * below, TAIL_FLOOR - below)
+    return W("XZ").polyline(pts).close().extrude(-(y1 - y0)).translate((0, y0, 0))
+
+
+def _mirror_y(w, side):
+    return w if side > 0 else w.mirror("XZ")
+
+
+def fin_rod(side):
+    """The dovetail rod on the fin's inner face (built for starboard, mirrored for port)."""
+    h, u, L = FIN_ROD
+    yt = tail_y_tip()
+    y_free = yt - L
+    rod = _dovetail(y_free, yt + 0.6)                      # into the fin past the pocket floor
+    t, tc, tl = FIN_ROD_TOOTH
+    yc = y_free + tc
+    teeth = _dovetail(yc - tl / 2, yc + tl / 2, extra=t)
+    xa, xb = FIN_ROD_X
+    xm = (xa + xb) / 2
+    hw = (xb - xa) / 2 + t + 0.01
+    ramp = (W("XY").polyline([(xm - hw + t, yc - tl / 2), (xm - hw, yc - tl / 6), (xm - hw, yc + tl / 6),
+                              (xm - hw + t, yc + tl / 2), (xm + hw - t, yc + tl / 2), (xm + hw, yc + tl / 6),
+                              (xm + hw, yc - tl / 6), (xm + hw - t, yc - tl / 2)]).close()
+            .extrude(20).translate((0, 0, TAIL_FLOOR - 5)))
+    rod = rod.union(teeth.intersect(ramp))
+    sw, sl = FIN_ROD_SLIT
+    rod = rod.cut(box(xm - sw / 2, xm + sw / 2, y_free - 1, y_free + sl, TAIL_FLOOR - 1, TAIL_FLOOR + h + 1))
+    return _mirror_y(rod, side)
+
+
+def fin_rod_slot(side, fit=None):
+    """Slot for the fin rod in a tailplane half: open at the tip and along the underside."""
+    fit = FIN_ROD_FIT if fit is None else fit
+    _, _, L = FIN_ROD
+    yt = tail_y_tip()
+    y_free = yt - L
+    slot = _dovetail(y_free - KEY_END_GAP, yt + 2.0, grow=fit, below=2.0)
+    t, tc, tl = FIN_ROD_TOOTH
+    yc = y_free + tc
+    slot = slot.union(_dovetail(yc - tl / 2 - fit, yc + tl / 2 + fit, grow=fit, extra=t, below=2.0))
+    return _mirror_y(slot, side)
+
+
+def tail_key_slot():
+    zc = TAIL_FLOOR + 2.05
+    return key_slots_fit([(TAIL_KEY_X, 0.0, zc)], "y", 0.0, TAIL_KEY, "x", TAIL_KEY_FIT)
+
+
+def key_slots_fit(points, axis, split, key, width_axis, fit):
+    return K.key_slots(points, axis, split, key, width_axis, fit, KEY_END_GAP)
+
+
+def tail_half(side, rod_fit=None):
+    """One tailplane half: root on the centreline, tip in its fin."""
+    half = box(TAIL_ROOT[0] - 5, TAIL_ROOT[0] + TAIL_ROOT[1] + 5, 0, 100, -50, 50)
     if side < 0:
-        y0, y1 = -y1, -y0
-    return box(x - w / 2 - grow, x + w / 2 + grow, y0, y1, TAIL_FLOOR - grow, TAIL_FLOOR + t + grow)
+        half = half.mirror("XZ")
+    KEY_COUNTS["key_tailplane"] = (TAIL_KEY, 1)
+    return tailplane().intersect(half).cut(tail_key_slot()).cut(fin_rod_slot(side, rod_fit))
 
 
 # ============================================================
@@ -1584,8 +1659,9 @@ def build():
     poses["stand_post"] = lambda w: rot(w.rotate(*sax, STAND_PITCH), "x", 90)
     poses["stand_base"] = lambda w: w.rotate(*sax, STAND_PITCH)
 
-    parts["tailplane"] = tailplane().union(fin_tab(1)).union(fin_tab(-1))
-    poses["tailplane"] = lambda w: w
+    for side, tag in ((1, "stbd"), (-1, "port")):
+        parts[f"tailplane_{tag}"] = tail_half(side)
+        poses[f"tailplane_{tag}"] = lambda w, s=side: rot(w, "x", 90 * s)   # on end, root down
     # printed connector keys (one part per key, so the kit is complete)
     for kname, (key, n) in KEY_COUNTS.items():
         for i in range(n):
