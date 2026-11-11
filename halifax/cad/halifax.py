@@ -203,7 +203,11 @@ TAIL_CONE = [(344.0, 9.5, 2.0, -14.0, 2.6), (352.0, 9.0, 1.0, -13.0, 2.5), (356.
 TT_FAIRING = [(336.0, 2.5, 10.8, 6.0, 2.2), (341.0, 4.5, 12.6, 6.0, 2.4), (345.2, 6.0, 14.0, 6.0, 2.6)]
 GUN_D = 1.2                  # mm, barrel diameter (printable minimum)
 GUN_LEN = 13.0               # mm, exposed barrel length
-GUN_PITCH = 2.4              # mm, vertical spacing of each stacked pair
+GUN_PITCH = 3.0              # mm, vertical spacing of each stacked pair: each barrel touches the block's
+                             # top or bottom face, so each half of the split pack prints with its barrels
+                             # lying on the bed (was 2.4: the barrels hung in the air)
+GUN_PEG = (1.4, 0.9, 0.2)    # pegs joining the pack's halves: diameter, height, hole clearance on the diameter
+GUN_PEG_AT = ((2.0, -2.2), (2.0, 2.2))   # (x, y) on the block, clear of the barrels
 GUN_BLOCK = (4.0, 9.0, 4.2)   # breech block x, y, z (two stacked pairs)
 GUN_SIDE = 3.2               # mm, each pair this far either side of the centreline
 
@@ -570,7 +574,7 @@ def fuselage_parts(wing_tongues):
     body = body.cut(cyl((DORSAL_X, 0, top_d - 3.0), 2 * DORSAL_R, 20, "z"))  # dorsal turret
     for c in tailplane_slot_cuts():
         body = body.cut(c)
-    body = body.cut(df_plug(grow=KEY_FIT)).cut(astrodome_socket())   # D/F loop pops in here
+    body = body.cut(df_plug(grow=KEY_FIT))   # D/F loop pops in here
     for pocket in wing_tongues:
         body = body.cut(pocket)
     _, _, _, bot_t, _ = interp(FUSE_STATIONS, TAIL_AXLE_X)
@@ -712,7 +716,7 @@ def fuselage_parts(wing_tongues):
     parts["canopy_side"] = (outer.intersect(box(sx + FIT / 2, cx1 - FIT, -30, 30, CANOPY_FLOOR + FIT, 40.0))
                             .cut(box(k0 - FIT, k1 + FIT, -khw - FIT, khw + FIT, cb0 - 1, cb1 + 0.3)))
     parts["canopy_rear"] = (outer.intersect(box(rx0 + FIT, rx1 - FIT, -30, 30, rz + FIT, 30))
-                            .cut(recess(CANOPY_REAR_KEY, rz)).cut(astrodome_socket()))
+                            .cut(recess(CANOPY_REAR_KEY, rz)).union(astrodome_dome()))
     return parts
 
 
@@ -726,6 +730,23 @@ def gun_pack():
     for y in (-GUN_SIDE, GUN_SIDE):
         for z in (bz / 2 - GUN_PITCH / 2, bz / 2 + GUN_PITCH / 2):
             g = g.union(cyl((bx - 0.2, y, z), GUN_D, GUN_LEN + 0.2, "x"))
+    return g
+
+
+def gun_half(upper):
+    """Half of a gun pack, split at mid-height (2026-11-11): the lower half keeps the pegs, the
+    upper half has the holes. Each prints with its barrels on the bed (the upper one flipped)."""
+    bx, by, bz = GUN_BLOCK
+    d, h, c = GUN_PEG
+    g = gun_pack()
+    if upper:
+        g = g.intersect(box(-1, bx + GUN_LEN + 2, -by, by, bz / 2, bz + 1))
+        for x, y in GUN_PEG_AT:
+            g = g.cut(cyl((x, y, bz / 2 - 0.1), d + c, h + 0.3, "z"))
+    else:
+        g = g.intersect(box(-1, bx + GUN_LEN + 2, -by, by, -1, bz / 2))
+        for x, y in GUN_PEG_AT:
+            g = g.union(cyl((x, y, bz / 2 - 0.1), d, h + 0.1, "z"))
     return g
 
 
@@ -1138,6 +1159,17 @@ def astrodome():
     plug = cyl((x, 0, top - 1.9), 2 * (r - 0.8) - 2 * FIT, 2.6, "z")   # overlaps the dome: one solid
     # skirt conforms to the curved roof (only the plug goes below the surface)
     return skirt.union(dome).cut(fuselage_solid()).union(plug)
+
+
+def astrodome_dome():
+    """The astrodome printed on the rear roof glazing (2026-11-11; it was a separate plug-in from
+    before the glazing became its own part): skirt and dome, sunk 0.3 into the glazing so they join."""
+    x, r = ASTRODOME
+    _, _, top, _, _ = interp(FUSE_STATIONS, x)
+    skirt = cyl((x, 0, top - 0.6), 2 * r, 1.0, "z")
+    dome = (wp(cq.Solid.makeSphere(r, V(x, 0, top + 0.4)))
+            .intersect(box(x - 10, x + 10, -10, 10, top + 0.4, top + 10)))
+    return skirt.union(dome).cut(fuselage_solid(offset=0.3, x0=x - 10, x1=x + 10))
 
 
 def astrodome_socket():
@@ -1668,7 +1700,6 @@ def build():
         for i in range(n):
             parts[f"{kname}_{i + 1}"] = connector_key(key)
             poses[f"{kname}_{i + 1}"] = lambda w: w
-    parts["astrodome"] = astrodome()
     # D/F loop in two halves down the centreline (2026-11-08): each lies on its flat cut face, so
     # nothing hangs (whole, on its side, the narrow mast floated between housing and plug). The
     # roof socket holds the two plug halves together.
@@ -1678,7 +1709,6 @@ def build():
         import trimesh
         parts[f"df_loop_{tag}"] = trimesh.Trimesh(*K.mesh_of(K.largest_piece(half)[0]))
         poses[f"df_loop_{tag}"] = lambda w, sg=sgn: rot(w, "x", 90 * sg)   # cut face down
-    poses["astrodome"] = lambda w: w
     for i in range(len(NACELLES)):
         for side, tag in ((1, "stbd"), (-1, "port")):
             for face, ftag in ((1, "a"), (-1, "b")):
@@ -1698,11 +1728,13 @@ def build():
     parts["turret_tail"] = tail_turret()
     poses["turret_tail"] = lambda w: w               # upright on its flat floor
     _, _, top, _, _ = interp(FUSE_STATIONS, DORSAL_X)
-    parts["guns_dorsal"] = gun_pack().translate(
-        (DORSAL_X + DORSAL_DOME_R - 2.0 - GUN_BLOCK[0], 0, top - 1.2 + DORSAL_GUN_Z))
-    parts["guns_tail"] = gun_pack().translate(
-        (TT_REAR - 1.5 - GUN_BLOCK[0], 0, TT_GUN_Z))
-    poses["guns_dorsal"] = poses["guns_tail"] = lambda w: w
+    at = {"dorsal": (DORSAL_X + DORSAL_DOME_R - 2.0 - GUN_BLOCK[0], 0, top - 1.2 + DORSAL_GUN_Z),
+          "tail": (TT_REAR - 1.5 - GUN_BLOCK[0], 0, TT_GUN_Z)}
+    for t, xyz in at.items():
+        parts[f"guns_{t}_lower"] = gun_half(False).translate(xyz)
+        parts[f"guns_{t}_upper"] = gun_half(True).translate(xyz)
+        poses[f"guns_{t}_lower"] = lambda w: w
+        poses[f"guns_{t}_upper"] = lambda w: rot(w, "x", 180)   # flipped: its barrels on the bed
     return parts, poses
 
 

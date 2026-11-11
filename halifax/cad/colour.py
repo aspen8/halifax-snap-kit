@@ -584,7 +584,8 @@ def frames(name, P):
         for sg in (1, -1):
             bars = bars + D.band((g0, sg * REAR_BARS), (g1, sg * REAR_BARS), W)
             bars = bars + D.band((g1, sg * (REAR_EDGE + 0.2)), (g0, sg * REAR_BARS), W)
-        return sk ^ (f + D.prism_z(bars))
+        x, r = H.ASTRODOME                              # the astrodome on it stays clear
+        return (sk ^ (f + D.prism_z(bars))) - cyl_axis(x, 0, r + 0.3, "z")
     if name == "nose_glazing":
         f = mf.Manifold()
         for x, zmin in NOSE_XFRAMES:
@@ -777,6 +778,96 @@ def write_3mf(path, objects, plates, template):
 
 
 # ============================================================
+# PAINT ONLY THE OUTSIDE (2026-11-11)
+# ============================================================
+# The skins above are taken from each part alone, so they also caught its internal faces: the
+# joint faces between sections, key-slot floors, the wing-root tongues, the nacelle halves' split
+# faces and wing notch, the fin-rod slot. Now paint is kept only within SKIN of the assembled
+# aircraft's outside (every part in place, the fit gaps closed and the enclosed slots filled), with
+# INNER_BLACK of black next to every internal face, so a thin wall (the skin over the fin-rod
+# slot) shows black inside. A joint face keeps a SKIN-deep band of colour at its outer edge, so
+# the colour runs on across the join. Nacelles are black wherever the wing is above them.
+GAP_CLOSE = 0.18             # mm: closes fit gaps up to 0.36 between parts; 0.5 mm panel lines stay open
+INNER_BLACK = 0.45           # mm of black kept next to an internal face (about one line width)
+UNMASKED = ("stand_base", "spine_")   # no black base, or not on the aircraft
+
+
+def leaf(P):
+    """Evaluate a Manifold and keep only its points and triangles: drops the operation history
+    and the per-triangle provenance. (Rebuilt straight from to_mesh(), with that provenance,
+    painting fuselage_front against its neighbours needed over 100 GB.)"""
+    V, F = mesh_of(P)
+    return mf.Manifold(mf.Mesh(vert_properties=np.array(V, np.float32, order="C"),   # writable copies
+                               tri_verts=np.array(F, np.uint32, order="C")))
+
+
+def dilate(P, r):
+    moves = ([r, 0, 0], [-r, 0, 0], [0, r, 0], [0, -r, 0], [0, 0, r], [0, 0, -r])
+    return mf.Manifold.batch_boolean([P] + [P.translate(v) for v in moves], mf.OpType.Add)
+
+
+def _overlaps(a, b, m=0.0):
+    return all(a[i] - m <= b[i + 3] and b[i] - m <= a[i + 3] for i in range(3))
+
+
+class Outside:
+    """Works part by part (a whole-aircraft union of grown parts needed over 100 GB): each part
+    with its neighbours, cut to a box just round it and grown by twice GAP_CLOSE to bridge the fit
+    gaps, then the enclosed slots filled."""
+    def __init__(self, built):
+        self.solids = []
+        for name, (P, extra) in built.items():
+            if name.startswith("key_"):              # loose keys have no assembled place
+                continue
+            self.solids.append((name, P, P.bounding_box()))
+            self.solids += [(n, plug, plug.bounding_box()) for n, *_, plug in extra]   # roundels, codes
+        self.wings = {tag: mf.Manifold.batch_boolean(
+            [P for n, (P, _) in built.items() if n.startswith("wing_") and n.endswith(tag)], mf.OpType.Add)
+            for tag in ("stbd", "port")}
+
+    def mask(self, name, P):
+        bb = P.bounding_box()
+        m = 2.0
+        clip = K.box(bb[0] - m, bb[3] + m, bb[1] - m, bb[4] + m, bb[2] - m, bb[5] + m)
+        near = [Q ^ clip for n, Q, qb in self.solids if n != name and _overlaps(bb, qb, m)]
+        near = [Q for Q in near if Q.volume() > 1e-3]
+        L = P if not near else mf.Manifold.batch_boolean(
+            [P] + [dilate(Q, 2 * GAP_CLOSE) for Q in near], mf.OpType.Add)
+        # enclosed slots (keys between joined parts) come out as negative shells: fill them
+        L = mf.Manifold.batch_boolean([q for q in L.decompose() if q.volume() > 0], mf.OpType.Add)
+        core_skin = K.inner_core(L, SKIN)
+        core_in = K.inner_core(L, INNER_BLACK)
+        near_inner = (P - K.inner_core(P, INNER_BLACK)) ^ core_in   # near P's faces, deep in the aircraft
+        return (P - core_skin) - near_inner
+
+    def wing_shadow(self, P, tag):
+        """Everything under the wing over a nacelle half."""
+        x0, y0, z0, x1, y1, z1 = P.bounding_box()
+        w = self.wings[tag] ^ K.box(x0 - 1, x1 + 1, y0 - 1, y1 + 1, z0 - 1, z1 + 30)
+        return mf.Manifold.batch_boolean([w.translate([0, 0, -k]) for k in np.arange(0.0, z1 - z0 + 1, 0.4)],
+                                         mf.OpType.Add)
+
+    def keep_paint_outside(self, name, vols, P):
+        if name.startswith(UNMASKED) or name in CLEAR_PARTS or set(vols) <= {BLACK}:
+            return vols
+        m = self.mask(name, P)
+        if name.startswith("nacelle"):
+            m = m - self.wing_shadow(P, name.split("_")[1])
+        out, black = {}, vols.get(BLACK)
+        for c, v in vols.items():
+            if c == BLACK:
+                continue
+            keep, lost = v ^ m, v - m
+            if keep.volume() > 1e-3:
+                out[c] = leaf(keep)
+            if lost.volume() > 1e-3:
+                black = lost if black is None else black + lost
+        if black is not None:
+            out[BLACK] = leaf(black)
+        return out
+
+
+# ============================================================
 # MAIN
 # ============================================================
 def add_object(objs, name, posed, out, whole):
@@ -820,9 +911,8 @@ if __name__ == "__main__":
     (out / "stl").mkdir(exist_ok=True)
     only = os.environ.get("ONLY", "")
     import time
+    built = {}
     for name, w in parts.items():
-        if only and not any(o in name for o in only.split(",")):
-            continue
         t0 = time.time()
         P = to_manifold(H.mesh(w))
         P = D.apply(name, P)                       # panel lines, hatches, rivets
@@ -836,13 +926,26 @@ if __name__ == "__main__":
         t1 = time.time()
         P, extra = inlays_for(name, P)             # roundel sockets + inlay discs
         P = K.largest_piece(P)[0]                  # the socket cut can strand a rivet dot
+        # keep a plain mesh: Manifold is lazy, and 80 parts' unevaluated histories (every detail
+        # cut and skin) held until painting ran the Mac out of memory (over 100 GB)
+        built[name] = (leaf(P), [(n, {c: leaf(v) for c, v in iv.items()}, r, leaf(plug))
+                                 for n, iv, r, plug in extra])
+        import resource
+        print(f"  [{name}] detail {t1 - t0:.1f}s inlay {time.time() - t1:.1f}s, peak memory "
+              f"{resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 2**30:.1f} GB", file=sys.stderr, flush=True)
+    t0 = time.time()
+    outside = Outside(built)                       # the assembled aircraft: what's on the outside
+    print(f"  [assembled envelope] {time.time() - t0:.1f}s", file=sys.stderr, flush=True)
+    for name, (P, extra) in built.items():
+        if only and not any(o in name for o in only.split(",")):
+            continue
         t2 = time.time()
-        vols = colour_part(name, P, pat)
+        vols = outside.keep_paint_outside(name, colour_part(name, P, pat), P)
         for v in vols.values():
             v.volume()                             # force evaluation for timing
-        t3 = time.time()
-        print(f"  [{name}] detail {t1 - t0:.1f}s inlay {t2 - t1:.1f}s colour {t3 - t2:.1f}s",
-              file=sys.stderr, flush=True)
+        import resource
+        print(f"  [{name}] colour {time.time() - t2:.1f}s, peak memory "
+              f"{resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 2**30:.1f} GB", file=sys.stderr, flush=True)
         M = pose_matrix(poses[name])
         jobs = [(name, vols, lambda v, M=M: v.transform(M[:3, :]), P)]
         jobs += [(n, iv, lambda v, r=r: v.rotate(r), plug) for n, iv, r, plug in extra]

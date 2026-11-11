@@ -2,6 +2,14 @@
 
 State on 2026-11-11, repo `aspen8/snap-kits` (renamed from `halifax-snap-kit`; the old URL redirects), branch `main`, worked on the user's Mac. **Ready for the full print: `halifax/kit/halifax_kit.3mf`, 7 plates, all slice, 50 h 29 m in total** (458 g of model, 495 g of purge; the wing plate is 25 h 35 m). All joints fit-tested (joint tests 1-3, tail tests 1-3). Geometry checks pass: single pieces, no clashes. Read `LESSONS.md` (repo root, both kits), `halifax/TODO.md` and `.claude/skills/snap-kit/SKILL.md` before changing anything.
 
+## In progress (branch `halifax-paint-fixes-guns`, 2026-11-11, not yet built)
+User found paint on internal faces of the wing/fuselage plate (joint faces, key slots, wing-root tongues), on the inside of the fin-rod slots in the tailplane halves, and on the nacelle halves (split faces, wing notch, parts under the wing). Changes made, committed, **not yet built or checked**:
+- `colour.Outside`: paint is kept only within `SKIN` of the assembled aircraft's outside, worked part by part (each part with its neighbours clipped to a box round it, grown 0.36 to bridge fit gaps, enclosed slots filled), with `INNER_BLACK` 0.45 of black next to internal faces; nacelles black under the wing (`wing_shadow`).
+- Memory: Manifold is lazy, and keeping 80 parts' unevaluated histories (and meshes rebuilt with `to_mesh()` provenance) needed over 100 GB. `colour.leaf()` rebuilds each part from bare points and triangles (writable copies). Built parts' isolated paint test: a few seconds each, under 2 GB. **Next: run a short `ONLY=fuselage_front,fuselage_rear,nacelle1_stbd_inboard,tailplane_stbd` build to `OUTTEST` and watch the "peak memory" figures in the log, then the full build.**
+- Guns split in two (`halifax.gun_half`): barrels at 3.0 pitch touch the block's faces, so both halves print with barrels on the bed (upper flipped); two 1.4 mm pegs join them (`GUN_PEG`).
+- Astrodome printed on the rear roof glazing (`astrodome_dome`), no longer a separate plug-in; its frame paint is kept off the dome.
+- Check scripts copied to `halifax/cad/OUT/` (untracked): `facepaint.py` (paint area on each object's bed and top faces in a 3MF; compare with the committed kit), `dump_built.py` + `mask_one.py` / `paint_one.py` (test the paint step on saved parts without a full build).
+
 ## Repo layout and workflow (from 2026-11-11)
 - The Halifax lives in `halifax/`: `cad/` (scripts, `kitlib.py`, `project_settings_template.json`), `kit/` (3MFs), `stl/`, `docs/`, `tools/refs.json` (reference calibrations). Shared tools are in `common/tools/`; run them from the repo root. The Hawk (another session's kit) is in `hawk/` with its own kitlib and Bambu settings: don't edit those for the Halifax. `phase1-airframe` is merged into `main` and retired.
 - **Work on short branches off `main`; commit locally only, and push only when the user says.**
