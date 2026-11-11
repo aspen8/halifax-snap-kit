@@ -21,9 +21,9 @@ The wings print standing on end, like the fuselage. Layer lines then run along t
 | Wings | Inner and outer panels, tailplane | Black, Dark Earth, Dark Green |
 | Nacelles | 8 nacelle halves | Black, Dark Earth, Dark Green |
 | Fin flashes, roundels and codes | Roundel inlays, NP-G code letters | Black, Red, Blue, Yellow, White |
-| Canopies and turrets | Cockpit canopy (2 pieces) and rear roof glazing with camo frames, nose, turrets, astrodome | Black, Silk Silver, Dark Earth, Dark Green |
+| Canopies and turrets | Cockpit canopy (2 pieces) and rear roof glazing with camo frames and the astrodome, nose, turrets | Black, Silk Silver, Dark Earth, Dark Green |
 | Display plinth | Camo plinth (150 × 95 mm, no black) with raised white badge and name | Dark Earth, Dark Green, Yellow, White |
-| Props, gear, fins, guns and stand blade | Fins, props, exhausts, 2-piece gear forks, wheels, gun packs, keys, stand blade | Black, Yellow |
+| Props, gear, fins, guns and stand blade | Fins, props, exhausts, 2-piece gear forks, wheels, gun packs (2 halves each), keys, stand blade | Black, Yellow |
 
 Print settings are already in the files, set up for the X2D 0.4 mm nozzle:
 
@@ -45,7 +45,7 @@ The single-colour STLs are in `stl/`, in print orientation.
   - Type B wing roundels and C1 fuselage roundels.
   - The NP-G code letters in red.
   - All press into black-lined sockets.
-- **Clear parts:** perspex nose, cockpit canopy in two pieces (the 5-pane front glazing, and the side windows, which step down below the camo line), rear roof glazing, astrodome, dorsal and tail turrets, all with black frame lines. Plus 2 gun packs.
+- **Clear parts:** perspex nose, cockpit canopy in two pieces (the 5-pane front glazing, and the side windows, which step down below the camo line), rear roof glazing with the astrodome on it, dorsal and tail turrets, all with black frame lines. Plus 2 gun packs, each in two halves.
 - **Engines:** 4 props with yellow tips that snap onto a slotted, sprung mushroom boss moulded on each nacelle nose and spin on it (after the A6M Zero kit card: no shaft or spindle), 8 exhaust banks.
 - **Gear:** 2 main gear forks and wheels and a tailwheel. Each fork is two halves: one has a printed stub axle (5 mm main, 3 mm tail) that runs through the wheel into the other half, so there are no loose pins. For display on the stand there are 2 wheels-up inserts that show the retracted main wheels.
 - **Connector keys** (6 loose, all flexing, after the PB94 Spitfire: spring slots at the ends and a narrow middle, so they push in easily and grip):
@@ -69,7 +69,7 @@ The single-colour STLs are in `stl/`, in print orientation.
 
 1. **Fuselage.**
    - Join the front and rear body sections on the 2 tall joint keys.
-   - Drop the canopy and rear roof glazing over their locating bosses, and press in the astrodome and the nose spigot. The canopy is two pieces: the side-window piece first (boss on the body), then the front glazing (boss on the nose spine piece).
+   - Drop the canopy and rear roof glazing over their locating bosses, and press in the nose spigot. The canopy is two pieces: the side-window piece first (boss on the body), then the front glazing (boss on the nose spine piece).
    - Slide both inner wing root tongues into their side pockets, port forward and starboard aft.
    - Lay the tailplane on its seat.
    - Press the spine pieces on, nose to tail, over the pegs on the body. The piece over the tail holds the tailplane down, and the piece over the joint locks the two sections together.
@@ -82,7 +82,7 @@ The single-colour STLs are in `stl/`, in print orientation.
    - Close both halves around the wing and the key.
    - Push the prop onto the nose boss last: the slotted boss squeezes, then springs out behind the prop's lip, and the prop spins.
 4. **Tail.** Push the centre key into one tailplane half, slide the two halves into the fuselage slot from each side and press them together on the key. Then slide each fin's dovetail rod into the slot under its tailplane tip until the teeth click. (The fin flashes are printed on the fins.)
-5. **Turrets.** Fit the gun packs into the turrets. Pin the turrets on: the dorsal turret rotates.
+5. **Turrets.** Press each gun pack's upper half onto the pegs of its lower half, then fit the packs into the turrets. Pin the turrets on: the dorsal turret rotates.
 6. **Display.** Either fit the gear (wheel onto the stub on one fork half, close the other half over it, then push the pair into its socket) or put the model on the stand. With the gear down it sits tail-down at 8.7°. For the stand, push the blade's tenon into the plinth, fit the wheels-up inserts, and lower the model onto the key at the blade tip: it sits 5° nose-up.
 
 ## Files

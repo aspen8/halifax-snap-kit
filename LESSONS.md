@@ -67,6 +67,10 @@ Print `cad/fit_test.py` first on any new printer or filament.
 
 These are not in git (copyright). Keep them in `ref/` locally or in a private repo. Without them the overlays can't be redrawn, but the calibrated numbers in `tools/refs.json` and the station tables in `cad/halifax.py` hold everything measured from them.
 
+## Paint only what's outside the assembled model
+A skin taken from a part alone (material within SKIN of its up- or side-facing surfaces) also paints its internal faces: joint faces (a tilted one gets a film over its whole area), key-slot floors, tongues, split faces, notches, slots under a thin wall. Halifax, 2026-11-11: work part by part, with its neighbours clipped to a box round it and grown to bridge the fit gaps, fill the enclosed slots (`decompose()` returns them as negative-volume shells), and keep paint within SKIN of that outside, with about one line width of black next to internal faces. Don't union the whole grown aircraft: that needed over 100 GB.
+Manifold is lazy: keeping many parts' results unevaluated (or rebuilt from `to_mesh()` with its provenance) holds every intermediate and ran the Mac out of memory. Rebuild kept parts from bare points and triangles (writable numpy copies), and print peak memory per part in the build log.
+
 ## Colour skins must overshoot the surface
 
 When a colour region's outer face is exactly coplanar with the part's surface, manifold booleans can leave zero-thickness sheets of the base colour lying on the outside. They show up as black streaks in renders and in Bambu Studio. Build skins as `P.translate(+0.05) - P.translate(-SKIN)` (see `SKIN_OUT` in `cad/colour.py`). On the stand plinth this cut stray black on the top from 6450 to 159 mm².
