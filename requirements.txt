@@ -1,0 +1,12 @@
+# Python 3.10-3.12 (CadQuery has no 3.13 wheels yet). About 1.5 GB installed.
+cadquery
+manifold3d
+trimesh
+rtree          # trimesh ray casting (inlay depths)
+scipy
+scikit-image
+shapely
+matplotlib
+lxml
+pillow
+pymupdf        # render reference PDFs to PNG

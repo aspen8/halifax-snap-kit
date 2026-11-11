@@ -1,0 +1,24 @@
+{
+  "_comment": "Hawk reference calibration: model (h, v) mm -> page px (u, v) = A @ [h, v, 1]. Images are not in git (ref/ is ignored).",
+  "plan": {
+    "image": "ref/revell_04284_p15.png",
+    "_source": "Revell 04284 Hawk T.1A Red Arrows instructions p15, top view (nose right, starboard down), 400 dpi. Scale from the span (avg of both halves, 1968 px = 234.75 mm): 0.11928 mm/px. Nose tip (white radome outline) at u 2645, centreline v 3300. Note: the artwork's wings sit ~20 px below the fuselage centreline.",
+    "axes": "xy",
+    "affine": [[-8.3836, 0.0, 2645.0], [0.0, 8.3836, 3300.0]],
+    "crop": [300, 2250, 3000, 4400]
+  },
+  "under": {
+    "image": "ref/revell_04284_p16.png",
+    "_source": "Same kit, p16 underside view (nose left, starboard down). Span 1972 px.",
+    "axes": "xy",
+    "affine": [[8.413, 0.0, 726.5], [0.0, 8.413, 3413.0]],
+    "crop": [300, 2350, 3100, 4450]
+  },
+  "side": {
+    "image": "ref/revell_04284_p16.png",
+    "_source": "p16 starboard side view (nose right). Drawn ~12% larger than the plan views: 0.10598 mm/px, from nose (u 2940) to jet pipe end (u 447) = 264.2 mm. z = 0 at the nose tip (v 1335).",
+    "axes": "xz",
+    "affine": [[-9.4357, 0.0, 2940.0], [0.0, -9.4357, 1335.0]],
+    "crop": [250, 550, 3150, 1600]
+  }
+}
