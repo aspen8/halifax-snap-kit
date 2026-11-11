@@ -1,6 +1,6 @@
 # Handoff (start here in a new session)
 
-State on 2026-11-08, branch `phase1-airframe`, worked on the user's Mac. **`kit/halifax_kit.3mf` is rebuilt: 7 plates, all slice, 50h 06m in total** (448 g of model, 494 g of purge; `docs/slicing.md`). The wing plate is 25h 20m (it was 76 h 50 m). Joint tests 1 and 2 printed; **print round 3 (`kit/halifax_joint_test.3mf`, 1h 30m) to check the nose and wing at 0.10 a side, then the full build.** Geometry checks pass: single pieces, no clashes. Read `LESSONS.md`, `TODO.md` and `.claude/skills/snap-kit/SKILL.md` before changing anything.
+State on 2026-11-11, branch `phase1-airframe`, worked on the user's Mac. **Ready for the full print: `kit/halifax_kit.3mf`, 7 plates, all slice, 50 h 29 m in total** (458 g of model, 495 g of purge; the wing plate is 25 h 35 m). All joints fit-tested (joint tests 1-3, tail tests 1-3). Geometry checks pass: single pieces, no clashes. Read `LESSONS.md`, `TODO.md` and `.claude/skills/snap-kit/SKILL.md` before changing anything.
 
 ## How to build
 - Full colour build: `cd cad && python -u colour.py OUT project_settings_template.json` (11 min on the Mac). The template is `cad/project_settings_template.json`: the user's Bambu X2D 0.20 mm Standard project settings, taken from `halifax.3mf`. The overrides in `colour.py` (`PRINT_OVERRIDES`, `object_settings`) go on top of it. `write_3mf` places a prime tower on every plate (`kitlib.place_towers`) and prints where.
@@ -17,7 +17,7 @@ State on 2026-11-08, branch `phase1-airframe`, worked on the user's Mac. **`kit/
 - `tools/closeup.py` uses EGL on Linux only; on macOS, pyrender's default pyglet backend.
 
 ## What changed on 2026-11-10 (later: tail redesign)
-- **Tail test 2: a pocket and small tab will never hold a fin.** New design (`halifax.fin_rod`, `fin_rod_slot`, `tail_half`): each fin has a dovetail rod on its inner face (2.3 mm tall, 8 mm wide at the floor, 10 at the top, 16 mm long, with a 1.2 mm slit and a 0.3 mm click tooth each side near its free end). It slides into a slot along the underside of its **tailplane half**; the rod's underside is part of the tailplane's flat underside. Fits: `FIN_ROD_FIT` 0.10. The tailplane is now **two halves** (`tailplane_stbd`, `tailplane_port`), each printed on end root down on the wing plate (brim), joined on the centreline inside the fuselage slot by one flexing key (`TAIL_KEY` 20 x 6 x 1.8, `TAIL_KEY_X` 311, fit 0.10; about 0.8 mm walls). The fin flash and stripes stay painted on the fins' bed face; the rod and inner face are black.
+- **Tail test 2: a pocket and small tab will never hold a fin.** New design (`halifax.fin_rod`, `fin_rod_slot`, `tail_half`): each fin has a dovetail rod on its inner face (2.3 mm tall, 8 mm wide at the floor, 10 at the top, 16 mm long, with a 1.2 mm slit and a 0.3 mm click tooth each side near its free end). It slides into a slot along the underside of its **tailplane half**; the rod's underside is part of the tailplane's flat underside. Fits: `FIN_ROD_FIT` 0.15 (tail test 3: 0.10 and 0.15 both held once the teeth clicked; 0.15 goes in more easily). The tailplane is now **two halves** (`tailplane_stbd`, `tailplane_port`), each printed on end root down on the wing plate (brim), joined on the centreline inside the fuselage slot by one flexing key (`TAIL_KEY` 20 x 6 x 1.8, `TAIL_KEY_X` 311, fit 0.10; about 0.8 mm walls). The fin flash and stripes stay painted on the fins' bed face; the rod and inner face are black.
 - **Tail test 3** (`kit/halifax_tail_test.3mf`, `cad/tail_test.py`): both halves (port with the rod slot at 0.15 to compare), both fins, the centre key.
 
 - **Fuselage bomb doors**: engraved under the belly, x 95-198, 15 mm wide, split on the centreline (`detail.FUSE_BOMB_BAY`; positions approximate). Ends ahead of the H2S radome.
@@ -68,10 +68,10 @@ State on 2026-11-08, branch `phase1-airframe`, worked on the user's Mac. **`kit/
 - Details in `LESSONS.md`.
 
 ## Next up
-1. **Print the joint test, then the kit.** `kit/halifax_joint_test.3mf` (1 h 15 m): the wing mid joint and the two new fuselage joints at 0.24 mm, with their keys. Then plate 1 (25 h), with the brims; watch the first layers. Look at these non-critical slicer messages in the app's preview first: the tailplane's first layers (a one-off "ZFiller" note from the slicer since its leading-edge fill, see `docs/slicing.md`); new at 0.24 mm, the wing tips' roundel sockets and the fuselage sections' pockets and key slots (the same features as before); `fuselage_rear` floating cantilever, `df_loop` and `turret_dorsal` floating regions, `stand_post` and both gun packs cantilever. Most are the small overhangs `tools/overhang.py` already accepts.
-2. **For later (user): panel lines and detail on the wing undersides.** They're plain because the wings used to print flat. Now they print on end, so the underside can carry detail like the top (see `cad/detail.py`).
-3. **Purge is now 494 g for 448 g of model** (was 1.44 kg). Left to try: real flush volumes in place of the flat 350 mm³. In the app, check that the Filament Grouping panel shows Dark Earth under the auxiliary nozzle.
-4. The test plate (`kit/halifax_test_plate.3mf`) is rebuilt with the kit's nose key slot (0.1 fit). It still carries the grip gauge, which isn't needed any more.
+1. **Full print.** Every joint has now been fit-tested (joint tests 1-3, tail tests 1-3). `kit/halifax_kit.3mf`: 7 plates, 50 h 29 m, all slice. Start with plate 1 (wings, fuselage, tailplane halves; 25 h 35 m) and watch the brims' first layers. Expected non-critical slicer notes: `fuselage_rear` floating regions (key-slot ceilings and pockets), `turret_dorsal`, `stand_post`, the gun packs.
+2. Checks before it (2026-11-11): assembled clash check clean apart from a <= 0.06 mm mesh sliver where each wing root sits flush on the fuselage (two meshes of one surface); every part a single solid.
+3. In the app, check that the Filament Grouping panel shows Dark Earth under the auxiliary nozzle.
+4. Later: real flush volumes in place of the flat 350 mm3 (purge 495 g for 458 g of model); the ideas in `TODO.md`.
 
 ## Recent decisions (the details are in git log)
 - **Camo:** painted from the plan pattern (Revell trace, `cad/ref/camo_plan_green.png`).

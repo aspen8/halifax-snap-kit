@@ -62,7 +62,8 @@ FIN_POCKET_FIT = FIT         # per side, round the tailplane tip in its pocket
 # free end makes two springy prongs with a tooth on each side that clicks into a recess.
 FIN_ROD_X = (312.0, 322.0)   # x at the rod's top (the wide face): where the tip is >= 3.3 mm thick
 FIN_ROD = (2.3, 1.0, 16.0)   # height above the floor, undercut each side, length into the tailplane
-FIN_ROD_FIT = 0.10           # per side (sides and top) in the tailplane slot
+FIN_ROD_FIT = 0.15           # per side (sides and top) in the tailplane slot. Tail test 3: 0.10 and 0.15
+                             # both held once the teeth clicked; 0.15 squeezes in more easily
 FIN_ROD_SLIT = (1.2, 10.0)   # width, length in from the rod's free end
 FIN_ROD_TOOTH = (0.3, 2.5, 1.8)   # proud of each side, centre from the free end, length along the rod
 # The tailplane is two halves (each prints on end, root down, like the wings) joined on the
