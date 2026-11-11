@@ -1,30 +1,30 @@
 # Handoff (start here in a new session)
 
-State on 2026-11-11, branch `phase1-airframe`, worked on the user's Mac. **Ready for the full print: `kit/halifax_kit.3mf`, 7 plates, all slice, 50 h 29 m in total** (458 g of model, 495 g of purge; the wing plate is 25 h 35 m). All joints fit-tested (joint tests 1-3, tail tests 1-3). Geometry checks pass: single pieces, no clashes. Read `LESSONS.md`, `TODO.md` and `.claude/skills/snap-kit/SKILL.md` before changing anything.
+State on 2026-11-11, branch `phase1-airframe`, worked on the user's Mac. **Ready for the full print: `halifax/kit/halifax_kit.3mf`, 7 plates, all slice, 50 h 29 m in total** (458 g of model, 495 g of purge; the wing plate is 25 h 35 m). All joints fit-tested (joint tests 1-3, tail tests 1-3). Geometry checks pass: single pieces, no clashes. Read `LESSONS.md`, `TODO.md` and `.claude/skills/snap-kit/SKILL.md` before changing anything.
 
 ## How to build
-- Full colour build: `cd cad && python -u colour.py OUT project_settings_template.json` (11 min on the Mac). The template is `cad/project_settings_template.json`: the user's Bambu X2D 0.20 mm Standard project settings, taken from `halifax.3mf`. The overrides in `colour.py` (`PRINT_OVERRIDES`, `object_settings`) go on top of it. `write_3mf` places a prime tower on every plate (`kitlib.place_towers`) and prints where.
-- Checks: `python halifax.py OUT2` (assembled geometry, 10 min), `tools/interference.py OUT2/assembled --min 2` (the loose keys all sit at the origin, so ignore key-against-key overlaps), `tools/overhang.py OUT/stl`, and a single-piece check on `OUT/stl/*.stl`. Use manifold3d's `decompose()` for that, not trimesh's `split()`: the STLs carry zero-volume slivers from rounding, which trimesh counts as pieces.
-- Slice: `python tools/slice.py kit/halifax_kit.3mf [--md]` (about 1 min), after copying `OUT/halifax_kit.3mf` to `kit/`.
-- Test plate: `cd cad && python test_plate.py OUT` (3 min).
-- Joint test (the 2026-11-08 joints): after the colour build, `cd cad && python joint_test.py OUT` (seconds; it cuts slices from `OUT/stl`). Tail test: `python tail_test.py OUT`.
-- Fast previews (seconds): build one part from `halifax.py`, paint it with `colour.colour_part`, render with `tools/closeup.py`. If pyrender can't find a screen (Mac display asleep: "IndexError" in pyglet's `get_default_screen`), use a software painter's render with matplotlib from the preview GLB.
+- Full colour build: `cd halifax/cad && python -u colour.py OUT project_settings_template.json` (11 min on the Mac). The template is `halifax/cad/project_settings_template.json`: the user's Bambu X2D 0.20 mm Standard project settings, taken from `halifax.3mf`. The overrides in `colour.py` (`PRINT_OVERRIDES`, `object_settings`) go on top of it. `write_3mf` places a prime tower on every plate (`kitlib.place_towers`) and prints where.
+- Checks: `python halifax.py OUT2` (assembled geometry, 10 min), `common/tools/interference.py OUT2/assembled --min 2` (the loose keys all sit at the origin, so ignore key-against-key overlaps), `common/tools/overhang.py OUT/stl`, and a single-piece check on `OUT/stl/*.stl`. Use manifold3d's `decompose()` for that, not trimesh's `split()`: the STLs carry zero-volume slivers from rounding, which trimesh counts as pieces.
+- Slice: `python common/tools/slice.py halifax/kit/halifax_kit.3mf [--md]` (about 1 min), after copying `OUT/halifax_kit.3mf` to `halifax/kit/`.
+- Test plate: `cd halifax/cad && python test_plate.py OUT` (3 min).
+- Joint test (the 2026-11-08 joints): after the colour build, `cd halifax/cad && python joint_test.py OUT` (seconds; it cuts slices from `OUT/stl`). Tail test: `python tail_test.py OUT`.
+- Fast previews (seconds): build one part from `halifax.py`, paint it with `colour.colour_part`, render with `common/tools/closeup.py`. If pyrender can't find a screen (Mac display asleep: "IndexError" in pyglet's `get_default_screen`), use a software painter's render with matplotlib from the preview GLB.
 
 ## Setting up on the Mac (done 2026-11-07)
 - Python 3.13 venv in `.venv/` (git-ignored): `python3.13 -m venv .venv && .venv/bin/pip install cadquery manifold3d trimesh numpy scipy shapely pillow matplotlib pyrender PyOpenGL rtree scikit-image` (scikit-image is needed by the colour build: `kitlib.raster_section`).
 - `cad/ref/` is git-ignored except `camo_plan_green.png`. The side-profile trace `camo_side_npg.png` was never committed; the build now skips it (`colour.side_trace`), since only the old split-fuselage halves were painted from it.
 - The Mac's OCC meshes curved faces slightly differently from the cloud's, so a rebuild changes the 3MF bytes without changing the design. Only commit a rebuilt 3MF when the design changed.
-- `tools/closeup.py` uses EGL on Linux only; on macOS, pyrender's default pyglet backend.
+- `common/tools/closeup.py` uses EGL on Linux only; on macOS, pyrender's default pyglet backend.
 
 ## What changed on 2026-11-10 (later: tail redesign)
 - **Tail test 2: a pocket and small tab will never hold a fin.** New design (`halifax.fin_rod`, `fin_rod_slot`, `tail_half`): each fin has a dovetail rod on its inner face (2.3 mm tall, 8 mm wide at the floor, 10 at the top, 16 mm long, with a 1.2 mm slit and a 0.3 mm click tooth each side near its free end). It slides into a slot along the underside of its **tailplane half**; the rod's underside is part of the tailplane's flat underside. Fits: `FIN_ROD_FIT` 0.15 (tail test 3: 0.10 and 0.15 both held once the teeth clicked; 0.15 goes in more easily). The tailplane is now **two halves** (`tailplane_stbd`, `tailplane_port`), each printed on end root down on the wing plate (brim), joined on the centreline inside the fuselage slot by one flexing key (`TAIL_KEY` 20 x 6 x 1.8, `TAIL_KEY_X` 311, fit 0.10; about 0.8 mm walls). The fin flash and stripes stay painted on the fins' bed face; the rod and inner face are black.
-- **Tail test 3** (`kit/halifax_tail_test.3mf`, `cad/tail_test.py`): both halves (port with the rod slot at 0.15 to compare), both fins, the centre key.
+- **Tail test 3** (`halifax/kit/halifax_tail_test.3mf`, `cad/tail_test.py`): both halves (port with the rod slot at 0.15 to compare), both fins, the centre key.
 
 - **Fuselage bomb doors**: engraved under the belly, x 95-198, 15 mm wide, split on the centreline (`detail.FUSE_BOMB_BAY`; positions approximate). Ends ahead of the H2S radome.
 - **Tail fit test 1**: the fuselage slot is fine. The fins were bad: printed inner face down, the tip pocket and tab slot opened onto the bed and their roofs bridged the whole tip chord.
 - **Fins now print outer face down** (pose `rot x -90*s`): pocket and slot open upwards. Pocket 1.2 mm deep (`FIN_POCKET`, was 0.6; the tailplane is 0.6 longer each side), tab 1.2 into the fin (`FIN_TAB`, was 1.8: 0.9 mm of fin stays outside its slot), tab slot 0.10 a side (`FIN_TAB_FIT`), pocket `FIN_POCKET_FIT` 0.15. **The fin flash is painted** on the outer (bed) face over the yellow, not an inlay (`FIN_FLASH_INLAY = False`): colour swaps only in the first 0.8 mm.
 - **Prime towers** are placed with room for 35 x 50 mm and 12 mm clear (`kitlib.TOWER_DEPTH`, `TOWER_CLEAR`): with five colours the props/fins plate failed with "G-code conflicts" at 35 x 35. Kit: 7 plates, 50 h 06 m.
-- **Tail fit test 2** (`kit/halifax_tail_test.3mf`, `cad/tail_test.py`): the tailplane, and plain fins at the kit fit (pocket 0.15, tab 0.10) and tight (both 0.10). Set `FIN_POCKET_FIT` from the result.
+- **Tail fit test 2** (`halifax/kit/halifax_tail_test.3mf`, `cad/tail_test.py`): the tailplane, and plain fins at the kit fit (pocket 0.15, tab 0.10) and tight (both 0.10). Set `FIN_POCKET_FIT` from the result.
 
 ## What changed on 2026-11-09 (after joint test 2)
 - **Fuselage "fillet" fixed**: the curved skins were meshed too coarsely (flat bands up to 0.5 mm deep, seen by the code letters on the starboard rear and tail). `halifax.mesh` now uses 0.05 rad (falls back to 0.15 for a part that won't close). Sides now match to 0.03 mm. The kit 3MF is 39 MB and the build takes 16 minutes.
@@ -68,7 +68,7 @@ State on 2026-11-11, branch `phase1-airframe`, worked on the user's Mac. **Ready
 - Details in `LESSONS.md`.
 
 ## Next up
-1. **Full print.** Every joint has now been fit-tested (joint tests 1-3, tail tests 1-3). `kit/halifax_kit.3mf`: 7 plates, 50 h 29 m, all slice. Start with plate 1 (wings, fuselage, tailplane halves; 25 h 35 m) and watch the brims' first layers. Expected non-critical slicer notes: `fuselage_rear` floating regions (key-slot ceilings and pockets), `turret_dorsal`, `stand_post`, the gun packs.
+1. **Full print.** Every joint has now been fit-tested (joint tests 1-3, tail tests 1-3). `halifax/kit/halifax_kit.3mf`: 7 plates, 50 h 29 m, all slice. Start with plate 1 (wings, fuselage, tailplane halves; 25 h 35 m) and watch the brims' first layers. Expected non-critical slicer notes: `fuselage_rear` floating regions (key-slot ceilings and pockets), `turret_dorsal`, `stand_post`, the gun packs.
 2. Checks before it (2026-11-11): assembled clash check clean apart from a <= 0.06 mm mesh sliver where each wing root sits flush on the fuselage (two meshes of one surface); every part a single solid.
 3. In the app, check that the Filament Grouping panel shows Dark Earth under the auxiliary nozzle.
 4. Later: real flush volumes in place of the flat 350 mm3 (purge 495 g for 458 g of model); the ideas in `TODO.md`.

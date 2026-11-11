@@ -1,5 +1,5 @@
 """Zoomed crop of a reference page with a labelled pixel grid (page coordinates).
-  python tools/grid.py PAGE x0 y0 x1 y1 OUT [--step 50] [--scale 0.5]"""
+  python common/tools/grid.py PAGE x0 y0 x1 y1 OUT [--step 50] [--scale 0.5]"""
 import argparse
 from PIL import Image, ImageDraw
 ap = argparse.ArgumentParser()

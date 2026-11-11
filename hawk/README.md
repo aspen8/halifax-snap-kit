@@ -206,7 +206,7 @@ From the user's look at v21 in the slicer, each point checked against the clean 
 ### v20 changes (pod's rear top line)
 
 - **Side pods:** behind their highest point the top now runs in a straight line down to the top of the roundel (z 18.8 at X 142 to 13.25 at X 186.8). v19 curved down and ended in front of the roundel (user).
-- **Tool:** `tools/raster.py --light` sets the light direction; a light from above (`0,1,0.35`) shows creases like the pod's top edge that the default front light hides.
+- **Tool:** `common/tools/raster.py --light` sets the light direction; a light from above (`0,1,0.35`) shows creases like the pod's top edge that the default front light hides.
 - **Checks:** interference shows only the known overlaps; all 7 plates slice, with print times as v19.
 
 ![v19 and v20 pod, lit from above](docs/v20_pod.png)
@@ -238,7 +238,7 @@ Measured off the Revell side view (orthographic, with the decals drawn on), whic
 - **Rear fuselage:** boxy above the widest line with softer top corners, and round below it, going cylindrical around the jet pipe (as seen from behind). The change of curve reads as a faint waist line.
 - **Smoke pod:** a blunter nose 1.5 mm further forward. At the tail the underside sweeps up to a blunt end at mid-height while the top stays level; it used to taper into the belly.
 - **Nozzle:** the ring flares out at 45 degrees behind the tail face to radius 6.0 (was 5.0), and the wider exit is lined in black. The spigot and socket are unchanged, so the fit stays the same.
-- **New tool:** `tools/raster.py` is a gap-free orthographic rasteriser for the preview GLB. It shows paint edges exactly, without the point-splat speckle.
+- **New tool:** `common/tools/raster.py` is a gap-free orthographic rasteriser for the preview GLB. It shows paint edges exactly, without the point-splat speckle.
 - **Checks:** interference shows only the known overlaps; overhangs are unchanged; all 7 plates slice. Print times: fuselage 11.6 h, small parts 0.7 h, wing tops 1.8 h, wing undersides 1.7 h, fins and canopy 4.3 h, stand 2.2 h, gear 1.1 h.
 
 ![v18 port side](docs/v18_side.png)
@@ -279,7 +279,7 @@ The user supplied clean renders of a Red Arrows Hawk from many angles (`ref/hawk
 
 ### v15 changes (watermarks out of the port flag)
 
-Paint only. The port photo's stock-photo watermark has small "a" glyphs on the fin; where they crossed the blue and red they traced as white splodges. `tools/trace_colours.py` now takes an optional `mask` list of image boxes, filled from the nearest colour outside them, and the port spec masks the four glyphs on the fin. Starboard is unchanged. All 7 plates slice.
+Paint only. The port photo's stock-photo watermark has small "a" glyphs on the fin; where they crossed the blue and red they traced as white splodges. `common/tools/trace_colours.py` now takes an optional `mask` list of image boxes, filled from the nearest colour outside them, and the port spec masks the four glyphs on the fin. Starboard is unchanged. All 7 plates slice.
 
 ![v15 tail paint, port and starboard](docs/v15_tail_paint.png)
 
@@ -449,7 +449,7 @@ The stand now plugs into a blind socket in the smoke pod:
 | | The wing-root coupon carries the inner underside fin, moulded on; one leading-edge fence and the piece of leading edge it slides onto | | The fin is attached along its whole length; the fence slides back onto the leading edge with its tongues in the grooves top and bottom and stays put without glue |
 | Wheel snap (black, grey) | Starboard main leg and wheel, whole | 0.5 h | The boss goes through the wheel and its head clicks out the far side without breaking; the wheel spins and doesn't pull off |
 
-`kit/hawk_test_coupons_one_nozzle.3mf` is the same plates with every colour on the main nozzle (made by `tools/single_nozzle.py`), to compare the white's quality against the second nozzle. One nozzle roughly doubles time and filament (every colour change is an AMS swap and purge): airframe coupons 4.3 h and 83 g (1.9 h, 32 g on two nozzles); in the kit, wings 16.1 h (8.1) and fuselage 23.3 h (11.9).
+`kit/hawk_test_coupons_one_nozzle.3mf` is the same plates with every colour on the main nozzle (made by `common/tools/single_nozzle.py`), to compare the white's quality against the second nozzle. One nozzle roughly doubles time and filament (every colour change is an AMS swap and purge): airframe coupons 4.3 h and 83 g (1.9 h, 32 g on two nozzles); in the kit, wings 16.1 h (8.1) and fuselage 23.3 h (11.9).
 
 If a fit is too tight or too loose, it's one number in `hawk.py`: `GEAR_SNAP` (wheel snap: head diameter or slot width), `TAIL_PLUG_FIT` (tailplane), `WING_KEY_FIT` (wing key, in the wing and in the fuselage).
 
@@ -537,7 +537,7 @@ The shape is measured from the Revell 04284 Hawk T.1A (Red Arrows) instruction s
 - The side pods are boxy D-sections (exponent 3.0), 21.7 mm half-width with a near-vertical outer side and a flat bottom. Their inner edge sits just inside the fuselage side, so the rounded inner top corner leaves a notch: near the inlet each pod reads as almost separate, with clear fuselage side between its top and the canopy sill (head-on photo). The top climbs a little behind the inlet (Z 12 to 15) and stays well below the sill. In plan view each pod is widest just behind the inlet (X 104), turns in straight away (a short convex shoulder), then tapers almost straight back and eases into the fuselage side in a long concave curve by about X 172, matching the reference model to 0.3 mm (top view in `docs/pods_plan.png`). As it tapers the bottom rises up the fuselage side, so nothing hangs below the belly. The blend radius varies with x: 6 mm at the canopy, 1.2–1.5 mm along the inlets, 6 mm again where the pods fade.
 - **Canopy and spine height** were checked against two more side views (Wikimedia and blueprintbox 3-views, `docs/side_3views_overlay.png`): our top line sits on both to within a line width.
 - The canopy section is an egg shape, checked against the head-on photo: its sides rise from the fuselage, curve very slightly out just above the sill (widest 2.5 mm above it, 3% wider than the spine table) and round over the top.
-- **Cross-check against another model.** The fuselage and pod sections were compared with a 1:72 Hawk 3MF by Greenwater (`tools/compare_ref_model.py`, result in `docs/ref_model_sections.png`). Widths and pod shape now agree. Where they disagree, the model follows the Revell drawings: the reference's canopy and spine are 3–5 mm lower and its windscreen starts further forward, and its fuselage is a constant-width tube.
+- **Cross-check against another model.** The fuselage and pod sections were compared with a 1:72 Hawk 3MF by Greenwater (`common/tools/compare_ref_model.py`, result in `docs/ref_model_sections.png`). Widths and pod shape now agree. Where they disagree, the model follows the Revell drawings: the reference's canopy and spine are 3–5 mm lower and its windscreen starts further forward, and its fuselage is a constant-width tube.
 - The side pods fade into the fuselage by the wing trailing edge (X 168). The end of "ROYAL AIR FORCE" sits on the fuselage side just behind them.
 - The rear top line stays nearly level from the fin to the jet pipe (Revell side view), and the end is squared off, as in the photos.
 - The side pods (intake trunks) are rounded, with 18 mm deep ducts that read dark, as in the head-on photo. Each opening is a rounded oval 6.5 × 9.3 mm, about two-thirds of the pod's visible width and half its height, set inboard next to the splitter gap with a thick outer lip and deep lips above and below (`docs/intake_comparison.png`). Their tops reach Z 15.
@@ -551,14 +551,14 @@ The shape is measured from the Revell 04284 Hawk T.1A (Red Arrows) instruction s
 
 The scheme is the current one, with the Union-flag fin. It combines two sheets:
 
-- **Fin flag:** traced (v17) from the clean reference renders of each side (v14 to v16: from close-up photos) with `tools/trace_colours.py`, one trace per side (specs in `tools/fin_flag_*.json`). Each photo is fitted to the model through the trailing edge's top corner and its bottom (kink) corner, so the flag lands exactly on our fin. Note the two close-up files are named the wrong way round: `photo_fin_stbd_closeup.webp` shows the port side (nose left) and is the port trace. Watermark colours in the port photo count as red, the watermark's "a" glyphs on the fin are masked out (v15), and islands under 10 mm² are dropped. (v9 to v13 used the HobbyBoss 81738 sheet, which drew the bands thinner and wobblier.) It's clipped to the fin itself: above the fuselage top line and behind the straight leading edge, so the spine cap and dorsal fillet stay red.
+- **Fin flag:** traced (v17) from the clean reference renders of each side (v14 to v16: from close-up photos) with `common/tools/trace_colours.py`, one trace per side (specs in `tools/fin_flag_*.json`). Each photo is fitted to the model through the trailing edge's top corner and its bottom (kink) corner, so the flag lands exactly on our fin. Note the two close-up files are named the wrong way round: `photo_fin_stbd_closeup.webp` shows the port side (nose left) and is the port trace. Watermark colours in the port photo count as red, the watermark's "a" glyphs on the fin are masked out (v15), and islands under 10 mm² are dropped. (v9 to v13 used the HobbyBoss 81738 sheet, which drew the bands thinner and wobblier.) It's clipped to the fin itself: above the fuselage top line and behind the straight leading edge, so the spine cap and dorsal fillet stay red.
 - **Cheat line and swoosh** (parametric, from the photos, the same on both sides):
   - It starts at the nose tip, 1.1 mm wide and crossing the front of the nose just above the probe boss (head-on photo), and thickens gradually to the letter height (5.2 mm) on the side pod, then stops 2 mm short of "ROYAL AIR FORCE".
   - It resumes behind the roundel at the same height and sweeps up in one curve (a cubic Bezier) to the fin root, widening to 8 mm, where it meets the flag's white.
 - **Lettering and roundels:** follow the Revell sheet and the photos.
   - The lettering is regenerated as text, so it reads correctly on both sides.
   - The roundels are Type D (red, white and blue in thirds).
-- **Underside chevrons and belly stripes:** straight lines fitted to the white areas traced from the Revell underside view (`tools/white_regions.py`; the fit is `CHEVRON_*` and `BELLY_*` in `cad/colour.py`). The trace itself had gaps wherever the drawing's panel lines crossed the white. Each wing has a band along the leading-edge side, widening outboard, and a strip along the trailing edge; two belly stripes run aft from the trailing-edge strips and meet in a U under the jet pipe.
+- **Underside chevrons and belly stripes:** straight lines fitted to the white areas traced from the Revell underside view (`common/tools/white_regions.py`; the fit is `CHEVRON_*` and `BELLY_*` in `cad/colour.py`). The trace itself had gaps wherever the drawing's panel lines crossed the white. Each wing has a band along the leading-edge side, widening outboard, and a strip along the trailing edge; two belly stripes run aft from the trailing-edge strips and meet in a U under the jet pipe.
 - **Where the traces live:** in `ref/hawk_white/`, which is git-ignored. Re-run the trace commands below to regenerate them.
 
 ## Rebuild
@@ -566,19 +566,19 @@ The scheme is the current one, with the Union-flag fin. It combines two sheets:
 From the repo root, with `requirements.txt` installed:
 
 ```
-.venv/bin/python tools/white_regions.py under ref/hawk_white/under.json --refs hawk/tools/refs.json
+.venv/bin/python common/tools/white_regions.py under ref/hawk_white/under.json --refs hawk/tools/refs.json
 for s in port stbd; do
-  .venv/bin/python tools/trace_colours.py hawk/tools/fin_flag_$s.json   ref/hawk_white/fin_$s.json
+  .venv/bin/python common/tools/trace_colours.py hawk/tools/fin_flag_$s.json   ref/hawk_white/fin_$s.json
 done
 cd hawk/cad
 ../../.venv/bin/python hawk.py ../../out/hawk/geo        # geometry only, about 10 s
 ../../.venv/bin/python colour.py ../../out/hawk/col      # colour, 3MF, about 10 min
 ONLY=wing_stbd ../../.venv/bin/python colour.py ../../out/hawk/col   # one part
 cd ../..
-.venv/bin/python tools/render.py out/hawk/col/hawk_colour_preview.glb hawk/docs/colour_render.png --skip gear_,wheel_,pin_,stand --zoom 1.5
+.venv/bin/python common/tools/render.py out/hawk/col/hawk_colour_preview.glb hawk/docs/colour_render.png --skip gear_,wheel_,pin_,stand --zoom 1.5
 ```
 
-Checks: run `tools/interference.py` on the assembled STLs without the `key_*` files (keys are modelled at the origin), and `tools/overhang.py` on `out/hawk/geo/print`.
+Checks: run `common/tools/interference.py` on the assembled STLs without the `key_*` files (keys are modelled at the origin), and `common/tools/overhang.py` on `out/hawk/geo/print`.
 
 ## Files
 

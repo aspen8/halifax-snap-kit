@@ -18,9 +18,9 @@ This repo holds finished kits (Handley Page Halifax B.II in the root `cad/`; BAE
 2. **Get references.** Ask the user for kit instructions with plan views (Revell or Airfix PDFs), a 3-view, and a colour profile, **as files on disk**: images pasted into chat live in a temporary folder and can vanish. Copy everything into `ref/` (git-ignored) at once and render PDF pages at 400 dpi (pymupdf). Never commit reference images.
    - Check free disk space and set up the venv first (`requirements.txt`, Python 3.12; about 1.5 GB).
 3. **Calibrate.** Add a view for each reference to `<aircraft>/tools/refs.json`: find the mm-per-px scale, the origin, and any tilt from features you can locate on both the drawing and the model. Calibrate every view separately (sheets mix scales) and check the drawing's symmetry.
-   - `tools/silhouette.py` gives outline masks of shaded views; `tools/grid.py` gives gridded zooms to read points by hand; `tools/white_regions.py` traces white paint areas.
+   - `common/tools/silhouette.py` gives outline masks of shaded views; `common/tools/grid.py` gives gridded zooms to read points by hand; `common/tools/white_regions.py` traces white paint areas.
 4. **New folder per aircraft.** Copy `hawk/` (for example to `spitfire/`): `cad/<aircraft>.py` (parameters → parts → poses), `cad/colour.py`, `cad/detail.py`, `tools/refs.json`, `README.md`. It appends the repo's `cad/` to `sys.path` for `kitlib`. Keep shapes as station tables, densified with `dense()` for ruled lofts. All booleans in manifold3d; CadQuery only for lofts and primitives.
-5. **Iterate the shape against the drawings** with `tools/ref_overlay.py` until the outline sits on the lines. Cross-check with a second source before showing the user.
+5. **Iterate the shape against the drawings** with `common/tools/ref_overlay.py` until the outline sits on the lines. Cross-check with a second source before showing the user.
 6. **Split the kit and add the joints:**
    - Parts lie flat with no supports.
    - Printed keys use `kitlib.key_slots` and `connector_key`.
@@ -33,11 +33,11 @@ This repo holds finished kits (Handley Page Halifax B.II in the root `cad/`; BAE
    - Keep camo to up-facing skins.
    - Roundels go in as `kitlib.make_inlay` discs.
 9. **Check before every handover:**
-   - `tools/interference.py`
-   - `tools/overhang.py`
-   - `tools/colour_check.py --from below`
+   - `common/tools/interference.py`
+   - `common/tools/overhang.py`
+   - `common/tools/colour_check.py --from below`
    - Interference without the `key_*` STLs (keys are modelled at the origin); count inlays per side (they should match).
-   - Renders with `tools/render.py` (works on macOS; `cad/render_colour.py` needs EGL) and `tools/closeup.py`. Send the renders.
+   - Renders with `common/tools/render.py` (works on macOS; `cad/render_colour.py` needs EGL) and `common/tools/closeup.py`. Send the renders.
 10. **Write the 3MF** with `kitlib.write_3mf`. Group the plates by colour set and assert at most 5 colours per plate. Use the user's Bambu project settings as the template.
 11. **Fit test first** (`cad/fit_test.py`) on a new printer or filament, then set `FIT`, `KEY_FIT` and `AXLE_HOLE_TIGHT`.
 

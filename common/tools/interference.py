@@ -1,7 +1,7 @@
 """
 Report overlapping parts in the assembled model (and any non-manifold meshes).
 
-  python tools/interference.py OUT_DIR/assembled [--min 0.5]
+  python common/tools/interference.py OUT_DIR/assembled [--min 0.5]
 
 Anything above a few mm3 means two parts won't go together; fix by cutting one
 from the other in the CAD.

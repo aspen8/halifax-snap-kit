@@ -2,8 +2,8 @@
 Check that a surface seen from one direction shows only the expected colours,
 e.g. no camo flecks on a black underside.
 
-  python tools/colour_check.py OUT_DIR/halifax_colour_preview.glb --from below --expect 1C1C1C
-  python tools/colour_check.py preview.glb --from above --expect 6B5638,3F4B2E --skip stand
+  python common/tools/colour_check.py OUT_DIR/halifax_colour_preview.glb --from below --expect 1C1C1C
+  python common/tools/colour_check.py preview.glb --from above --expect 6B5638,3F4B2E --skip stand
 
 Casts a grid of rays at the coloured preview (from colour.py) and reports which
 colours the first hit lands on. Stray hits in small numbers usually sit on joint

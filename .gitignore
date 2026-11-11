@@ -1,6 +1,6 @@
 out/
 __pycache__/
 *.pyc
-cad/prof
+halifax/cad/prof
 ref/
 .venv/

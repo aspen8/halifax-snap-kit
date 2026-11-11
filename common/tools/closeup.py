@@ -1,7 +1,7 @@
 """
 Close-up renders of the coloured preview: one tile per view.
 
-  python tools/closeup.py preview.glb out.png "40,0,-5 : -0.3,-1,0.35 : 110" "135,61,-30 : 0,1,0.05 : 110"
+  python common/tools/closeup.py preview.glb out.png "40,0,-5 : -0.3,-1,0.35 : 110" "135,61,-30 : 0,1,0.05 : 110"
 
 Each view is "target x,y,z : direction from target to camera : distance" (mm).
 Up to six views make a 3x2 sheet.

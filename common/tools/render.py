@@ -1,8 +1,8 @@
 """
 Software renderer (numpy point splatting, no OpenGL: works on macOS) for any kit preview GLB.
 
-  python tools/render.py preview.glb out.png [--views a,b,...] [--size 900x640]
-  python tools/render.py STL_DIR out.png          (grey, all STLs in a folder)
+  python common/tools/render.py preview.glb out.png [--views a,b,...] [--size 900x640]
+  python common/tools/render.py STL_DIR out.png          (grey, all STLs in a folder)
 
 Views: port34, stbd34, top, port, under, rear34, front, head, tail, stbd, low34, lowside, nose34.
 """

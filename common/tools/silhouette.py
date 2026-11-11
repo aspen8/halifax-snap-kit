@@ -1,6 +1,6 @@
 """Silhouette masks from the Revell painting-guide views (grey stipple fill).
 
-  python tools/silhouette.py PAGE_PNG x0 y0 x1 y1 OUT_PREFIX [--thresh 215] [--blur 5]
+  python common/tools/silhouette.py PAGE_PNG x0 y0 x1 y1 OUT_PREFIX [--thresh 215] [--blur 5]
 
 Writes OUT_PREFIX_mask.png (largest filled component) and prints its pixel bounds.
 """

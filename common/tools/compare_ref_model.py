@@ -2,7 +2,7 @@
 Compare our model with another 3D model of the same aircraft (a 3MF or STL someone else made),
 cross-section by cross-section. Use it as a measuring reference only; keep our own geometry.
 
-  python tools/compare_ref_model.py REF.3mf|REF.stl OUT.png OUR_PART.stl [...]
+  python common/tools/compare_ref_model.py REF.3mf|REF.stl OUT.png OUR_PART.stl [...]
       --axes=-z,x,y          how the reference's axes map to ours (X aft, Y span, Z up)
       --ends=-127.5,146.5    reference fuselage nose and tail x (after --axes), found with --probe
       --target=0.8,264.2     our fuselage nose and tail x: the reference is scaled to fit between them

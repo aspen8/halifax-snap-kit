@@ -1,7 +1,7 @@
 """
 Slice every plate of a Bambu 3MF from the command line and summarise it.
 
-  python tools/slice.py kit/halifax_kit.3mf [more.3mf ...] [--out out/slice] [--md]
+  python common/tools/slice.py kit/halifax_kit.3mf [more.3mf ...] [--out out/slice] [--md]
 
 For each 3MF it runs Bambu Studio once per plate (`--slice N`) into
 OUT/<name>/plate_N/, which gets plate_N.gcode, Bambu's result.json and slice.log.
@@ -41,12 +41,12 @@ HARMLESS = (
     "building nozzle list from filament map",
     "Current BambuStudio Version",
 )
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]          # repo root (this is common/tools/)
 
 
 def filament_names():
     """Slot -> name from cad/colour.py FILAMENTS, without importing CadQuery."""
-    src = (ROOT / "cad" / "colour.py").read_text()
+    src = (ROOT / "halifax" / "cad" / "colour.py").read_text()
     return {int(s): n for s, n in re.findall(r'^\s+(\d+): \("([^"]+)"', src, re.M)}
 
 

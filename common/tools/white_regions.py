@@ -2,7 +2,7 @@
 Extract the white paint areas from a Revell painting-guide view and save them as
 model-space polygons (mm), for colour.py.
 
-  python tools/white_regions.py VIEW OUT.json --refs hawk/tools/refs.json [--erode 5]
+  python common/tools/white_regions.py VIEW OUT.json --refs hawk/tools/refs.json [--erode 5]
 
 VIEW is a key in the refs JSON (default tools/refs.json). White = inside the aircraft silhouette and plain
 paper-white after a small blur (the stipple is grey). Writes {"rings": [[[h, v], ...], ...]}
@@ -17,13 +17,13 @@ from PIL import Image, ImageFilter
 from scipy import ndimage as ndi
 from skimage import measure
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]          # repo root (this is common/tools/)
 ap = argparse.ArgumentParser()
 ap.add_argument("view"); ap.add_argument("out")
 ap.add_argument("--erode", type=int, default=5, help="px kept clear of the outline")
 ap.add_argument("--min-area", type=float, default=1.5, help="mm2; smaller blobs are dropped")
 ap.add_argument("--thresh", type=int, default=228)
-ap.add_argument("--refs", default=str(Path(__file__).resolve().parents[1] / "tools" / "refs.json"))
+ap.add_argument("--refs", default=str(Path(__file__).resolve().parents[2] / "halifax" / "tools" / "refs.json"))
 a = ap.parse_args()
 ref = json.load(open(a.refs))[a.view]
 A = np.array(ref["affine"], float)

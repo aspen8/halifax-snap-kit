@@ -1,8 +1,8 @@
 """
 Orthographic triangle rasteriser with a z-buffer (numpy only): a gap-free view of a kit preview
-GLB, for checking paint edges where the point-splat renderer (tools/render.py) speckles.
+GLB, for checking paint edges where the point-splat renderer (common/tools/render.py) speckles.
 
-  python tools/raster.py preview.glb out.png --view under [--px 0.25] [--box x0,x1,y0,y1]
+  python common/tools/raster.py preview.glb out.png --view under [--px 0.25] [--box x0,x1,y0,y1]
 
 Views look along an axis: under (from below, nose left, port at the top), top, port, stbd,
 tail (from behind), head. --px is mm per pixel in the GLB's units; --box crops (view units).

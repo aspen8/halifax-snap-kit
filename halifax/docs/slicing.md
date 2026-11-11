@@ -3,7 +3,7 @@
 Sliced on 2026-11-08 with the Bambu Studio 02.08.02.61 command line on macOS, using the settings embedded in each 3MF (Bambu Lab X2D 0.4 nozzle, 0.20 mm Standard @BBL X2D template, with the kit's per-object overrides). Regenerate everything here with:
 
 ```
-python tools/slice.py kit/halifax_test_plate.3mf kit/halifax_kit.3mf kit/halifax_joint_test.3mf --md
+python common/tools/slice.py halifax/kit/halifax_test_plate.3mf halifax/kit/halifax_kit.3mf halifax/kit/halifax_joint_test.3mf --md
 ```
 
 The G-code, Bambu's `result.json` and the slicer log for each plate go to `out/slice/<3mf name>/plate_N/`.
@@ -14,7 +14,7 @@ The G-code, Bambu's `result.json` and the slicer log for each plate go to `out/s
 
 The command line can treat some settings differently from the app (filament-to-nozzle mapping in particular, see below), so open the app to confirm anything that matters before printing.
 
-## Test plate (`kit/halifax_test_plate.3mf`, round 2): slices cleanly
+## Test plate (`halifax/kit/halifax_test_plate.3mf`, round 2): slices cleanly
 
 Round 2 adds the grip gauge and peg tab to plate 2 (13 min more).
 
@@ -28,7 +28,7 @@ Round 2 adds the grip gauge and peg tab to plate 2 (13 min more).
 - **Plate 1 is mostly purge.** It uses 6.7 g of flush and tower for 1.6 g of inlays, and about 17 of its 37 minutes are flushing.
 - **No warnings since the wheels got a flat side.** The first slice warned that "t4_main_wheel has floating regions": the rounded tyre edge lifted off the bed (175 mm² of overhang). The wheels now have a flat inboard face that prints on the bed, and the warning has gone. The kit's wheels don't get the warning either.
 
-## Full kit (`kit/halifax_kit.3mf`, rebuilt 2026-11-08): 7 plates, 50 h 06 m
+## Full kit (`halifax/kit/halifax_kit.3mf`, rebuilt 2026-11-08): 7 plates, 50 h 06 m
 
 Half the time and a third of the purge of the 2026-11-07 kit (102 h 39 m, 1439 g), from three changes on the wing plate:
 
@@ -60,7 +60,7 @@ Notes:
 - **Plate 3 (markings):** 3 h 21 m and 46 g of purge (3 h 40 m and 43 g on 2026-11-07). The inlays are thinner now that their sockets follow the skin, which offsets the four colours all staying on the main nozzle (the second nozzle holds Dark Earth for the whole kit).
 - **Nozzle grouping is Manual** (`colour.NOZZLE`, `filament_map_mode`). On "Auto For Flush" the command line put every filament on the main nozzle.
 
-### Joint test (`kit/halifax_joint_test.3mf`), round 3
+### Joint test (`halifax/kit/halifax_joint_test.3mf`), round 3
 
 `cad/joint_test.py`: a slice from each side of the three new joints, cut from the kit parts, at 0.24 mm, and their keys at 0.12 mm. Black only. Round 1 (2026-11-08): the nose joint was good; the tail joint wanted to be tighter; the wing key, at 10–29 % chord and 8 mm deep, peeled open from the trailing edge. Round 2: the wing key is 24 × 21.9 × 3 mm across 20–55 % chord, 12 mm into each piece, under the roundel (whose back is notched over it); the fuselage keys go 9 mm into each piece (8 at the tail), and the tail joint's slots are 0.10 a side. Round 2 (2026-11-09): the tail joint is right at 0.10; the nose and wing joints were a touch loose at 0.15, so they are now 0.10 a side too (round 3).
 

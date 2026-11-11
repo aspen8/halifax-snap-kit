@@ -6,15 +6,15 @@ What the Halifax taught us, so the next aircraft starts from a working pipeline.
 
 1. **References first.** Get a good kit-instruction plan (Revell or Airfix PDFs are usually the most accurate) plus one or two independent 3-views, and a colour profile for the markings. Render the PDF page at 400 dpi.
 2. **Calibrate each view** in `tools/refs.json`: find the mm-per-pixel scale and origin from known features (nose tip, wing leading edge, fuselage datum). Check the drawing isn't slightly rotated: the Revell side view was tilted by 0.77°.
-3. **Shape as tables of stations.** Fuselage: (x, half-width, top z, bottom z, superellipse exponent). Wings: planform (span, LE x, chord) and t/c. Edit the numbers, rebuild, and overlay with `tools/ref_overlay.py` until the outline sits on the drawing lines.
+3. **Shape as tables of stations.** Fuselage: (x, half-width, top z, bottom z, superellipse exponent). Wings: planform (span, LE x, chord) and t/c. Edit the numbers, rebuild, and overlay with `common/tools/ref_overlay.py` until the outline sits on the drawing lines.
 4. **Cross-check with a second drawing.** The 51 Sqn profile artwork was off by several mm at the nose and missed the turret; the Revell plans and the Wikipedia 3-view agreed to about 2 mm.
 5. **Split for printing.** Each piece lies flat with no supports. Joints use printed keys and pins, never glue or filament.
 6. **Colour last.** `kitlib.paint` peels regions (camo, codes, stripes) into per-filament volumes. Roundels are separate press-fit inlays (`kitlib.make_inlay`).
 7. **Check:**
-   - `tools/interference.py`: parts must not overlap.
-   - `tools/overhang.py`: printable poses.
-   - `tools/colour_check.py`: no stray colour on surfaces that should be plain.
-   - `tools/closeup.py`: render the details that matter.
+   - `common/tools/interference.py`: parts must not overlap.
+   - `common/tools/overhang.py`: printable poses.
+   - `common/tools/colour_check.py`: no stray colour on surfaces that should be plain.
+   - `common/tools/closeup.py`: render the details that matter.
 8. **Write the 3MF.** `kitlib.write_3mf` groups parts onto plates by colour set, with at most 5 colours a plate (one AMS plus the auxiliary head).
 
 ## Printer numbers (Bambu X2D, PLA)
@@ -98,8 +98,8 @@ The tailplane slot was a plain box. Where the rear fuselage tapers, it broke thr
 
 Run all three on the full build. Every one caught something on the Halifax that the renders hid:
 1. Every STL is a single piece (`trimesh` `split()`). This caught the nacelle islands left in the wing-tongue pocket, an astrodome plug that only touched its dome, and loose rivet dots.
-2. Assembled interference over all parts (`tools/interference.py`). It must be clean apart from intended press fits.
-3. Overhangs in print pose (`tools/overhang.py`). This caught the canopy floating on its tab.
+2. Assembled interference over all parts (`common/tools/interference.py`). It must be clean apart from intended press fits.
+3. Overhangs in print pose (`common/tools/overhang.py`). This caught the canopy floating on its tab.
 
 `colour.py` now keeps only the largest solid of each part and reports anything above 1 mm3 it drops. Read those reports: a dropped piece can mean a real geometry bug.
 
@@ -160,7 +160,7 @@ After the A6M Zero kit card: mould a mushroom boss on the nose, split with the n
 
 ## Slicing from the command line (Bambu Studio CLI)
 
-`tools/slice.py` wraps it. What tripped us up:
+`common/tools/slice.py` wraps it. What tripped us up:
 - **Slice plate by plate.** With `--slice 0`, Bambu stops at the first plate with an error, so later plates get no numbers; `--no-check` doesn't change that. `--slice N` per plate gets every plate that can slice.
 - **Read `result.json`, not just the log.** It gives per plate: total time, filament changes, and `main_used_g` (in the parts) vs `total_used_g` (with flush and prime tower). Its `error_string` explains "gcode unprintable" codes in plain words. The G-code header's "volume [cm^3]" is mislabelled mm³.
 - **`--export-3mf` fails on macOS** ("Unable to open the file ...tmp") whatever the path. It isn't needed.
@@ -232,15 +232,15 @@ The Hawk was the second kit, and the first built from scratch on the v2 approach
 ### Setup
 - **Python 3.10–3.12 only.** CadQuery has no 3.13 wheels. `uv venv --python 3.12 .venv` fetches a suitable Python. Then `pip install -r requirements.txt`, which includes `rtree` (trimesh ray casting needs it) and `pymupdf` (to render the reference PDFs).
 - **Disk.** CadQuery, OCP and VTK take about 1.5 GB installed. Check free space first: a half-finished install on a full disk wastes time.
-- **macOS has no EGL.** `cad/render_colour.py` (pyrender) won't run there. `tools/render.py` is a numpy point-splat renderer: about 5 s for 400k triangles, and `--skip gear_,stand` gives flight views.
+- **macOS has no EGL.** `cad/render_colour.py` (pyrender) won't run there. `common/tools/render.py` is a numpy point-splat renderer: about 5 s for 400k triangles, and `--skip gear_,stand` gives flight views.
 
 ### References
 - **Copy every reference into `ref/` the moment it arrives.** Images pasted into a chat sit in a temporary folder and were lost mid-build. Ask for files on disk.
-- **Scanned instruction sheets are fine.** `tools/silhouette.py` makes the outline mask (blur, threshold, largest component, fill holes). Leader lines and part numbers pollute side views, so read those outlines by hand from `tools/grid.py` zooms instead.
+- **Scanned instruction sheets are fine.** `common/tools/silhouette.py` makes the outline mask (blur, threshold, largest component, fill holes). Leader lines and part numbers pollute side views, so read those outlines by hand from `common/tools/grid.py` zooms instead.
 - **Each view on a sheet has its own scale.** The Revell Hawk side view is drawn 12% larger than the plan view. Calibrate the plan by the span and the side by the length.
 - **Check the drawing's symmetry.** The Hawk plan view's wings sit 20 px off the fuselage centreline, and its two half-spans differ by 5%, in both the top and underside views. Average the halves, each normalised by its own half-span.
 - **Cross-check against real data.** Wing area, root chord, and overall length including the probe all came within 1%, which confirmed the calibration.
-- **Paint can be traced too.** `tools/white_regions.py` keeps what is inside the silhouette and still paper-white after a small blur. The underside chevrons and belly stripes came out clean. Side views need the canopy glass, labels and roundel rings filtered out, and long stripes are better redrawn as a smooth parametric band along the traced path.
+- **Paint can be traced too.** `common/tools/white_regions.py` keeps what is inside the silhouette and still paper-white after a small blur. The underside chevrons and belly stripes came out clean. Side views need the canopy glass, labels and roundel rings filtered out, and long stripes are better redrawn as a smooth parametric band along the traced path.
 - **Regenerate lettering as text,** with `text_section`, mirrored on starboard. A traced word would read backwards on the other side.
 
 ### Geometry pipeline
@@ -267,7 +267,7 @@ The Hawk was the second kit, and the first built from scratch on the v2 approach
 - **Find a plinth's deck height from the geometry, not the bounding box.** The raised boss at the blade foot was taller than the deck, and the lettering and pinstripe came out empty.
 
 ### Tracing colour artwork
-- **Fit the drawing locally to the part being traced.** The HobbyBoss side views were fitted through the fin's corners (`tools/trace_colours.py`, a least-squares affine over several point pairs), so the flag lands exactly on our fin. Fitting by overlap of the outline failed: the white parts of the flag are the same colour as the paper.
+- **Fit the drawing locally to the part being traced.** The HobbyBoss side views were fitted through the fin's corners (`common/tools/trace_colours.py`, a least-squares affine over several point pairs), so the flag lands exactly on our fin. Fitting by overlap of the outline failed: the white parts of the flag are the same colour as the paper.
 - **Different sheets disagree by a few mm.** That fit drifted 2–4 mm lower down the fuselage, and the two side views disagreed with each other. Don't mix positions from two sheets. Keep one source per region, and warp the joining piece to meet both ends: the swoosh is pinned to the Revell roundel at its foot and to the HobbyBoss fin at the root.
 - **Trace the port and starboard views separately.** Then check that they agree in (x, z): on the Hawk they do, because the flag is reversed on the starboard side, hoist forward.
 - **Sheets show different years.** The Revell 2010 sheet has the blue fin, the HobbyBoss sheet II the Union flag. Check which scheme the user wants before tracing.
@@ -292,7 +292,7 @@ The Hawk was the second kit, and the first built from scratch on the v2 approach
 - **Ask for a marked-up photo when the user says a shape is hard to describe.** "The canopy front should look curved" turned out to mean the red nose top domes up into the windscreen, so the glass base is an arch. A circle on a photo settled it in one round.
 - **Measure off a tilted photo with a two-point fit.** A side photo of an aircraft in flight is rotated and scaled. Fit a similarity transform through two known points (nose tip, canopy rear corner) and convert other points to model coordinates. It put the windscreen frame and the hoop within 1 mm of the Revell drawing and gave their lean angles, which an upright slab had got wrong.
 - **Two lofted shapes meeting at a seam leave a waist.** The body's egg section narrows towards its top just where the canopy sits on it, so the side pinched in under the sill: a groove along the cockpit. Patching it with a flat wall looked like filler. What worked: fill each section to its convex hull above the pod tops (leaving the pods and their notch alone), and give the body behind the canopy a higher widest point and a squarer top so its sides run up flat. Check the result against the reference model's sections, not just renders.
-- **Render the model from the photo's viewpoint and put the two side by side.** `tools/render.py` has `stbd`, `port` and `head` views, and `--focus` and `--zoom` for framing. That's how the photos showed the continuous cheat line, the gear positions and the round intakes.
+- **Render the model from the photo's viewpoint and put the two side by side.** `common/tools/render.py` has `stbd`, `port` and `head` views, and `--focus` and `--zoom` for framing. That's how the photos showed the continuous cheat line, the gear positions and the round intakes.
 - **A curve the eye follows (canopy, spine) must be one smooth curve.** Measured points wobble by a few tenths. Fit a smoothing spline (`UnivariateSpline`, small `s`), resample every 2 mm, and loft ruled. Then check that the second difference doesn't change sign.
 - **Settle a disagreement by counting sources.** On fuselage depth, Revell and the side-on photo agreed and HobbyBoss didn't. A low camera and a long lens make an aircraft look deeper, so measure photos on a grid against the nose tip and the length.
 - **Gear sockets need wall too.** Moving the main leg aft put its socket at 80% chord, where the wing is 2.4 mm thick. Measure the local thickness, put the socket where it leaves at least 0.6 mm above, and rake the leg to put the wheel where the photo shows it.
@@ -314,7 +314,7 @@ The Hawk was the second kit, and the first built from scratch on the v2 approach
 - **Watch the ends of a blend.** A ruled loft between a section without the pods and one with them makes a wedge; just ahead of an intake it partly plugged the duct. Leave the pods out of the blend ahead of the lip. The overhang report caught it: about 90 mm² of new downward-facing area at the intakes.
 - **Look at the shape in grey.** Paint hides lumps. A grey render from high 3/4 front and rear showed the canopy ledge at once.
 - **Fade fairings out where the real ones end.** The Hawk's intake trunks are flush with the body by the wing trailing edge. Letters can run on past that onto the fuselage side.
-- **Cross-check against another 3D model if one exists.** `tools/compare_ref_model.py` scales it to our fuselage length and overlays sections. It found what the drawings had hidden: our rear fuselage was 3 mm too wide a side, because I had traced the wing-root and pod outline in the plan view, not the fuselage edge. Don't trust the other model blindly either. Check each disagreement against the drawings (this one's canopy was too low and its body a plain tube), and use it for measuring only: keep your own geometry and respect its licence.
+- **Cross-check against another 3D model if one exists.** `common/tools/compare_ref_model.py` scales it to our fuselage length and overlays sections. It found what the drawings had hidden: our rear fuselage was 3 mm too wide a side, because I had traced the wing-root and pod outline in the plan view, not the fuselage edge. Don't trust the other model blindly either. Check each disagreement against the drawings (this one's canopy was too low and its body a plain tube), and use it for measuring only: keep your own geometry and respect its licence.
 - **Settle a disagreement with a third source.** The Revell drawing and the reference 3MF differed on canopy height by 3–5 mm. Two more independent 3-views, overlaid with our silhouette scaled from nose tip to jet pipe, sat on our line, so the 3MF was the odd one out. Fairing shapes such as the pods are easier to read from several small side views than from one big drawing: the climb behind the inlet showed in all of them.
 - **Fade a fairing out from below as well as from the side.** Tapering only the pod width left its flat bottom corners hanging below the belly at the back. Raise the bottom up the fuselage side over the same length.
 - **Check fairings in plan view, not just in section.** The pod sections matched the reference, but in plan the pods kept full width for too long and pinched in late. The real shape is the opposite: a short convex shoulder behind the inlet, then a long, nearly straight taper that eases (concave) into the body. Compare half-width against x with the reference model before tuning sections.
@@ -333,7 +333,7 @@ The Hawk was the second kit, and the first built from scratch on the v2 approach
 1. Brief: type and mark, span or scale, markings, display (gear, stand or both), colours per plate.
 2. Free disk space, set up the venv, then copy `hawk/` to `<aircraft>/`.
 3. References into `ref/`. Render the PDF pages at 400 dpi, then get outlines (`silhouette.py`, `grid.py`) and calibrate each view in `<aircraft>/tools/refs.json`.
-4. Station tables, then `tools/ref_overlay.py --refs <aircraft>/tools/refs.json`, iterating until the outline sits on the lines. Check against real dimensions.
+4. Station tables, then `common/tools/ref_overlay.py --refs <aircraft>/tools/refs.json`, iterating until the outline sits on the lines. Check against real dimensions.
 5. Split for printing (sections on end, flat panels, halves for round parts), with keys and shaped sockets.
 6. Colour: inlays for anything that would cost colour changes on many layers, skin paint for bed-face colour.
 7. Checks (single pieces, interference without keys, overhangs, inlay counts), renders, 3MF.
@@ -373,7 +373,7 @@ At 1:32 the Hawk's 16 printed keys, the smallest 2.75 × 5 × 1.5 mm, were fiddl
 
 ### Check a new peg or socket against every part, not just its mate
 
-The smoke pod's front peg went up into the port wing's root tongue, which crosses under the belly only 1 mm above the pod. The interference check caught it (19.6 mm³). Run `tools/interference.py` after any change to joints.
+The smoke pod's front peg went up into the port wing's root tongue, which crosses under the belly only 1 mm above the pod. The interference check caught it (19.6 mm³). Run `common/tools/interference.py` after any change to joints.
 
 ### Thin walls vanish in the slicer
 

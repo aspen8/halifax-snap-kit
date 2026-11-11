@@ -1,8 +1,8 @@
 """
 Draw the model's outline over a reference drawing, to check the shape.
 
-  python tools/ref_overlay.py OUT_DIR/assembled side docs/overlay_side.png
-  python tools/ref_overlay.py OUT_DIR/assembled plan docs/overlay_plan.png --skip stand,gear,wheel,prop
+  python common/tools/ref_overlay.py OUT_DIR/assembled side docs/overlay_side.png
+  python common/tools/ref_overlay.py OUT_DIR/assembled plan docs/overlay_plan.png --skip stand,gear,wheel,prop
 
 The view's image, calibration and crop come from tools/refs.json. To calibrate a
 new drawing: pick two or three features you can locate both in the model (mm)
@@ -20,7 +20,7 @@ from PIL import Image, ImageDraw
 from shapely.geometry import Polygon
 from shapely.ops import unary_union
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]          # repo root (this is common/tools/)
 
 ap = argparse.ArgumentParser()
 ap.add_argument("stl_dir", help="folder of assembled-frame STLs")
@@ -28,7 +28,7 @@ ap.add_argument("view", help="key in refs.json")
 ap.add_argument("out")
 ap.add_argument("--only", default="", help="comma list: keep parts whose name contains one of these")
 ap.add_argument("--skip", default="", help="comma list: drop parts whose name contains one of these")
-ap.add_argument("--refs", default=str(ROOT / "tools" / "refs.json"))
+ap.add_argument("--refs", default=str(ROOT / "halifax" / "tools" / "refs.json"))
 a = ap.parse_args()
 
 ref = json.load(open(a.refs))[a.view]

@@ -39,7 +39,7 @@ import cadquery as cq
 import manifold3d as mf
 import numpy as np
 
-sys.path.append(str(Path(__file__).resolve().parents[2] / "cad"))   # kitlib (append: hawk/cad wins)
+sys.path.append(str(Path(__file__).resolve().parent))   # kitlib: the Hawk's own copy, here in hawk/cad
 import kitlib as K  # noqa: E402
 
 # ============================================================

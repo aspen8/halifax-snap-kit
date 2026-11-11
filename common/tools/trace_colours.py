@@ -1,7 +1,7 @@
 """
 Trace flat colour areas (e.g. a fin flag) from a colour painting guide onto a model region.
 
-  python tools/trace_colours.py SPEC.json OUT.json [--res 0.15]
+  python common/tools/trace_colours.py SPEC.json OUT.json [--res 0.15]
 
 SPEC (JSON):
   image:   path (relative to the repo root)
@@ -27,7 +27,7 @@ from PIL import Image
 from scipy import ndimage as ndi
 from skimage import measure
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]          # repo root (this is common/tools/)
 ap = argparse.ArgumentParser()
 ap.add_argument("spec"); ap.add_argument("out")
 ap.add_argument("--res", type=float, default=0.15)

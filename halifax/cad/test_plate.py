@@ -17,8 +17,8 @@ Everything comes from the kit builders (halifax.py, colour.py), so the fits matc
 
 Two plates, as the full build: the red/white/blue inlays alone, everything else in black. Each
 part keeps the print settings of its kit part (layer height, walls).
-Writes OUT_DIR/halifax_test_plate.3mf, OUT_DIR/assembled/*.stl (for tools/interference.py),
-OUT_DIR/print/*.stl (for tools/overhang.py) and OUT_DIR/test_plate_preview.glb.
+Writes OUT_DIR/halifax_test_plate.3mf, OUT_DIR/assembled/*.stl (for common/tools/interference.py),
+OUT_DIR/print/*.stl (for common/tools/overhang.py) and OUT_DIR/test_plate_preview.glb.
 About 5 min, most of it the nacelle.
 """
 import sys

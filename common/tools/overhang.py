@@ -1,7 +1,7 @@
 """
 Print-pose sanity check: bed contact area and downward-facing overhangs per part.
 
-  python tools/overhang.py OUT_DIR/print [--angle 50]
+  python common/tools/overhang.py OUT_DIR/print [--angle 50]
 
 Large overhang areas well above the bed mean the part needs a different pose,
 a chamfer, or supports.

@@ -1,7 +1,7 @@
 """
 Colour the Hawk kit (Red Arrows) and write a multi-colour Bambu Studio 3MF.
 
-Run:  python colour.py OUT_DIR [project_settings_template.json]   (default: cad/bambu_x2d_project_settings.json)
+Run:  python colour.py OUT_DIR [project_settings_template.json]   (default: hawk/cad/bambu_x2d_project_settings.json)
       ONLY=name,name python colour.py OUT_DIR      (just some parts)
 
 Scheme: Red Arrows Hawk T.1A, current Union-flag fin (traced from close-up photos of each side, v14).
@@ -422,14 +422,14 @@ def fin_outline(z0=None):
 
 
 def fin_flag(side):
-    """Union-flag fin traced from the clean reference renders of each side (v17; tools/trace_colours.py,
+    """Union-flag fin traced from the clean reference renders of each side (v17; common/tools/trace_colours.py,
     specs in hawk/tools/fin_flag_*.json, fitted through the trailing edge's top and kink
     corners). Returns [(colour, section)] in (x, z)."""
     from matplotlib.path import Path as MPath
     tag = "stbd" if side > 0 else "port"
     p = WHITE_DIR / f"fin_{tag}.json"
     if not p.exists():
-        raise SystemExit(f"missing {p}: run tools/trace_colours.py hawk/tools/fin_flag_{tag}.json {p}")
+        raise SystemExit(f"missing {p}: run common/tools/trace_colours.py hawk/tools/fin_flag_{tag}.json {p}")
     cls = json.load(open(p))["classes"]
     secs = []
     for name, colour in (("white", WHITE), ("blue", BLUE)):

@@ -3,7 +3,7 @@ Copy a Bambu 3MF with every plate set to print every filament from the main (lef
 the AMS swaps colours in one nozzle instead of handing them to the second one. For comparing
 print quality and time against the two-nozzle file.
 
-  python tools/single_nozzle.py IN.3mf OUT.3mf
+  python common/tools/single_nozzle.py IN.3mf OUT.3mf
 """
 import json
 import re
