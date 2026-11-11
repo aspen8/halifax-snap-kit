@@ -38,7 +38,11 @@ Then:
 - The user prints on a Bambu X2D (two nozzles, AMS). Keep the base red on the main nozzle (fixed per-plate map in `colour.py` `FILAMENT_MAP`/`MAPPED_PLATES`); the second nozzle runs outer walls at 50 mm/s.
 - The user often asks to "add to the to-do list" when near a usage limit: write it into `hawk/README.md` "Known gaps and next steps", commit, change nothing else.
 
-## State at handoff (v35, pushed)
+## Repository (2026-11-11)
+
+The repo is now `aspen8/snap-kits` (renamed from `halifax-snap-kit`; the old URL redirects), and all work is on `main`: the Halifax in `halifax/`, the Hawk in `hawk/`, shared tools in `common/tools/` (run them as `.venv/bin/python common/tools/<tool>.py`). The Hawk keeps its own kit library and Bambu settings in `hawk/cad/` (`kitlib.py`, `bambu_x2d_project_settings.json`). The old `hawk-red-arrows` branch is merged into `main` and still on GitHub (not yet deleted). Work on short branches off `main`.
+
+## State at handoff (v35, on main)
 
 v35 (test print 4): wheel snap v33 good. Fences snap on: `_fence_teeth`, `WING_FENCE_TOOTH`, `WING_FENCE_TOOTH_X`, pockets in `wing_fence_grooves`; groove floors with no clearance (the interference check shows about 1 mm3 fence x wing from that contact, expected). Parts don't need to come apart again (user): favour firm snaps. v35 fence tested good (test print 5): every joint on the coupons now works.
 
