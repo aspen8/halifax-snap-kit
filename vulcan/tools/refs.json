@@ -1,8 +1,54 @@
 {
   "_comment": "Vulcan reference calibration: model (h, v) mm at 1:72 -> page px (u, v) = A @ [h, v, 1]. Images are not in git (ref/ is ignored).",
   "plan": {
+    "image": "ref/vulcan/airfix_a12011_scheme_a_xm594.png",
+    "_source": "Airfix A12011 painting guide, scheme A (XM594, Scampton 1966), screenshot 1074 x 748 (user upload). Upper plan view, nose up. Span cols 47 to 533 = 469.9 mm: 0.9669 mm/px (the wing roundel is 27 x 27 px: the image is not stretched). Nose tip (no probe) row 133, tail row 570, centreline col 290.5.",
+    "axes": "xy",
+    "affine": [
+      [
+        0.0,
+        1.03423,
+        290.5
+      ],
+      [
+        1.03423,
+        0.0,
+        133.0
+      ]
+    ],
+    "crop": [
+      30,
+      95,
+      545,
+      580
+    ]
+  },
+  "side": {
+    "image": "ref/vulcan/airfix_a12011_scheme_a_xm594.png",
+    "_source": "Same sheet, port side view (nose left), same scale as the plan. Nose tip col 596, row 181.5; tail col 1032.5.",
+    "axes": "xz",
+    "affine": [
+      [
+        1.03423,
+        0.0,
+        596.0
+      ],
+      [
+        0.0,
+        -1.03423,
+        181.5
+      ]
+    ],
+    "crop": [
+      560,
+      90,
+      1045,
+      245
+    ]
+  },
+  "sil_plan": {
     "image": "ref/vulcan/wiki_silhouette_1920.png",
-    "_source": "Wikimedia Commons 'Avro Vulcan B.2 three-view silhouette.png' (GVG/PD), 1920 px thumbnail (user upload). Plan view, nose up. Span cols 57 to 970 = 469.9 mm: 0.5146 mm/px. Nose tip (no probe) row 88, tail row 875, centreline col 513.5.",
+    "_source": "Wikimedia Commons 'Avro Vulcan B.2 three-view silhouette.png' (GVG/PD), 1920 px thumbnail (user upload). Plan view, nose up. Span cols 57 to 970 = 469.9 mm: 0.5146 mm/px. Nose tip (no probe) row 88, tail row 875, centreline col 513.5. The side and plan views draw the tail cone about 17 mm short (405 mm nose to tail against the Airfix sheet's 422.5); the wing agrees.",
     "axes": "xy",
     "affine": [
       [
@@ -23,32 +69,9 @@
       900
     ]
   },
-  "side": {
+  "sil_front": {
     "image": "ref/vulcan/wiki_silhouette_1920.png",
-    "_source": "Same sheet, starboard side view (nose right). Nose tip col 1840, row 632.5; tail col 1042: 798 px = 405 mm, 0.5075 mm/px (1% off the plan's scale).",
-    "axes": "xz",
-    "affine": [
-      [
-        -1.9704,
-        0.0,
-        1840.0
-      ],
-      [
-        0.0,
-        -1.9704,
-        632.5
-      ]
-    ],
-    "crop": [
-      1020,
-      480,
-      1900,
-      700
-    ]
-  },
-  "front": {
-    "image": "ref/vulcan/wiki_silhouette_1920.png",
-    "_source": "Same sheet, head-on view. Span 888 px: 0.529 mm/px. Heights are drawn about 12% taller than in the side view (fin top above the belly: 179 px here, 166 px there), so v uses 2.1267 px/mm. Belly row 260 = z -20.6.",
+    "_source": "Same sheet, head-on view. Span 888 px: 0.529 mm/px. Heights are drawn about 12% taller than in the side view (fin top above the belly: 179 px here, 166 px there), so v uses 2.1267 px/mm. Belly row 260 = z -15.0.",
     "axes": "yz",
     "affine": [
       [
@@ -59,7 +82,7 @@
       [
         0.0,
         -2.1267,
-        216.2
+        228.1
       ]
     ],
     "crop": [
