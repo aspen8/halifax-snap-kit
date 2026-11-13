@@ -6,6 +6,7 @@ Fully printed, multi-colour snap-together model aircraft kits for the Bambu Lab 
 |---|---|---|
 | [Handley Page Halifax B Mk II](halifax/README.md), 1:60, 500 mm span | [`halifax/kit/halifax_kit.3mf`](halifax/kit/halifax_kit.3mf) | ![Halifax](halifax/docs/colour_render.png) |
 | [BAE Hawk T.1A, Red Arrows](hawk/README.md), 1:32, 293 mm span | [`hawk/kit/hawk_kit.3mf`](hawk/kit/hawk_kit.3mf) | ![Hawk](hawk/docs/colour_render.png) |
+| [Avro Vulcan B.2](vulcan/README.md), 1:72, 470 mm span | in progress: outer shape only | ![Vulcan](vulcan/docs/shape_grey.png) |
 
 ## Layout
 

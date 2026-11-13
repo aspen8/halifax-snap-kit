@@ -1,0 +1,24 @@
+{
+  "_comment": "Vulcan reference calibration: model (h, v) mm at 1:72 -> page px (u, v) = A @ [h, v, 1]. Images are not in git (ref/ is ignored).",
+  "plan": {
+    "image": "ref/vulcan/aeroweb_schem_x4.png",
+    "_source": "aerospaceweb.org Vulcan 3-view (vulcan_schem_01.gif, 466 x 334), enlarged x4 (Lanczos). Plan view, nose right. Low resolution: one source pixel is about 1.5 mm at 1:72. x from the length without the probe (nose col 282, tail col 12 = 30.45 m), y from the span (rows 11 to 326 = 33.83 m): the plan's span is drawn about 4% larger than its length, so the two axes have their own scales.",
+    "axes": "xy",
+    "affine": [[-2.5536, 0.0, 1128.0], [0.0, 2.6817, 674.0]],
+    "crop": [0, 0, 1240, 1336]
+  },
+  "side": {
+    "image": "ref/vulcan/aeroweb_schem_x4.png",
+    "_source": "Same drawing, port side view (nose left). Nose tip col 180, row 280.5; tail col 451.",
+    "axes": "xz",
+    "affine": [[2.5633, 0.0, 720.0], [0.0, -2.5633, 1122.0]],
+    "crop": [600, 880, 1864, 1300]
+  },
+  "front": {
+    "image": "ref/vulcan/aeroweb_schem_x4.png",
+    "_source": "Same drawing, head-on view. Span 302 px (drawn at the side view's scale). Fuselage centre col 313, row 58.75 (z 4.7).",
+    "axes": "yz",
+    "affine": [[2.571, 0.0, 1252.0], [0.0, -2.571, 247.1]],
+    "crop": [600, 0, 1864, 440]
+  }
+}
