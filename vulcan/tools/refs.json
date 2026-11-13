@@ -1,24 +1,95 @@
 {
   "_comment": "Vulcan reference calibration: model (h, v) mm at 1:72 -> page px (u, v) = A @ [h, v, 1]. Images are not in git (ref/ is ignored).",
   "plan": {
-    "image": "ref/vulcan/aeroweb_schem_x4.png",
-    "_source": "aerospaceweb.org Vulcan 3-view (vulcan_schem_01.gif, 466 x 334), enlarged x4 (Lanczos). Plan view, nose right. Low resolution: one source pixel is about 1.5 mm at 1:72. x from the length without the probe (nose col 282, tail col 12 = 30.45 m), y from the span (rows 11 to 326 = 33.83 m): the plan's span is drawn about 4% larger than its length, so the two axes have their own scales.",
+    "image": "ref/vulcan/wiki_silhouette_1920.png",
+    "_source": "Wikimedia Commons 'Avro Vulcan B.2 three-view silhouette.png' (GVG/PD), 1920 px thumbnail (user upload). Plan view, nose up. Span cols 57 to 970 = 469.9 mm: 0.5146 mm/px. Nose tip (no probe) row 88, tail row 875, centreline col 513.5.",
     "axes": "xy",
-    "affine": [[-2.5536, 0.0, 1128.0], [0.0, 2.6817, 674.0]],
-    "crop": [0, 0, 1240, 1336]
+    "affine": [
+      [
+        0.0,
+        1.9433,
+        513.5
+      ],
+      [
+        1.9433,
+        0.0,
+        88.0
+      ]
+    ],
+    "crop": [
+      30,
+      30,
+      1000,
+      900
+    ]
   },
   "side": {
-    "image": "ref/vulcan/aeroweb_schem_x4.png",
-    "_source": "Same drawing, port side view (nose left). Nose tip col 180, row 280.5; tail col 451.",
+    "image": "ref/vulcan/wiki_silhouette_1920.png",
+    "_source": "Same sheet, starboard side view (nose right). Nose tip col 1840, row 632.5; tail col 1042: 798 px = 405 mm, 0.5075 mm/px (1% off the plan's scale).",
     "axes": "xz",
-    "affine": [[2.5633, 0.0, 720.0], [0.0, -2.5633, 1122.0]],
-    "crop": [600, 880, 1864, 1300]
+    "affine": [
+      [
+        -1.9704,
+        0.0,
+        1840.0
+      ],
+      [
+        0.0,
+        -1.9704,
+        632.5
+      ]
+    ],
+    "crop": [
+      1020,
+      480,
+      1900,
+      700
+    ]
   },
   "front": {
-    "image": "ref/vulcan/aeroweb_schem_x4.png",
-    "_source": "Same drawing, head-on view. Span 302 px (drawn at the side view's scale). Fuselage centre col 313, row 58.75 (z 4.7).",
+    "image": "ref/vulcan/wiki_silhouette_1920.png",
+    "_source": "Same sheet, head-on view. Span 888 px: 0.529 mm/px. Heights are drawn about 12% taller than in the side view (fin top above the belly: 179 px here, 166 px there), so v uses 2.1267 px/mm. Belly row 260 = z -20.6.",
     "axes": "yz",
-    "affine": [[2.571, 0.0, 1252.0], [0.0, -2.571, 247.1]],
-    "crop": [600, 0, 1864, 440]
+    "affine": [
+      [
+        1.8904,
+        0.0,
+        1128.0
+      ],
+      [
+        0.0,
+        -2.1267,
+        216.2
+      ]
+    ],
+    "crop": [
+      670,
+      60,
+      1590,
+      290
+    ]
+  },
+  "aw_plan": {
+    "image": "ref/vulcan/aeroweb_schem_x4.png",
+    "_source": "aerospaceweb.org Vulcan 3-view (vulcan_schem_01.gif, 466 x 334), enlarged x4 (Lanczos). Plan view, nose right. Low resolution (1.5 mm per source pixel at 1:72); scale from the span. Superseded by the Commons silhouette; kept as a second source.",
+    "axes": "xy",
+    "affine": [
+      [
+        -2.6817,
+        0.0,
+        1128.0
+      ],
+      [
+        0.0,
+        2.6817,
+        674.0
+      ]
+    ],
+    "crop": [
+      0,
+      0,
+      1240,
+      1336
+    ]
   }
 }

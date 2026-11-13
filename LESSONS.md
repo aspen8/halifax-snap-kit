@@ -472,3 +472,12 @@ The Hawk's leading-edge fences are C-shaped collars that slide onto the wing wit
 Thin white markings from the X2D's second nozzle came out rough. Thicker layers would not have fixed it (0.24 mm was considered and dropped). Two things did:
 - **Calibrate each filament on the nozzle it runs on.** Bambu's Flow Dynamics calibration gave K 0.35 for the white on the right nozzle; the flow-rate calibration confirmed 0.98. K is stored on the printer against the AMS slot, not in the 3MF, so a new filament or slot needs its own run (Bambu Studio: Calibration tab, pick the right nozzle).
 - **Slower speeds on the second nozzle:** outer wall 30, inner wall and top surface 80, internal solid infill 100 mm/s (the last three entries of each speed list in `hawk/cad/bambu_x2d_project_settings.json`). The Halifax's template still has 50 and 200; copy these when its camo colour on that nozzle needs it.
+
+## What the Vulcan added (started 2026-11-13, in a cloud session)
+
+- **A cloud session can do the shape work.** `uv venv --python 3.12 .venv` and `requirements.txt` install in about a minute. What it lacks is Bambu Studio (no slicing) and `ref/`: the user uploads references in chat, and they go straight into `ref/<aircraft>/`.
+- **Reference sites often refuse automated downloads.** Wikimedia Commons rate-limited the shared address, and Scalemates and vulcantothesky.org turn bots away (the latter names AI agents in `robots.txt`). Don't work round that: ask the user to download the file.
+- **Check what a published length includes.** The Vulcan's 30.45 m includes the refuelling probe. Taking it as nose to tail stretched the fuselage 4%, and the first calibration hid that by giving the drawing's two axes different scales. Two drawings that agree on length over span, and a kit's overall size, outweigh a spec table.
+- **Wing area is a strong check on a planform.** It came out 13% low when an elevon hinge line was traced as the trailing edge, and within 1% once the planform was right.
+- **A silhouette sheet traces by machine.** Row and column extents of a black silhouette give the leading edge, trailing edge and body lines directly, with no hand reading (`common/tools/silhouette.py` does the same for shaded drawings). Views on one sheet still need their own scales: the head-on view was 12% taller than the side view.
+- **Ruled lofts as point rings in manifold3d** (`ring_loft` in `vulcan/cad/vulcan.py`) need no CadQuery: the whole airframe builds in about 10 s, and sheared rings make a fairing along a swept edge (the intake lips).
