@@ -1,5 +1,5 @@
 """
-Avro Vulcan B.2 snap kit, 1:72 (470 mm span, 423 mm long without the probe).
+Avro Vulcan B.2 snap kit, 1:96 (352 mm span, 317 mm long without the probe).
 
   python vulcan/cad/vulcan.py OUT_DIR
 
@@ -7,7 +7,10 @@ v1: the outer shape only, as one solid in the assembled frame (OUT_DIR/assembled
 against the drawings before the kit is split into parts. See vulcan/README.md.
 
 Axes (assembled): X = distance aft of the nose tip (probe excluded), Y = span (+ starboard),
-Z = up, 0 at the nose tip. Lengths are printed mm (SCALE = KIT_SCALE for now).
+Z = up, 0 at the nose tip. Lengths are mm at 1:72, the scale the drawings were measured at
+(SCALE); parts are scaled by PRINT_K when written for printing. Give fits and pin sizes as
+printed mm times _P, so they come out at their tested size (LESSONS.md, "Build at the
+measuring scale and scale at the end").
 
 All shapes are tables of stations, lofted ruled as point rings straight into manifold3d
 (no CadQuery in the shape: see LESSONS.md, "Smooth OCC lofts ... can twist and overshoot").
@@ -28,11 +31,12 @@ M = mf.Manifold
 # ============================================================
 # PARAMETERS
 # ============================================================
-SCALE = 72.0
-KIT_SCALE = 72.0
-PRINT_K = SCALE / KIT_SCALE
-SPAN = 33830.0 / SCALE          # 469.9 mm
-LENGTH = 30450.0 / SCALE        # 422.9 mm, nose tip to the end of the tail cone (no probe)
+SCALE = 72.0                    # shape scale: all lengths below are at 1:72
+KIT_SCALE = 96.0                # print scale: 352 mm span, about a 1:32 Spitfire's (user)
+PRINT_K = SCALE / KIT_SCALE     # 0.75: every part is scaled by this when written out
+_P = 1.0 / PRINT_K              # print-size lengths (fits, pins, walls) are given as printed mm times this
+SPAN = 33830.0 / SCALE          # 469.9 mm at 1:72 (352.4 mm printed)
+LENGTH = 30450.0 / SCALE        # 422.9 mm at 1:72 (317.2 mm printed), nose tip to the end of the tail cone (no probe)
 
 # Fuselage: x, half-width, z top, z bottom, superellipse exponent. A 40.6 mm (2.9 m) tube with
 # its centre at z 4.7; the wing's underside is flush with its belly.
@@ -73,7 +77,7 @@ WING_TC = [(0.0, 0.11), (57.0, 0.10), (101.0, 0.08), (181.0, 0.06), (SPAN / 2, 0
 WING_TIP_ROUND = (9.0, 14.7)    # the leading edge rounds into the tip over this span, by this much
 WING_UNDER_Z = [(0.0, -14.5), (57.0, -14.5), (SPAN / 2, -18.5)]   # (y, z) of each section's lowest
                                 # point: flush with the belly inboard, drooping 4 mm to the tip
-WING_TE_T = 0.9                 # trailing edge thickness
+WING_TE_T = 0.9 * _P            # trailing edge thickness (0.9 mm printed)
 WING_Y = [0.0, 10.0, 20.0, 25.4, 40.0, 56.5, 57.5, 73.8, 88.0, 101.4, 116.0, 132.0, 150.0, 165.0,
           181.2, 195.0, 208.1, 218.0, 226.0, 229.0, 231.5, 233.5, 234.5, SPAN / 2]
 
@@ -336,4 +340,5 @@ if __name__ == "__main__":
     # planform area, to check against the real 368.3 m2
     ys = np.linspace(0, SPAN / 2, 400)
     area = 2 * np.trapezoid([wing_te(y) - wing_le(y) for y in ys], ys)
-    print(f"wing area {area * SCALE**2 / 1e6:.1f} m2 (real 368.3), span {SPAN:.1f} mm, length {LENGTH:.1f} mm")
+    print(f"wing area {area * SCALE**2 / 1e6:.1f} m2 (real 368.3); printed at 1:{KIT_SCALE:.0f}: span "
+          f"{SPAN * PRINT_K:.1f} mm, length {LENGTH * PRINT_K:.1f} mm")

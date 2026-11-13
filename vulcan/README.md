@@ -1,6 +1,13 @@
 # Avro Vulcan B.2 snap kit
 
-Avro Vulcan B.2 at 1:72: 470 mm span, 423 mm long (446 mm with the refuelling probe). To be a fully printed, multi-colour snap kit like the Halifax and the Hawk.
+Avro Vulcan B.2 at 1:96: 352 mm span, 317 mm long (334 mm with the refuelling probe), about the span of a 1:32 Spitfire. To be a fully printed, multi-colour snap kit like the Halifax and the Hawk.
+
+## Brief (agreed 2026-11-13)
+
+- **Scale:** 1:96, chosen for a span close to the user's 1:32 Spitfire kit (351 mm if that kit is 1:32: its file is not in this repo, so the figure is from the real span, 11.23 m). The shape is built at 1:72 (`SCALE`) and scaled by `PRINT_K` 0.75 on output.
+- **Two print files:** anti-flash white, and XH558's camouflage (grey and green over light grey; check every detail against photos).
+- **Display:** stand with the wheels up, and gear down, both in the kit; a bomb bay that can be built open, with a Blue Steel missile as an alternative load.
+- **For MakerWorld:** a single-colour version for printers without an AMS; plates that fit 256 mm beds; no supports, no glue.
 
 ![shape in grey](docs/shape_grey.png)
 
@@ -19,7 +26,7 @@ Avro Vulcan B.2 at 1:72: 470 mm span, 423 mm long (446 mm with the refuelling pr
 ## Shape and references
 
 - Real dimensions: span 33.83 m, length 30.45 m without the probe, height 8.28 m, wing area 368.3 m².
-- The only drawing so far is the aerospaceweb.org 3-view (466 × 334 px, about 1.5 mm per pixel at 1:72), calibrated in `tools/refs.json`. Its plan view is drawn about 4% wider in span than in length, so each axis has its own scale.
+- The only drawing so far is the aerospaceweb.org 3-view (466 × 334 px, about 1.5 mm per pixel at 1:72, the scale the shape is built at), calibrated in `tools/refs.json`. Its plan view is drawn about 4% wider in span than in length, so each axis has its own scale.
 - Check: the model's wing area is 351.5 m² with the trailing edge cut back between the jet pipes, about 364 m² with a straight trailing edge, within about 1% of the real figure.
 - The trailing edge is the outermost line of the plan view. The line inboard of it is the elevon hinge line (the first trace took it for the trailing edge and the area came out 13% low).
 
