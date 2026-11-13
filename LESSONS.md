@@ -1,21 +1,22 @@
 # Lessons for the next kit
 
-What the Halifax taught us, so the next aircraft starts from a working pipeline.
+What the Halifax and the Hawk taught us, so the next aircraft starts from a working pipeline. The early sections come from the Halifax; "What the Hawk added" further down is newer, and where the two disagree the newer section wins.
 
 ## Workflow that worked
 
-1. **References first.** Get a good kit-instruction plan (Revell or Airfix PDFs are usually the most accurate) plus one or two independent 3-views, and a colour profile for the markings. Render the PDF page at 400 dpi.
-2. **Calibrate each view** in `tools/refs.json`: find the mm-per-pixel scale and origin from known features (nose tip, wing leading edge, fuselage datum). Check the drawing isn't slightly rotated: the Revell side view was tilted by 0.77°.
+1. **References first.** Get a good kit-instruction plan (Revell or Airfix PDFs are usually the most accurate) plus one or two independent 3-views, and a colour profile for the markings. Render the PDF page at 400 dpi. Get the instructions' own drawings of small parts too (see "Trace small parts from the kit maker's own part drawings").
+2. **Calibrate each view** in `<kit>/tools/refs.json`: find the mm-per-pixel scale and origin from known features (nose tip, wing leading edge, fuselage datum). Check the drawing isn't slightly rotated: the Revell side view was tilted by 0.77°.
 3. **Shape as tables of stations.** Fuselage: (x, half-width, top z, bottom z, superellipse exponent). Wings: planform (span, LE x, chord) and t/c. Edit the numbers, rebuild, and overlay with `common/tools/ref_overlay.py` until the outline sits on the drawing lines.
 4. **Cross-check with a second drawing.** The 51 Sqn profile artwork was off by several mm at the nose and missed the turret; the Revell plans and the Wikipedia 3-view agreed to about 2 mm.
-5. **Split for printing.** Each piece lies flat with no supports. Joints use printed keys and pins, never glue or filament.
-6. **Colour last.** `kitlib.paint` peels regions (camo, codes, stripes) into per-filament volumes. Roundels are separate press-fit inlays (`kitlib.make_inlay`).
+5. **Split for printing.** Each piece prints with no supports, flat or on end (wings stand on their root faces). Joints hold by their own fit: printed keys, plugs, tongues and snaps, never glue or filament. Parts don't need to come apart again, so one-way snaps are fine.
+6. **Colour last.** `kitlib.paint` peels regions (camo, codes, stripes, roundels) into per-filament volumes. Paint markings into the skin by default; use press-fit inlays (`kitlib.make_inlay`) only where a plate has no colour to spare or a marking would add colour changes on hundreds of layers.
 7. **Check:**
    - `common/tools/interference.py`: parts must not overlap.
    - `common/tools/overhang.py`: printable poses.
    - `common/tools/colour_check.py`: no stray colour on surfaces that should be plain.
    - `common/tools/closeup.py`: render the details that matter.
 8. **Write the 3MF.** `kitlib.write_3mf` groups parts onto plates by colour set, with at most 5 colours a plate (one AMS plus the auxiliary head).
+9. **Print test coupons before the full kit.** Cut each new joint out of the real finished parts, in their print poses (`hawk/cad/test_coupons.py`), and print them on one or two short plates. On the Hawk, five rounds of coupons found every bad fit for a few hours of printing.
 
 ## Printer numbers (Bambu X2D, PLA)
 
@@ -34,7 +35,16 @@ What the Halifax taught us, so the next aircraft starts from a working pipeline.
 | Hinge lines | 0.4 mm deep | |
 | Rivets | 0.7 mm dots, raised 0.2 mm, 10 mm pitch, structural rows only | Matches PB94 |
 
-Print `cad/fit_test.py` first on any new printer or filament.
+Fits the Hawk's coupons confirmed (printed mm, per side unless noted; the constants in `hawk/cad/hawk.py` are in model mm, `× _P`):
+
+| Joint | Value | Status |
+|---|---|---|
+| Tailplane root plug in its socket (`TAIL_PLUG_FIT`), tailplane printed on end | 0.10 | Good (test print 3) |
+| Flat key in a wing printed on end / in a fuselage section printed on end (`WING_KEY_FIT`) | 0.08 / 0.04 | Good (test print 2); 0.15 was loose in both |
+| Wheel snap through the wheel (`GEAR_SNAP`): bore 6.6 with 0.6 lead-in, neck 6.0, head 7.4, slot 1.6 | head closes to 5.8, 0.8 under the bore; holds 0.4 a side | Good (test print 4); 5.6 bore broke the boss twice |
+| Fence collar on the leading edge: 1.6 thick, tongues in layer-aligned grooves, snap teeth 0.4 top / 0.3 underneath (`WING_FENCE_*`) | groove floors at 0 clearance, `WING_FENCE_FIT` 0.04 at the sides | Good (test print 5) |
+
+Print `halifax/cad/fit_test.py` first on any new printer or filament type.
 
 ## Pitfalls and fixes
 
@@ -334,14 +344,15 @@ The Hawk was the second kit, and the first built from scratch on the v2 approach
 - **Rebuild into a fresh output folder,** or old part files linger next to the new ones.
 
 ### Starting the next aircraft: checklist
-1. Brief: type and mark, span or scale, markings, display (gear, stand or both), colours per plate.
-2. Free disk space, set up the venv, then copy `hawk/` to `<aircraft>/`.
+1. Brief: type and mark, span or scale, markings, display (gear, stand or both), colours per plate, and which colour goes on the second nozzle.
+2. Work in the local checkout on the Mac (it has `ref/`, `.venv` and Bambu Studio), on a short branch off `main`. Copy `hawk/` to `<aircraft>/`. The two kits' `cad/kitlib.py` copies have drifted: the Halifax's alone has per-plate prime tower placement (`place_towers`), name cleaning (`safe_name`, see the colon rule below) and curved-skin inlay sockets (`floor_plane`, `peg_on_floor`, `under_band`); the Hawk's alone has `spring_key`. Bring over what the new kit needs. The Hawk's `bambu_x2d_project_settings.json` has the slower second-nozzle speeds; the Halifax's does not yet.
 3. References into `ref/`. Render the PDF pages at 400 dpi, then get outlines (`silhouette.py`, `grid.py`) and calibrate each view in `<aircraft>/tools/refs.json`.
 4. Station tables, then `common/tools/ref_overlay.py --refs <aircraft>/tools/refs.json`, iterating until the outline sits on the lines. Check against real dimensions.
 5. Split for printing (sections on end, flat panels, halves for round parts), with keys and shaped sockets.
-6. Colour: inlays for anything that would cost colour changes on many layers, skin paint for bed-face colour.
-7. Checks (single pieces, interference without keys, overhangs, inlay counts), renders, 3MF.
-8. Fold what you learned back into this file and the README.
+6. Colour: paint markings into the skin; inlays only where a plate is out of colours.
+7. Checks (single pieces, interference without keys, overhangs, inlay counts), renders, 3MF, then slice every plate with the Bambu Studio command line.
+8. Test coupons of every new joint (copy `hawk/cad/test_coupons.py`), and calibrate any new filament on the second nozzle, before the full print.
+9. Fold what you learned back into this file and the README.
 
 ### A 3MF without project settings opens as bare geometry
 
@@ -451,3 +462,13 @@ A void that doesn't reach the outside is a separate, negative-volume shell. `lar
 The Hawk's smoke pod took four tries from descriptions, a sketch and a perspective render, and each moved further from the real shape. What worked: the kit instructions' separate side view of the part and the parts-sheet outlines (flat, true profiles), traced by pixel and scaled to the calibrated side view, then shown overlaid on the drawing before building. Ask the user for that drawing first, and don't take a feature in a render (here a "tail point") as part of the shape without checking where it ends on a true side view.
 - **Leave a real margin on a snap's squeeze.** The v27 wheel head closed to 5.4 mm against a 5.6 mm bore: 0.2 mm on paper, but the hole printed tight and the boss broke. v33 leaves 0.8 mm (head closes to 5.8 in a 6.6 bore) and keeps the hold to 0.4 mm a side.
 - **A slot across the layers prints in whole layers.** In a part printed on end, a slot whose faces are horizontal in the print comes out a whole number of layers wide, so a small drawn clearance can become a large one. Put such faces on layer boundaries (from the part's bed face) and size the mating part to whole layers too.
+
+### Hold a slide-on part with one-way snap teeth
+
+The Hawk's leading-edge fences are C-shaped collars that slide onto the wing with a tongue in a groove top and bottom. A snug side fit (v28), deeper grooves, and grooves lined up with the wing's print layers (v34) all left them loose: a slide fit tight enough to hold is too tight to assemble. Small teeth on the tongues fixed it (v35, `_fence_teeth`): 0.4 mm on the longer, springier top arm and 0.3 mm underneath, riding the groove floors at zero clearance and dropping into pockets at the end of travel. The collar springs open on the way in and shuts on the teeth. Start each tooth's root inside the arm so it prints as one piece with it (the first version left the teeth floating beside the arm). The parts never need to come apart again, so square retaining faces are fine.
+
+### Calibrate the second nozzle's filament, and slow it down
+
+Thin white markings from the X2D's second nozzle came out rough. Thicker layers would not have fixed it (0.24 mm was considered and dropped). Two things did:
+- **Calibrate each filament on the nozzle it runs on.** Bambu's Flow Dynamics calibration gave K 0.35 for the white on the right nozzle; the flow-rate calibration confirmed 0.98. K is stored on the printer against the AMS slot, not in the 3MF, so a new filament or slot needs its own run (Bambu Studio: Calibration tab, pick the right nozzle).
+- **Slower speeds on the second nozzle:** outer wall 30, inner wall and top surface 80, internal solid infill 100 mm/s (the last three entries of each speed list in `hawk/cad/bambu_x2d_project_settings.json`). The Halifax's template still has 50 and 200; copy these when its camo colour on that nozzle needs it.
