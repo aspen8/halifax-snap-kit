@@ -100,6 +100,12 @@ WING_MIN_T = 1.7 * _P           # no section is thinner than this (the tip)
 # tip (the outer wings). Sections are deeper above it than below inboard, so the underside stays
 # flat and the top slopes down to the tip, as the drawings show.
 SPLIT_Z = -4.0
+# Inboard, over the engines, the wing's top is not an aerofoil hump: it climbs from the intake
+# lip to its crest just behind it and then runs almost straight down to the trailing edge, so it
+# meets the fuselage side on a straight line (Airfix side view, XH558 photos; user review).
+WING_ROOT_UP = [(0.0, 23.0), (20.0, 23.0), (57.0, 12.9)]   # (y, depth of the top above the split)
+WING_CREST = (0.12, 1.25)       # inboard: crest at this fraction of chord, then 1 - u^k to the trailing edge
+WING_CREST_BLEND = (25.0, 80.0)  # the inboard profile fades into the plain aerofoil over this span
 SPLIT_TIP_Z = -14.0
 WING_JOINT_Y = 57.0             # centre body / outer wing joint (just outboard of the intakes and jet pipes)
 RADOME_X = 24.0                 # the black radome is its own part ahead of this
@@ -110,16 +116,16 @@ WING_Y = [0.0, 10.0, 19.8, 34.0, 49.8, 54.0, 57.0, 58.5, 67.9, 77.8, 97.2, 116.5
 
 # Intakes: letterbox mouths in the swept inner leading edge, one per engine pair, split in two.
 INTAKE_Y = (17.0, 55.0)         # span of the blunt lip fairing
-INTAKE_ZC = 3.5
-INTAKE_RINGS = [(-1.5, 17.0, 7.6), (1.0, 18.5, 9.0), (6.0, 19.0, 9.5), (80.0, 19.0, 9.5),
-                (120.0, 17.0, 6.0)]   # distance behind the lip line, half-width, half-height
+INTAKE_ZC = 6.5
+INTAKE_RINGS = [(-1.5, 17.0, 9.6), (1.0, 18.5, 11.0), (6.0, 19.0, 11.5), (40.0, 19.0, 11.5),
+                (75.0, 17.0, 6.0)]   # distance behind the lip line, half-width, half-height
 INTAKE_MOUTH = (20.5, 52.0)     # y range of the one letterbox mouth (head-on photo, 1982)
 INTAKE_MOUTHS = [(20.5, 35.4), (37.1, 52.0)]   # the two ducts behind it, one per engine
 INTAKE_SPLIT = 9.0              # the wall between the ducts starts this far behind the lip
-INTAKE_MOUTH_Z = (-2.5, 9.5)
+INTAKE_MOUTH_Z = (-2.5, 15.0)
 INTAKE_DEPTH = 28.0
 INTAKE_N = 4.0
-INTAKE_TAPER = (0.72, -3.5)     # at the outer end the lip is this fraction as tall and this much
+INTAKE_TAPER = (0.55, -4.5)     # at the outer end the lip is this fraction as tall and this much
                                 # lower, so it runs into the thinner wing there (no ear above the skin)
 
 # Jet pipes: four, in pairs. Their fairings run under the wing from mid-chord (the side
@@ -294,11 +300,19 @@ def wing_ring(y, n=40):
     zs = split_z(y)
     dl = min(zs - WING_UNDER_Z, 0.55 * t)
     du = t - dl
+    ya = abs(y)
+    if ya <= WING_JOINT_Y:
+        r = np.asarray(WING_ROOT_UP)
+        du = float(np.interp(ya, r[:, 0], r[:, 1]))
     x = (1 - np.cos(np.pi * np.arange(n + 1) / n)) / 2
     f = 0.2969 * np.sqrt(x) - 0.1260 * x - 0.3516 * x**2 + 0.2843 * x**3 - 0.1036 * x**4
     f = f / f.max()
+    p, k = WING_CREST
+    fw = np.where(x < p, np.sqrt(np.clip(1 - (1 - x / p) ** 2, 0, 1)), 1 - np.clip((x - p) / (1 - p), 0, 1) ** k)
+    w = float(np.clip((ya - WING_CREST_BLEND[0]) / (WING_CREST_BLEND[1] - WING_CREST_BLEND[0]), 0, 1))
+    fu = (1 - w) * fw + w * f
     e = np.minimum(WING_TE_T, t) / 2 * x                  # half the trailing edge thickness, growing aft
-    up = np.c_[x * c, f * (du - e[-1]) + e][::-1]
+    up = np.c_[x * c, fu * (du - e[-1]) + e][::-1]
     lo = np.c_[x * c, -(f * (dl - e[-1]) + e)][1:]
     sec = np.vstack([up, lo])
     return np.c_[le + sec[:, 0], np.full(len(sec), y), zs + sec[:, 1]]

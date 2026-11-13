@@ -11,9 +11,9 @@ Avro Vulcan B.2 at 1:96: 352 mm span, 317 mm long (336 mm with the refuelling pr
 
 ![shape in grey](docs/shape_grey.png)
 
-> **Status: v6: shape fitted to the Airfix A12011 plan and side views, and split into shells.** No joints, colour or print file yet. Not yet split into parts; no joints, colour or print file.
+> **Status: v7: shape fitted to the Airfix A12011 plan and side views, and split into shells.** No joints, colour or print file yet. Not yet split into parts; no joints, colour or print file.
 
-Intakes (v3): one letterbox mouth a side with the wall between the two engine ducts set back 9 mm, after the 1982 head-on photo. The lips taper into the thinner wing at their outer ends (v5). Still to do: the splitter plate at the fuselage.
+Intakes and wing root (v7, user review): one letterbox mouth a side, tall at the fuselage (about 60% of its depth, from the XH558 photos) and tapering outboard, with the wall between the two engine ducts set back 9 mm. Over the engines the wing's top is not an aerofoil hump: it reaches its crest just behind the intake lip and runs almost straight to the trailing edge, so it meets the fuselage on a straight line, as in the Airfix side view (`WING_ROOT_UP`, `WING_CREST`). Still to do: the splitter plate at the fuselage.
 
 ![intakes](docs/intakes_v3.png)
 
