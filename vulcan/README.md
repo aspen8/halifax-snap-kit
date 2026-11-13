@@ -11,7 +11,11 @@ Avro Vulcan B.2 at 1:96: 352 mm span, 317 mm long (334 mm with the refuelling pr
 
 ![shape in grey](docs/shape_grey.png)
 
-> **Status: v2, outer shape only.** One solid in the assembled frame, fitted to the Commons silhouette. Not yet split into parts; no joints, colour or print file.
+> **Status: v3, outer shape only.** One solid in the assembled frame, fitted to the Commons silhouette. Not yet split into parts; no joints, colour or print file.
+
+Intakes (v3): one letterbox mouth a side with the wall between the two engine ducts set back 9 mm, after the 1982 head-on photo. Still to do: the lip fairing's outer end stands proud of the wing as a small ear, and there is no splitter plate at the fuselage.
+
+![intakes](docs/intakes_v3.png)
 
 ## Build
 

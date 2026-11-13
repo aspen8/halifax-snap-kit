@@ -97,7 +97,9 @@ INTAKE_Y = (17.0, 55.0)         # span of the blunt lip fairing
 INTAKE_ZC = -2.0
 INTAKE_RINGS = [(-1.5, 17.0, 7.6), (1.0, 18.5, 9.0), (6.0, 19.0, 9.5), (80.0, 19.0, 9.5),
                 (120.0, 17.0, 6.0)]   # distance behind the lip line, half-width, half-height
-INTAKE_MOUTHS = [(20.5, 35.0), (37.0, 52.0)]   # y range of each opening (splitter between them)
+INTAKE_MOUTH = (20.5, 52.0)     # y range of the one letterbox mouth (head-on photo, 1982)
+INTAKE_MOUTHS = [(20.5, 35.4), (37.1, 52.0)]   # the two ducts behind it, one per engine
+INTAKE_SPLIT = 9.0              # the wall between the ducts starts this far behind the lip
 INTAKE_MOUTH_Z = (-8.0, 4.0)
 INTAKE_DEPTH = 28.0
 INTAKE_N = 4.0
@@ -290,8 +292,9 @@ def intake_fairing():
 @cached
 def intake_ducts():
     z0, z1 = INTAKE_MOUTH_Z
-    return union([ring_loft([_sheared_ring(s, y0, y1, z0, z1) for s in (-4.0, INTAKE_DEPTH)])
-                  for y0, y1 in INTAKE_MOUTHS])
+    mouth = ring_loft([_sheared_ring(s, *INTAKE_MOUTH, z0, z1) for s in (-4.0, INTAKE_SPLIT)])
+    return union([mouth] + [ring_loft([_sheared_ring(s, y0, y1, z0, z1) for s in (INTAKE_SPLIT - 1.0, INTAKE_DEPTH)])
+                            for y0, y1 in INTAKE_MOUTHS])
 
 
 @cached
