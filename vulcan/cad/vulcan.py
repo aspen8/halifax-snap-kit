@@ -90,10 +90,22 @@ WING_TE_INNER = 360.2           # inboard of that y
 WING_TC = [(0.0, 0.14), (30.0, 0.14), (57.0, 0.12), (105.0, 0.11), (152.0, 0.085), (200.0, 0.075),
            (SPAN / 2, 0.06)]
 WING_TIP_ROUND = (9.0, 0.0)     # (the tip's rounding is in WING_LE now)
-WING_UNDER_Z = [(0.0, -15.0), (58.0, -15.0), (SPAN / 2, -17.0)]   # (y, z) of each section's lowest
-                                # point: flush with the belly inboard, drooping 2 mm to the tip
-WING_TE_T = 0.9 * _P            # trailing edge thickness (0.9 mm printed)
-WING_Y = [0.0, 10.0, 19.8, 34.0, 49.8, 54.0, 58.5, 67.9, 77.8, 97.2, 116.5, 135.8, 155.2, 174.5,
+WING_UNDER_Z = -15.0            # every section's lowest point: a flat underside, flush with the belly
+WING_TE_T = 1.7 * _P            # trailing edge thickness (1.7 mm printed: two lines in each shell)
+WING_MIN_T = 1.7 * _P           # no section is thinner than this (the tip)
+
+# The kit splits into upper and lower shells, like a plastic kit, so the underside prints in one
+# colour. The split surface holds the wing's leading and trailing edges: level at SPLIT_Z from
+# the centreline to WING_JOINT_Y (the centre body), then a plane falling to SPLIT_TIP_Z at the
+# tip (the outer wings). Sections are deeper above it than below inboard, so the underside stays
+# flat and the top slopes down to the tip, as the drawings show.
+SPLIT_Z = -4.0
+SPLIT_TIP_Z = -14.0
+WING_JOINT_Y = 57.0             # centre body / outer wing joint (just outboard of the intakes and jet pipes)
+RADOME_X = 24.0                 # the black radome is its own part ahead of this
+FRONT_X = 105.0                 # front fuselage / centre body joint, at the wing root's leading edge
+BED = (230.0, 250.0)            # usable plate, printed mm (X2D; 256 mm beds are larger)
+WING_Y = [0.0, 10.0, 19.8, 34.0, 49.8, 54.0, 57.0, 58.5, 67.9, 77.8, 97.2, 116.5, 135.8, 155.2, 174.5,
           189.0, 193.9, 200.0, 206.9, 213.2, 219.0, 224.3, 229.0, 232.5, 233.5, 234.6, 234.8]
 
 # Intakes: letterbox mouths in the swept inner leading edge, one per engine pair, split in two.
@@ -263,13 +275,33 @@ def wing_tc(y):
     return float(np.interp(abs(y), t[:, 0], t[:, 1]))
 
 
-def wing_ring(y):
+def split_z(y):
+    """Height of the split surface (and of the wing's leading and trailing edges) at span y."""
+    y = abs(y)
+    if y <= WING_JOINT_Y:
+        return SPLIT_Z
+    return SPLIT_Z + (SPLIT_TIP_Z - SPLIT_Z) * (y - WING_JOINT_Y) / (SPAN / 2 - WING_JOINT_Y)
+
+
+SPLIT_TILT = math.degrees(math.atan2(SPLIT_Z - SPLIT_TIP_Z, SPAN / 2 - WING_JOINT_Y))   # 3.2 deg
+
+
+def wing_ring(y, n=40):
+    """Section at span y: edges on the split surface, depth below it set by the flat underside."""
     le, te = wing_le(y), wing_te(y)
     c = te - le
-    sec = aerofoil(wing_tc(y), c, WING_TE_T)
-    t = np.asarray(WING_UNDER_Z)
-    zc = float(np.interp(abs(y), t[:, 0], t[:, 1])) + sec[:, 1].max()
-    return np.c_[le + sec[:, 0], np.full(len(sec), y), zc + sec[:, 1]]
+    t = max(wing_tc(y) * c, WING_MIN_T)
+    zs = split_z(y)
+    dl = min(zs - WING_UNDER_Z, 0.55 * t)
+    du = t - dl
+    x = (1 - np.cos(np.pi * np.arange(n + 1) / n)) / 2
+    f = 0.2969 * np.sqrt(x) - 0.1260 * x - 0.3516 * x**2 + 0.2843 * x**3 - 0.1036 * x**4
+    f = f / f.max()
+    e = np.minimum(WING_TE_T, t) / 2 * x                  # half the trailing edge thickness, growing aft
+    up = np.c_[x * c, f * (du - e[-1]) + e][::-1]
+    lo = np.c_[x * c, -(f * (dl - e[-1]) + e)][1:]
+    sec = np.vstack([up, lo])
+    return np.c_[le + sec[:, 0], np.full(len(sec), y), zs + sec[:, 1]]
 
 
 @cached
@@ -342,28 +374,90 @@ def probe():
 
 @cached
 def airframe():
+    """Everything but the fin and the probe, as one solid."""
     pipes, bores = jet_pipes()
     half = wing() + intake_fairing() + pipes
     cuts = intake_ducts() + bores
-    solid = union([body(), canopy(), blister(), fin(), half, mirror_y(half)])
+    solid = union([body(), canopy(), blister(), half, mirror_y(half)])
     return solid - cuts - mirror_y(cuts)
 
 
+# ============================================================
+# PARTS
+# ============================================================
+BIG = 600.0
+
+
+def box(x0, x1, y0, y1, z0, z1):
+    return K.box(x0, x1, y0, y1, z0, z1)
+
+
+def rot_x(m, deg, y0, z0):
+    """Rotate about the line through (y0, z0) parallel to X."""
+    return m.translate([0, -y0, -z0]).rotate([deg, 0, 0]).translate([0, y0, z0])
+
+
+def above_split(side):
+    """Half-space above the split surface: side 0 the centre body, +1 / -1 an outer wing."""
+    up = box(-BIG, BIG, -BIG, BIG, SPLIT_Z, BIG)
+    if side == 0:
+        return up
+    return rot_x(up, -side * SPLIT_TILT, side * WING_JOINT_Y, SPLIT_Z)
+
+
+def region(name):
+    """The block of space a part is cut from (before the upper / lower split)."""
+    j = WING_JOINT_Y
+    if name == "radome":
+        return box(-BIG, RADOME_X, -BIG, BIG, -BIG, BIG)
+    if name == "front":
+        return box(RADOME_X, FRONT_X, -BIG, BIG, -BIG, BIG)
+    if name == "centre":
+        return box(FRONT_X, BIG, -j, j, -BIG, BIG)
+    if name == "wing_stbd":
+        return box(FRONT_X, BIG, j, BIG, -BIG, BIG)
+    if name == "wing_port":
+        return box(FRONT_X, BIG, -BIG, -j, -BIG, BIG)
+    raise KeyError(name)
+
+
+def flip(m):
+    """Turn a lower shell over (a rotation about X: never a mirror)."""
+    return m.rotate([180, 0, 0])
+
+
 def build():
-    return {"airframe": airframe(), "probe": probe()}
+    """Returns {name: (Manifold in the assembled frame, pose function -> print pose)}."""
+    a = airframe() - fin()
+    parts = {"radome": (a ^ region("radome"),
+                        lambda m: m.rotate([0, 90, 0]))}             # on end, on its joint face
+    for name, side in (("front", 0), ("centre", 0), ("wing_stbd", 1), ("wing_port", -1)):
+        blk = a ^ region(name)
+        up = above_split(side)
+        level = (lambda m, s=side: rot_x(m, s * SPLIT_TILT, s * WING_JOINT_Y, SPLIT_Z)) if side else (lambda m: m)
+        parts[f"{name}_upper"] = (blk ^ up, level)
+        parts[f"{name}_lower"] = (blk - up, lambda m, lv=level: flip(lv(m)))
+    parts["fin"] = (fin(), lambda m: m.rotate([90, 0, 0]))            # (pose to come: two halves)
+    parts["probe"] = (probe(), lambda m: m)
+    return parts
 
 
 if __name__ == "__main__":
-    (OUT_DIR / "assembled").mkdir(parents=True, exist_ok=True)
-    for name, m in build().items():
+    for d in ("assembled", "print"):
+        (OUT_DIR / d).mkdir(parents=True, exist_ok=True)
+    for name, (m, pose) in build().items():
         piece, dropped = K.largest_piece(m)
         if any(abs(v) > 1.0 for v in dropped):
             print(f"!! {name}: dropped pieces {[round(v, 1) for v in dropped]}")
-        tm = mesh_tm(piece)
-        tm.export(OUT_DIR / "assembled" / f"{name}.stl")
-        lo, hi = tm.bounds
-        print(f"{name:12s} {piece.volume() / 1000:8.1f} cm3   x {lo[0]:.1f}..{hi[0]:.1f}   "
-              f"y {lo[1]:.1f}..{hi[1]:.1f}   z {lo[2]:.1f}..{hi[2]:.1f}")
+        mesh_tm(piece).export(OUT_DIR / "assembled" / f"{name}.stl")       # at 1:72 (the checks' frame)
+        pm = pose(piece).scale([PRINT_K] * 3)
+        lo, hi = pm.bounding_box()[:3], pm.bounding_box()[3:]
+        pm = pm.translate([-lo[0], -lo[1], -lo[2]])
+        mesh_tm(pm).export(OUT_DIR / "print" / f"{name}.stl")              # print pose, printed size
+        sx, sy, sz = (hi[i] - lo[i] for i in range(3))
+        fits = (sx <= BED[0] and sy <= BED[1]) or (sy <= BED[0] and sx <= BED[1])
+        print(f"{name:16s} {pm.volume() / 1000:7.1f} cm3   print {sx:6.1f} x {sy:6.1f} x {sz:5.1f} mm"
+              f"{'' if fits else '   !! does not fit the bed'}")
     # planform area, to check against the real 368.3 m2
     ys = np.linspace(0, SPAN / 2, 400)
     area = 2 * np.trapezoid([wing_te(y) - wing_le(y) for y in ys], ys)
