@@ -115,12 +115,15 @@ WING_Y = [0.0, 10.0, 19.8, 34.0, 49.8, 54.0, 57.0, 58.5, 67.9, 77.8, 97.2, 116.5
           189.0, 193.9, 200.0, 206.9, 213.2, 219.0, 224.3, 229.0, 232.5, 233.5, 234.6, 234.8]
 
 # Intakes: letterbox mouths in the swept inner leading edge, one per engine pair, split in two.
-INTAKE_Y = (17.0, 55.0)         # span of the blunt lip fairing
+INTAKE_Y = (21.2, 55.0)         # span of the blunt lip fairing: its inner end stands off the fuselage
+INTAKE_GAP = (2.0, 16.0, -9.0)  # boundary-layer gap between the intake's inner wall and the fuselage
+                                # skin: width, how far it runs back from the lip, and its floor (z);
+                                # it is open at the top (XH558 photos; user: "almost a separation")
 INTAKE_ZC = 6.5
 INTAKE_RINGS = [(-1.5, 17.0, 9.6), (1.0, 18.5, 11.0), (6.0, 19.0, 11.5), (40.0, 19.0, 11.5),
                 (75.0, 17.0, 6.0)]   # distance behind the lip line, half-width, half-height
-INTAKE_MOUTH = (20.5, 52.0)     # y range of the one letterbox mouth (head-on photo, 1982)
-INTAKE_MOUTHS = [(20.5, 35.4), (37.1, 52.0)]   # the two ducts behind it, one per engine
+INTAKE_MOUTH = (23.2, 52.0)     # y range of the one letterbox mouth (head-on photo, 1982)
+INTAKE_MOUTHS = [(23.2, 36.8), (38.4, 52.0)]   # the two ducts behind it, one per engine
 INTAKE_SPLIT = 9.0              # the wall between the ducts starts this far behind the lip
 INTAKE_MOUTH_Z = (-2.5, 15.0)
 INTAKE_DEPTH = 28.0
@@ -141,6 +144,8 @@ FIN_TE = ((376.0, 11.0), (406.0, 70.6))
 FIN_Z = (5.0, 72.0)
 FIN_TC = (0.08, 0.08)
 FIN_TIP_ROUND = (7.0, 5.0)
+FIN_FILLET = (31.7, 8.0, 17.0, 1.6)   # below this z the leading edge sweeps forward into the spine:
+                                # over this height, by this much at the spine, with this exponent (Airfix side view)
 FIN_CAP = [(362.0, 0.5, 71.6, 70.6), (366.0, 2.0, 72.8, 69.6), (404.0, 2.0, 72.8, 69.6),
            (409.5, 0.8, 72.0, 70.4)]   # x, half-width, z top, z bottom: the fairing on the fin top (XH558 fin photo)     # the leading edge rounds into the top over this height, by this much
 
@@ -246,6 +251,16 @@ def cached(fn):
 @cached
 def body():
     return ring_loft([x_ring(*s) for s in dense(FUSE_STATIONS)])
+
+
+@cached
+def intake_gap():
+    """Slot between the intake's inner wall and the fuselage (starboard): a shell of the gap's
+    width round the body, from ahead of the lip to INTAKE_GAP[1] behind it."""
+    g, depth, z0 = INTAKE_GAP
+    grown = ring_loft([x_ring(x, hw + g, zt + g, zb - g, n) for x, hw, zt, zb, n in dense(FUSE_STATIONS)])
+    x0 = lip_x(INTAKE_Y[0])
+    return (grown - body()) ^ K.box(x0 - 8.0, x0 + depth, 0.0, 60.0, z0, 60.0)
 
 
 @cached
@@ -368,13 +383,17 @@ def fin():
     (xt0, zt0), (xt1, zt1) = FIN_TE
     span, cut = FIN_TIP_ROUND
     rings = []
-    zs = np.r_[np.linspace(FIN_Z[0], FIN_Z[1] - span, 16), FIN_Z[1] - span * (1 - np.sin(np.linspace(0.15, 1, 9) * np.pi / 2))]
+    zs = np.r_[np.linspace(FIN_Z[0], FIN_Z[1] - span, 40), FIN_Z[1] - span * (1 - np.sin(np.linspace(0.15, 1, 9) * np.pi / 2))]
     for z in zs:
         le = xl0 + (z - zl0) * (xl1 - xl0) / (zl1 - zl0)
         te = xt0 + (z - zt0) * (xt1 - xt0) / (zt1 - zt0)
         u = max(0.0, (z - (FIN_Z[1] - span)) / span)
         le += cut * (1 - math.sqrt(max(0.0, 1 - u * u)))
-        sec = aerofoil(FIN_TC[0], te - le, WING_TE_T)
+        zf, hf, df, kf = FIN_FILLET
+        le0 = le
+        if z < zf:                                   # root fillet: longer chord, same thickness
+            le -= df * min(1.6, (zf - z) / hf) ** kf
+        sec = aerofoil(FIN_TC[0] * (te - le0) / (te - le), te - le, WING_TE_T)
         rings.append(np.c_[le + sec[:, 0], sec[:, 1], np.full(len(sec), z)])
     cap = ring_loft([x_ring(x, hw, zt, zb, 3.0) for x, hw, zt, zb in dense(FIN_CAP, 1.5)])
     return ring_loft(rings) + cap
@@ -392,6 +411,7 @@ def airframe():
     pipes, bores = jet_pipes()
     half = wing() + intake_fairing() + pipes
     cuts = intake_ducts() + bores
+    half = half - intake_gap()
     solid = union([body(), canopy(), blister(), half, mirror_y(half)])
     return solid - cuts - mirror_y(cuts)
 
