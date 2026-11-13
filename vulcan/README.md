@@ -21,6 +21,8 @@ Intakes (v3): one letterbox mouth a side with the wall between the two engine du
 
 Upper and lower shells, as in a plastic kit, so every underside part prints in one colour and both skins print as top layers. The split surface holds the wing's leading and trailing edges: level at z -4 (1:72) across the centre body, then a plane falling 3.2 degrees to the tip on each outer wing. Upper shells print standing on the split face; lower shells are turned over onto it.
 
+![parts, exploded](docs/parts_exploded.png)
+
 | Part | Printed size (mm) |
 |---|---|
 | `radome` (on end) | 18 x 19 x 18 |
