@@ -11,9 +11,9 @@ Avro Vulcan B.2 at 1:96: 352 mm span, 317 mm long (336 mm with the refuelling pr
 
 ![shape in grey](docs/shape_grey.png)
 
-> **Status: v4, outer shape only.** One solid in the assembled frame, fitted to the Airfix A12011 plan and side views. Not yet split into parts; no joints, colour or print file.
+> **Status: v5, outer shape only.** One solid in the assembled frame, fitted to the Airfix A12011 plan and side views. Not yet split into parts; no joints, colour or print file.
 
-Intakes (v3): one letterbox mouth a side with the wall between the two engine ducts set back 9 mm, after the 1982 head-on photo. Still to do: the lip fairing's outer end stands proud of the wing as a small ear, and there is no splitter plate at the fuselage.
+Intakes (v3): one letterbox mouth a side with the wall between the two engine ducts set back 9 mm, after the 1982 head-on photo. The lips taper into the thinner wing at their outer ends (v5). Still to do: the splitter plate at the fuselage.
 
 ![intakes](docs/intakes_v3.png)
 
@@ -38,7 +38,7 @@ Intakes (v3): one letterbox mouth a side with the wall between the two engine du
 
 ## Known gaps and next steps
 
-1. Still wanted: sharper copies of the Airfix A12011 painting guides (scheme A, and scheme B: XM602 in anti-flash white, 1963, which the user showed in chat but which did not reach the disk), and for XH558 a straight-down view of its upper camouflage.
-2. Shape still to do: the fin root fillet and fin cap, the drooped outer leading edge, the nose gear and main gear bays, the bomb bay, the ECM plate between the starboard jet pipes, the terrain-following radar thimble on the nose.
+1. Still wanted: sharper copies of the Airfix A12011 painting guides (scheme A, and scheme B: XM602 in anti-flash white, 1963; both are in `ref/vulcan/` as screenshots), and for XH558 a straight-down view of its upper camouflage.
+2. Shape still to do: the fin root fillet, the drooped outer leading edge, the nose gear and main gear bays, the bomb bay, the ECM plate between the starboard jet pipes, the terrain-following radar thimble on the nose.
 3. The wing's height on the fuselage, its root thickness and the intake lips come from a silhouette and one head-on photo: check them against more photos. The intakes are plain slots so far (the real lips are rounded, with a splitter plate at the fuselage).
 4. Agree the brief (markings, display, colours per plate), then split into parts, add joints, colour and the 3MF.

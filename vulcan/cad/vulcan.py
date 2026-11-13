@@ -107,6 +107,8 @@ INTAKE_SPLIT = 9.0              # the wall between the ducts starts this far beh
 INTAKE_MOUTH_Z = (-2.5, 9.5)
 INTAKE_DEPTH = 28.0
 INTAKE_N = 4.0
+INTAKE_TAPER = (0.72, -3.5)     # at the outer end the lip is this fraction as tall and this much
+                                # lower, so it runs into the thinner wing there (no ear above the skin)
 
 # Jet pipes: four, in pairs. Their fairings run under the wing from mid-chord (the side
 # view's lowest line, about 3.5 mm below the belly) and the nozzles stand 6 mm behind the trailing edge.
@@ -120,7 +122,9 @@ FIN_LE = ((303.6, 23.7), (362.5, 69.0))
 FIN_TE = ((376.0, 11.0), (406.0, 70.6))
 FIN_Z = (5.0, 72.0)
 FIN_TC = (0.08, 0.08)
-FIN_TIP_ROUND = (7.0, 5.0)      # the leading edge rounds into the top over this height, by this much
+FIN_TIP_ROUND = (7.0, 5.0)
+FIN_CAP = [(362.0, 0.5, 71.6, 70.6), (366.0, 2.0, 72.8, 69.6), (404.0, 2.0, 72.8, 69.6),
+           (409.5, 0.8, 72.0, 70.4)]   # x, half-width, z top, z bottom: the fairing on the fin top (XH558 fin photo)     # the leading edge rounds into the top over this height, by this much
 
 OUT_DIR = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("out/vulcan")
 
@@ -283,7 +287,9 @@ def _sheared_ring(s, y0, y1, z0, z1, n=INTAKE_N, pts=72):
     """Superellipse in (y, z), in a plane parallel to the swept intake lip, s behind it."""
     se = superellipse((y1 - y0) / 2, (z1 - z0) / 2, n, pts)
     y = (y0 + y1) / 2 + se[:, 0]
-    return np.c_[lip_x(y) + s, y, (z0 + z1) / 2 + se[:, 1]]
+    u = np.clip((y - INTAKE_Y[0]) / (INTAKE_Y[1] - INTAKE_Y[0]), 0.0, 1.0)
+    k, dz = 1 + u * (INTAKE_TAPER[0] - 1), u * INTAKE_TAPER[1]
+    return np.c_[lip_x(y) + s, y, (z0 + z1) / 2 + dz + se[:, 1] * k]
 
 
 @cached
@@ -324,7 +330,8 @@ def fin():
         le += cut * (1 - math.sqrt(max(0.0, 1 - u * u)))
         sec = aerofoil(FIN_TC[0], te - le, WING_TE_T)
         rings.append(np.c_[le + sec[:, 0], sec[:, 1], np.full(len(sec), z)])
-    return ring_loft(rings)
+    cap = ring_loft([x_ring(x, hw, zt, zb, 3.0) for x, hw, zt, zb in dense(FIN_CAP, 1.5)])
+    return ring_loft(rings) + cap
 
 
 @cached
