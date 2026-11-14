@@ -11,7 +11,7 @@ Avro Vulcan B.2 at 1:96: 352 mm span, 317 mm long (336 mm with the refuelling pr
 
 ![shape in grey](docs/shape_grey.png)
 
-> **Status: v10: shape fitted to the Airfix A12011 plan and side views, and split into shells.** No joints, colour or print file yet. Not yet split into parts; no joints, colour or print file.
+> **Status: v11: shape fitted to the Airfix A12011 plan and side views, and split into shells.** No joints, colour or print file yet. Not yet split into parts; no joints, colour or print file.
 
 Intakes and wing root (v7, user review): one letterbox mouth a side, tall at the fuselage (about 60% of its depth, from the XH558 photos) and tapering outboard, with the wall between the two engine ducts set back 9 mm. Over the engines the wing's top is not an aerofoil hump: it reaches its crest just behind the intake lip and runs almost straight to the trailing edge, so it meets the fuselage on a straight line, as in the Airfix side view (`WING_ROOT_UP`, `WING_CREST`). Each intake's inner wall stands 2 mm (1:72) off the fuselage, with an open slot between them running 16 mm back from the lip (v8, user: "almost a separation from the fuselage"). The fin's leading edge sweeps forward into the spine (`FIN_FILLET`).
 
@@ -24,6 +24,10 @@ Smooth upper surface (v10, user: "seamlessly incorporating the engines"): every 
 ![sections](docs/sections_blend.png)
 
 ![smoothed top and underside](docs/smooth_top_under.png)
+
+Panel lines (v11): the upper surface carries the main lines from the Airfix scheme B top view, read on a 10 mm grid (`PANEL_LINES`, `HINGE_LINES` in `vulcan.py`): the engine bay panels, the leading-edge and rear spar lines, the outer wing joint, every other skin stiffener, the jet pipe panels, and the elevon hinge and ends (deeper). 0.5 mm wide and 0.25 mm deep as printed (hinges 0.6 x 0.4). Still to do: the underside, the fuselage and fin, airbrakes.
+
+![panel lines](docs/panel_lines_top.png)
 
 ## Parts (v6: first split, no joints yet)
 
@@ -56,7 +60,7 @@ Still to do on the split: joints (keys between the shells, a spar key across eac
 ## Shape and references
 
 - **Main drawings:** the Airfix A12011 painting guide, scheme A (XM594, Scampton 1966): flat upper plan, underside plan and both side views, with panel lines, at about 0.97 mm per pixel at 1:72 (a screenshot; a sharper copy would help). Calibrated in `tools/refs.json` as `plan` and `side`. The outline sits on both.
-- **Sharper views (2026-11-14, user uploads, in `ref/vulcan/`):** each Airfix view as its own zoomed screenshot, about 0.44 mm per pixel at 1:72: `airfix_a_top`, `airfix_a_side_port`, `airfix_a_under_bluesteel` (with the Blue Steel's side and plan views), `airfix_b_top`, `airfix_b_side_stbd`, `airfix_b_under`. `plan` and `side` in `tools/refs.json` now point at the scheme A ones; the first screenshots are `plan_lo` and `side_lo`. Also Airfix instruction pages 22-23 (main gear: leg, bogie with 8 wheels, doors, bay), a side-on photo of the canopy and nose roundel, and a photo of a main gear bogie.
+- **Sharper views (2026-11-14, user uploads, in `ref/vulcan/`):** each Airfix view as its own zoomed screenshot, about 0.44 mm per pixel at 1:72: `airfix_a_top`, `airfix_a_side_port`, `airfix_a_under_bluesteel` (with the Blue Steel's side and plan views), `airfix_b_top`, `airfix_b_side_stbd`, `airfix_b_under`. `plan` and `side` in `tools/refs.json` now point at the scheme A ones; the first screenshots are `plan_lo` and `side_lo`. Also Airfix instruction pages 22-23 (main gear: leg, bogie with 8 wheels, doors, bay), a side-on photo of the canopy and nose roundel, a photo of a main gear bogie, the nose gear side-on at take-off, a colour head-on photo on the ground (intakes, splitter plates, all three gear legs) and two photos of the open bomb bay.
 - **Other sources:** the Commons silhouette (`sil_plan`, `sil_front`; sharper, 0.51 mm per pixel, and its wing agrees within about 3 mm, but its tail cone is 17 mm short) and the aerospaceweb.org 3-view (`aw_plan`).
 - **Length:** 422.5 mm at 1:72 from nose tip to tail cone: the published 99 ft 11 in (30.45 m), without the probe. With the probe 448.5 mm (32.3 m; published 105 ft 6 in).
 - **Check:** the model's wing area is 367.4 m², against the real 368.3 m².

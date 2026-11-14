@@ -123,6 +123,27 @@ BLEND_UNDER_R = [(200.0, 4.0), (330.0, 4.0), (358.0, 1.5)]   # the same undernea
 BLEND_UNDER_X = (200.0, 359.0)
 BLEND_Y = 85.0                  # out to this span (the outer wing has no creases)
 BLEND_STEP = (1.5, 0.3)         # grid: x, y
+# Panel lines on the upper surface, starboard, as (x, y) polylines read off the Airfix scheme B top
+# view on a 10 mm grid (ref airfix_b_top.png: 2.3026 px/mm, centreline col 592.5, nose row 28).
+LINE_W, LINE_D = 0.5 * _P, 0.25 * _P        # panel lines: 0.5 mm wide, 0.25 mm deep, printed
+HINGE_W, HINGE_D = 0.6 * _P, 0.4 * _P       # control surface edges
+_EB = (22.0, 58.0)                          # engine bay: from the fuselage side to its outer edge
+PANEL_LINES = (
+    [[(x, _EB[0]), (x, _EB[1])] for x in (188, 208, 217, 226, 235, 244, 253, 262, 270, 278, 287, 302, 316)]
+    + [[(160, 58), (360, 58)], [(188, 22), (345, 22)]]                 # the bay's outer and inner edges
+    + [[(316, y), (358, y)] for y in (27.0, 37.0, 44.0, 54.0)]         # jet pipe panels
+    + [[(126, 13), (190, 58), (250, 153)],                            # behind the leading edge panels
+       [(250, 153), (290, 146), (345, 137)],                          # outer wing joint
+       [(311, 58), (333, 137), (352, 221)],                           # rear spar
+       [(320, 221), (382, 221)]]                                      # tip panel
+    # skin stiffeners outboard of the engine bay: every other one of the sheet's
+    + [[(x0, 58), (x0 + 0.80 * (y1 - 58), y1)] for x0, y1 in
+       ((200, 148), (222, 146), (240, 144), (262, 140), (290, 98))]
+)
+HINGE_LINES = (
+    [[(327, 58), (348, 137), (365, 221)]]                             # elevon hinge
+    + [[(337, 97), (364.5, 97)], [(348, 137), (369.5, 137)], [(356.7, 180), (374.5, 180)]]   # elevon ends
+)
 BED = (230.0, 250.0)            # usable plate, printed mm (X2D; 256 mm beds are larger)
 WING_Y = [0.0, 5.0, 10.0, 15.0, 19.8, 24.0, 29.0, 34.0, 39.0, 44.0, 49.8, 54.0, 57.0, 58.5, 63.0, 67.9, 72.0,
           77.8, 84.0, 90.0, 97.2, 116.5, 135.8, 155.2, 174.5,
@@ -505,6 +526,7 @@ def surface_blend(under):
     C = np.where(Z > -900.0, C, -1e3)
     C, Z = np.maximum(C[keep][:, ky], level), np.maximum(Z[keep][:, ky], level)
     fill = heightfield_solid(xs[keep], ys[ky], C, level) ^ K.box(-BIG, BIG, -BIG, BIG, level + 1.01, BIG)
+    fill = fill.simplify(0.02)                   # the 0.3 mm grid makes a very dense mesh: thin it
     print(f"{'under' if under else 'top'} blend: {(fill - solid).volume() / 1000:.2f} cm3 added, "
           f"deepest fill {float((C - Z).max()):.2f} mm")
     return fill.rotate([180, 0, 0]) if under else fill
@@ -564,6 +586,29 @@ def region(name):
     raise KeyError(name)
 
 
+def _grooves(lines, w):
+    """Prism through all z along the polylines (given as (x, y)), both sides of the aircraft."""
+    secs = []
+    for ln in lines:
+        for a, b in zip(ln, ln[1:]):
+            for sgn in (1, -1):
+                secs.append(K.band((a[0], sgn * a[1]), (b[0], sgn * b[1]), w))
+    return K.prism_z(mf.CrossSection.batch_boolean(secs, mf.OpType.Add))
+
+
+@cached
+def top_grooves():
+    return _grooves(PANEL_LINES, LINE_W), _grooves(HINGE_LINES, HINGE_W)
+
+
+def engrave_top(part):
+    """Cut the upper-surface panel lines into an upper shell: each groove is the part of its
+    prism within the line's depth of the surface, measured straight down."""
+    lines, hinges = top_grooves()
+    cut = (lines ^ (part - part.translate([0, 0, -LINE_D]))) + (hinges ^ (part - part.translate([0, 0, -HINGE_D])))
+    return part - cut
+
+
 def flip(m):
     """Turn a lower shell over (a rotation about X: never a mirror)."""
     return m.rotate([180, 0, 0])
@@ -578,7 +623,8 @@ def build():
         blk = a ^ region(name)
         up = above_split(side)
         level = (lambda m, s=side: rot_x(m, s * SPLIT_TILT, s * WING_JOINT_Y, SPLIT_Z)) if side else (lambda m: m)
-        parts[f"{name}_upper"] = (blk ^ up, level)
+        upper = blk ^ up
+        parts[f"{name}_upper"] = (engrave_top(upper) if name != "front" else upper, level)
         parts[f"{name}_lower"] = (blk - up, lambda m, lv=level: flip(lv(m)))
     parts["fin"] = (fin(), lambda m: m.rotate([90, 0, 0]))            # (pose to come: two halves)
     parts["probe"] = (probe(), lambda m: m)
