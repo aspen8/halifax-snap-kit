@@ -105,15 +105,27 @@ SPLIT_Z = -4.0
 # Inboard, over the engines, the wing's top is not an aerofoil hump: it climbs from the intake
 # lip to its crest just behind it and then runs almost straight down to the trailing edge, so it
 # meets the fuselage side on a straight line (Airfix side view, XH558 photos; user review).
-WING_ROOT_UP = [(0.0, 23.0), (20.0, 23.0), (57.0, 12.9)]   # (y, depth of the top above the split)
+WING_ROOT_UP = [(0.0, 23.0), (14.0, 23.0), (28.0, 20.3), (42.0, 16.4), (57.0, 12.9), (70.0, 11.5)]
+                                # (y, depth of the top above the split): a smooth (PCHIP) curve into the outer wing
 WING_CREST = (0.12, 1.25)       # inboard: crest at this fraction of chord, then 1 - u^k to the trailing edge
 WING_CREST_BLEND = (25.0, 80.0)  # the inboard profile fades into the plain aerofoil over this span
 SPLIT_TIP_Z = -14.0
 WING_JOINT_Y = 57.0             # centre body / outer wing joint (just outboard of the intakes and jet pipes)
 RADOME_X = 24.0                 # the black radome is its own part ahead of this
 FRONT_X = 105.0                 # front fuselage / centre body joint, at the wing root's leading edge
+# The upper surface over the engines is smoothed: every concave crease on top (wing to fuselage,
+# intake fairing to wing, jet pipe humps to wing and to each other) is filled as if a ball of this
+# radius had been rolled over it (user: "seamlessly incorporating the engines").
+BLEND_R = [(110.0, 4.0), (150.0, 4.0), (190.0, 12.0), (300.0, 12.0), (358.0, 2.0)]   # (x, radius): small
+                                # by the intakes, a soft fillet along the fuselage, fading out at the trailing edge
+BLEND_X = (112.0, 359.0)        # x range of the fill
+BLEND_UNDER_R = [(200.0, 4.0), (330.0, 4.0), (358.0, 1.5)]   # the same underneath, round the jet pipe fairings
+BLEND_UNDER_X = (200.0, 359.0)
+BLEND_Y = 85.0                  # out to this span (the outer wing has no creases)
+BLEND_STEP = (1.5, 0.3)         # grid: x, y
 BED = (230.0, 250.0)            # usable plate, printed mm (X2D; 256 mm beds are larger)
-WING_Y = [0.0, 10.0, 19.8, 34.0, 49.8, 54.0, 57.0, 58.5, 67.9, 77.8, 97.2, 116.5, 135.8, 155.2, 174.5,
+WING_Y = [0.0, 5.0, 10.0, 15.0, 19.8, 24.0, 29.0, 34.0, 39.0, 44.0, 49.8, 54.0, 57.0, 58.5, 63.0, 67.9, 72.0,
+          77.8, 84.0, 90.0, 97.2, 116.5, 135.8, 155.2, 174.5,
           189.0, 193.9, 200.0, 206.9, 213.2, 219.0, 224.3, 229.0, 232.5, 233.5, 234.6, 234.8]
 
 # Intakes: letterbox mouths in the swept inner leading edge, one per engine pair, split in two.
@@ -122,8 +134,8 @@ INTAKE_GAP = (2.0, 16.0, -9.0)  # boundary-layer gap between the intake's inner 
                                 # skin: width, how far it runs back from the lip, and its floor (z);
                                 # it is open at the top (XH558 photos; user: "almost a separation")
 INTAKE_ZC = 6.5
-INTAKE_RINGS = [(-1.5, 17.0, 9.6), (1.0, 18.5, 11.0), (6.0, 19.0, 11.5), (40.0, 19.0, 11.5),
-                (75.0, 17.0, 6.0)]   # distance behind the lip line, half-width, half-height
+INTAKE_RINGS = [(-1.5, 17.0, 9.6), (1.0, 18.5, 11.0), (6.0, 19.0, 11.5), (22.0, 19.0, 11.5),
+                (45.0, 17.0, 5.0)]   # distance behind the lip line, half-width, half-height
 INTAKE_MOUTH = (23.2, 52.0)     # y range of the one letterbox mouth (head-on photo, 1982)
 INTAKE_MOUTHS = [(23.2, 36.8), (38.4, 52.0)]   # the two ducts behind it, one per engine
 INTAKE_SPLIT = 9.0              # the wall between the ducts starts this far behind the lip
@@ -154,6 +166,7 @@ FIN_FILLET = (31.7, 8.0, 17.0, 1.6)   # below this z the leading edge sweeps for
 FIN_CAP = [(362.0, 0.5, 71.6, 70.6), (366.0, 2.0, 72.8, 69.6), (404.0, 2.0, 72.8, 69.6),
            (409.5, 0.8, 72.0, 70.4)]   # x, half-width, z top, z bottom: the fairing on the fin top (XH558 fin photo)     # the leading edge rounds into the top over this height, by this much
 
+BIG = 600.0
 OUT_DIR = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("out/vulcan")
 
 
@@ -322,8 +335,9 @@ def wing_ring(y, n=40):
     du = t - dl
     ya = abs(y)
     if ya <= WING_JOINT_Y:
+        from scipy.interpolate import PchipInterpolator
         r = np.asarray(WING_ROOT_UP)
-        du = float(np.interp(ya, r[:, 0], r[:, 1]))
+        du = float(PchipInterpolator(r[:, 0], r[:, 1])(ya))
     x = (1 - np.cos(np.pi * np.arange(n + 1) / n)) / 2
     f = 0.2969 * np.sqrt(x) - 0.1260 * x - 0.3516 * x**2 + 0.2843 * x**3 - 0.1036 * x**4
     f = f / f.max()
@@ -412,21 +426,109 @@ def probe():
     return M.cylinder(length + 2.0, d / 2, d / 2, 32).rotate([0, 90, 0]).translate([-length, 0, 0])
 
 
+def _closing(z, r, step):
+    """Roll a ball of radius r over the height profile z (sampled every `step`): fills concave
+    corners, leaves convex shapes and drop-offs alone."""
+    k = int(r / step)
+    if k < 1:
+        return z
+    d = np.arange(-k, k + 1) * step
+    cap = np.sqrt(np.maximum(r * r - d * d, 0.0))
+    n = len(z)
+    pad = np.pad(z, k, constant_values=-1e3)
+    win = np.lib.stride_tricks.sliding_window_view(pad, 2 * k + 1)
+    up = (win + cap).max(1)
+    pad = np.pad(up, k, constant_values=1e3)
+    win = np.lib.stride_tricks.sliding_window_view(pad, 2 * k + 1)
+    return np.maximum((win - cap).min(1), z)[:n]
+
+
+def top_field(solid, xs, ys):
+    """Height of the solid's upper surface on the grid (xs, ys); -1e3 where there is none."""
+    turned = solid.transform(np.array([[0, 1, 0, 0], [0, 0, 1, 0], [1, 0, 0, 0]], float))   # (y, z, x)
+    Z = np.full((len(xs), len(ys)), -1e3)
+    for i, x in enumerate(xs):
+        for poly in turned.slice(float(x)).to_polygons():
+            a, b = poly, np.roll(poly, -1, axis=0)
+            for (y1, z1), (y2, z2) in zip(a, b):
+                if y1 > y2:
+                    y1, z1, y2, z2 = y2, z2, y1, z1
+                j0, j1 = np.searchsorted(ys, y1), np.searchsorted(ys, y2)
+                if j1 > j0:
+                    yy = ys[j0:j1]
+                    Z[i, j0:j1] = np.maximum(Z[i, j0:j1], z1 + (z2 - z1) * (yy - y1) / (y2 - y1))
+    return Z
+
+
+def heightfield_solid(xs, ys, Z, z0):
+    """Solid between the level z0 and the surface Z on the grid."""
+    nx, ny = Z.shape
+    X, Y = np.meshgrid(xs, ys, indexing="ij")
+    top = np.c_[X.ravel(), Y.ravel(), Z.ravel()]
+    bot = np.c_[X.ravel(), Y.ravel(), np.full(nx * ny, z0)]
+    idx = np.arange(nx * ny).reshape(nx, ny)
+    a, b, c, d = idx[:-1, :-1].ravel(), idx[1:, :-1].ravel(), idx[1:, 1:].ravel(), idx[:-1, 1:].ravel()
+    o = nx * ny
+    faces = [np.c_[a, b, c], np.c_[a, c, d], np.c_[a + o, c + o, b + o], np.c_[a + o, d + o, c + o]]
+    for edge, rev in ((idx[:, 0], False), (idx[:, -1], True), (idx[0, :], True), (idx[-1, :], False)):
+        e0, e1 = edge[:-1], edge[1:]
+        q = [np.c_[e0, e0 + o, e1 + o], np.c_[e0, e1 + o, e1]]
+        faces += [f[:, ::-1] for f in q] if rev else q
+    tm = trimesh.Trimesh(np.vstack([top, bot]), np.vstack(faces), process=False)
+    if tm.volume < 0:
+        tm.invert()
+    m = K.to_manifold(tm)
+    if m.status() != mf.Error.NoError:
+        raise RuntimeError(f"height field not manifold: {m.status()}")
+    return m
+
+
+@cached
+def surface_blend(under):
+    """Fill for the creases in the upper surface over the engines (under=False), or in the
+    underside round the jet pipe fairings (under=True); both sides of the aircraft."""
+    solid = raw_airframe()
+    if under:                                    # work on the solid turned over, then turn the fill back
+        solid = solid.rotate([180, 0, 0])
+    radii, (x0, x1) = (BLEND_UNDER_R, BLEND_UNDER_X) if under else (BLEND_R, BLEND_X)
+    level = (-SPLIT_Z if under else SPLIT_Z) - 1.0
+    sx, sy = BLEND_STEP
+    xs = np.arange(x0 - 15.0, x1 + 15.0 + sx / 2, sx)
+    ys = np.arange(-BLEND_Y - 25.0, BLEND_Y + 25.0 + sy / 2, sy)
+    Z = top_field(solid, xs, ys)                 # -1e3 where there is no surface: a drop-off, never filled
+    r = np.interp(xs, [p[0] for p in radii], [p[1] for p in radii])
+    C = np.array([_closing(Z[i], r[i], sy) for i in range(len(xs))])          # across the span
+    rm = float(np.min(r))
+    C = np.maximum(C, np.array([_closing(C[:, j], rm, sx) for j in range(len(ys))]).T)   # along the chord
+    keep = (xs >= x0) & (xs <= x1)
+    ky = np.abs(ys) <= BLEND_Y
+    C = np.where(Z > -900.0, C, -1e3)
+    C, Z = np.maximum(C[keep][:, ky], level), np.maximum(Z[keep][:, ky], level)
+    fill = heightfield_solid(xs[keep], ys[ky], C, level) ^ K.box(-BIG, BIG, -BIG, BIG, level + 1.01, BIG)
+    print(f"{'under' if under else 'top'} blend: {(fill - solid).volume() / 1000:.2f} cm3 added, "
+          f"deepest fill {float((C - Z).max()):.2f} mm")
+    return fill.rotate([180, 0, 0]) if under else fill
+
+
+@cached
+def raw_airframe():
+    """Body, wings, intake fairings and jet pipes as one solid, before blending and cuts."""
+    pipes, _ = jet_pipes()
+    half = wing() + intake_fairing() + pipes
+    return union([body(), canopy(), blister(), half, mirror_y(half)])
+
+
 @cached
 def airframe():
     """Everything but the fin and the probe, as one solid."""
-    pipes, bores = jet_pipes()
-    half = wing() + intake_fairing() + pipes
-    cuts = intake_ducts() + bores
-    half = half - intake_gap()
-    solid = union([body(), canopy(), blister(), half, mirror_y(half)])
-    return solid - cuts - mirror_y(cuts)
+    _, bores = jet_pipes()
+    cuts = intake_ducts() + bores + intake_gap()
+    return (raw_airframe() + surface_blend(False) + surface_blend(True)) - cuts - mirror_y(cuts)
 
 
 # ============================================================
 # PARTS
 # ============================================================
-BIG = 600.0
 
 
 def box(x0, x1, y0, y1, z0, z1):
