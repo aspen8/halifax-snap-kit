@@ -244,9 +244,9 @@ KEY_H = [h * _P for h in (5.0, 4.5, 4.0, 3.5, 3.0, 2.5, 2.0, 1.6)]   # half-heig
 KEYS = (
     [(("front",), (x, 0.0), "x", 6.0 * _P) for x in (45.0, 80.0)]
     + [(("front", "centre"), (102.0, 9.0), "x", 18.0 * _P)]
-    + [(("centre",), xy, "x", 6.0 * _P) for xy in ((172.0, 14.0), (190.0, 30.0), (250.0, 42.0), (330.0, 42.0),
+    + [(("centre",), xy, "x", 6.0 * _P) for xy in ((172.0, 14.0), (201.0, 30.0), (250.0, 42.0), (330.0, 42.0),
                                                    (335.0, 0.0), (385.0, 0.0))]
-    + [(("centre", "wing"), (x, WING_JOINT_Y), "y", 30.0 * _P) for x in (198.0, 300.0)]
+    + [(("centre", "wing"), (x, WING_JOINT_Y), "y", 30.0 * _P) for x in (199.5, 300.0)]
     + [(("wing",), xy, "x", 6.0 * _P) for xy in ((245.0, 100.0), (310.0, 100.0), (285.0, 150.0), (305.0, 150.0))]
 )
 RADOME_TONGUE = (10.0, 5.0, 2.5)   # front shells' tongue into the radome: length, half-width, half-height
@@ -279,12 +279,13 @@ INTAKE_WALL_BOW = (5.5, 10.0)    # the inner wall's leading edge bows forward by
                                 # (side-on photo), fading out over this span outboard
 INTAKE_FAIR = [(8.0, 0.6, 1.0), (22.0, 0.9, 1.0), (45.0, 0.0, 0.55)]   # behind the lip: distance, extra
                                 # offset, height scale (the fairing sinks into the wing)
-INTAKE_SPLIT = (9.0, 37.6, 1.8)  # the wall between the two engines' ducts: set back, y, thickness
-INTAKE_DEPTH = 60.0             # (the ducts are cut off at the engine faces)
+INTAKE_SPLIT = (24.0, 37.6, 1.8)  # the wall between the two engines' ducts: set back, y, thickness
+INTAKE_DEPTH = 90.0             # (the ducts are cut off where the round tunnels start)
 # Engine faces: each duct ends in a round tunnel with a compressor face at its end (hub and blades),
 # a separate plate printed face up that drops into a slot between the centre shells.
-# (y centre, z centre, x of the face): the outer engine sits further back, with the wing's sweep.
-ENGINES = [(30.2, 1.3, 152.0), (47.0, 1.0, 176.0)]
+# (y centre, z centre, x of the face): all four faces are the same distance back from the nose, deep
+# in the wing (user review), so the inner ducts are long: 70 mm from the lip at the fuselage side.
+ENGINES = [(30.2, 1.3, 192.0), (47.0, 1.0, 192.0)]
 ENGINE_R = 5.5                  # tunnel radius (8.25 mm bore printed)
 ENGINE_TUNNEL = 14.0            # length of the round tunnel ahead of the face
 ENGINE_PLATE = (6.5, 2.0, -6.4, 8.4)   # plate: half-width, thickness, z bottom, z top
@@ -569,10 +570,10 @@ def intake_ducts():
     rings = [mouth_ring(-2.0, t / 2 + 0.01)] + [mouth_ring(t / 2 * (1 - math.cos(a)), t / 2 * (1 - math.sin(a))) for a in _LIP_TH]
     rings.append(mouth_ring(INTAKE_DEPTH, 0.0))
     back, ys, tw = INTAKE_SPLIT
-    wall = K.box(lip_x(ys) + back, 200.0, ys - tw / 2, ys + tw / 2, -30.0, 30.0)
+    wall = K.box(lip_x(ys) + back, 230.0, ys - tw / 2, ys + tw / 2, -30.0, 30.0)
     nose = M.cylinder(60.0, tw / 2, tw / 2, 24).translate([lip_x(ys) + back, ys, -30.0])
     (yi, zi, xi), (yo, zo, xo) = ENGINES
-    cells = K.box(-BIG, xi, 0.0, ys, -BIG, BIG) + K.box(-BIG, xo, ys, BIG, -BIG, BIG)
+    cells = K.box(-BIG, xi - ENGINE_TUNNEL + 1.0, 0.0, ys, -BIG, BIG) + K.box(-BIG, xo - ENGINE_TUNNEL + 1.0, ys, BIG, -BIG, BIG)
     tunnels = union([M.cylinder(ENGINE_TUNNEL, ENGINE_R, ENGINE_R, 64).rotate([0, 90, 0]).translate([x - ENGINE_TUNNEL, y, z])
                      for y, z, x in ENGINES])
     return ((ring_loft(rings) ^ cells) + tunnels) - wall - nose
