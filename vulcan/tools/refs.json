@@ -1,49 +1,49 @@
 {
   "_comment": "Vulcan reference calibration: model (h, v) mm at 1:72 -> page px (u, v) = A @ [h, v, 1]. Images are not in git (ref/ is ignored).",
   "plan": {
-    "image": "ref/vulcan/airfix_a12011_scheme_a_xm594.png",
-    "_source": "Airfix A12011 painting guide, scheme A (XM594, Scampton 1966), screenshot 1074 x 748 (user upload). Upper plan view, nose up. Span cols 47 to 533 = 469.9 mm: 0.9669 mm/px (the wing roundel is 27 x 27 px: the image is not stretched). Nose tip (no probe) row 133, tail row 570, centreline col 290.5.",
+    "image": "ref/vulcan/airfix_a_top.png",
+    "_source": "Airfix A12011 painting guide, scheme A (XM594), upper plan view, zoomed screenshot 1157 x 1052 (user upload, 2026-11-14). Span cols 40 to 1114 = 469.9 mm: 0.4375 mm/px (roundel 63 x 64 px: not stretched). Nose tip (no probe) row 60, tail row 1028, centreline col 578.",
     "axes": "xy",
     "affine": [
       [
         0.0,
-        1.03423,
-        290.5
+        2.2857,
+        578.0
       ],
       [
-        1.03423,
+        2.2857,
         0.0,
-        133.0
+        60.0
       ]
     ],
     "crop": [
-      30,
-      95,
-      545,
-      580
+      0,
+      0,
+      1157,
+      1052
     ]
   },
   "side": {
-    "image": "ref/vulcan/airfix_a12011_scheme_a_xm594.png",
-    "_source": "Same sheet, port side view (nose left), same scale as the plan. Nose tip col 596, row 181.5; tail col 1032.5.",
+    "image": "ref/vulcan/airfix_a_side_port.png",
+    "_source": "Same sheet, port side view (nose left), zoomed screenshot 1175 x 348, same scale as the plan: nose tip col 153, row 178; tail col 1118.",
     "axes": "xz",
     "affine": [
       [
-        1.03423,
+        2.2857,
         0.0,
-        596.0
+        153.0
       ],
       [
         0.0,
-        -1.03423,
-        181.5
+        -2.2857,
+        178.0
       ]
     ],
     "crop": [
-      560,
-      90,
-      1045,
-      245
+      0,
+      0,
+      1175,
+      348
     ]
   },
   "sil_plan": {
@@ -113,6 +113,52 @@
       0,
       1240,
       1336
+    ]
+  },
+  "plan_lo": {
+    "image": "ref/vulcan/airfix_a12011_scheme_a_xm594.png",
+    "_source": "Airfix A12011 painting guide, scheme A (XM594, Scampton 1966), screenshot 1074 x 748 (user upload). Upper plan view, nose up. Span cols 47 to 533 = 469.9 mm: 0.9669 mm/px (the wing roundel is 27 x 27 px: the image is not stretched). Nose tip (no probe) row 133, tail row 570, centreline col 290.5.",
+    "axes": "xy",
+    "affine": [
+      [
+        0.0,
+        1.03423,
+        290.5
+      ],
+      [
+        1.03423,
+        0.0,
+        133.0
+      ]
+    ],
+    "crop": [
+      30,
+      95,
+      545,
+      580
+    ]
+  },
+  "side_lo": {
+    "image": "ref/vulcan/airfix_a12011_scheme_a_xm594.png",
+    "_source": "Same sheet, port side view (nose left), same scale as the plan. Nose tip col 596, row 181.5; tail col 1032.5.",
+    "axes": "xz",
+    "affine": [
+      [
+        1.03423,
+        0.0,
+        596.0
+      ],
+      [
+        0.0,
+        -1.03423,
+        181.5
+      ]
+    ],
+    "crop": [
+      560,
+      90,
+      1045,
+      245
     ]
   }
 }
