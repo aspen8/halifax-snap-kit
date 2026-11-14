@@ -11,7 +11,7 @@ Avro Vulcan B.2 at 1:96: 352 mm span, 317 mm long (336 mm with the refuelling pr
 
 ![shape in grey](docs/shape_grey.png)
 
-> **Status: v15: shape fitted to the Airfix A12011 plan and side views, and split into shells.** No joints, colour or print file yet. Not yet split into parts; no joints, colour or print file.
+> **Status: v16: shape fitted to the Airfix A12011 plan and side views, and split into shells.** No joints, colour or print file yet. Not yet split into parts; no joints, colour or print file.
 
 Intakes and wing root (v7, user review): one letterbox mouth a side, tall at the fuselage (about 60% of its depth, from the XH558 photos) and tapering outboard, with the wall between the two engine ducts set back 9 mm. Over the engines the wing's top is not an aerofoil hump: it reaches its crest just behind the intake lip and runs almost straight to the trailing edge, so it meets the fuselage on a straight line, as in the Airfix side view (`WING_ROOT_UP`, `WING_CREST`). Each intake's inner wall stands 2 mm (1:72) off the fuselage, with an open slot between them running 16 mm back from the lip (v8, user: "almost a separation from the fuselage"). The fin's leading edge sweeps forward into the spine (`FIN_FILLET`).
 
@@ -43,23 +43,37 @@ Blue Steel (v15): the stand-off missile from the Airfix scheme A sheet (149 mm l
 
 ![Blue Steel](docs/blue_steel.png)
 
+Stand (v16): a blade post (`stand_post`, printed flat) with a 6 mm square key that goes up through its own bomb door panel (`door_bomb_stand`) into the bay roof plate, and a tenon into a 150 x 100 x 8 mm plinth (`stand_base`). The aircraft sits 8 degrees nose-up, belly 80 mm above the plinth. The plain `door_bomb` has no hole. Not yet possible: the stand together with the Blue Steel.
+
+![on the stand](docs/on_stand.png)
+
+Interference check (`common/tools/interference.py`, gear up with the Blue Steel, and gear down): clean except the probe in the radome (its socket comes with the joints).
+
 ## Parts (v6: first split, no joints yet)
 
 Upper and lower shells, as in a plastic kit, so every underside part prints in one colour and both skins print as top layers. The split surface holds the wing's leading and trailing edges: level at z -4 (1:72) across the centre body, then a plane falling 3.2 degrees to the tip on each outer wing. Upper shells print standing on the split face; lower shells are turned over onto it.
 
 ![parts, exploded](docs/parts_exploded.png)
 
+30 parts in all (`out/.../print/`, each in its print pose at printed size):
+
 | Part | Printed size (mm) |
 |---|---|
 | `radome` (on end) | 18 x 19 x 18 |
-| `front_upper`, `front_lower` (x 24 to 105: flight deck, canopy, blister) | 61 x 28 x 25, 61 x 26 x 11 |
-| `centre_upper`, `centre_lower` (fuselage, intakes, inner wing, tail cone) | 238 x 86 x 22, 238 x 86 x 11 |
-| `wing_stbd_upper/lower`, `wing_port_upper/lower` (outboard of y 57) | 165 x 134 x 9, 165 x 134 x 8 |
+| `front_upper`, `front_lower` | 61 x 28 x 25, 61 x 26 x 11 |
+| `centre_upper`, `centre_lower` | 238 x 86 x 22, 238 x 86 x 8 |
+| `wing_stbd_upper/lower`, `wing_port_upper/lower` | 165 x 134 x 9, 165 x 134 x 8 |
+| `bomb_bay_roof` | 95 x 35 x 2.6 |
+| `door_bomb`, `door_bomb_stand`, `door_bluesteel` (one of) | 92 x 32 x 2 to 3.8 |
+| `blue_steel` | 112 x 39 x 6.6 |
+| `door_nose`, `door_main_stbd/port` (wheels up) or `doors_open_nose`, `doors_open_main_stbd/port` (gear down) | up to 40 x 11 x 12 |
+| `nose_gear_a/b`, `main_gear_stbd_a/b`, `main_gear_port_a/b` | 10 x 36 x 4, 16 x 36 x 6 |
+| `stand_post`, `stand_base` | 34 x 95 x 6, 150 x 100 x 8 |
 | `fin` (to become two halves), `probe` | |
 
-All fit a 230 x 250 mm plate. Overhang check (`common/tools/overhang.py`): 0 on the wings and front shells; 943 mm2 on `centre_upper` and 534 mm2 on `centre_lower` (intake duct roofs and jet pipe bores, to be dealt with).
+All fit a 230 x 250 mm plate. Overhangs: none on the wings, doors, gear, stand, roof or front shells; `centre_upper` (intake duct roofs) and `centre_lower` (jet pipe bores, bay ledges) still have some.
 
-Still to do on the split: joints (keys between the shells, a spar key across each wing joint, plugs at the front and radome joints), the fin as two halves in a slot, separate jet nozzles, gear and bays, bomb bay doors and the Blue Steel, the stand.
+Still to do on the split: joints (keys between the shells, a spar key across each wing joint, plugs at the front and radome joints, the probe's socket), the fin as two halves in a slot, separate jet nozzles, the stand with the Blue Steel fitted.
 
 ## Build
 

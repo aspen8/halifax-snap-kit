@@ -203,7 +203,7 @@ MAIN_GEAR = dict(
     yc=67.0, wheels=[(242.5, -42.0), (252.7, -42.0)],
     leg=[(246.3, GEAR_PLUG_TOP), (250.5, GEAR_PLUG_TOP), (250.5, -7.0), (246.8, -38.0), (254.0, -39.6),
          (254.0, -44.0), (241.2, -44.0), (241.2, -39.6), (243.0, -38.0), (246.3, -7.0)],
-    struts=[((237.0, -7.3), (242.0, -29.0)), ((248.6, -25.0), (248.6, -39.0)), ((242.0, -29.0), (238.5, -33.5)),
+    struts=[((237.4, -9.0), (242.0, -29.0)), ((248.6, -25.0), (248.6, -39.0)), ((242.0, -29.0), (238.5, -33.5)),
             ((238.5, -33.5), (243.0, -37.0))],
     plug=(246.3, 250.5),
     wheel_profile=[(0.0, 2.9), (0.1, 2.9), (1.7, 4.5), (4.0, 4.5), (4.8, 3.7), (5.6, 4.5), (7.7, 4.5), (8.0, 4.2)],   # flares and the groove between the twin tyres at 45 degrees: no overhang
@@ -220,6 +220,17 @@ BS_WING = [(102.0, 7.0), (131.0, 26.0), (136.0, 26.0), (136.0, 7.0)]      # (fro
 BS_FORE = [(12.0, 2.0), (30.0, 15.4), (36.0, 15.4), (36.0, 5.0)]
 BS_WING_T = 1.2 * _P            # wing and foreplane thickness (1.2 mm printed)
 BS_KEYS = [(215.0, 285.0), (8.0, 3.0, 2.4)]   # x of the two keys on the door; length, width, height
+# Stand (wheels up): a blade post with a square key that goes up through its own bomb door panel
+# (door_bomb_stand) into the bay roof plate, and a tenon into a plinth. The aircraft sits nose-up.
+STAND_X = 240.0                 # key position: near the balance point, inside the bomb bay
+STAND_KEY = 8.0                 # key and post thickness (6 mm printed)
+STAND_PITCH = 8.0               # degrees nose-up
+STAND_HEIGHT = 107.0            # belly above the plinth at the key (80 mm printed)
+STAND_SWEEP = 20.0              # the foot sits this far behind the key
+STAND_SHOULDER = (22.0, 30.0)   # post width under the belly, and at the foot
+STAND_TENON = (16.0, 8.0)       # tenon length along the plinth, depth into it
+STAND_BASE = (200.0, 133.0, 10.7, 14.0)   # plinth length, width, thickness, corner radius (150 x 100 x 8 printed)
+STAND_BASE_DX = -30.0           # plinth centre from the foot, along the plinth (forward)
 STRUT_W = 1.7
 DOOR_T = 1.6                    # open gear doors: 1.2 mm printed
 NOSE_DOORS = (118.5, 158.5, 7.0)          # x range and how far the two doors hang below the belly
@@ -791,6 +802,35 @@ def blue_steel():
     return half, keys
 
 
+def stand_parts():
+    """(post, plinth, key hole for the door and roof, plinth's print pose), assembled frame."""
+    th = math.radians(STAND_PITCH)
+    d, n = np.array([math.cos(th), math.sin(th)]), np.array([-math.sin(th), math.cos(th)])   # along / up from the plinth, (x, z)
+    k = STAND_KEY / 2
+    belly = WING_UNDER_Z
+    foot = np.array([STAND_X + STAND_SWEEP, belly - STAND_HEIGHT])
+    w0, w1 = STAND_SHOULDER[0] / 2, STAND_SHOULDER[1] / 2
+    tl, td = STAND_TENON
+    outline = [(STAND_X - k, SPLIT_Z - 0.3), (STAND_X + k, SPLIT_Z - 0.3), (STAND_X + k, belly - 0.3),
+               (STAND_X + w0, belly - 0.3), tuple(foot + w1 * d), tuple(foot + tl / 2 * d),
+               tuple(foot + tl / 2 * d - td * n), tuple(foot - tl / 2 * d - td * n), tuple(foot - tl / 2 * d),
+               tuple(foot - w1 * d), (STAND_X - w0, belly - 0.3), (STAND_X - k, belly - 0.3)]
+    post = _plate_xz([outline], -k, k)
+    hole = K.box(STAND_X - k - FIT, STAND_X + k + FIT, -k - FIT, k + FIT, belly - 1.0, SPLIT_Z + 0.01)
+    L, W, T, R = STAND_BASE
+    sec = K.cs([[(-L / 2 + R, -W / 2 + R), (L / 2 - R, -W / 2 + R), (L / 2 - R, W / 2 - R), (-L / 2 + R, W / 2 - R)]]).offset(R, mf.JoinType.Round, 2.0, 48)
+    slab = sec.extrude(T).translate([STAND_BASE_DX, 0, -T])
+    slot = K.box(-tl / 2 - FIT, tl / 2 + FIT, -k - FIT, k + FIT, -td - 0.4, 1.0)
+    local = slab - slot
+
+    def place(m):
+        return m.rotate([0, -STAND_PITCH, 0]).translate([foot[0], 0, foot[1]])
+
+    def unplace(m):
+        return m.translate([-foot[0], 0, -foot[1]]).rotate([0, STAND_PITCH, 0])
+    return post, place(local), hole, unplace
+
+
 def bomb_roof():
     """(recess in the centre lower shell's top face, the ribbed roof plate that drops into it)."""
     t, margin, pitch, rw, rd = BOMB_ROOF
@@ -857,7 +897,11 @@ def build():
         if name == "centre":
             recess, roof = bomb_roof()
             lower = lower - recess
-            parts["bomb_bay_roof"] = (roof, flip)
+            post, plinth, hole, unplace = stand_parts()
+            parts["bomb_bay_roof"] = (roof - hole, flip)
+            parts["door_bomb_stand"] = (parts["door_bomb"][0] - hole, under_pose)
+            parts["stand_post"] = (post, lambda m: m.rotate([90, 0, 0]))
+            parts["stand_base"] = (plinth, unplace)
         parts[f"{name}_lower"] = (lower, under_pose)
     for tag, g, sd in (("nose_gear", NOSE_GEAR, 1), ("main_gear_stbd", MAIN_GEAR, 1), ("main_gear_port", MAIN_GEAR, -1)):
         ha, hb, _ = gear_halves(g, sd)
