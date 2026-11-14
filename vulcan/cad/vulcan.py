@@ -175,12 +175,43 @@ UNDER_STBD = [[(360, 32), (298, 32), (285, 39.5), (298, 47), (360, 47)]]        
 # Bays. Each is an opening in a lower shell with a ledge round it; a door panel cut from the shell's
 # own skin drops in from below against the ledge (wheels up, bomb doors shut), or is left out.
 # name: (part, outline (x, y) starboard or centred, ledge z, roof z, mirrored to port too?)
-BAY_LEDGE_W = 1.4               # width of the ledge the door panel sits against
+# name: (part, outline (x, y) starboard or centred, ledge z, roof z, mirrored to port too?, ledge width)
+BAY_LEDGE_W = 1.4               # width of the bomb bay's ledge (the gear bays' are wider: they carry a frame)
 BAYS = {
-    "bomb": ("centre", [(187, -21.5), (187, 21.5), (310, 21.5), (310, -21.5)], -12.3, -6.0, False),
-    "nose": ("centre", [(122, -8), (122, 8), (162, 8), (162, -8)], -11.5, -6.0, False),
-    "main": ("wing", [(204, 60), (204, 71), (232, 75), (258, 75), (258, 60)], -12.5, -7.0, True),
+    "bomb": ("centre", [(187, -21.5), (187, 21.5), (310, 21.5), (310, -21.5)], -12.3, -6.0, False, 1.4),
+    "nose": ("centre", [(117, -8), (117, 8), (160, 8), (160, -8)], -11.5, -6.0, False, 2.0),
+    "main": ("wing", [(204, 60), (204, 71), (232, 75), (258, 75), (258, 60)], -12.5, -7.0, True, 2.0),
 }
+
+# Landing gear (Airfix side view on a 5 mm grid; instruction pages 22-23; photos). Ground at z -46.5.
+# Each leg is two flat halves split on its own centre plane, printed lying on that plane with the
+# wheels moulded on top: no loose axles (LESSONS: small pins snap). Legs are thicker than scale.
+GROUND_Z = -46.5
+GEAR_T = 4.4                    # leg thickness across the split (two halves of 1.65 mm printed)
+GEAR_PLUG_FIT = 0.06 * _P       # plug to socket, per side: a firm push (socket sized from the closed halves)
+GEAR_PLUG_TOP = 1.0             # the plugs run up through the bay roof into the upper shell, to this z
+NOSE_GEAR = dict(
+    yc=0.0, wheel=(120.0, -41.5),
+    # leg outline (x, z), from the plug down to the axle block
+    leg=[(117.7, GEAR_PLUG_TOP), (121.3, GEAR_PLUG_TOP), (121.3, -36.0), (122.2, -38.5), (122.2, -44.0),
+         (117.8, -44.0), (117.8, -38.5), (117.7, -36.0)],
+    struts=[((127.0, -6.3), (120.6, -27.0))],                 # retraction strut (clear of the roof)
+    plug=(117.7, 121.3),
+    wheel_profile=[(0.0, 3.0), (0.7, 3.0), (2.7, 5.0), (5.3, 5.0), (5.7, 4.4)],   # along the axle from the split: (pos, radius)
+)
+MAIN_GEAR = dict(
+    yc=67.0, wheels=[(242.5, -42.0), (252.7, -42.0)],
+    leg=[(246.3, GEAR_PLUG_TOP), (250.5, GEAR_PLUG_TOP), (250.5, -7.0), (246.8, -38.0), (254.0, -39.6),
+         (254.0, -44.0), (241.2, -44.0), (241.2, -39.6), (243.0, -38.0), (246.3, -7.0)],
+    struts=[((237.0, -7.3), (242.0, -29.0)), ((248.6, -25.0), (248.6, -39.0)), ((242.0, -29.0), (238.5, -33.5)),
+            ((238.5, -33.5), (243.0, -37.0))],
+    plug=(246.3, 250.5),
+    wheel_profile=[(0.0, 2.9), (0.1, 2.9), (1.7, 4.5), (4.0, 4.5), (4.8, 3.7), (5.6, 4.5), (7.7, 4.5), (8.0, 4.2)],   # flares and the groove between the twin tyres at 45 degrees: no overhang
+)
+STRUT_W = 1.7
+DOOR_T = 1.6                    # open gear doors: 1.2 mm printed
+NOSE_DOORS = (118.5, 158.5, 7.0)          # x range and how far the two doors hang below the belly
+MAIN_DOOR = (212.0, 230.0, 16.0)          # the big door on the bay's outboard edge: x range, drop
 BOMB_ROOF = (2.0, 2.0, 12.0, 1.2, 1.5)   # roof plate: thickness, margin round the bay, rib pitch, rib width, rib depth
 BED = (230.0, 250.0)            # usable plate, printed mm (X2D; 256 mm beds are larger)
 WING_Y = [0.0, 5.0, 10.0, 15.0, 19.8, 24.0, 29.0, 34.0, 39.0, 44.0, 49.8, 54.0, 57.0, 58.5, 63.0, 67.9, 72.0,
@@ -673,20 +704,68 @@ def flip(m):
     return m.rotate([180, 0, 0])
 
 
-def _bay_cut(shell, outline, z_ledge, z_roof, side=1):
+def _bay_cut(shell, outline, z_ledge, z_roof, side=1, ledge_w=BAY_LEDGE_W):
     """(shell with the bay cut, the door panel) for one bay."""
     sec = K.cs([[(x, side * y) for x, y in outline]])
     lo = K.box(-BIG, BIG, -BIG, BIG, -BIG, z_ledge)
     opening = K.prism_z(sec) ^ lo
-    cavity = K.prism_z(sec.offset(-BAY_LEDGE_W, mf.JoinType.Miter, 2.0)) ^ K.box(-BIG, BIG, -BIG, BIG, -BIG, z_roof)
+    cavity = K.prism_z(sec.offset(-ledge_w, mf.JoinType.Miter, 2.0)) ^ K.box(-BIG, BIG, -BIG, BIG, -BIG, z_roof)
     door = shell ^ K.prism_z(sec.offset(-FIT, mf.JoinType.Miter, 2.0)) ^ lo
     return shell - opening - cavity, door
+
+
+def _open_frame(shell, outline, z_ledge, ledge_w, side, door_edges, drop):
+    """Gear-down insert for a bay: the rim that sits on the ledge (cut from the shell's skin, like
+    the closed door) with the open doors standing down from it. door_edges: [((x, y), (x, y)), ...]
+    along the outline; drop: how far they hang below the ledge."""
+    sec = K.cs([[(x, side * y) for x, y in outline]])
+    lo = K.box(-BIG, BIG, -BIG, BIG, -BIG, z_ledge)
+    outer, inner = sec.offset(-FIT, mf.JoinType.Miter, 2.0), sec.offset(-ledge_w - 0.3, mf.JoinType.Miter, 2.0)
+    rim = shell ^ K.prism_z(outer - inner) ^ lo
+    doors = []
+    for a, b in door_edges:
+        band = K.band((a[0], side * a[1]), (b[0], side * b[1]), DOOR_T)
+        doors.append(K.prism_z(band ^ outer) ^ K.box(-BIG, BIG, -BIG, BIG, z_ledge - drop, z_ledge))
+    return rim + union(doors) if len(doors) > 1 else rim + doors[0]
+
+
+def _plate_xz(polys, y0, y1):
+    """Plate between y0 and y1 with the (x, z) outline(s) given."""
+    sec = mf.CrossSection.batch_boolean([K.cs([p]) for p in polys], mf.OpType.Add)
+    return sec.extrude(y1 - y0).rotate([90, 0, 0]).translate([0, y1, 0])
+
+
+def _bar(p0, p1, w):
+    d = np.subtract(p1, p0); n = np.array([-d[1], d[0]]) / np.linalg.norm(d) * w / 2
+    return [tuple(np.add(p0, -n)), tuple(np.add(p1, -n)), tuple(np.add(p1, n)), tuple(np.add(p0, n))]
+
+
+def gear_halves(g, side=1):
+    """(half a, half b, socket) of a leg in the assembled frame; a is the half on the +y side of the
+    leg's centre plane. side -1 gives the port leg."""
+    yc = g["yc"]
+    polys = [g["leg"]] + [_bar(p0, p1, STRUT_W) for p0, p1 in g["struts"]]
+    plate = _plate_xz(polys, yc, yc + GEAR_T / 2)
+    wheel = revolve_x(g["wheel_profile"]).rotate([0, 0, 90])               # axle along +y from the split
+    centres = g.get("wheels") or [g["wheel"]]
+    a = plate + union([wheel.translate([x, yc, z]) for x, z in centres] + [plate])
+    b = a.mirror([0, 1, 0]).translate([0, 2 * yc, 0])
+    f = GEAR_PLUG_FIT
+    x0, x1 = g["plug"]
+    socket = K.box(x0 - f, x1 + f, yc - GEAR_T / 2 - f, yc + GEAR_T / 2 + f, -30.0, GEAR_PLUG_TOP + 0.4)
+    if side < 0:
+        a, b, socket = (m.mirror([0, 1, 0]) for m in (b, a, socket))
+    return a, b, socket
+
+
+def gear_sockets():
+    return union([gear_halves(NOSE_GEAR)[2], gear_halves(MAIN_GEAR, 1)[2], gear_halves(MAIN_GEAR, -1)[2]])
 
 
 def bomb_roof():
     """(recess in the centre lower shell's top face, the ribbed roof plate that drops into it)."""
     t, margin, pitch, rw, rd = BOMB_ROOF
-    _, outline, _, z_roof, _ = BAYS["bomb"]
+    _, outline, _, z_roof, _, _ = BAYS["bomb"]
     sec = K.cs([outline])
 
     def wedge(grow, top):
@@ -708,6 +787,7 @@ def bomb_roof():
 def build():
     """Returns {name: (Manifold in the assembled frame, pose function -> print pose)}."""
     a = airframe() - fin()
+    sockets = gear_sockets()
     parts = {"radome": (a ^ region("radome"),
                         lambda m: m.rotate([0, 90, 0]))}             # on end, on its joint face
     for name, side in (("front", 0), ("centre", 0), ("wing_stbd", 1), ("wing_port", -1)):
@@ -715,24 +795,41 @@ def build():
         up = above_split(side)
         level = (lambda m, s=side: rot_x(m, s * SPLIT_TILT, s * WING_JOINT_Y, SPLIT_Z)) if side else (lambda m: m)
         upper = blk ^ up
-        parts[f"{name}_upper"] = (engrave_top(upper) if name != "front" else upper, level)
+        if name != "front":
+            upper = engrave_top(upper) - sockets
+        parts[f"{name}_upper"] = (upper, level)
         lower = engrave_under(blk - up)
         under_pose = lambda m, lv=level: flip(lv(m))
-        for bay, (where, outline, z_ledge, z_roof, both) in BAYS.items():
+        for bay, (where, outline, z_ledge, z_roof, both, ledge_w) in BAYS.items():
             if not name.startswith(where) or (side < 0 and not both):
                 continue
+            sfx = "" if not both else ("_stbd" if side > 0 else "_port")
             if side:                             # wing bays are cut square to the wing's own split plane
                 unlevel = lambda m, s=side: rot_x(m, -s * SPLIT_TILT, s * WING_JOINT_Y, SPLIT_Z)
-                lower, door = (unlevel(m) for m in _bay_cut(level(lower), outline, z_ledge, z_roof, side))
+                whole = level(lower)
+                x0, x1, drop = MAIN_DOOR
+                edge = [((x0, 71 + (x0 - 204) / 7.0), (x1, 71 + (x1 - 204) / 7.0))]     # along the outboard edge
+                frame = unlevel(_open_frame(whole, outline, z_ledge, ledge_w, side, [((a[0], a[1] - 1.0), (b[0], b[1] - 1.0)) for a, b in edge], drop))
+                lower, door = (unlevel(m) for m in _bay_cut(whole, outline, z_ledge, z_roof, side, ledge_w))
+                parts[f"doors_open_{bay}{sfx}"] = (frame, under_pose)
             else:
-                lower, door = _bay_cut(lower, outline, z_ledge, z_roof, 1)
-            tag = f"door_{bay}" + ("" if not both else ("_stbd" if side > 0 else "_port"))
-            parts[tag] = (door, under_pose)
+                if bay == "nose":
+                    x0, x1, drop = NOSE_DOORS
+                    yd = outline[1][1] - 1.0
+                    parts["doors_open_nose"] = (_open_frame(lower, outline, z_ledge, ledge_w, 1,
+                                                            [((x0, yd), (x1, yd)), ((x0, -yd), (x1, -yd))], drop), under_pose)
+                lower, door = _bay_cut(lower, outline, z_ledge, z_roof, 1, ledge_w)
+            parts[f"door_{bay}{sfx}"] = (door, under_pose)
+        lower = lower - sockets
         if name == "centre":
             recess, roof = bomb_roof()
             lower = lower - recess
             parts["bomb_bay_roof"] = (roof, flip)
         parts[f"{name}_lower"] = (lower, under_pose)
+    for tag, g, sd in (("nose_gear", NOSE_GEAR, 1), ("main_gear_stbd", MAIN_GEAR, 1), ("main_gear_port", MAIN_GEAR, -1)):
+        ha, hb, _ = gear_halves(g, sd)
+        parts[f"{tag}_a"] = (ha, lambda m: m.rotate([90, 0, 0]))       # +y half: split face down
+        parts[f"{tag}_b"] = (hb, lambda m: m.rotate([-90, 0, 0]))
     parts["fin"] = (fin(), lambda m: m.rotate([90, 0, 0]))            # (pose to come: two halves)
     parts["probe"] = (probe(), lambda m: m)
     return parts
