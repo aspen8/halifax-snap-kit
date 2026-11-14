@@ -11,7 +11,7 @@ Avro Vulcan B.2 at 1:96: 352 mm span, 317 mm long (336 mm with the refuelling pr
 
 ![shape in grey](docs/shape_grey.png)
 
-> **Status: v16: shape fitted to the Airfix A12011 plan and side views, and split into shells.** No joints, colour or print file yet. Not yet split into parts; no joints, colour or print file.
+> **Status: v17: shape fitted to the Airfix A12011 plan and side views, and split into shells.** No joints, colour or print file yet. Not yet split into parts; no joints, colour or print file.
 
 Intakes and wing root (v7, user review): one letterbox mouth a side, tall at the fuselage (about 60% of its depth, from the XH558 photos) and tapering outboard, with the wall between the two engine ducts set back 9 mm. Over the engines the wing's top is not an aerofoil hump: it reaches its crest just behind the intake lip and runs almost straight to the trailing edge, so it meets the fuselage on a straight line, as in the Airfix side view (`WING_ROOT_UP`, `WING_CREST`). Each intake's inner wall stands 2 mm (1:72) off the fuselage, with an open slot between them running 16 mm back from the lip (v8, user: "almost a separation from the fuselage"). The fin's leading edge sweeps forward into the spine (`FIN_FILLET`).
 
@@ -47,7 +47,9 @@ Stand (v16): a blade post (`stand_post`, printed flat) with a 6 mm square key th
 
 ![on the stand](docs/on_stand.png)
 
-Interference check (`common/tools/interference.py`, gear up with the Blue Steel, and gear down): clean except the probe in the radome (its socket comes with the joints).
+Interference check (`common/tools/interference.py`, gear down with the Blue Steel, keys left out): clean.
+
+Joints (v17, untested: print coupons before trusting any fit). Every key is a 3 mm plate standing on edge across the split surface, upright in the assembled frame, so the keys go into the lower shells and every upper shell drops straight down onto them (`KEYS`, `add_joints`). 26 keys in 7 sizes: 20 short ones (6 mm long, 3.2 to 10 mm tall, the height found from the material at each place) between upper and lower shells, 2 of 18 mm across the front/centre joint and 4 spars of 30 mm across the wing joints. The radome pushes onto a tongue moulded half on each front shell; the probe (2 mm, thicker than scale) plugs into the radome tip; the fin is two halves printed on their split faces, its root in a slot of its own shape. Checks: no overlaps between parts, every part one piece. Not keyed yet: the wing shells outboard of y 150 (too thin for a key: the tips may need a lip), and the two fin halves to each other above the slot.
 
 ## Parts (v6: first split, no joints yet)
 
@@ -55,7 +57,7 @@ Upper and lower shells, as in a plastic kit, so every underside part prints in o
 
 ![parts, exploded](docs/parts_exploded.png)
 
-30 parts in all (`out/.../print/`, each in its print pose at printed size):
+57 parts in all, 26 of them keys (`out/.../print/`, each in its print pose at printed size):
 
 | Part | Printed size (mm) |
 |---|---|
@@ -69,11 +71,11 @@ Upper and lower shells, as in a plastic kit, so every underside part prints in o
 | `door_nose`, `door_main_stbd/port` (wheels up) or `doors_open_nose`, `doors_open_main_stbd/port` (gear down) | up to 40 x 11 x 12 |
 | `nose_gear_a/b`, `main_gear_stbd_a/b`, `main_gear_port_a/b` | 10 x 36 x 4, 16 x 36 x 6 |
 | `stand_post`, `stand_base` | 34 x 95 x 6, 150 x 100 x 8 |
-| `fin` (to become two halves), `probe` | |
+| `fin_stbd`, `fin_port`, `probe`, 26 `key_*` | 141 x 51 x 3; 25 x 2 x 2 |
 
 All fit a 230 x 250 mm plate. Overhangs: none on the wings, doors, gear, stand, roof or front shells; `centre_upper` (intake duct roofs) and `centre_lower` (jet pipe bores, bay ledges) still have some.
 
-Still to do on the split: joints (keys between the shells, a spar key across each wing joint, plugs at the front and radome joints, the probe's socket), the fin as two halves in a slot, separate jet nozzles, the stand with the Blue Steel fitted.
+Still to do on the split: test coupons for every joint, separate jet nozzles, the stand with the Blue Steel fitted, something to hold the wing tips' shells together.
 
 ## Build
 

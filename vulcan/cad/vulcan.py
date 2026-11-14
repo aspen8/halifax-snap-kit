@@ -86,7 +86,8 @@ CANOPY_STATIONS = [             # x, half-width, z top: the small bubble over th
 CANOPY_DEPTH = 12.0
 CANOPY_N = 2.5
 BLISTER = (70.0, -14.6, 12.0, 7.0, 3.5)   # bomb aimer's blister: x, z, radii along x, y, z
-PROBE = (26.0, 2.0)             # refuelling probe: length ahead of the nose tip, diameter
+PROBE = (26.0, 2.0 * _P)        # refuelling probe: length ahead of the nose tip, diameter (2 mm printed: thicker than scale)
+PROBE_PLUG = (7.0, 0.08 * _P)   # its plug into the radome tip: depth, fit per side
 
 # Wing planform (starboard), from the Airfix plan view (the Commons silhouette agrees within
 # about 3 mm): leading edge (y, x) with the intake notch at y 50-58, the B.2's two kinks
@@ -231,6 +232,25 @@ STAND_SHOULDER = (22.0, 30.0)   # post width under the belly, and at the foot
 STAND_TENON = (16.0, 8.0)       # tenon length along the plinth, depth into it
 STAND_BASE = (200.0, 133.0, 10.7, 14.0)   # plinth length, width, thickness, corner radius (150 x 100 x 8 printed)
 STAND_BASE_DX = -30.0           # plinth centre from the foot, along the plinth (forward)
+# Joints. Every key is a flat plate standing on edge across the split surface, upright in the
+# assembled frame, so all the upper shells go straight down onto the lower ones. The long ones also
+# cross a joint between sections. Slot depth is found per key from the material there.
+KEY_T = 3.0 * _P                # key thickness (3 mm printed)
+KEY_FIT = 0.08 * _P             # per side across the thickness: a firm push (to be set from test coupons)
+KEY_WALL = 1.0 * _P             # skin left beyond a slot's end
+KEY_GAP = 0.3 * _P              # slot deeper than the key by this, each end
+KEY_H = [h * _P for h in (5.0, 4.5, 4.0, 3.5, 3.0, 2.5, 2.0, 1.6)]   # half-heights tried, deepest first
+# (parts' name prefixes, (x, y) centre, direction of the key's length, length), y mirrored when != 0
+KEYS = (
+    [(("front",), (x, 0.0), "x", 6.0 * _P) for x in (45.0, 80.0)]
+    + [(("front", "centre"), (102.0, 9.0), "x", 18.0 * _P)]
+    + [(("centre",), xy, "x", 6.0 * _P) for xy in ((172.0, 14.0), (182.0, 40.0), (250.0, 42.0), (330.0, 42.0),
+                                                   (335.0, 0.0), (385.0, 0.0))]
+    + [(("centre", "wing"), (x, WING_JOINT_Y), "y", 30.0 * _P) for x in (198.0, 300.0)]
+    + [(("wing",), xy, "x", 6.0 * _P) for xy in ((245.0, 100.0), (310.0, 100.0), (285.0, 150.0), (305.0, 150.0))]
+)
+RADOME_TONGUE = (10.0, 5.0, 2.5)   # front shells' tongue into the radome: length, half-width, half-height
+FIN_FIT = 0.10 * _P             # fin root in its slot, per side
 STRUT_W = 1.7
 DOOR_T = 1.6                    # open gear doors: 1.2 mm printed
 NOSE_DOORS = (118.5, 158.5, 7.0)          # x range and how far the two doors hang below the belly
@@ -543,8 +563,12 @@ def fin():
 
 @cached
 def probe():
+    """(probe with its plug, the hole for it in the radome tip)."""
     length, d = PROBE
-    return M.cylinder(length + 2.0, d / 2, d / 2, 32).rotate([0, 90, 0]).translate([-length, 0, 0])
+    depth, f = PROBE_PLUG
+    rod = M.cylinder(length + depth, d / 2, d / 2, 32).rotate([0, 90, 0]).translate([-length, 0, 0])
+    hole = M.cylinder(length + depth + 0.5, d / 2 + f, d / 2 + f, 32).rotate([0, 90, 0]).translate([-length, 0, 0])
+    return rod, hole
 
 
 def _closing(z, r, step):
@@ -831,6 +855,72 @@ def stand_parts():
     return post, place(local), hole, unplace
 
 
+def key_plate(length, height, t):
+    """A key lying flat (length x height on the bed), its insertion ends chamfered."""
+    c = 0.5 * _P
+    a = mf.CrossSection.square([length, height - 2 * c], True)
+    b = mf.CrossSection.square([length - 2 * c, height], True)
+    return mf.CrossSection.batch_boolean([a, b], mf.OpType.Add).hull().extrude(t)
+
+
+def add_joints(parts):
+    """Cut the key slots, the radome tongue and socket, the probe hole and the fin slot, and add the
+    keys and fin halves to parts."""
+    def solid(prefix, sgn):
+        names = [n for n in parts if n.startswith(prefix) and n.endswith(("_upper", "_lower"))
+                 and (prefix != "wing" or ("stbd" in n) == (sgn > 0))]
+        return names
+
+    sizes = {}
+    for prefixes, (x, y0), direction, length in KEYS:
+        for sgn in ((1, -1) if y0 else (1,)):
+            y = sgn * y0
+            names = [n for pf in prefixes for n in solid(pf, sgn)]
+            whole = union([parts[n][0] for n in names])
+            hx, hy = (length / 2, KEY_T / 2) if direction == "x" else (KEY_T / 2, length / 2)
+            zs = split_z(y)
+            for h in KEY_H:
+                probe_box = K.box(x - hx - KEY_WALL, x + hx + KEY_WALL, y - hy - KEY_WALL, y + hy + KEY_WALL,
+                                  zs - h - KEY_GAP - KEY_WALL, zs + h + KEY_GAP + KEY_WALL)
+                if (probe_box ^ whole).volume() > 0.997 * probe_box.volume():
+                    break
+            else:
+                print(f"!! no room for a key at ({x:.0f}, {y:.0f}) in {prefixes}")
+                continue
+            ex, ey = (0.15 * _P, KEY_FIT) if direction == "x" else (KEY_FIT, 0.15 * _P)
+            slot = K.box(x - hx - ex, x + hx + ex, y - hy - ey, y + hy + ey, zs - h - KEY_GAP, zs + h + KEY_GAP)
+            for n in names:
+                parts[n] = (parts[n][0] - slot, parts[n][1])
+            sizes.setdefault((round(length * PRINT_K, 1), round(2 * h * PRINT_K, 1)), []).append((x, y))
+    n_keys = 0
+    for (lp, hp), where in sorted(sizes.items()):
+        for i in range(len(where)):
+            parts[f"key_{lp:g}x{hp:g}_{i + 1}"] = (key_plate(lp * _P, hp * _P, KEY_T), lambda m: m)
+            n_keys += 1
+    print(f"keys: {n_keys} in {len(sizes)} sizes (length x height, printed): "
+          + ", ".join(f"{len(w)} of {lp:g} x {hp:g}" for (lp, hp), w in sorted(sizes.items())))
+
+    # radome: a tongue on the front shells (half on each, lying on the split plane) into a socket
+    tl, tw, th = RADOME_TONGUE
+    tongue = K.box(RADOME_X - tl, RADOME_X + 1.0, -tw, tw, SPLIT_Z - th, SPLIT_Z + th)
+    socket = K.box(RADOME_X - tl - 0.5, RADOME_X + 0.01, -tw - FIT, tw + FIT, SPLIT_Z - th - FIT, SPLIT_Z + th + FIT)
+    up = above_split(0)
+    parts["front_upper"] = (parts["front_upper"][0] + (tongue ^ up), parts["front_upper"][1])
+    parts["front_lower"] = (parts["front_lower"][0] + (tongue - up), parts["front_lower"][1])
+    rod, hole = probe()
+    parts["radome"] = (parts["radome"][0] - socket - hole, parts["radome"][1])
+    parts["probe"] = (rod, lambda m: m)
+
+    # fin: two halves printed on their split faces; the root sits in a slot of its own shape
+    f = fin()
+    grown = union([f.translate([dx, dy, 0]) for dx in (-FIN_FIT, FIN_FIT) for dy in (-FIN_FIT, FIN_FIT)]
+                  + [f.translate([0, 0, -0.3])])
+    parts["centre_upper"] = (parts["centre_upper"][0] - grown, parts["centre_upper"][1])
+    half = K.box(-BIG, BIG, 0.0, BIG, -BIG, BIG)
+    parts["fin_stbd"] = (f ^ half, lambda m: m.rotate([90, 0, 0]))
+    parts["fin_port"] = (f - half, lambda m: m.rotate([-90, 0, 0]))
+
+
 def bomb_roof():
     """(recess in the centre lower shell's top face, the ribbed roof plate that drops into it)."""
     t, margin, pitch, rw, rd = BOMB_ROOF
@@ -907,8 +997,7 @@ def build():
         ha, hb, _ = gear_halves(g, sd)
         parts[f"{tag}_a"] = (ha, lambda m: m.rotate([90, 0, 0]))       # +y half: split face down
         parts[f"{tag}_b"] = (hb, lambda m: m.rotate([-90, 0, 0]))
-    parts["fin"] = (fin(), lambda m: m.rotate([90, 0, 0]))            # (pose to come: two halves)
-    parts["probe"] = (probe(), lambda m: m)
+    add_joints(parts)
     return parts
 
 
