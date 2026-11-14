@@ -25,7 +25,7 @@
   },
   "side": {
     "image": "ref/vulcan/airfix_a_side_port.png",
-    "_source": "Same sheet, port side view (nose left), zoomed screenshot 1175 x 348, same scale as the plan: nose tip col 153, row 178; tail col 1118.",
+    "_source": "Same sheet, port side view (nose left), zoomed screenshot 1175 x 348, same scale as the plan: nose tip col 153, row 186 (the probe leaves the nose 8 px above the tip; the first overlay, set on the probe, sat 8 px high); tail col 1118.",
     "axes": "xz",
     "affine": [
       [
@@ -36,7 +36,7 @@
       [
         0.0,
         -2.2857,
-        178.0
+        186.0
       ]
     ],
     "crop": [
