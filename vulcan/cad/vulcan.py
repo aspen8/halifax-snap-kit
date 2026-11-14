@@ -120,7 +120,8 @@ WING_CREST = (0.09, 1.25)       # inboard: crest at this fraction of chord, then
 WING_UNDER_RAMP = (0.30, 0.8)   # inboard underside: reaches full depth at this fraction of chord, exponent
 WING_CREST_BLEND = (25.0, 80.0)  # the inboard profile fades into the plain aerofoil over this span
 SPLIT_TIP_Z = -14.0
-WING_JOINT_Y = 57.0             # centre body / outer wing joint (just outboard of the intakes and jet pipes)
+WING_JOINT_Y = 59.0             # centre body / outer wing joint: just outboard of the intake lips' outer ends
+                                # (at 57 it cut through the lip and left a loose strip of duct floor)
 RADOME_X = 24.0                 # the black radome is its own part ahead of this
 FRONT_X = 105.0                 # front fuselage / centre body joint, at the wing root's leading edge
 # The upper surface over the engines is smoothed: every concave crease on top (wing to fuselage,
@@ -138,17 +139,17 @@ BLEND_STEP = (1.5, 0.3)         # grid: x, y
 # view on a 10 mm grid (ref airfix_b_top.png: 2.3026 px/mm, centreline col 592.5, nose row 28).
 LINE_W, LINE_D = 0.5 * _P, 0.25 * _P        # panel lines: 0.5 mm wide, 0.25 mm deep, printed
 HINGE_W, HINGE_D = 0.6 * _P, 0.4 * _P       # control surface edges
-_EB = (22.0, 58.0)                          # engine bay: from the fuselage side to its outer edge
+_EB = (22.0, 59.0)                          # engine bay: from the fuselage side to its outer edge
 PANEL_LINES = (
     [[(x, _EB[0]), (x, _EB[1])] for x in (188, 208, 217, 226, 235, 244, 253, 262, 270, 278, 287, 302, 316)]
-    + [[(160, 58), (360, 58)], [(188, 22), (345, 22)]]                 # the bay's outer and inner edges
+    + [[(188, 22), (345, 22)]]                                         # the bay's inner edge (the outer one is the wing joint)
     + [[(316, y), (358, y)] for y in (27.0, 37.0, 44.0, 54.0)]         # jet pipe panels
     + [[(126, 13), (190, 58), (250, 153)],                            # behind the leading edge panels
        [(250, 153), (290, 146), (345, 137)],                          # outer wing joint
        [(311, 58), (333, 137), (352, 221)],                           # rear spar
        [(320, 221), (382, 221)]]                                      # tip panel
     # skin stiffeners outboard of the engine bay: every other one of the sheet's
-    + [[(x0, 58), (x0 + 0.80 * (y1 - 58), y1)] for x0, y1 in
+    + [[(x0, 59), (x0 + 0.80 * (y1 - 59), y1)] for x0, y1 in
        ((200, 148), (222, 146), (240, 144), (262, 140), (290, 98))]
 )
 HINGE_LINES = (
@@ -157,11 +158,11 @@ HINGE_LINES = (
 )
 # Underside lines, from the Airfix scheme B underside view (ref airfix_b_under.png: 2.3026 px/mm,
 # centreline col 630.5, nose tip row 985, nose down; starboard on the right).
-_STIFF = [[(x0, 58), (x0 + 0.80 * (y1 - 58), y1)] for x0, y1 in
+_STIFF = [[(x0, 59), (x0 + 0.80 * (y1 - 59), y1)] for x0, y1 in
           ((200, 148), (222, 146), (240, 144), (262, 140), (290, 98))]
 UNDER_LINES = (
-    [[(x, 22), (x, 57)] for x in (211, 231, 252, 275, 337.5)]          # engine doors
-    + [[(211, 39.5), (275, 39.5)], [(205, 57), (360, 57)], [(205, 22), (205, 57)]]
+    [[(x, 22), (x, 59)] for x in (211, 231, 252, 275, 337.5)]          # engine doors
+    + [[(211, 39.5), (275, 39.5)], [(205, 22), (205, 59)]]
     + [[(86, 6.5), (107, 6.5)], [(86, 0), (86, 6.5)], [(107, 0), (107, 6.5)]]   # crew hatch
     + [[(190, 58), (250, 153)], [(250, 153), (290, 146), (345, 137)],  # as on top: leading-edge line,
        [(311, 58), (333, 137), (352, 221)], [(320, 221), (382, 221)]]  # outer joint, rear spar, tip
@@ -181,7 +182,7 @@ BAY_LEDGE_W = 1.4               # width of the bomb bay's ledge (the gear bays' 
 BAYS = {
     "bomb": ("centre", [(187, -21.5), (187, 21.5), (310, 21.5), (310, -21.5)], -12.3, -6.0, False, 1.4),
     "nose": ("centre", [(117, -8), (117, 8), (160, 8), (160, -8)], -11.5, -6.0, False, 2.0),
-    "main": ("wing", [(204, 60), (204, 71), (232, 75), (258, 75), (258, 60)], -12.5, -7.0, True, 2.0),
+    "main": ("wing", [(204, 61.5), (204, 71), (232, 75), (258, 75), (258, 61.5)], -12.5, -7.0, True, 2.0),
 }
 
 # Landing gear (Airfix side view on a 5 mm grid; instruction pages 22-23; photos). Ground at z -46.5.
@@ -192,12 +193,13 @@ GEAR_T = 4.4                    # leg thickness across the split (two halves of 
 GEAR_PLUG_FIT = 0.06 * _P       # plug to socket, per side: a firm push (socket sized from the closed halves)
 GEAR_PLUG_TOP = 1.0             # the plugs run up through the bay roof into the upper shell, to this z
 NOSE_GEAR = dict(
-    yc=0.0, wheel=(120.0, -41.5),
-    # leg outline (x, z), from the plug down to the axle block
-    leg=[(117.7, GEAR_PLUG_TOP), (121.3, GEAR_PLUG_TOP), (121.3, -36.0), (122.2, -38.5), (122.2, -44.0),
-         (117.8, -44.0), (117.8, -38.5), (117.7, -36.0)],
-    struts=[((127.0, -6.3), (120.6, -27.0))],                 # retraction strut (clear of the roof)
-    plug=(117.7, 121.3),
+    yc=0.0, wheel=(122.6, -41.5),
+    # leg outline (x, z), from the plug down to the axle block (2.6 mm behind where the side view puts it,
+    # to clear the gear-down door frame's front rim)
+    leg=[(120.3, GEAR_PLUG_TOP), (123.89999999999999, GEAR_PLUG_TOP), (123.89999999999999, -36.0), (124.8, -38.5), (124.8, -44.0),
+         (120.39999999999999, -44.0), (120.39999999999999, -38.5), (120.3, -36.0)],
+    struts=[((129.6, -6.3), (123.19999999999999, -27.0))],                 # retraction strut (clear of the roof)
+    plug=(120.3, 123.89999999999999),
     wheel_profile=[(0.0, 3.0), (0.7, 3.0), (2.7, 5.0), (5.3, 5.0), (5.7, 4.4)],   # along the axle from the split: (pos, radius)
 )
 MAIN_GEAR = dict(
@@ -257,13 +259,13 @@ NOSE_DOORS = (118.5, 158.5, 7.0)          # x range and how far the two doors ha
 MAIN_DOOR = (212.0, 230.0, 16.0)          # the big door on the bay's outboard edge: x range, drop
 BOMB_ROOF = (2.0, 2.0, 12.0, 1.2, 1.5)   # roof plate: thickness, margin round the bay, rib pitch, rib width, rib depth
 BED = (230.0, 250.0)            # usable plate, printed mm (X2D; 256 mm beds are larger)
-WING_Y = [0.0, 5.0, 10.0, 15.0, 19.8, 24.0, 29.0, 34.0, 39.0, 44.0, 49.8, 54.0, 57.0, 58.5, 63.0, 67.9, 72.0,
+WING_Y = [0.0, 5.0, 10.0, 15.0, 19.8, 24.0, 29.0, 34.0, 39.0, 44.0, 49.8, 54.0, 57.0, 59.0, 63.0, 67.9, 72.0,
           77.8, 84.0, 90.0, 97.2, 116.5, 135.8, 155.2, 174.5,
           189.0, 193.9, 200.0, 206.9, 213.2, 219.0, 224.3, 229.0, 232.5, 233.5, 234.6, 234.8]
 
 # Intakes: letterbox mouths in the swept inner leading edge, one per engine pair, split in two.
 INTAKE_Y = (20.8, 59.0)         # span of the lip: its inner wall stands off the fuselage
-INTAKE_GAP = (2.0, 16.0, -9.0)  # boundary-layer gap between the intake's inner wall and the fuselage
+INTAKE_GAP = (2.7, 16.0, -9.0)  # boundary-layer gap between the intake's inner wall and the fuselage
                                 # skin: width, how far it runs back from the lip, and its floor (z);
                                 # it is open at the top (XH558 photos; user: "almost a separation")
 # The mouth, measured on the colour head-on photo (12.2 px per model mm; belly z -15 at the bottom
@@ -272,12 +274,15 @@ INTAKE_GAP = (2.0, 16.0, -9.0)  # boundary-layer gap between the intake's inner 
 # with gently bowed top and bottom lips. A thick round lip runs all the way round it. In plan the
 # lip follows the wing's leading edge, including the notch at y 50-58, which is its outer end.
 INTAKE_INNER = (23.8, -5.3, 8.2, 2.5)     # y of the inner edge, z bottom, z top, corner radius
-INTAKE_OUTER = (53.15, 0.85, 2.85)        # outer end: centre y, z, radius
-INTAKE_BOW = (38.0, 6.8, -4.3)            # mid-span: y, z of the top lip, z of the bottom lip
-INTAKE_LIP = 3.0                # lip thickness (2.25 mm printed): its nose is a half-round of this diameter
-INTAKE_WALL_BOW = (5.5, 10.0)    # the inner wall's leading edge bows forward by this much at mid-height
+INTAKE_OUTER = (52.4, 0.9, 3.6)          # outer end: centre y, z, radius
+INTAKE_BOW = (38.0, 7.1, -4.6)            # mid-span: y, z of the top lip, z of the bottom lip
+INTAKE_LIP = 4.2                # lip thickness (3.15 mm printed): a fat half-round nose (lip close-up photo)
+INTAKE_LIP_OUTER = (2.5, 46.0)  # the lip thins to this at its outer end, from this y: it must end inside the centre part
+INTAKE_LIP_INNER = 2.2          # the inner wall is a thinner plate standing off the fuselage
+INTAKE_WALL_BOW = (8.0, 10.0)   # the inner plate's leading edge rakes forward to a horn at its lower corner
+                                # (photo of the blanked intake): this far ahead of the lip at the bottom,    # the inner wall's leading edge bows forward by this much at mid-height
                                 # (side-on photo), fading out over this span outboard
-INTAKE_FAIR = [(8.0, 0.6, 1.0), (22.0, 0.9, 1.0), (45.0, 0.0, 0.55)]   # behind the lip: distance, extra
+INTAKE_FAIR = [(8.0, 1.0, 1.0), (22.0, 1.8, 1.0), (45.0, 1.2, 0.8), (70.0, 0.0, 0.5)]   # behind the lip: distance, extra
                                 # offset, height scale (the fairing sinks into the wing)
 INTAKE_SPLIT = (24.0, 37.6, 1.8)  # the wall between the two engines' ducts: set back, y, thickness
 INTAKE_DEPTH = 90.0             # (the ducts are cut off where the round tunnels start)
@@ -538,16 +543,27 @@ def mouth_outline():
     return p, nrm / np.linalg.norm(nrm, axis=1)[:, None]
 
 
+def lip_t():
+    """Lip thickness at each outline point: the thin inner plate, fat everywhere else."""
+    p, _ = mouth_outline()
+    u = np.clip((p[:, 0] - INTAKE_INNER[0]) / 5.0, 0, 1)
+    t = INTAKE_LIP_INNER + (INTAKE_LIP - INTAKE_LIP_INNER) * u * u * (3 - 2 * u)
+    v = np.clip((p[:, 0] - INTAKE_LIP_OUTER[1]) / (INTAKE_OUTER[0] + INTAKE_OUTER[2] - INTAKE_LIP_OUTER[1]), 0, 1)
+    return t + (INTAKE_LIP_OUTER[0] - t) * v * v * (3 - 2 * v)
+
+
 def mouth_ring(s, offset, z_scale=1.0):
-    """The mouth outline grown by `offset`, s behind the lip's nose, in the swept lip surface."""
+    """The mouth outline grown by `offset`, s behind the lip's nose, in the swept lip surface
+    (s and offset: one value, or one per outline point)."""
     p, n = mouth_outline()
-    q = p + offset * n
+    q = p + np.asarray(offset, float).reshape(-1, 1) * n
     yi, zb, zt, _ = INTAKE_INNER
     zc = (zb + zt) / 2
     if z_scale != 1.0:
         q[:, 1] = zc + (q[:, 1] - zc) * z_scale
     bow, span = INTAKE_WALL_BOW
-    w = np.clip(1 - (q[:, 0] - yi) / span, 0, 1) ** 2 * np.clip(1 - ((q[:, 1] - zc) / ((zt - zb) / 2 + INTAKE_LIP)) ** 2, 0, 1)
+    rake = np.clip((zt + INTAKE_LIP - q[:, 1]) / (zt - zb + 2 * INTAKE_LIP), 0, 1) ** 1.4      # 0 at the top, 1 at the bottom
+    w = np.clip(1 - (q[:, 0] - yi) / span, 0, 1) ** 2 * rake
     xl = np.array([lip_x(max(float(v), yi)) for v in p[:, 0]])
     return np.c_[xl + s - bow * w, q[:, 0], q[:, 1]]
 
@@ -558,7 +574,7 @@ _LIP_TH = np.radians([0.0, 20.0, 40.0, 60.0, 75.0, 90.0])
 @cached
 def intake_fairing():
     """The lip and the fairing behind it (solid; the duct is cut from it)."""
-    t = INTAKE_LIP
+    t = lip_t()
     rings = [mouth_ring(t / 2 * (1 - math.cos(a)), t / 2 * (1 + math.sin(a))) for a in _LIP_TH]
     rings += [mouth_ring(sd, t + extra, zs) for sd, extra, zs in INTAKE_FAIR]
     return ring_loft(rings)
@@ -566,7 +582,7 @@ def intake_fairing():
 
 @cached
 def intake_ducts():
-    t = INTAKE_LIP
+    t = lip_t()
     rings = [mouth_ring(-2.0, t / 2 + 0.01)] + [mouth_ring(t / 2 * (1 - math.cos(a)), t / 2 * (1 - math.sin(a))) for a in _LIP_TH]
     rings.append(mouth_ring(INTAKE_DEPTH, 0.0))
     back, ys, tw = INTAKE_SPLIT
