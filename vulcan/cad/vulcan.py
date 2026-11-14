@@ -57,10 +57,12 @@ FUSE_STATIONS = [
     (74.5, 18.4, 22.3, -15.0, 2.0),
     (86.1, 18.9, 23.2, -15.0, 2.0),
     (108.0, 18.9, 23.7, -15.0, 2.0),
-    (300.0, 18.9, 23.7, -15.0, 2.0),
-    (330.0, 17.5, 20.0, -15.0, 2.0),
-    (350.0, 15.0, 14.0, -15.0, 2.0),
-    (365.0, 13.0, 11.0, -14.8, 2.0),
+    (225.0, 18.9, 23.7, -15.0, 2.0),     # from here the body tapers and its top falls away under the
+    (260.0, 17.8, 21.5, -15.0, 2.0),     # fin's long dorsal ridge, which keeps the top line level
+    (300.0, 16.0, 18.0, -15.0, 2.0),     # (Airfix top view; XH558 Farnborough photo; user review)
+    (330.0, 14.5, 15.0, -15.0, 2.0),
+    (350.0, 13.5, 12.5, -15.0, 2.0),
+    (365.0, 12.8, 11.0, -14.8, 2.0),
     (383.9, 11.6, 10.5, -14.2, 2.0),
     (395.5, 11.6, 8.0, -12.9, 2.0),
     (401.3, 10.6, 6.6, -12.2, 2.0),
@@ -134,9 +136,10 @@ INTAKE_TAPER = (0.55, -4.5)     # at the outer end the lip is this fraction as t
 # Jet pipes: four, in pairs. Their fairings run under the wing from mid-chord (the side
 # view's lowest line, about 3.5 mm below the belly) and the nozzles stand 6 mm behind the trailing edge.
 JET_Y = (33.4, 45.9)
-JET_Z = -12.3
-JET_PROFILE = [(197.0, 1.5), (252.0, 6.0), (302.0, 6.7), (366.5, 6.2)]   # x, radius
-JET_BORE = (5.1, 10.0)          # radius, depth
+JET_Z = -7.5                    # the pipes straddle the trailing edge: their tops show as humps on the
+                                # upper surface over the last 40 mm, their undersides as the long fairings below
+JET_PROFILE = [(197.0, 1.5), (252.0, 5.0), (302.0, 6.3), (366.5, 6.5)]   # x, radius
+JET_BORE = (5.4, 10.0)          # radius, depth
 
 # Fin: leading and trailing edge lines (x at z), symmetric section, rounded front top corner.
 FIN_LE = ((303.6, 23.7), (362.5, 69.0))
@@ -144,6 +147,8 @@ FIN_TE = ((376.0, 11.0), (406.0, 70.6))
 FIN_Z = (5.0, 72.0)
 FIN_TC = (0.08, 0.08)
 FIN_TIP_ROUND = (7.0, 5.0)
+FIN_RIDGE = (24.5, 222.0)       # below this z the fin runs forward to this x as a low dorsal ridge on the
+                                # falling body (the ochre-tipped wedge in the Airfix top view)
 FIN_FILLET = (31.7, 8.0, 17.0, 1.6)   # below this z the leading edge sweeps forward into the spine:
                                 # over this height, by this much at the spine, with this exponent (Airfix side view)
 FIN_CAP = [(362.0, 0.5, 71.6, 70.6), (366.0, 2.0, 72.8, 69.6), (404.0, 2.0, 72.8, 69.6),
@@ -383,7 +388,7 @@ def fin():
     (xt0, zt0), (xt1, zt1) = FIN_TE
     span, cut = FIN_TIP_ROUND
     rings = []
-    zs = np.r_[np.linspace(FIN_Z[0], FIN_Z[1] - span, 40), FIN_Z[1] - span * (1 - np.sin(np.linspace(0.15, 1, 9) * np.pi / 2))]
+    zs = np.r_[np.linspace(FIN_Z[0], FIN_RIDGE[0] - 0.15, 8), np.linspace(FIN_RIDGE[0] + 0.15, FIN_Z[1] - span, 34), FIN_Z[1] - span * (1 - np.sin(np.linspace(0.15, 1, 9) * np.pi / 2))]
     for z in zs:
         le = xl0 + (z - zl0) * (xl1 - xl0) / (zl1 - zl0)
         te = xt0 + (z - zt0) * (xt1 - xt0) / (zt1 - zt0)
@@ -391,7 +396,9 @@ def fin():
         le += cut * (1 - math.sqrt(max(0.0, 1 - u * u)))
         zf, hf, df, kf = FIN_FILLET
         le0 = le
-        if z < zf:                                   # root fillet: longer chord, same thickness
+        if z < FIN_RIDGE[0]:                         # dorsal ridge
+            le = FIN_RIDGE[1]
+        elif z < zf:                                 # root fillet: longer chord, same thickness
             le -= df * min(1.6, (zf - z) / hf) ** kf
         sec = aerofoil(FIN_TC[0] * (te - le0) / (te - le), te - le, WING_TE_T)
         rings.append(np.c_[le + sec[:, 0], sec[:, 1], np.full(len(sec), z)])
