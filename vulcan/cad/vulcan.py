@@ -244,7 +244,7 @@ KEY_H = [h * _P for h in (5.0, 4.5, 4.0, 3.5, 3.0, 2.5, 2.0, 1.6)]   # half-heig
 KEYS = (
     [(("front",), (x, 0.0), "x", 6.0 * _P) for x in (45.0, 80.0)]
     + [(("front", "centre"), (102.0, 9.0), "x", 18.0 * _P)]
-    + [(("centre",), xy, "x", 6.0 * _P) for xy in ((172.0, 14.0), (182.0, 40.0), (250.0, 42.0), (330.0, 42.0),
+    + [(("centre",), xy, "x", 6.0 * _P) for xy in ((172.0, 14.0), (190.0, 30.0), (250.0, 42.0), (330.0, 42.0),
                                                    (335.0, 0.0), (385.0, 0.0))]
     + [(("centre", "wing"), (x, WING_JOINT_Y), "y", 30.0 * _P) for x in (198.0, 300.0)]
     + [(("wing",), xy, "x", 6.0 * _P) for xy in ((245.0, 100.0), (310.0, 100.0), (285.0, 150.0), (305.0, 150.0))]
@@ -280,7 +280,15 @@ INTAKE_WALL_BOW = (5.5, 10.0)    # the inner wall's leading edge bows forward by
 INTAKE_FAIR = [(8.0, 0.6, 1.0), (22.0, 0.9, 1.0), (45.0, 0.0, 0.55)]   # behind the lip: distance, extra
                                 # offset, height scale (the fairing sinks into the wing)
 INTAKE_SPLIT = (9.0, 37.6, 1.8)  # the wall between the two engines' ducts: set back, y, thickness
-INTAKE_DEPTH = 28.0
+INTAKE_DEPTH = 60.0             # (the ducts are cut off at the engine faces)
+# Engine faces: each duct ends in a round tunnel with a compressor face at its end (hub and blades),
+# a separate plate printed face up that drops into a slot between the centre shells.
+# (y centre, z centre, x of the face): the outer engine sits further back, with the wing's sweep.
+ENGINES = [(30.2, 1.3, 152.0), (47.0, 1.0, 176.0)]
+ENGINE_R = 5.5                  # tunnel radius (8.25 mm bore printed)
+ENGINE_TUNNEL = 14.0            # length of the round tunnel ahead of the face
+ENGINE_PLATE = (6.5, 2.0, -6.4, 8.4)   # plate: half-width, thickness, z bottom, z top
+ENGINE_FAN = dict(blades=10, hub_r=1.7, hub_len=2.2, rim=0.5, depth=0.8, swirl=16.0)
 INTAKE_PTS = 144
 
 # Jet pipes: four, in pairs. Their fairings run under the wing from mid-chord (the side
@@ -561,9 +569,47 @@ def intake_ducts():
     rings = [mouth_ring(-2.0, t / 2 + 0.01)] + [mouth_ring(t / 2 * (1 - math.cos(a)), t / 2 * (1 - math.sin(a))) for a in _LIP_TH]
     rings.append(mouth_ring(INTAKE_DEPTH, 0.0))
     back, ys, tw = INTAKE_SPLIT
-    wall = K.box(lip_x(ys) + back, lip_x(ys) + INTAKE_DEPTH + 5.0, ys - tw / 2, ys + tw / 2, -30.0, 30.0)
+    wall = K.box(lip_x(ys) + back, 200.0, ys - tw / 2, ys + tw / 2, -30.0, 30.0)
     nose = M.cylinder(60.0, tw / 2, tw / 2, 24).translate([lip_x(ys) + back, ys, -30.0])
-    return ring_loft(rings) - wall - nose
+    (yi, zi, xi), (yo, zo, xo) = ENGINES
+    cells = K.box(-BIG, xi, 0.0, ys, -BIG, BIG) + K.box(-BIG, xo, ys, BIG, -BIG, BIG)
+    tunnels = union([M.cylinder(ENGINE_TUNNEL, ENGINE_R, ENGINE_R, 64).rotate([0, 90, 0]).translate([x - ENGINE_TUNNEL, y, z])
+                     for y, z, x in ENGINES])
+    return ((ring_loft(rings) ^ cells) + tunnels) - wall - nose
+
+
+def engine_face(zc):
+    """One compressor face at x 0, y 0, facing -x: the plate with its fan in relief, centred at zc."""
+    hw, t, zb, zt = ENGINE_PLATE
+    f = ENGINE_FAN
+    r1 = ENGINE_R - 0.3
+    plate = K.box(0.0, t, -hw, hw, zb, zt)
+    blades = []
+    n = f["blades"]
+    for i in range(n):
+        a0 = 2 * math.pi * i / n
+        da = math.pi / n * 0.55
+        sw = math.radians(f["swirl"])
+        pts = [(f["hub_r"] * 0.8 * math.cos(a0 - da), f["hub_r"] * 0.8 * math.sin(a0 - da)),
+               (r1 * math.cos(a0 - da + sw), r1 * math.sin(a0 - da + sw)),
+               (r1 * math.cos(a0 + da + sw), r1 * math.sin(a0 + da + sw)),
+               (f["hub_r"] * 0.8 * math.cos(a0 + da), f["hub_r"] * 0.8 * math.sin(a0 + da))]
+        blades.append(K.cs([pts]))
+    fan = mf.CrossSection.batch_boolean(blades, mf.OpType.Add).extrude(f["depth"])
+    hub = M.cylinder(f["hub_len"], f["hub_r"], 0.5, 32)
+    relief = (fan + hub).rotate([0, -90, 0])              # +z -> -x: stands out of the plate's front
+    return plate + relief.translate([0, 0, zc])
+
+
+def add_engines(parts):
+    hw, t, zb, zt = ENGINE_PLATE
+    for sgn in (1, -1):
+        for i, (y, z, x) in enumerate(ENGINES):
+            slot = K.box(x - KEY_FIT, x + t + KEY_FIT, sgn * y - hw - FIT, sgn * y + hw + FIT, zb - 0.3, zt + 0.3)
+            for n in ("centre_upper", "centre_lower"):
+                parts[n] = (parts[n][0] - slot, parts[n][1])
+            tag = f"engine_face_{'stbd' if sgn > 0 else 'port'}_{'inner' if i == 0 else 'outer'}"
+            parts[tag] = (engine_face(z).translate([x, sgn * y, 0]), lambda m: m.rotate([0, 90, 0]))
 
 
 @cached
@@ -1035,6 +1081,7 @@ def build():
         ha, hb, _ = gear_halves(g, sd)
         parts[f"{tag}_a"] = (ha, lambda m: m.rotate([90, 0, 0]))       # +y half: split face down
         parts[f"{tag}_b"] = (hb, lambda m: m.rotate([-90, 0, 0]))
+    add_engines(parts)
     add_joints(parts)
     return parts
 
