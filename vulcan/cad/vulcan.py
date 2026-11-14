@@ -35,6 +35,7 @@ SCALE = 72.0                    # shape scale: all lengths below are at 1:72
 KIT_SCALE = 96.0                # print scale: 352 mm span, about a 1:32 Spitfire's (user)
 PRINT_K = SCALE / KIT_SCALE     # 0.75: every part is scaled by this when written out
 _P = 1.0 / PRINT_K              # print-size lengths (fits, pins, walls) are given as printed mm times this
+FIT = 0.15 * _P                 # sliding clearance per side (X2D fit test)
 SPAN = 33830.0 / SCALE          # 469.9 mm at 1:72 (352.4 mm printed)
 LENGTH = 422.5                  # nose tip to the end of the tail cone, no probe (316.9 mm printed):
                                 # 30.42 m, the published 99 ft 11 in (Airfix A12011 plan and side views)
@@ -71,6 +72,13 @@ FUSE_STATIONS = [
     (418.7, 4.0, 1.5, -7.5, 2.0),
     (LENGTH, 0.8, -2.9, -3.9, 2.0),
 ]
+# Under the wing the body is not a tube: its flat-bottomed keel (bomb bay and its fairing) runs level
+# with the wing's lowest point from the nose gear bay back to the jet pipes (underside photos; the
+# bomb doors would otherwise ride up the tube's sides). x, half-width, z bottom.
+KEEL_STATIONS = [(116.0, 17.0, -15.0), (150.0, 22.5, -15.0), (320.0, 22.5, -15.0), (340.0, 18.0, -15.0),
+                 (356.0, 13.5, -14.9)]
+KEEL_TOP = -2.0
+KEEL_N = 5.0
 CANOPY_STATIONS = [             # x, half-width, z top: the small bubble over the flight deck
     (58.0, 4.0, 20.5), (62.0, 7.5, 25.6), (69.6, 9.5, 29.5), (77.4, 9.5, 29.5),
     (85.0, 9.0, 28.5), (93.0, 8.0, 27.6), (101.0, 6.0, 25.6), (110.0, 3.0, 24.2),
@@ -108,6 +116,7 @@ SPLIT_Z = -4.0
 WING_ROOT_UP = [(0.0, 23.0), (14.0, 23.0), (28.0, 20.3), (42.0, 16.4), (57.0, 12.9), (70.0, 11.5)]
                                 # (y, depth of the top above the split): a smooth (PCHIP) curve into the outer wing
 WING_CREST = (0.12, 1.25)       # inboard: crest at this fraction of chord, then 1 - u^k to the trailing edge
+WING_UNDER_RAMP = (0.30, 0.8)   # inboard underside: reaches full depth at this fraction of chord, exponent
 WING_CREST_BLEND = (25.0, 80.0)  # the inboard profile fades into the plain aerofoil over this span
 SPLIT_TIP_Z = -14.0
 WING_JOINT_Y = 57.0             # centre body / outer wing joint (just outboard of the intakes and jet pipes)
@@ -163,6 +172,16 @@ UNDER_DOORS = (                                                        # cut dee
     + [[(184, 31), (204, 53), (204, 70), (186, 58), (184, 31)]]                 # main gear door
 )
 UNDER_STBD = [[(360, 32), (298, 32), (285, 39.5), (298, 47), (360, 47)]]        # plate under the starboard jet pipes
+# Bays. Each is an opening in a lower shell with a ledge round it; a door panel cut from the shell's
+# own skin drops in from below against the ledge (wheels up, bomb doors shut), or is left out.
+# name: (part, outline (x, y) starboard or centred, ledge z, roof z, mirrored to port too?)
+BAY_LEDGE_W = 1.4               # width of the ledge the door panel sits against
+BAYS = {
+    "bomb": ("centre", [(187, -21.5), (187, 21.5), (310, 21.5), (310, -21.5)], -12.3, -6.0, False),
+    "nose": ("centre", [(122, -8), (122, 8), (162, 8), (162, -8)], -11.5, -6.0, False),
+    "main": ("wing", [(204, 60), (204, 71), (232, 75), (258, 75), (258, 60)], -12.5, -7.0, True),
+}
+BOMB_ROOF = (2.0, 2.0, 12.0, 1.2, 1.5)   # roof plate: thickness, margin round the bay, rib pitch, rib width, rib depth
 BED = (230.0, 250.0)            # usable plate, printed mm (X2D; 256 mm beds are larger)
 WING_Y = [0.0, 5.0, 10.0, 15.0, 19.8, 24.0, 29.0, 34.0, 39.0, 44.0, 49.8, 54.0, 57.0, 58.5, 63.0, 67.9, 72.0,
           77.8, 84.0, 90.0, 97.2, 116.5, 135.8, 155.2, 174.5,
@@ -322,6 +341,11 @@ def intake_gap():
 
 
 @cached
+def keel():
+    return ring_loft([x_ring(x, hw, KEEL_TOP, zb, KEEL_N) for x, hw, zb in dense(KEEL_STATIONS)])
+
+
+@cached
 def canopy():
     return ring_loft([x_ring(x, hw, zt, zt - CANOPY_DEPTH, CANOPY_N) for x, hw, zt in dense(CANOPY_STATIONS, 2.0)])
 
@@ -387,7 +411,10 @@ def wing_ring(y, n=40):
     fu = (1 - w) * fw + w * f
     e = np.minimum(WING_TE_T, t) / 2 * x                  # half the trailing edge thickness, growing aft
     up = np.c_[x * c, fu * (du - e[-1]) + e][::-1]
-    lo = np.c_[x * c, -(f * (dl - e[-1]) + e)][1:]
+    # underneath, inboard, the belly comes up to the intake's lower lip on a long ramp, not a blunt nose
+    fr = np.where(x < WING_UNDER_RAMP[0], (x / WING_UNDER_RAMP[0]) ** WING_UNDER_RAMP[1], f)
+    fl = (1 - w) * np.maximum(np.minimum(fr, f), 0.0) + w * f
+    lo = np.c_[x * c, -(fl * (dl - e[-1]) + e)][1:]
     sec = np.vstack([up, lo])
     return np.c_[le + sec[:, 0], np.full(len(sec), y), zs + sec[:, 1]]
 
@@ -556,7 +583,7 @@ def raw_airframe():
     """Body, wings, intake fairings and jet pipes as one solid, before blending and cuts."""
     pipes, _ = jet_pipes()
     half = wing() + intake_fairing() + pipes
-    return union([body(), canopy(), blister(), half, mirror_y(half)])
+    return union([body(), keel(), canopy(), blister(), half, mirror_y(half)])
 
 
 @cached
@@ -646,6 +673,38 @@ def flip(m):
     return m.rotate([180, 0, 0])
 
 
+def _bay_cut(shell, outline, z_ledge, z_roof, side=1):
+    """(shell with the bay cut, the door panel) for one bay."""
+    sec = K.cs([[(x, side * y) for x, y in outline]])
+    lo = K.box(-BIG, BIG, -BIG, BIG, -BIG, z_ledge)
+    opening = K.prism_z(sec) ^ lo
+    cavity = K.prism_z(sec.offset(-BAY_LEDGE_W, mf.JoinType.Miter, 2.0)) ^ K.box(-BIG, BIG, -BIG, BIG, -BIG, z_roof)
+    door = shell ^ K.prism_z(sec.offset(-FIT, mf.JoinType.Miter, 2.0)) ^ lo
+    return shell - opening - cavity, door
+
+
+def bomb_roof():
+    """(recess in the centre lower shell's top face, the ribbed roof plate that drops into it)."""
+    t, margin, pitch, rw, rd = BOMB_ROOF
+    _, outline, _, z_roof, _ = BAYS["bomb"]
+    sec = K.cs([outline])
+
+    def wedge(grow, top):
+        """Slab from SPLIT_Z - t up to `top`, its edges sloping in at 45 degrees going down, so the
+        recess has no ledge over the bed when the shell prints turned over."""
+        a = K.prism_z(sec.offset(margin + grow, mf.JoinType.Miter, 2.0)) ^ K.box(-BIG, BIG, -BIG, BIG, SPLIT_Z - 0.02, top)
+        b = K.prism_z(sec.offset(margin + grow - t, mf.JoinType.Miter, 2.0)) ^ K.box(-BIG, BIG, -BIG, BIG, SPLIT_Z - t, SPLIT_Z - t + 0.02)
+        return (a + b).hull()
+    recess = wedge(0.0, SPLIT_Z + 0.01)
+    plate = wedge(-FIT, SPLIT_Z)
+    x0, x1 = outline[0][0], outline[2][0]
+    yh = outline[1][1] - BAY_LEDGE_W - 0.6
+    ribs = union([K.box(x - rw / 2, x + rw / 2, -yh, yh, SPLIT_Z - t - rd, SPLIT_Z - t + 0.5)
+                  for x in np.arange(x0 + pitch / 2, x1 - 1.0, pitch)]
+                 + [K.box(x0 + 3, x1 - 3, -rw / 2, rw / 2, SPLIT_Z - t - rd, SPLIT_Z - t + 0.5)])
+    return recess, plate + ribs
+
+
 def build():
     """Returns {name: (Manifold in the assembled frame, pose function -> print pose)}."""
     a = airframe() - fin()
@@ -657,7 +716,23 @@ def build():
         level = (lambda m, s=side: rot_x(m, s * SPLIT_TILT, s * WING_JOINT_Y, SPLIT_Z)) if side else (lambda m: m)
         upper = blk ^ up
         parts[f"{name}_upper"] = (engrave_top(upper) if name != "front" else upper, level)
-        parts[f"{name}_lower"] = (engrave_under(blk - up), lambda m, lv=level: flip(lv(m)))
+        lower = engrave_under(blk - up)
+        under_pose = lambda m, lv=level: flip(lv(m))
+        for bay, (where, outline, z_ledge, z_roof, both) in BAYS.items():
+            if not name.startswith(where) or (side < 0 and not both):
+                continue
+            if side:                             # wing bays are cut square to the wing's own split plane
+                unlevel = lambda m, s=side: rot_x(m, -s * SPLIT_TILT, s * WING_JOINT_Y, SPLIT_Z)
+                lower, door = (unlevel(m) for m in _bay_cut(level(lower), outline, z_ledge, z_roof, side))
+            else:
+                lower, door = _bay_cut(lower, outline, z_ledge, z_roof, 1)
+            tag = f"door_{bay}" + ("" if not both else ("_stbd" if side > 0 else "_port"))
+            parts[tag] = (door, under_pose)
+        if name == "centre":
+            recess, roof = bomb_roof()
+            lower = lower - recess
+            parts["bomb_bay_roof"] = (roof, flip)
+        parts[f"{name}_lower"] = (lower, under_pose)
     parts["fin"] = (fin(), lambda m: m.rotate([90, 0, 0]))            # (pose to come: two halves)
     parts["probe"] = (probe(), lambda m: m)
     return parts
