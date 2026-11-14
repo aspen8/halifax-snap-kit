@@ -208,6 +208,18 @@ MAIN_GEAR = dict(
     plug=(246.3, 250.5),
     wheel_profile=[(0.0, 2.9), (0.1, 2.9), (1.7, 4.5), (4.0, 4.5), (4.8, 3.7), (5.6, 4.5), (7.7, 4.5), (8.0, 4.2)],   # flares and the groove between the twin tyres at 45 degrees: no overhang
 )
+# Blue Steel stand-off missile (Airfix scheme A underside sheet: side and plan views; real length
+# 10.7 m, body 1.27 m, wing span 3.96 m). Carried half sunk in the bomb bay: the kit part is the
+# half below the belly, printed on its flat top face with the wings and foreplanes on the bed; it
+# keys onto its own bomb door panel (door_bluesteel) in place of the plain doors.
+BS_X = (166.0, 315.0)           # nose and tail: the nose runs 21 mm ahead of the bay
+BS_Z = -15.0                    # centreline, on the belly
+BS_PROFILE = [(0.0, 0.3), (6.0, 1.8), (16.0, 4.0), (30.0, 6.2), (48.0, 7.9), (66.0, 8.7), (80.0, 8.8),
+              (133.0, 8.8), (141.0, 8.3), (146.0, 7.0), (149.0, 4.5)]      # distance from the nose, radius
+BS_WING = [(102.0, 7.0), (131.0, 26.0), (136.0, 26.0), (136.0, 7.0)]      # (from the nose, y), starboard
+BS_FORE = [(12.0, 2.0), (30.0, 15.4), (36.0, 15.4), (36.0, 5.0)]
+BS_WING_T = 1.2 * _P            # wing and foreplane thickness (1.2 mm printed)
+BS_KEYS = [(215.0, 285.0), (8.0, 3.0, 2.4)]   # x of the two keys on the door; length, width, height
 STRUT_W = 1.7
 DOOR_T = 1.6                    # open gear doors: 1.2 mm printed
 NOSE_DOORS = (118.5, 158.5, 7.0)          # x range and how far the two doors hang below the belly
@@ -762,6 +774,23 @@ def gear_sockets():
     return union([gear_halves(NOSE_GEAR)[2], gear_halves(MAIN_GEAR, 1)[2], gear_halves(MAIN_GEAR, -1)[2]])
 
 
+def blue_steel():
+    """(the missile half, its slots' keys to add to the bomb door panel)."""
+    x0 = BS_X[0]
+    body = revolve_x([(x0 + d, r) for d, r in BS_PROFILE]).translate([0, 0, BS_Z])
+    flats = []
+    for outline in (BS_WING, BS_FORE):
+        for sgn in (1, -1):
+            flats.append(K.cs([[(x0 + d, sgn * y) for d, y in outline]]))
+    wings = mf.CrossSection.batch_boolean(flats, mf.OpType.Add).extrude(BS_WING_T).translate([0, 0, BS_Z - BS_WING_T])
+    kl, kw, kh = BS_KEYS[1]
+    keys = union([K.box(x - kl / 2, x + kl / 2, -kw / 2, kw / 2, BS_Z - kh, BS_Z + 1.0) for x in BS_KEYS[0]])
+    slots = union([K.box(x - kl / 2 - FIT, x + kl / 2 + FIT, -kw / 2 - FIT, kw / 2 + FIT, BS_Z - kh - 0.4, BS_Z + 1.0)
+                   for x in BS_KEYS[0]])
+    half = ((body + wings) ^ K.box(-BIG, BIG, -BIG, BIG, -BIG, BS_Z)) - slots
+    return half, keys
+
+
 def bomb_roof():
     """(recess in the centre lower shell's top face, the ribbed roof plate that drops into it)."""
     t, margin, pitch, rw, rd = BOMB_ROOF
@@ -820,6 +849,10 @@ def build():
                                                             [((x0, yd), (x1, yd)), ((x0, -yd), (x1, -yd))], drop), under_pose)
                 lower, door = _bay_cut(lower, outline, z_ledge, z_roof, 1, ledge_w)
             parts[f"door_{bay}{sfx}"] = (door, under_pose)
+            if bay == "bomb":
+                missile, keys = blue_steel()
+                parts["door_bluesteel"] = (door + (keys ^ K.box(-BIG, BIG, -BIG, BIG, -BIG, z_ledge)), under_pose)
+                parts["blue_steel"] = (missile, flip)
         lower = lower - sockets
         if name == "centre":
             recess, roof = bomb_roof()
