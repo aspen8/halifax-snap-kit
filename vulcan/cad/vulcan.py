@@ -116,7 +116,7 @@ SPLIT_Z = -4.0
 # meets the fuselage side on a straight line (Airfix side view, XH558 photos; user review).
 WING_ROOT_UP = [(0.0, 23.0), (14.0, 23.0), (28.0, 20.3), (42.0, 16.4), (57.0, 12.9), (70.0, 11.5)]
                                 # (y, depth of the top above the split): a smooth (PCHIP) curve into the outer wing
-WING_CREST = (0.12, 1.25)       # inboard: crest at this fraction of chord, then 1 - u^k to the trailing edge
+WING_CREST = (0.09, 1.25)       # inboard: crest at this fraction of chord, then 1 - u^k to the trailing edge
 WING_UNDER_RAMP = (0.30, 0.8)   # inboard underside: reaches full depth at this fraction of chord, exponent
 WING_CREST_BLEND = (25.0, 80.0)  # the inboard profile fades into the plain aerofoil over this span
 SPLIT_TIP_Z = -14.0
@@ -262,21 +262,26 @@ WING_Y = [0.0, 5.0, 10.0, 15.0, 19.8, 24.0, 29.0, 34.0, 39.0, 44.0, 49.8, 54.0, 
           189.0, 193.9, 200.0, 206.9, 213.2, 219.0, 224.3, 229.0, 232.5, 233.5, 234.6, 234.8]
 
 # Intakes: letterbox mouths in the swept inner leading edge, one per engine pair, split in two.
-INTAKE_Y = (21.2, 55.0)         # span of the blunt lip fairing: its inner end stands off the fuselage
+INTAKE_Y = (20.8, 59.0)         # span of the lip: its inner wall stands off the fuselage
 INTAKE_GAP = (2.0, 16.0, -9.0)  # boundary-layer gap between the intake's inner wall and the fuselage
                                 # skin: width, how far it runs back from the lip, and its floor (z);
                                 # it is open at the top (XH558 photos; user: "almost a separation")
-INTAKE_ZC = 6.5
-INTAKE_RINGS = [(-1.5, 17.0, 9.6), (1.0, 18.5, 11.0), (6.0, 19.0, 11.5), (22.0, 19.0, 11.5),
-                (45.0, 17.0, 5.0)]   # distance behind the lip line, half-width, half-height
-INTAKE_MOUTH = (23.2, 52.0)     # y range of the one letterbox mouth (head-on photo, 1982)
-INTAKE_MOUTHS = [(23.2, 36.8), (38.4, 52.0)]   # the two ducts behind it, one per engine
-INTAKE_SPLIT = 9.0              # the wall between the ducts starts this far behind the lip
-INTAKE_MOUTH_Z = (-2.5, 15.0)
+# The mouth, measured on the colour head-on photo (12.2 px per model mm; belly z -15 at the bottom
+# of the fuselage): one opening a side, tall at its inner end (z -5.3 to 8.2 at y 23.8, a nearly
+# upright inner edge with rounded corners) and tapering to a round outer end (y 56, z -2 to 3.7),
+# with gently bowed top and bottom lips. A thick round lip runs all the way round it. In plan the
+# lip follows the wing's leading edge, including the notch at y 50-58, which is its outer end.
+INTAKE_INNER = (23.8, -5.3, 8.2, 2.5)     # y of the inner edge, z bottom, z top, corner radius
+INTAKE_OUTER = (53.15, 0.85, 2.85)        # outer end: centre y, z, radius
+INTAKE_BOW = (38.0, 6.8, -4.3)            # mid-span: y, z of the top lip, z of the bottom lip
+INTAKE_LIP = 3.0                # lip thickness (2.25 mm printed): its nose is a half-round of this diameter
+INTAKE_WALL_BOW = (5.5, 10.0)    # the inner wall's leading edge bows forward by this much at mid-height
+                                # (side-on photo), fading out over this span outboard
+INTAKE_FAIR = [(8.0, 0.6, 1.0), (22.0, 0.9, 1.0), (45.0, 0.0, 0.55)]   # behind the lip: distance, extra
+                                # offset, height scale (the fairing sinks into the wing)
+INTAKE_SPLIT = (9.0, 37.6, 1.8)  # the wall between the two engines' ducts: set back, y, thickness
 INTAKE_DEPTH = 28.0
-INTAKE_N = 4.0
-INTAKE_TAPER = (0.55, -4.5)     # at the outer end the lip is this fraction as tall and this much
-                                # lower, so it runs into the thinner wing there (no ear above the skin)
+INTAKE_PTS = 144
 
 # Jet pipes: four, in pairs. Their fairings run under the wing from mid-chord (the side
 # view's lowest line, about 3.5 mm below the belly) and the nozzles stand 6 mm behind the trailing edge.
@@ -500,32 +505,65 @@ def wing():
 
 
 def lip_x(y):
-    (y0, x0), (y1, x1) = WING_LE[1], WING_LE[2]
-    return x0 + (y - y0) * (x1 - x0) / (y1 - y0)
+    return wing_le(y)
 
 
-def _sheared_ring(s, y0, y1, z0, z1, n=INTAKE_N, pts=72):
-    """Superellipse in (y, z), in a plane parallel to the swept intake lip, s behind it."""
-    se = superellipse((y1 - y0) / 2, (z1 - z0) / 2, n, pts)
-    y = (y0 + y1) / 2 + se[:, 0]
-    u = np.clip((y - INTAKE_Y[0]) / (INTAKE_Y[1] - INTAKE_Y[0]), 0.0, 1.0)
-    k, dz = 1 + u * (INTAKE_TAPER[0] - 1), u * INTAKE_TAPER[1]
-    return np.c_[lip_x(y) + s, y, (z0 + z1) / 2 + dz + se[:, 1] * k]
+@cached
+def mouth_outline():
+    """The opening as INTAKE_PTS points (y, z), evenly spaced, anticlockwise from the outer end,
+    with unit outward normals."""
+    from shapely.geometry import Point, Polygon, MultiPoint
+    yi, zb, zt, rc = INTAKE_INNER
+    yo, zo, ro = INTAKE_OUTER
+    ym, zmt, zmb = INTAKE_BOW
+    pts = [(yi, zb), (yi, zt), (ym, zmt), (ym, zmb)] + list(Point(yo, zo).buffer(ro, 64).exterior.coords)
+    poly = MultiPoint(pts).convex_hull.buffer(-rc, 32).buffer(rc, 32)
+    ring = poly.exterior
+    if not ring.is_ccw:
+        ring = ring.reverse()
+    start = ring.project(Point(yo + ro, zo))
+    d = (start + np.arange(INTAKE_PTS) * ring.length / INTAKE_PTS) % ring.length
+    p = np.array([ring.interpolate(t).coords[0] for t in d])
+    tan = np.roll(p, -1, 0) - np.roll(p, 1, 0)
+    nrm = np.c_[tan[:, 1], -tan[:, 0]]
+    return p, nrm / np.linalg.norm(nrm, axis=1)[:, None]
+
+
+def mouth_ring(s, offset, z_scale=1.0):
+    """The mouth outline grown by `offset`, s behind the lip's nose, in the swept lip surface."""
+    p, n = mouth_outline()
+    q = p + offset * n
+    yi, zb, zt, _ = INTAKE_INNER
+    zc = (zb + zt) / 2
+    if z_scale != 1.0:
+        q[:, 1] = zc + (q[:, 1] - zc) * z_scale
+    bow, span = INTAKE_WALL_BOW
+    w = np.clip(1 - (q[:, 0] - yi) / span, 0, 1) ** 2 * np.clip(1 - ((q[:, 1] - zc) / ((zt - zb) / 2 + INTAKE_LIP)) ** 2, 0, 1)
+    xl = np.array([lip_x(max(float(v), yi)) for v in p[:, 0]])
+    return np.c_[xl + s - bow * w, q[:, 0], q[:, 1]]
+
+
+_LIP_TH = np.radians([0.0, 20.0, 40.0, 60.0, 75.0, 90.0])
 
 
 @cached
 def intake_fairing():
-    yc = (INTAKE_Y[0] + INTAKE_Y[1]) / 2
-    return ring_loft([_sheared_ring(s, yc - hw, yc + hw, INTAKE_ZC - hh, INTAKE_ZC + hh)
-                      for s, hw, hh in INTAKE_RINGS])
+    """The lip and the fairing behind it (solid; the duct is cut from it)."""
+    t = INTAKE_LIP
+    rings = [mouth_ring(t / 2 * (1 - math.cos(a)), t / 2 * (1 + math.sin(a))) for a in _LIP_TH]
+    rings += [mouth_ring(sd, t + extra, zs) for sd, extra, zs in INTAKE_FAIR]
+    return ring_loft(rings)
 
 
 @cached
 def intake_ducts():
-    z0, z1 = INTAKE_MOUTH_Z
-    mouth = ring_loft([_sheared_ring(s, *INTAKE_MOUTH, z0, z1) for s in (-4.0, INTAKE_SPLIT)])
-    return union([mouth] + [ring_loft([_sheared_ring(s, y0, y1, z0, z1) for s in (INTAKE_SPLIT - 1.0, INTAKE_DEPTH)])
-                            for y0, y1 in INTAKE_MOUTHS])
+    t = INTAKE_LIP
+    rings = [mouth_ring(-2.0, t / 2 + 0.01)] + [mouth_ring(t / 2 * (1 - math.cos(a)), t / 2 * (1 - math.sin(a))) for a in _LIP_TH]
+    rings.append(mouth_ring(INTAKE_DEPTH, 0.0))
+    back, ys, tw = INTAKE_SPLIT
+    wall = K.box(lip_x(ys) + back, lip_x(ys) + INTAKE_DEPTH + 5.0, ys - tw / 2, ys + tw / 2, -30.0, 30.0)
+    nose = M.cylinder(60.0, tw / 2, tw / 2, 24).translate([lip_x(ys) + back, ys, -30.0])
+    return ring_loft(rings) - wall - nose
 
 
 @cached
