@@ -11,7 +11,7 @@ Avro Vulcan B.2 at 1:96: 352 mm span, 317 mm long (336 mm with the refuelling pr
 
 ![shape in grey](docs/shape_grey.png)
 
-> **Status: v11: shape fitted to the Airfix A12011 plan and side views, and split into shells.** No joints, colour or print file yet. Not yet split into parts; no joints, colour or print file.
+> **Status: v12: shape fitted to the Airfix A12011 plan and side views, and split into shells.** No joints, colour or print file yet. Not yet split into parts; no joints, colour or print file.
 
 Intakes and wing root (v7, user review): one letterbox mouth a side, tall at the fuselage (about 60% of its depth, from the XH558 photos) and tapering outboard, with the wall between the two engine ducts set back 9 mm. Over the engines the wing's top is not an aerofoil hump: it reaches its crest just behind the intake lip and runs almost straight to the trailing edge, so it meets the fuselage on a straight line, as in the Airfix side view (`WING_ROOT_UP`, `WING_CREST`). Each intake's inner wall stands 2 mm (1:72) off the fuselage, with an open slot between them running 16 mm back from the lip (v8, user: "almost a separation from the fuselage"). The fin's leading edge sweeps forward into the spine (`FIN_FILLET`).
 
@@ -25,9 +25,11 @@ Smooth upper surface (v10, user: "seamlessly incorporating the engines"): every 
 
 ![smoothed top and underside](docs/smooth_top_under.png)
 
-Panel lines (v11): the upper surface carries the main lines from the Airfix scheme B top view, read on a 10 mm grid (`PANEL_LINES`, `HINGE_LINES` in `vulcan.py`): the engine bay panels, the leading-edge and rear spar lines, the outer wing joint, every other skin stiffener, the jet pipe panels, and the elevon hinge and ends (deeper). 0.5 mm wide and 0.25 mm deep as printed (hinges 0.6 x 0.4). Still to do: the underside, the fuselage and fin, airbrakes.
+Panel lines (v11): the upper surface carries the main lines from the Airfix scheme B top view, read on a 10 mm grid (`PANEL_LINES`, `HINGE_LINES` in `vulcan.py`): the engine bay panels, the leading-edge and rear spar lines, the outer wing joint, every other skin stiffener, the jet pipe panels, and the elevon hinge and ends (deeper). 0.5 mm wide and 0.25 mm deep as printed (hinges 0.6 x 0.4). Underneath (v12, from the scheme B underside view; `UNDER_LINES`, `UNDER_DOORS`, `UNDER_STBD`): the engine doors, crew hatch, the outer wing's lines as on top, the plate under the starboard jet pipes, and, cut deeper, the bomb bay doors (123 x 43 mm at 1:72, x 187 to 310), the nose gear doors and the main gear doors. These are outlines only: the bays are not cut out yet. Still to do: the fuselage and fin, airbrakes; the intake's lower lip still shows as a bulge behind the mouth.
 
 ![panel lines](docs/panel_lines_top.png)
+
+![underside lines](docs/panel_lines_under.png)
 
 ## Parts (v6: first split, no joints yet)
 

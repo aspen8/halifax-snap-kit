@@ -119,8 +119,9 @@ FRONT_X = 105.0                 # front fuselage / centre body joint, at the win
 BLEND_R = [(110.0, 4.0), (150.0, 4.0), (190.0, 12.0), (300.0, 12.0), (358.0, 2.0)]   # (x, radius): small
                                 # by the intakes, a soft fillet along the fuselage, fading out at the trailing edge
 BLEND_X = (112.0, 359.0)        # x range of the fill
-BLEND_UNDER_R = [(200.0, 4.0), (330.0, 4.0), (358.0, 1.5)]   # the same underneath, round the jet pipe fairings
-BLEND_UNDER_X = (200.0, 359.0)
+BLEND_UNDER_R = [(112.0, 6.0), (190.0, 6.0), (210.0, 4.0), (330.0, 4.0), (358.0, 1.5)]   # the same underneath:
+                                # behind the intakes' lower lips and round the jet pipe fairings
+BLEND_UNDER_X = (112.0, 359.0)
 BLEND_Y = 85.0                  # out to this span (the outer wing has no creases)
 BLEND_STEP = (1.5, 0.3)         # grid: x, y
 # Panel lines on the upper surface, starboard, as (x, y) polylines read off the Airfix scheme B top
@@ -144,6 +145,24 @@ HINGE_LINES = (
     [[(327, 58), (348, 137), (365, 221)]]                             # elevon hinge
     + [[(337, 97), (364.5, 97)], [(348, 137), (369.5, 137)], [(356.7, 180), (374.5, 180)]]   # elevon ends
 )
+# Underside lines, from the Airfix scheme B underside view (ref airfix_b_under.png: 2.3026 px/mm,
+# centreline col 630.5, nose tip row 985, nose down; starboard on the right).
+_STIFF = [[(x0, 58), (x0 + 0.80 * (y1 - 58), y1)] for x0, y1 in
+          ((200, 148), (222, 146), (240, 144), (262, 140), (290, 98))]
+UNDER_LINES = (
+    [[(x, 22), (x, 57)] for x in (211, 231, 252, 275, 337.5)]          # engine doors
+    + [[(211, 39.5), (275, 39.5)], [(205, 57), (360, 57)], [(205, 22), (205, 57)]]
+    + [[(86, 6.5), (107, 6.5)], [(86, 0), (86, 6.5)], [(107, 0), (107, 6.5)]]   # crew hatch
+    + [[(190, 58), (250, 153)], [(250, 153), (290, 146), (345, 137)],  # as on top: leading-edge line,
+       [(311, 58), (333, 137), (352, 221)], [(320, 221), (382, 221)]]  # outer joint, rear spar, tip
+    + _STIFF
+)
+UNDER_DOORS = (                                                        # cut deeper: doors
+    [[(187, 0), (187, 21.5), (310, 21.5), (310, 0)], [(187, 0), (310, 0)]]      # bomb bay, 123 x 43 mm
+    + [[(122, 0), (122, 8), (162, 8), (162, 0)], [(122, 0), (162, 0)]]          # nose gear doors
+    + [[(184, 31), (204, 53), (204, 70), (186, 58), (184, 31)]]                 # main gear door
+)
+UNDER_STBD = [[(360, 32), (298, 32), (285, 39.5), (298, 47), (360, 47)]]        # plate under the starboard jet pipes
 BED = (230.0, 250.0)            # usable plate, printed mm (X2D; 256 mm beds are larger)
 WING_Y = [0.0, 5.0, 10.0, 15.0, 19.8, 24.0, 29.0, 34.0, 39.0, 44.0, 49.8, 54.0, 57.0, 58.5, 63.0, 67.9, 72.0,
           77.8, 84.0, 90.0, 97.2, 116.5, 135.8, 155.2, 174.5,
@@ -586,12 +605,12 @@ def region(name):
     raise KeyError(name)
 
 
-def _grooves(lines, w):
+def _grooves(lines, w, sides=(1, -1)):
     """Prism through all z along the polylines (given as (x, y)), both sides of the aircraft."""
     secs = []
     for ln in lines:
         for a, b in zip(ln, ln[1:]):
-            for sgn in (1, -1):
+            for sgn in sides:
                 secs.append(K.band((a[0], sgn * a[1]), (b[0], sgn * b[1]), w))
     return K.prism_z(mf.CrossSection.batch_boolean(secs, mf.OpType.Add))
 
@@ -606,6 +625,19 @@ def engrave_top(part):
     prism within the line's depth of the surface, measured straight down."""
     lines, hinges = top_grooves()
     cut = (lines ^ (part - part.translate([0, 0, -LINE_D]))) + (hinges ^ (part - part.translate([0, 0, -HINGE_D])))
+    return part - cut
+
+
+@cached
+def under_grooves():
+    lines = _grooves(UNDER_LINES, LINE_W) + _grooves(UNDER_STBD, LINE_W, sides=(1,))
+    return lines, _grooves(UNDER_DOORS + HINGE_LINES, HINGE_W)
+
+
+def engrave_under(part):
+    """The same for a lower shell: grooves within the line's depth of the underside."""
+    lines, doors = under_grooves()
+    cut = (lines ^ (part - part.translate([0, 0, LINE_D]))) + (doors ^ (part - part.translate([0, 0, HINGE_D])))
     return part - cut
 
 
@@ -625,7 +657,7 @@ def build():
         level = (lambda m, s=side: rot_x(m, s * SPLIT_TILT, s * WING_JOINT_Y, SPLIT_Z)) if side else (lambda m: m)
         upper = blk ^ up
         parts[f"{name}_upper"] = (engrave_top(upper) if name != "front" else upper, level)
-        parts[f"{name}_lower"] = (blk - up, lambda m, lv=level: flip(lv(m)))
+        parts[f"{name}_lower"] = (engrave_under(blk - up), lambda m, lv=level: flip(lv(m)))
     parts["fin"] = (fin(), lambda m: m.rotate([90, 0, 0]))            # (pose to come: two halves)
     parts["probe"] = (probe(), lambda m: m)
     return parts
